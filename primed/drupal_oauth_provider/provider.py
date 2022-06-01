@@ -15,7 +15,7 @@ class CustomAccount(ProviderAccount):
 
 class CustomProvider(OAuth2Provider):
 
-    id = "gregor_oauth_provider"
+    id = "drupal_oauth_provider"
     name = "Gregor Consortium Site Login"
     account_class = CustomAccount
 

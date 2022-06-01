@@ -2,9 +2,7 @@ from allauth.account.signals import user_logged_in
 from allauth.socialaccount.adapter import get_adapter
 from django.dispatch import receiver
 
-from gregor_django.gregor_oauth_provider.provider import (
-    CustomProvider as GregorProvider,
-)
+from primed.drupal_oauth_provider.provider import CustomProvider as GregorProvider
 
 
 @receiver(user_logged_in)

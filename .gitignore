@@ -273,10 +273,10 @@ tags
 
 ### Project template
 
-gregor_django/media/
+primed/media/
 
 .pytest_cache/
 
-gregor_django.db
+primed.db
 
 

@@ -8,10 +8,10 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 from django.urls import reverse
 
-from gregor_django.users.forms import UserChangeForm
-from gregor_django.users.models import User
-from gregor_django.users.tests.factories import UserFactory
-from gregor_django.users.views import UserRedirectView, UserUpdateView, user_detail_view
+from primed.users.forms import UserChangeForm
+from primed.users.models import User
+from primed.users.tests.factories import UserFactory
+from primed.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 
@@ -59,7 +59,7 @@ class TestUserUpdateView:
 
         # Initialize the form
         form = UserChangeForm()
-        form.cleaned_data = []
+        form.cleaned_data = dict()
         view.form_valid(form)
 
         messages_sent = [m.message for m in messages.get_messages(request)]
@@ -94,4 +94,4 @@ class TestUserDetailView:
         login_url = reverse(settings.LOGIN_URL)
 
         assert response.status_code == 302
-        assert response.url == f"{login_url}?next=/fake-url/"
+        assert response["Location"] == f"{login_url}?next=/fake-url/"

@@ -24,8 +24,8 @@ if __name__ == "__main__":
         raise
 
     # This allows easy placement of apps within the interior
-    # gregor_django directory.
+    # primed directory.
     current_path = Path(__file__).parent.resolve()
-    sys.path.append(str(current_path / "gregor_django"))
+    sys.path.append(str(current_path / "primed"))
 
     execute_from_command_line(sys.argv)
