@@ -1,10 +1,6 @@
 from django.urls import path
 
-from gregor_django.users.views import (
-    user_detail_view,
-    user_redirect_view,
-    user_update_view,
-)
+from primed.users.views import user_detail_view, user_redirect_view, user_update_view
 
 app_name = "users"
 urlpatterns = [

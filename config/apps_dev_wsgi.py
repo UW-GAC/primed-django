@@ -31,9 +31,9 @@ from django.core.wsgi import get_wsgi_application  # noqa: E402
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 # This allows easy placement of apps within the interior
-# gregor_django directory.
+# primed directory.
 
-sys.path.append(str(ROOT_DIR / "gregor_django"))
+sys.path.append(str(ROOT_DIR / "primed"))
 sys.path.append(str(ROOT_DIR))
 
 # Explicitly set the settings module for this wsgi app

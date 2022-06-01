@@ -1,6 +1,6 @@
 import pytest
 
-from gregor_django.users.models import User
+from primed.users.models import User
 
 pytestmark = pytest.mark.django_db
 

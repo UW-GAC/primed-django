@@ -23,7 +23,7 @@ About
     -   Is Confidential: \'Yes\'
     -   Is third party: \'No\'
     -   Redirect URI:
-        <http://domain.com/accounts/gregor_oauth_provider/login/callback/>
+        <http://domain.com/accounts/drupal_oauth_provider/login/callback/>
 
     \- Scopes: click \'Oauth Client User\' only .. warning:: any roles
     selected here are granted automatically to any user who logs in via
@@ -37,8 +37,8 @@ Development callback URL Notes
 
 :   Use the appropriate domain for your development or production
     server, eg:
-    <http://127.0.0.1:8000/accounts/gregor_oauth_provider/login/callback/>
-    <http://localhost:8000/accounts/gregor_oauth_provider/login/callback>
+    <http://127.0.0.1:8000/accounts/drupal_oauth_provider/login/callback/>
+    <http://localhost:8000/accounts/drupal_oauth_provider/login/callback>
 
 Configuration settings:
 
@@ -52,7 +52,7 @@ the SocialAccountAdapter the updates the users groups post login.
 
 ``` 
 SOCIALACCOUNT_PROVIDERS = {
-    "gregor_oauth_provider": {
+    "drupal_oauth_provider": {
         "API_URL": "https://dev.gregorconsortium.org",
         "SCOPES": [
             {

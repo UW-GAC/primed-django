@@ -110,7 +110,7 @@ class CustomAdapter(OAuth2Adapter):
         resp.raise_for_status()
         extra_data = resp.json()
         logger.debug(
-            f"[gregor_oauth_provider:complete_login] extra profile data {resp} "
+            f"[drupal_oauth_provider:complete_login] extra profile data {resp} "
             f"ed: {extra_data} scopes granted {scopes_granted}"
             f" managed_scope_status {managed_scope_status}"
         )

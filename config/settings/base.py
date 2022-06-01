@@ -6,8 +6,8 @@ from pathlib import Path
 import environ
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
-# gregor_django/
-APPS_DIR = ROOT_DIR / "gregor_django"
+# primed/
+APPS_DIR = ROOT_DIR / "primed"
 env = environ.Env()
 
 READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
@@ -45,12 +45,12 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "gregor_django.db",
+        "NAME": "primed.db",
     }
 }
 
 # DATABASES = {
-#     "default": env.db("DATABASE_URL", default="postgres:///gregor_django"),
+#     "default": env.db("DATABASE_URL", default="postgres:///primed"),
 # }
 # DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
@@ -85,9 +85,9 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "gregor_django.users.apps.UsersConfig",
+    "primed.users.apps.UsersConfig",
     # Your stuff: custom apps go here
-    "gregor_django.gregor_oauth_provider",
+    "primed.drupal_oauth_provider",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -96,7 +96,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # MIGRATIONS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#migration-modules
-MIGRATION_MODULES = {"sites": "gregor_django.contrib.sites.migrations"}
+MIGRATION_MODULES = {"sites": "primed.contrib.sites.migrations"}
 
 # AUTHENTICATION
 # ------------------------------------------------------------------------------
@@ -197,7 +197,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
-                "gregor_django.utils.context_processors.settings_context",
+                "primed.utils.context_processors.settings_context",
             ],
         },
     }
@@ -282,17 +282,17 @@ ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_ADAPTER = "gregor_django.users.adapters.AccountAdapter"
+ACCOUNT_ADAPTER = "primed.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-SOCIALACCOUNT_ADAPTER = "gregor_django.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "primed.users.adapters.SocialAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # django-login-required-middleware login not required views
 # limited set of views we allow a non-logged in user to access
 LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "account_login",
-    "gregor_oauth_provider_login",
-    "gregor_oauth_provider_callback",
+    "drupal_oauth_provider_login",
+    "drupal_oauth_provider_callback",
     "socialaccount_signup",
     "admin:index",
     "admin:login",
@@ -309,7 +309,7 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 # via oauth (as configured in the drupal consumer) and will be returned even if we do not request
 # them but are not currently mapped to django groups.
 SOCIALACCOUNT_PROVIDERS = {
-    "gregor_oauth_provider": {
+    "drupal_oauth_provider": {
         "API_URL": "https://dev.gregorconsortium.org",
         "SCOPES": [
             {
