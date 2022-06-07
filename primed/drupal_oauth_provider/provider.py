@@ -18,6 +18,7 @@ OVERRIDE_NAME = (
     .get("OVERRIDE_NAME", DRUPAL_DEFAULT_NAME)
 )
 
+
 class CustomAccount(ProviderAccount):
     pass
 
