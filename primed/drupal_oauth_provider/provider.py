@@ -4,10 +4,19 @@ from allauth.account.models import EmailAddress
 from allauth.socialaccount import app_settings, providers
 from allauth.socialaccount.providers.base import ProviderAccount
 from allauth.socialaccount.providers.oauth2.provider import OAuth2Provider
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 
+DRUPAL_PROVIDER_ID = "drupal_oauth_provider"
+DRUPAL_DEFAULT_NAME = "Drupal Simple Oauth"
+
+OVERRIDE_NAME = (
+    getattr(settings, "SOCIALACCOUNT_PROVIDERS", {})
+    .get(DRUPAL_PROVIDER_ID, {})
+    .get("OVERRIDE_NAME", DRUPAL_DEFAULT_NAME)
+)
 
 class CustomAccount(ProviderAccount):
     pass
@@ -16,7 +25,7 @@ class CustomAccount(ProviderAccount):
 class CustomProvider(OAuth2Provider):
 
     id = "drupal_oauth_provider"
-    name = "Gregor Consortium Site Login"
+    name = OVERRIDE_NAME
     account_class = CustomAccount
 
     def extract_uid(self, data):

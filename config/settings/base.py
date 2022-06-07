@@ -310,7 +310,8 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 # them but are not currently mapped to django groups.
 SOCIALACCOUNT_PROVIDERS = {
     "drupal_oauth_provider": {
-        "API_URL": "https://dev.gregorconsortium.org",
+        "OVERRIDE_NAME": "Primed Consortium Site Login",
+        "API_URL": "",
         "SCOPES": [
             {
                 "drupal_machine_name": "oauth_django_access",
