@@ -8,6 +8,6 @@ try:
     from mod_wsgi import version  # noqa
 
     LOGGING["handlers"]["console"]["class"] = "logging.FileHandler"
-    LOGGING["handlers"]["console"]["filename"] = "/var/log/django/gregor-app-dev.log"
+    LOGGING["handlers"]["console"]["filename"] = "/var/log/django/primed-app-dev.log"
 except ImportError:
     LOGGING["handlers"]["console"]["class"] = "logging.StreamHandler"
