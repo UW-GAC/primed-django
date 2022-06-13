@@ -311,18 +311,18 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 SOCIALACCOUNT_PROVIDERS = {
     "drupal_oauth_provider": {
         "OVERRIDE_NAME": "Primed Consortium Site Login",
-        "API_URL": "",
+        "API_URL": "https://dev.primedconsortium.org",
         "SCOPES": [
             {
                 "drupal_machine_name": "oauth_django_access",
                 "request_scope": False,
                 "django_group_name": "test_django_access",
             },
-            {
-                "drupal_machine_name": "gregor_anvil_admin",
-                "request_scope": True,
-                "django_group_name": "gregor_anvil_admin",
-            },
+            # {
+            #     "drupal_machine_name": "gregor_anvil_admin",
+            #     "request_scope": True,
+            #     "django_group_name": "gregor_anvil_admin",
+            # },
         ],
     }
 }
