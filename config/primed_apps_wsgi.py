@@ -19,7 +19,7 @@ Activate the virtualenv. Must happen before any imports.
 This code assumes it is in a relative directory to the wsgi script.
 """
 
-activate_file = "/var/www/django/apps_dev/venv/bin/activate_this.py"
+activate_file = "/var/www/django/primed_apps/venv/bin/activate_this.py"
 exec(open(activate_file).read(), {"__file__": activate_file})
 
 import os  # noqa: E402
