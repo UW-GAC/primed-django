@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from allauth.account.adapter import DefaultAccountAdapter
+from allauth.account.utils import user_field
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -20,7 +21,20 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest, sociallogin: Any):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
-    def update_gregor_user_data(self, sociallogin: Any):
+    def authentication_error(
+        self, request, provider_id, error, exception, extra_context
+    ):
+        logger.error(
+            f"SocialAccount auth error provider {provider_id} error {error} exception {exception} extra {extra_context}"
+        )
+
+    def populate_user(self, request, sociallogin, data):
+        user = super().populate_user(request, sociallogin, data)
+        full_name = data.get("full_name")
+        user_field(user, "name", full_name)
+        return user
+
+    def update_user_data(self, sociallogin: Any):
 
         logger.debug(
             f"[SocialAccountAdatpter:update_gregor_user_data] account: {sociallogin.account} "
