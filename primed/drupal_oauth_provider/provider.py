@@ -33,10 +33,20 @@ class CustomProvider(OAuth2Provider):
         return str(data["sub"])
 
     def extract_common_fields(self, data):
-        return dict(
+        extra_common = super(CustomProvider, self).extract_common_fields(data)
+
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        full_name = " ".join(part for part in (first_name, last_name) if part)
+
+        extra_common.update(
             username=data["name"],
             email=data["email"],
+            first_name=first_name,
+            last_name=last_name,
+            full_name=full_name,
         )
+        return extra_common
 
     def extract_email_addresses(self, data):
         ret = []
