@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Site(models.Model):
+class StudySite(models.Model):
     """A model to track Study Sites."""
 
     short_name = models.CharField(max_length=31, unique=True)

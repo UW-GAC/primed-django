@@ -4,14 +4,14 @@ from factory.django import DjangoModelFactory
 from .. import models
 
 
-class SiteFactory(DjangoModelFactory):
-    """A factory for the Site model."""
+class StudySiteFactory(DjangoModelFactory):
+    """A factory for the StudySite model."""
 
     short_name = Faker("word")
     full_name = Faker("company")
 
     class Meta:
-        model = models.Study
+        model = models.StudySite
         django_get_or_create = ["short_name"]
 
 
