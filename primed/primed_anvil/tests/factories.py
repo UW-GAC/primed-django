@@ -1,3 +1,4 @@
+from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from factory import Faker, Sequence, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 
@@ -72,3 +73,16 @@ class StudyConsentGroupFactory(DjangoModelFactory):
     class Meta:
         model = models.StudyConsentGroup
         exclude = "data_use_modifiers_list"
+
+
+class dbGaPWorkspaceFactory(DjangoModelFactory):
+    """A factory for the dbGaPWorkspace model."""
+
+    workspace = SubFactory(WorkspaceFactory)
+    study_consent_group = SubFactory(StudyConsentGroupFactory)
+    phs = Faker("random_int")
+    version = Faker("random_int")
+    participant_set = Faker("random_int")
+
+    class Meta:
+        model = models.dbGaPWorkspace

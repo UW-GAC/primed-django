@@ -1,3 +1,5 @@
+from anvil_consortium_manager.models import BaseWorkspaceData
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -113,3 +115,45 @@ class StudyConsentGroup(models.Model):
             A string showing the study and full consent code of the object.
         """
         return "{} - {}".format(self.study, self.full_consent_code)
+
+
+class dbGaPWorkspace(BaseWorkspaceData):
+    """A model to track additional data about dbGaP data in a workspace."""
+
+    study_consent_group = models.ForeignKey(StudyConsentGroup, on_delete=models.PROTECT)
+    """The StudyConsentGroup associated with this workspace."""
+
+    # Should some of these be their own model?
+    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
+    # We'll need to add a separate constraint.
+    phs = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    """The dbGaP study accession associated with this workspace (e.g., phs000007)."""
+
+    # Do we want version here?
+    version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    """The dbGaP version associated with this Workspace."""
+
+    # Do we want version here?
+    participant_set = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    """The dbGaP participant set associated with this Workspace."""
+
+    class Meta:
+        constraints = [
+            # Model uniqueness.
+            models.UniqueConstraint(
+                name="unique_dbgap_workspace",
+                fields=["study_consent_group", "phs", "version"],
+            ),
+        ]
+
+    def __str__(self):
+        """String method.
+        Returns:
+            A string showing the workspace name of the object.
+        """
+        return "phs{phs:06d}.v{v}.p{ps} - {code}".format(
+            phs=self.phs,
+            v=self.version,
+            ps=self.participant_set,
+            code=self.study_consent_group.full_consent_code,
+        )
