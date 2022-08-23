@@ -348,4 +348,5 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
     "anvil_consortium_manager.adapters.default.DefaultWorkspaceAdapter",
+    "primed.primed_anvil.adapters.dbGaPWorkspaceAdapter",
 ]
