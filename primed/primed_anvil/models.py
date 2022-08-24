@@ -141,9 +141,11 @@ class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):
         Returns:
             A string showing the workspace name of the object.
         """
-        return "phs{phs:06d}.v{v}.p{ps} - {code}".format(
+        return "{} - {}".format(self.get_dbgap_accession(), self.full_consent_code)
+
+    def get_dbgap_accession(self):
+        return "phs{phs:06d}.v{v}.p{ps}".format(
             phs=self.phs,
             v=self.version,
             ps=self.participant_set,
-            code=self.full_consent_code,
         )

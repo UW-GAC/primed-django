@@ -380,3 +380,10 @@ class dbGaPWorkspaceTest(TestCase):
             "greater than or equal to 1",
             e.exception.error_dict["participant_set"][0].messages[0],
         )
+
+    def test_get_dbgap_accession(self):
+        """`get_dbgap_accession` returns the correct string"""
+        instance = factories.dbGaPWorkspaceFactory.create(
+            phs=1, version=2, participant_set=3
+        )
+        self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")
