@@ -1,6 +1,7 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.urls import reverse
 
 
 class StudySite(models.Model):
@@ -35,6 +36,10 @@ class Study(models.Model):
             A string showing the short name of the object.
         """
         return self.short_name
+
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("primed_anvil:studies:detail", args=[self.pk])
 
 
 class DataUsePermission(models.Model):
