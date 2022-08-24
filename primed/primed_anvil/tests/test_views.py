@@ -91,7 +91,7 @@ class dbGaPWorkspaceListTest(TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "dbGaP"
+        self.workspace_type = "dbgap"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -133,7 +133,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "dbGaP"
+        self.workspace_type = "dbgap"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -237,7 +237,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
-        self.workspace_type = "dbGaP"
+        self.workspace_type = "dbgap"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -270,7 +270,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         }
         return json_data
 
-    def test_creates_upload_workspace(self):
+    def test_creates_dbgap_workspace(self):
         """Posting valid data to the form creates an UploadWorkspace object."""
         study = factories.StudyFactory.create()
         data_use_permission = factories.DataUsePermissionFactory.create()

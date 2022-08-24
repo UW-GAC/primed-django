@@ -6,7 +6,7 @@ from . import forms, models, tables
 class dbGaPWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for dbGaPWorkspaces."""
 
-    type = "dbGaP"
+    type = "dbgap"
     name = "dbGaP workspace"
     list_table_class = tables.dbGaPWorkspaceTable
     workspace_data_model = models.dbGaPWorkspace
