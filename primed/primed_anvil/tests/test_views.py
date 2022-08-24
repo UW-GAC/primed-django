@@ -3,17 +3,79 @@ from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager import views as acm_views
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.exceptions import PermissionDenied
+from django.http.response import Http404
+from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from .. import models, tables
+from .. import models, tables, views
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
 
 User = get_user_model()
+
+
+class StudyDetailTest(TestCase):
+    """Tests for the StudyDetail view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:studies:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.StudyDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=obj.pk)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_view_status_code_with_invalid_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.pk + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, pk=obj.pk + 1)
 
 
 class dbGaPWorkspaceListTest(TestCase):

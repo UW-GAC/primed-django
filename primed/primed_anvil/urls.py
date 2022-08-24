@@ -1,8 +1,17 @@
-# from django.urls import include, path
+from django.urls import include, path
 
-# from . import views
+from . import views
 
 app_name = "primed_anvil"
 
 
-urlpatterns = []
+study_patterns = (
+    [
+        path("<int:pk>", views.StudyDetail.as_view(), name="detail"),
+    ],
+    "studies",
+)
+
+urlpatterns = [
+    path("studies/", include(study_patterns)),
+]
