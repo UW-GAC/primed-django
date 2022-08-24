@@ -2,8 +2,34 @@
 
 {% block workspace_data %}
 
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
 {% if object.workspace_type == 'dbgap' %}
-  dbgap
+  <ul>
+    <li>Study: <a href="{{ object.dbgapworkspace.study.get_absolute_url }}">{{ object.dbgapworkspace.study }}</a></li>
+    <li>dbGaP accession: {{ object.dbgapworkspace.get_dbgap_accession }}</li>
+    <li>Consent code: {{ object.dbgapworkspace.full_consent_code }}</li>
+  </ul>
+{% endif %}
+</div>
+
+{% if object.workspace_type == 'dbgap' %}
+<div class="my-3">
+  <div class="accordion" id="accordionGroupsDUL">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingDUL">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDUL" aria-expanded="true" aria-controls="collapseDUL">
+          <span class="fa-solid fa-list-check mx-2"></span>
+          Full data use limitations
+        </button>
+      </h2>
+      <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
+        <div class="accordion-body">
+          {{ object.dbgapworkspace.data_use_limitations }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
 {% endblock workspace_data %}
