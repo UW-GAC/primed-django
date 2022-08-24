@@ -78,18 +78,26 @@ class DataUseModifier(models.Model):
         return self.code
 
 
-class StudyConsentGroup(models.Model):
-    """A model to track study-consent groups."""
-
-    study = models.ForeignKey(Study, on_delete=models.PROTECT)
-    """The Study associated with this study-consent group."""
+class DataUseOntologyModel(models.Model):
+    """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""
 
     data_use_permission = models.ForeignKey(DataUsePermission, on_delete=models.PROTECT)
     """The DataUsePermission associated with this study-consent group."""
 
-    data_use_modifiers = models.ManyToManyField(DataUseModifier)
+    data_use_modifiers = models.ManyToManyField(DataUseModifier, blank=True)
     """The DataUseModifiers associated with this study consent group."""
 
+    class Meta:
+        abstract = True
+
+
+class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):
+    """A model to track additional data about dbGaP data in a workspace."""
+
+    study = models.ForeignKey(Study, on_delete=models.PROTECT)
+    """The Study associated with this Workspace."""
+
+    # Should this be here or in the abstract DataUseOntology model?
     full_consent_code = models.CharField(max_length=63)
     """The full consent code for this study consent group (e.g., GRU-NPU-MDS).
 
@@ -98,30 +106,7 @@ class StudyConsentGroup(models.Model):
     We also need this field to match to dbGaP authorized access, so store it separately."""
 
     data_use_limitations = models.TextField()
-    """The full data use limitations for this study consent group."""
-
-    class Meta:
-        constraints = [
-            # Model uniqueness.
-            models.UniqueConstraint(
-                name="unique_study_consent_group",
-                fields=["study", "full_consent_code"],
-            ),
-        ]
-
-    def __str__(self):
-        """String method.
-        Returns:
-            A string showing the study and full consent code of the object.
-        """
-        return "{} - {}".format(self.study, self.full_consent_code)
-
-
-class dbGaPWorkspace(BaseWorkspaceData):
-    """A model to track additional data about dbGaP data in a workspace."""
-
-    study_consent_group = models.ForeignKey(StudyConsentGroup, on_delete=models.PROTECT)
-    """The StudyConsentGroup associated with this workspace."""
+    """The full data use limitations for this workspace."""
 
     # Should some of these be their own model?
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
@@ -142,7 +127,7 @@ class dbGaPWorkspace(BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_dbgap_workspace",
-                fields=["study_consent_group", "phs", "version"],
+                fields=["study", "phs", "version"],
             ),
         ]
 
@@ -155,5 +140,5 @@ class dbGaPWorkspace(BaseWorkspaceData):
             phs=self.phs,
             v=self.version,
             ps=self.participant_set,
-            code=self.study_consent_group.full_consent_code,
+            code=self.full_consent_code,
         )

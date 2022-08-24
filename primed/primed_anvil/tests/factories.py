@@ -49,15 +49,11 @@ class DataUseModifierFactory(DjangoModelFactory):
         model = models.DataUseModifier
 
 
-class StudyConsentGroupFactory(DjangoModelFactory):
+class DataUseOntologyModelFactory(DjangoModelFactory):
     """A factory for the StudyConsentGroup model."""
 
-    study = SubFactory(StudyFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)
     data_use_limitations = Faker("paragraph", nb_sentences=3)
-    # Ideally we would calculate the default full consent code from the data use permission and limitations,
-    # but that is not straightforward and it doesn't particularly matter.
-    full_consent_code = Faker("word")
 
     # Handle many-to-many relationships as recommended by factoryboy.
     @post_generation
@@ -71,15 +67,18 @@ class StudyConsentGroupFactory(DjangoModelFactory):
                 self.data_use_modifiers.add(modifier)
 
     class Meta:
-        model = models.StudyConsentGroup
-        exclude = "data_use_modifiers_list"
+        model = models.DataUseOntologyModel
+        abstract = True
 
 
-class dbGaPWorkspaceFactory(DjangoModelFactory):
+class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory)
-    study_consent_group = SubFactory(StudyConsentGroupFactory)
+    study = SubFactory(StudyFactory)
+    # Ideally we would calculate the default full consent code from the data use permission and limitations,
+    # but that is not straightforward and it doesn't particularly matter.
+    full_consent_code = Faker("word")
     phs = Faker("random_int")
     version = Faker("random_int")
     participant_set = Faker("random_int")

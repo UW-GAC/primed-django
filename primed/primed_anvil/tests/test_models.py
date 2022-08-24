@@ -218,78 +218,21 @@ class DataUseModifierTest(TestCase):
             instance2.save()
 
 
-class StudyConsentGroupTest(TestCase):
-    """Tests for the StudyConsentGroup model."""
-
-    def test_model_saving(self):
-        """Creation using the model constructor and .save() works."""
-        study = factories.StudyFactory.create()
-        dup = factories.DataUsePermissionFactory.create()
-        instance = models.StudyConsentGroup(
-            study=study,
-            data_use_permission=dup,
-            full_consent_code="TEST",
-            data_use_limitations="Data can only be used for test purposes.",
-        )
-        instance.save()
-        self.assertIsInstance(instance, models.StudyConsentGroup)
-
-    def test_str_method(self):
-        """The custom __str__ method returns the correct string."""
-        instance = factories.StudyConsentGroupFactory.create(
-            study__short_name="Study", full_consent_code="Code"
-        )
-        instance.save()
-        self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "Study - Code")
-
-    def test_unique_study_consent_group(self):
-        """Saving a duplicate model fails."""
-        study = factories.StudyFactory.create()
-        dup_1 = factories.DataUsePermissionFactory.create()
-        dup_2 = factories.DataUsePermissionFactory.create()
-        full_consent_code = "TEST-NPU-COL"
-        factories.StudyConsentGroupFactory.create(
-            study=study, full_consent_code=full_consent_code, data_use_permission=dup_1
-        )
-        instance_2 = factories.StudyConsentGroupFactory.build(
-            study=study, full_consent_code=full_consent_code, data_use_permission=dup_2
-        )
-        with self.assertRaises(ValidationError) as e:
-            instance_2.full_clean()
-        self.assertIn("__all__", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["__all__"][0].messages[0]
-        )
-        with self.assertRaises(IntegrityError):
-            instance_2.save()
-
-    def test_study_protect(self):
-        """Cannot delete a Study if it has an associated StudyConsentGroup."""
-        study = factories.StudyFactory.create()
-        factories.StudyConsentGroupFactory.create(study=study)
-        with self.assertRaises(ProtectedError):
-            study.delete()
-
-    def test_data_use_permission_protect(self):
-        """Cannot delete a DataUsePermission if it has an associated StudyConsentGroup."""
-        dup = factories.DataUsePermissionFactory.create()
-        factories.StudyConsentGroupFactory.create(data_use_permission=dup)
-        with self.assertRaises(ProtectedError):
-            dup.delete()
-
-
 class dbGaPWorkspaceTest(TestCase):
     """Tests for the dbGaPWorkspace model."""
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory()
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
+        data_use_permission = factories.DataUsePermissionFactory.create()
         instance = models.dbGaPWorkspace(
             workspace=workspace,
-            study_consent_group=study_consent_group,
+            # study_consent_group=study_consent_group,
+            study=study,
+            data_use_permission=data_use_permission,
+            data_use_limitations="test limitations",
+            full_consent_code="GRU-NPU",
             phs=1,
             version=1,
             participant_set=1,
@@ -303,7 +246,7 @@ class dbGaPWorkspaceTest(TestCase):
             phs=1,
             version=2,
             participant_set=3,
-            study_consent_group__full_consent_code="GRU-NPU",
+            full_consent_code="GRU-NPU",
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
@@ -311,17 +254,16 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_unique_dbgap_workspace(self):
         """Saving a duplicate model fails."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
-        factories.dbGaPWorkspaceFactory.create(
-            study_consent_group=study_consent_group, phs=1, version=1, participant_set=1
-        )
+        study = factories.StudyFactory.create()
+        factories.dbGaPWorkspaceFactory.create(study=study, phs=1, version=1)
+        data_use_permission = factories.DataUsePermissionFactory.create()
         workspace = WorkspaceFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             phs=1,
             version=1,
-            participant_set=1,
             workspace=workspace,
+            data_use_permission=data_use_permission,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
@@ -333,18 +275,18 @@ class dbGaPWorkspaceTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance.save()
 
-    def test_study_consent_group_protect(self):
-        """Cannot delete a StudyConsentGroup if it has an associated dbGaPWorkspace."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
-        factories.dbGaPWorkspaceFactory.create(study_consent_group=study_consent_group)
+    def test_study_protect(self):
+        """Cannot delete a Study if it has an associated dbGaPWorkspace."""
+        study = factories.StudyFactory.create()
+        factories.dbGaPWorkspaceFactory.create(study=study)
         with self.assertRaises(ProtectedError):
-            study_consent_group.delete()
+            study.delete()
 
     def test_phs_cannot_be_zero(self):
         """phs cannot be zero."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             phs=0,
         )
         with self.assertRaises(ValidationError) as e:
@@ -357,9 +299,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_phs_cannot_be_negative(self):
         """phs cannot be negative."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             phs=-1,
         )
         with self.assertRaises(ValidationError) as e:
@@ -372,9 +314,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_version_cannot_be_zero(self):
         """version cannot be zero."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             version=0,
         )
         with self.assertRaises(ValidationError) as e:
@@ -388,9 +330,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_version_cannot_be_negative(self):
         """version cannot be negative."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             version=-1,
         )
         with self.assertRaises(ValidationError) as e:
@@ -404,9 +346,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_participant_set_cannot_be_zero(self):
         """participant_set cannot be zero."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             participant_set=0,
         )
         with self.assertRaises(ValidationError) as e:
@@ -420,9 +362,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_participant_set_cannot_be_negative(self):
         """participant_set cannot be negative."""
-        study_consent_group = factories.StudyConsentGroupFactory.create()
+        study = factories.StudyFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            study_consent_group=study_consent_group,
+            study=study,
             participant_set=-1,
         )
         with self.assertRaises(ValidationError) as e:

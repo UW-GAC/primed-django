@@ -11,9 +11,13 @@ class dbGaPWorkspaceForm(forms.ModelForm):
     class Meta:
         model = models.dbGaPWorkspace
         fields = (
-            "study_consent_group",
+            "study",
             "phs",
             "version",
             "participant_set",
+            "full_consent_code",
+            "data_use_limitations",
+            "data_use_permission",
+            "data_use_modifiers",
             "workspace",
         )

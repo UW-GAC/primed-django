@@ -11,8 +11,8 @@ class dbGaPWorkspaceTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "dbgapworkspace__study_consent_group__study",
-            "dbgapworkspace__study_consent_group__full_consent_code",
-            "dbgapworkspace__phs",
-            "dbgapworkspace__version",
+            "study",
+            "phs",
+            "version",
+            "full_consent_code",
         )
