@@ -20,6 +20,7 @@ urlpatterns = [
         "anvil/",
         include("anvil_consortium_manager.urls", namespace="anvil_consortium_manager"),
     ),
+    path("anvil/", include("primed.primed_anvil.urls", namespace="primed_anvil")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
