@@ -8,6 +8,7 @@ app_name = "primed_anvil"
 study_patterns = (
     [
         path("<int:pk>", views.StudyDetail.as_view(), name="detail"),
+        path("", views.StudyList.as_view(), name="list"),
     ],
     "studies",
 )
