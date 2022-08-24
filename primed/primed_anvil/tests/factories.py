@@ -74,7 +74,7 @@ class DataUseOntologyModelFactory(DjangoModelFactory):
 class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
-    workspace = SubFactory(WorkspaceFactory)
+    workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")
     study = SubFactory(StudyFactory)
     # Ideally we would calculate the default full consent code from the data use permission and limitations,
     # but that is not straightforward and it doesn't particularly matter.
