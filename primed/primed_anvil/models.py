@@ -106,7 +106,7 @@ class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):
     full_consent_code = models.CharField(max_length=63)
     """The full consent code for this study consent group (e.g., GRU-NPU-MDS).
 
-    This field would ideally be created from main_consent + consent_modifiers to minimize data duplication.
+    This field would ideally be created from the DataUseOntology fields to minimize data duplication.
     Unfortunately, there are often legacy codes that don't fit into the current main/modifiers model.
     We also need this field to match to dbGaP authorized access, so store it separately."""
 
