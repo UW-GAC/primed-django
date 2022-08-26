@@ -10,39 +10,6 @@ from .. import models
 from . import factories
 
 
-class SiteTest(TestCase):
-    """Tests for the StudySite model."""
-
-    def test_model_saving(self):
-        """Creation using the model constructor and .save() works."""
-        instance = models.StudySite(full_name="Test name", short_name="TEST")
-        instance.save()
-        self.assertIsInstance(instance, models.StudySite)
-
-    def test_str_method(self):
-        """The custom __str__ method returns the correct string."""
-        instance = factories.StudySiteFactory.create(short_name="Test")
-        instance.save()
-        self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "Test")
-
-    def test_unique_short_name(self):
-        """Saving a model with a duplicate short name fails."""
-        factories.StudySiteFactory.create(short_name="FOO")
-        instance2 = factories.StudySiteFactory.build(
-            short_name="FOO", full_name="full name"
-        )
-        with self.assertRaises(ValidationError) as e:
-            instance2.full_clean()
-        self.assertIn("short_name", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["short_name"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["short_name"][0].messages[0]
-        )
-        with self.assertRaises(IntegrityError):
-            instance2.save()
-
-
 class StudyTest(TestCase):
     """Tests for the Study model."""
 

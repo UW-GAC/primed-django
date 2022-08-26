@@ -3,24 +3,6 @@ from django.contrib import admin
 from . import models
 
 
-@admin.register(models.StudySite)
-class StudySiteAdmin(admin.ModelAdmin):
-    """Admin class for the `StudySite` model."""
-
-    list_display = (
-        "short_name",
-        "full_name",
-    )
-    search_fields = (
-        "short_name",
-        "full_name",
-    )
-    sortable_by = (
-        "short_name",
-        "full_name",
-    )
-
-
 @admin.register(models.Study)
 class StudyAdmin(admin.ModelAdmin):
     """Admin class for the `Study` model."""
