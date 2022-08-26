@@ -9,6 +9,7 @@ study_patterns = (
     [
         path("<int:pk>", views.StudyDetail.as_view(), name="detail"),
         path("", views.StudyList.as_view(), name="list"),
+        path("autocomplete/", views.StudyAutocomplete.as_view(), name="autocomplete"),
     ],
     "studies",
 )

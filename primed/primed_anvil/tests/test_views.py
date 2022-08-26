@@ -1,3 +1,5 @@
+import json
+
 import responses
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager import views as acm_views
@@ -76,6 +78,187 @@ class StudyDetailTest(TestCase):
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
+
+
+class StudyAutocompleteTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with the correct permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:studies:autocomplete", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.StudyAutocomplete.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_returns_all_objects(self):
+        """Queryset returns all objects when there is no query."""
+        objects = factories.StudyFactory.create_batch(10)
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 10)
+        self.assertEqual(
+            sorted(returned_ids), sorted([object.pk for object in objects])
+        )
+
+    def test_returns_correct_object_match_short_name(self):
+        """Queryset returns the correct objects when query matches the short_name."""
+        object = factories.StudyFactory.create(
+            short_name="test", full_name="other study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "test"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_starting_with_query_short_name(self):
+        """Queryset returns the correct objects when query matches the beginning of the short_name."""
+        object = factories.StudyFactory.create(
+            short_name="test", full_name="other study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "test"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_containing_query_short_name(self):
+        """Queryset returns the correct objects when the short_name contains the query."""
+        object = factories.StudyFactory.create(
+            short_name="test", full_name="other study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "es"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_case_insensitive_short_name(self):
+        """Queryset returns the correct objects when query matches the beginning of the short_name."""
+        object = factories.StudyFactory.create(
+            short_name="TEST", full_name="other study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "test"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_match_full_name(self):
+        """Queryset returns the correct objects when query matches the full_name."""
+        object = factories.StudyFactory.create(
+            short_name="other", full_name="test study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "test study"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_starting_with_query_full_name(self):
+        """Queryset returns the correct objects when query matches the beginning of the full_name."""
+        object = factories.StudyFactory.create(
+            short_name="other", full_name="test study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "test"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_containing_query_full_name(self):
+        """Queryset returns the correct objects when the full_name contains the query."""
+        object = factories.StudyFactory.create(
+            short_name="other", full_name="test study"
+        )
+        request = self.factory.get(self.get_url(), {"q": "stu"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
+
+    def test_returns_correct_object_case_insensitive_full_name(self):
+        """Queryset returns the correct objects when query matches the beginning of the full_name."""
+        object = factories.StudyFactory.create(
+            short_name="other", full_name="TEST STUDY"
+        )
+        request = self.factory.get(self.get_url(), {"q": "test study"})
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [
+            int(x["id"])
+            for x in json.loads(response.content.decode("utf-8"))["results"]
+        ]
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids[0], object.pk)
 
 
 class dbGaPWorkspaceListTest(TestCase):
