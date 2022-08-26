@@ -298,13 +298,14 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "admin:login",
 ]
 
-# GREGOR
+# PRIMED
 # ------------------------------------------------------------------------------
 # Allauth
 # SCOPES are the set of drupal roles/django groups managed by the gregor drupal oauth provider.
 # Scopes that are requested "request_scope=True" will be returned by the oauth server
 # if the user has that drupal role.
 # ** Note: Requested drupal scopes that do not exist will cause a drupal server error
+# where the user will just land at the drupal site on the home page (check the drupal logs for errors in this case)
 # The scopes 'oauth_client_user' and 'authenticated' automatically to anyone who logs in
 # via oauth (as configured in the drupal consumer) and will be returned even if we do not request
 # them but are not currently mapped to django groups.
@@ -314,15 +315,15 @@ SOCIALACCOUNT_PROVIDERS = {
         "API_URL": "https://dev.primedconsortium.org",
         "SCOPES": [
             {
-                "drupal_machine_name": "oauth_django_access",
-                "request_scope": False,
-                "django_group_name": "test_django_access",
+                "drupal_machine_name": "dcc_staff",
+                "request_scope": True,
+                "django_group_name": "DCC Staff",
             },
-            # {
-            #     "drupal_machine_name": "gregor_anvil_admin",
-            #     "request_scope": True,
-            #     "django_group_name": "gregor_anvil_admin",
-            # },
+            {
+                "drupal_machine_name": "dcc_acm_admin",
+                "request_scope": True,
+                "django_group_name": "DCC ACM Admin",
+            },
         ],
     }
 }
