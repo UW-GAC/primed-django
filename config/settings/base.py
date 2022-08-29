@@ -297,7 +297,7 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
 # PRIMED
 # ------------------------------------------------------------------------------
 # Allauth
-# SCOPES are the set of drupal roles/django groups managed by the gregor drupal oauth provider.
+# SCOPES are the set of drupal roles/django groups managed by the drupal oauth provider.
 # Scopes that are requested "request_scope=True" will be returned by the oauth server
 # if the user has that drupal role.
 # ** Note: Requested drupal scopes that do not exist will cause a drupal server error

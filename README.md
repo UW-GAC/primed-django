@@ -31,11 +31,11 @@
 ### Enable oauth login for drupal if needed for your development work
 
 -   [Configuration and setup instructions for drupal simple_oauth
-    provider](primed/gregor_oath_provider/docs/provider.md)
+    provider](drupal_oath_provider/docs/provider.md)
 -   After configuring your site and creating a consumer, navigate to
     /admin
 -   Add a Social Application to your django site
-    -   Select \'Gregor Oauth2 Drupal Provider\'
+    -   Select \'Drupal Oauth2 Drupal Provider\'
     -   enter secret key and client ID captured when creating a drupal
         consumer
     -   leave \'key\' blank
@@ -44,7 +44,7 @@
 -   Open a different browser or browser private session (so not logged
     in as SU)
 -   visit \<site_url\>
--   choose sign in via Gregor Oauth2 Drupal Provider
+-   choose sign in via Drupal Provider
 -   login at the oauth server site and follow instructions to grant
     permissions and create oauth account
 
