@@ -72,19 +72,6 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA
 # ------------------------------------------------------------------------------
 
-# TEMPLATES
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#templates
-TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
-    (
-        "django.template.loaders.cached.Loader",
-        [
-            "django.template.loaders.filesystem.Loader",
-            "django.template.loaders.app_directories.Loader",
-        ],
-    )
-]
-
 # EMAIL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
@@ -96,7 +83,7 @@ SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
-    default="[GREGOR] ",
+    default="[PRIMED] ",
 )
 
 # ADMIN

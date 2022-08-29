@@ -60,11 +60,6 @@ SOCIALACCOUNT_PROVIDERS = {
                 "request_scope": False,
                 "django_group_name": "test_django_access",
             },
-            {
-                "drupal_machine_name": "gregor_anvil_admin",
-                "request_scope": True,
-                "django_group_name": "gregor_anvil_admin",
-            },
         ],
     }
 }
