@@ -13,6 +13,9 @@ class Study(models.Model):
     full_name = models.CharField(max_length=255)
     """The full name for this Study."""
 
+    class Meta:
+        verbose_name_plural = "studies"
+
     def __str__(self):
         """String method.
         Returns:
@@ -111,6 +114,9 @@ class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):
     """The dbGaP participant set associated with this Workspace."""
 
     class Meta:
+        # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
+        verbose_name = " dbGaP workspace"
+        verbose_name_plural = " dbGaP workspaces"
         constraints = [
             # Model uniqueness.
             models.UniqueConstraint(
