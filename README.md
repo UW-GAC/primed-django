@@ -31,7 +31,7 @@
 ### Enable oauth login for drupal if needed for your development work
 
 -   [Configuration and setup instructions for drupal simple_oauth
-    provider](drupal_oath_provider/docs/provider.md)
+    provider](drupal_oauth_provider/docs/provider.md)
 -   After configuring your site and creating a consumer, navigate to
     /admin
 -   Add a Social Application to your django site
