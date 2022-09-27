@@ -19,6 +19,7 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "full_consent_code",
             "data_use_limitations",
             "data_use_permission",
+            "disease_restriction",
             "data_use_modifiers",
             "workspace",
         )

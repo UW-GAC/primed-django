@@ -1,4 +1,5 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -45,6 +46,10 @@ class DataUsePermission(models.Model):
         max_length=31,
         unique=True,
         help_text="""The identifier of this modifier (e.g., DUO:0000045).""",
+    )
+    requires_disease_restriction = models.BooleanField(
+        default=False,
+        help_text="Indicator of whether an additional disease restriction is required for this term.",
     )
 
     def __str__(self):
@@ -93,9 +98,38 @@ class DataUseOntologyModel(models.Model):
         blank=True,
         help_text="""The DataUseModifiers associated with this study consent group.""",
     )
+    disease_restriction = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="The disease restriction if required by data_use_permission.",
+    )
 
     class Meta:
         abstract = True
+
+    def clean(self):
+        """Ensure that the disease_restriction term is set if data_use_permission requires it."""
+        # Without hasattr, we get a RelatedObjectDoesNotExist error.
+        if hasattr(self, "data_use_permission"):
+            if (
+                self.data_use_permission.requires_disease_restriction
+                and not self.disease_restriction
+            ):
+                raise ValidationError(
+                    "`disease_restriction` must not be None "
+                    "because data_use_permission requires a disease restriction."
+                )
+            if (
+                not self.data_use_permission.requires_disease_restriction
+                and self.disease_restriction
+            ):
+                raise ValidationError(
+                    (
+                        "`disease_restriction` must be None "
+                        "because data_use_permission does not require a disease restriction."
+                    )
+                )
 
 
 class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):

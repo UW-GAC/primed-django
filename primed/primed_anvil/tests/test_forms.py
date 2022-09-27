@@ -240,6 +240,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "version": 1,
             "participant_set": 1,
             "full_consent_code": "GRU",
+            "data_use_permission": "",
             "data_use_limitations": "test limitations",
             "workspace": self.workspace,
         }
