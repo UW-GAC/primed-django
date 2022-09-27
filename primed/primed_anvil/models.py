@@ -7,11 +7,12 @@ from django.urls import reverse
 class Study(models.Model):
     """A model to track studies."""
 
-    short_name = models.CharField(max_length=31, unique=True)
-    """The short name for this Study."""
-
-    full_name = models.CharField(max_length=255)
-    """The full name for this Study."""
+    short_name = models.CharField(
+        max_length=31, unique=True, help_text="The short name for this Study."
+    )
+    full_name = models.CharField(
+        max_length=255, help_text="The full name for this Study."
+    )
 
     class Meta:
         verbose_name_plural = "studies"
@@ -32,14 +33,19 @@ class DataUsePermission(models.Model):
     """A model to track the allowed main consent codes using GA4GH DUO codes."""
 
     # Consider separating this into a main consent code and a set of modifiers.
-    code = models.CharField(max_length=15, unique=True)
-    """The short consent code (e.g., GRU)."""
-
-    description = models.CharField(max_length=255, unique=True)
-    """The description for this consent code (e.g., General Research Use)."""
-
-    identifier = models.CharField(max_length=31, unique=True)
-    """The identifier of this modifier (e.g., DUO:0000045)."""
+    code = models.CharField(
+        max_length=15, unique=True, help_text="""The short consent code (e.g., GRU)."""
+    )
+    description = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text="""The description for this consent code (e.g., General Research Use).""",
+    )
+    identifier = models.CharField(
+        max_length=31,
+        unique=True,
+        help_text="""The identifier of this modifier (e.g., DUO:0000045).""",
+    )
 
     def __str__(self):
         """String method.
@@ -52,14 +58,19 @@ class DataUsePermission(models.Model):
 class DataUseModifier(models.Model):
     """A model to track the allowed consent modifiers using GA4GH DUO codes."""
 
-    code = models.CharField(max_length=15, unique=True)
-    """The short consent code (e.g., NPU)."""
-
-    description = models.CharField(max_length=255, unique=True)
-    """The description of the consent code (e.g., Non-Profit Use only)."""
-
-    identifier = models.CharField(max_length=31, unique=True)
-    """The identifier of this modifier (e.g., DUO:0000045)."""
+    code = models.CharField(
+        max_length=15, unique=True, help_text="""The short consent code (e.g., NPU)."""
+    )
+    description = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text="""The description of the consent code (e.g., Non-Profit Use only).""",
+    )
+    identifier = models.CharField(
+        max_length=31,
+        unique=True,
+        help_text="""The identifier of this modifier (e.g., DUO:0000045).""",
+    )
 
     def __str__(self):
         """String method.
@@ -72,11 +83,16 @@ class DataUseModifier(models.Model):
 class DataUseOntologyModel(models.Model):
     """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""
 
-    data_use_permission = models.ForeignKey(DataUsePermission, on_delete=models.PROTECT)
-    """The DataUsePermission associated with this study-consent group."""
-
-    data_use_modifiers = models.ManyToManyField(DataUseModifier, blank=True)
-    """The DataUseModifiers associated with this study consent group."""
+    data_use_permission = models.ForeignKey(
+        DataUsePermission,
+        on_delete=models.PROTECT,
+        help_text="""The DataUsePermission associated with this study-consent group.""",
+    )
+    data_use_modifiers = models.ManyToManyField(
+        DataUseModifier,
+        blank=True,
+        help_text="""The DataUseModifiers associated with this study consent group.""",
+    )
 
     class Meta:
         abstract = True
@@ -85,33 +101,44 @@ class DataUseOntologyModel(models.Model):
 class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""
 
-    study = models.ForeignKey(Study, on_delete=models.PROTECT)
-    """The Study associated with this Workspace."""
+    study = models.ForeignKey(
+        Study,
+        on_delete=models.PROTECT,
+        help_text="""The Study associated with this Workspace.""",
+    )
 
     # Should this be here or in the abstract DataUseOntology model?
-    full_consent_code = models.CharField(max_length=63)
-    """The full consent code for this study consent group (e.g., GRU-NPU-MDS).
+    full_consent_code = models.CharField(
+        max_length=63,
+        help_text="""The full consent code from dbGaP for this study consent group (e.g., GRU-NPU-MDS).""",
+    )
+    # This field would ideally be created from the DataUseOntology fields to minimize data duplication.
+    # Unfortunately, there are often legacy codes that don't fit into the current main/modifiers model.
+    # We also need this field to match to dbGaP authorized access, so store it separately."""
 
-    This field would ideally be created from the DataUseOntology fields to minimize data duplication.
-    Unfortunately, there are often legacy codes that don't fit into the current main/modifiers model.
-    We also need this field to match to dbGaP authorized access, so store it separately."""
-
-    data_use_limitations = models.TextField()
-    """The full data use limitations for this workspace."""
+    data_use_limitations = models.TextField(
+        help_text="""The full data use limitations for this workspace."""
+    )
 
     # Should some of these be their own model?
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint.
-    phs = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    """The dbGaP study accession associated with this workspace (e.g., phs000007)."""
+    phs = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="""The dbGaP study accession associated with this workspace (e.g., phs000007).""",
+    )
 
     # Do we want version here?
-    version = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    """The dbGaP version associated with this Workspace."""
+    version = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="""The dbGaP study version associated with this Workspace.""",
+    )
 
     # Do we want version here?
-    participant_set = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    """The dbGaP participant set associated with this Workspace."""
+    participant_set = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="""The dbGaP participant set associated with this Workspace.""",
+    )
 
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
