@@ -27,3 +27,4 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+ANVIL_API_SERVICE_ACCOUNT_FILE = "foo"
