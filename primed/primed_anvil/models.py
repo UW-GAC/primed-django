@@ -3,9 +3,10 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django_extensions.db.models import TimeStampedModel
 
 
-class Study(models.Model):
+class Study(TimeStampedModel, models.Model):
     """A model to track studies."""
 
     short_name = models.CharField(
@@ -30,7 +31,7 @@ class Study(models.Model):
         return reverse("primed_anvil:studies:detail", args=[self.pk])
 
 
-class DataUsePermission(models.Model):
+class DataUsePermission(TimeStampedModel, models.Model):
     """A model to track the allowed main consent codes using GA4GH DUO codes."""
 
     # Consider separating this into a main consent code and a set of modifiers.
@@ -60,7 +61,7 @@ class DataUsePermission(models.Model):
         return self.code
 
 
-class DataUseModifier(models.Model):
+class DataUseModifier(TimeStampedModel, models.Model):
     """A model to track the allowed consent modifiers using GA4GH DUO codes."""
 
     code = models.CharField(
@@ -132,7 +133,7 @@ class DataUseOntologyModel(models.Model):
                 )
 
 
-class dbGaPWorkspace(DataUseOntologyModel, BaseWorkspaceData):
+class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""
 
     study = models.ForeignKey(
