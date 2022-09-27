@@ -25,28 +25,40 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         self, request, provider_id, error, exception, extra_context
     ):
         logger.error(
-            f"SocialAccount auth error provider {provider_id} error {error} exception {exception} extra {extra_context}"
+            f"[SocialAccountAdapter:authentication_error] {request} {provider_id} "
+            f"error {error} exception {exception} extra {extra_context}"
         )
 
     def populate_user(self, request, sociallogin, data):
+        """
+        set user name field to provider full name
+        populate_user is only called on account creation
+        """
         user = super().populate_user(request, sociallogin, data)
         full_name = data.get("full_name")
         user_field(user, "name", full_name)
         return user
 
     def update_user_data(self, sociallogin: Any):
-
         logger.debug(
-            f"[SocialAccountAdatpter:update_gregor_user_data] account: {sociallogin.account} "
+            f"[SocialAccountAdapter:update_user_data] account: {sociallogin.account} "
             f"extra_data {sociallogin.account.extra_data} "
             f"provider: {sociallogin.account.provider}"
         )
 
         extra_data = sociallogin.account.extra_data
+        user = sociallogin.user
+
+        if not user.name:
+            first_name = extra_data.get("first_name")
+            last_name = extra_data.get("last_name")
+            full_name = " ".join(part for part in (first_name, last_name) if part)
+            user.name = full_name
+            user.save()
 
         managed_scope_status = extra_data.get("managed_scope_status")
         if managed_scope_status:
-            user = sociallogin.user
+
             added_groups = []
             removed_groups = []
             if not isinstance(managed_scope_status, dict):
@@ -60,7 +72,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     )
                     if was_created:
                         logger.debug(
-                            f"[SocialAccountAdatpter:update_gregor_user_data] created mapped user group: {group_name}"
+                            f"[SocialAccountAdapter:update_user_data] created mapped user group: {group_name}"
                         )
                     if user_has_group is True:
                         if user_group not in user.groups.all():
@@ -72,7 +84,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                             removed_groups.append(user_group.name)
             if added_groups or removed_groups:
                 logger.info(
-                    f"[SocialAccountAdatpter:update_gregor_user_data] user: {sociallogin.account} updated groups: "
+                    f"[SocialAccountAdapter:update_user_data] user: {sociallogin.account} updated groups: "
                     f"added {added_groups} removed: {removed_groups} "
                     f"managed_scope_status: {managed_scope_status}"
                 )
