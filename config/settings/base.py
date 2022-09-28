@@ -82,12 +82,21 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     "maintenance_mode",
     "login_required",
+    # Tables
+    "django_tables2",
+    # Autocomplete.
+    # note these are supposed to come before django.contrib.admin.
+    "dal",
+    "dal_select2",
+    "fontawesomefree",
 ]
 
 LOCAL_APPS = [
+    "anvil_consortium_manager",
     "primed.users.apps.UsersConfig",
     # Your stuff: custom apps go here
     "primed.drupal_oauth_provider",
+    "primed.primed_anvil",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -194,6 +203,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "primed.utils.context_processors.settings_context",
+                "anvil_consortium_manager.context_processors.workspace_adapter",
             ],
         },
     }
@@ -323,3 +333,16 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+
+# django-tables2
+# ------------------------------------------------------------------------------
+# https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
+DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
+
+# django-anvil-consortium-manager
+# ------------------------------------------------------------------------------
+ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
+# Specify workspace adapters.
+ANVIL_WORKSPACE_ADAPTERS = [
+    "anvil_consortium_manager.adapters.default.DefaultWorkspaceAdapter",
+]

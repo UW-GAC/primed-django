@@ -16,6 +16,13 @@ urlpatterns = [
     path("users/", include("primed.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
+    path(
+        "anvil/",
+        include("anvil_consortium_manager.urls", namespace="anvil_consortium_manager"),
+    ),
+    path(
+        "primed_anvil/", include("primed.primed_anvil.urls", namespace="primed_anvil")
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
