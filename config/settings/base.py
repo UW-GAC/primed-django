@@ -97,6 +97,7 @@ LOCAL_APPS = [
     # Your stuff: custom apps go here
     "primed.drupal_oauth_provider",
     "primed.primed_anvil",
+    "primed.dbgap",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
