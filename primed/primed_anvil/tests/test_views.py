@@ -10,7 +10,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from .. import views
+from .. import models, views
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -255,3 +255,181 @@ class StudyAutocompleteTest(TestCase):
         ]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
+
+
+class StudyCreateTest(TestCase):
+    """Tests for the StudyCreate view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:studies:new", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.StudyCreate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has no permissions."""
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertTrue("form" in response.context_data)
+
+    def test_can_create_object(self):
+        """Can create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"short_name": "TEST", "full_name": "Test study"}
+        )
+        self.assertEqual(response.status_code, 302)
+        # A new object was created.
+        self.assertEqual(models.Study.objects.count(), 1)
+        new_object = models.Study.objects.latest("pk")
+        self.assertEqual(new_object.short_name, "TEST")
+        self.assertEqual(new_object.full_name, "Test study")
+
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"short_name": "TEST", "full_name": "Test study"}
+        )
+        new_object = models.Study.objects.latest("pk")
+        self.assertRedirects(response, new_object.get_absolute_url())
+
+    def test_success_message(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"short_name": "TEST", "full_name": "Test study"},
+            follow=True,
+        )
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.StudyCreate.success_msg, str(messages[0]))
+
+    def test_error_missing_short_name(self):
+        """Form shows an error when short name is missing."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"full_name": "Test study"})
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.Study.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("short_name", form.errors)
+        self.assertEqual(len(form.errors["short_name"]), 1)
+        self.assertIn("required", form.errors["short_name"][0])
+
+    def test_error_missing_full_name(self):
+        """Form shows an error when full name is missing."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"short_name": "TEST"})
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.Study.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("full_name", form.errors)
+        self.assertEqual(len(form.errors["full_name"]), 1)
+        self.assertIn("required", form.errors["full_name"][0])
+
+    def test_error_duplicate_short_name(self):
+        """Form shows an error when trying to create a duplicate short name."""
+        factories.StudyFactory.create(short_name="TEST", full_name="Test study")
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"short_name": "TEST", "full_name": "Test study 2"}
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.Study.objects.count(), 1)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("short_name", form.errors)
+        self.assertEqual(len(form.errors["short_name"]), 1)
+        self.assertIn("already exists", form.errors["short_name"][0])
+
+    def test_post_blank_data(self):
+        """Posting blank data does not create an object."""
+        request = self.factory.post(self.get_url(), {})
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("short_name", form.errors.keys())
+        self.assertEqual(len(form.errors["short_name"]), 1)
+        self.assertIn("required", form.errors["short_name"][0])
+        self.assertIn("full_name", form.errors.keys())
+        self.assertEqual(len(form.errors["full_name"]), 1)
+        self.assertIn("required", form.errors["full_name"][0])
+        self.assertEqual(models.Study.objects.count(), 0)
