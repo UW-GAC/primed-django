@@ -341,8 +341,6 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
-# Specify the path to the service account to use for managing access on AnVIL.
-ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.primed_anvil.adapters.dbGaPWorkspaceAdapter",
