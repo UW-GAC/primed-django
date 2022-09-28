@@ -343,5 +343,5 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # ------------------------------------------------------------------------------
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
-    "primed.primed_anvil.adapters.dbGaPWorkspaceAdapter",
+    "anvil_consortium_manager.adapters.default.DefaultWorkspaceAdapter",
 ]
