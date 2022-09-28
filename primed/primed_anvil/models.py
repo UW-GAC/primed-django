@@ -34,19 +34,20 @@ class Study(TimeStampedModel, models.Model):
 class DataUsePermission(TimeStampedModel, models.Model):
     """A model to track the allowed main consent codes using GA4GH DUO codes."""
 
-    # Consider separating this into a main consent code and a set of modifiers.
     code = models.CharField(
-        max_length=15, unique=True, help_text="""The short consent code (e.g., GRU)."""
+        max_length=15,
+        unique=True,
+        help_text="""The short code for this consent group (e.g., GRU).""",
     )
     description = models.CharField(
         max_length=255,
         unique=True,
-        help_text="""The description for this consent code (e.g., General Research Use).""",
+        help_text="""The description for this consent group (e.g., General Research Use).""",
     )
     identifier = models.CharField(
         max_length=31,
         unique=True,
-        help_text="""The identifier of this modifier (e.g., DUO:0000045).""",
+        help_text="""The identifier of this consent group (e.g., DUO:0000045).""",
     )
     requires_disease_restriction = models.BooleanField(
         default=False,
@@ -65,12 +66,14 @@ class DataUseModifier(TimeStampedModel, models.Model):
     """A model to track the allowed consent modifiers using GA4GH DUO codes."""
 
     code = models.CharField(
-        max_length=15, unique=True, help_text="""The short consent code (e.g., NPU)."""
+        max_length=15,
+        unique=True,
+        help_text="""The short code for this modifier (e.g., NPU).""",
     )
     description = models.CharField(
         max_length=255,
         unique=True,
-        help_text="""The description of the consent code (e.g., Non-Profit Use only).""",
+        help_text="""The description of this modifier (e.g., Non-Profit Use only).""",
     )
     identifier = models.CharField(
         max_length=31,
@@ -97,7 +100,7 @@ class DataUseOntologyModel(models.Model):
     data_use_modifiers = models.ManyToManyField(
         DataUseModifier,
         blank=True,
-        help_text="""The DataUseModifiers associated with this study consent group.""",
+        help_text="""The DataUseModifiers associated with this study-consent group.""",
     )
     disease_restriction = models.CharField(
         max_length=255,
