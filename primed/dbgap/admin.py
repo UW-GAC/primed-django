@@ -10,15 +10,13 @@ class dbGaPWorkspaceAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "workspace",
-        "study",
-        "phs",
-        "version",
-        "participant_set",
+        "dbgap_study",
+        "dbgap_version",
+        "dbgap_participant_set",
         "full_consent_code",
     )
     list_filter = (
-        "study",
-        "phs",
+        "dbgap_study",
         "full_consent_code",
     )
     sortable_by = (

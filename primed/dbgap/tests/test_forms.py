@@ -7,7 +7,6 @@ from primed.primed_anvil.models import DataUseModifier
 from primed.primed_anvil.tests.factories import (
     DataUseModifierFactory,
     DataUsePermissionFactory,
-    StudyFactory,
 )
 
 from .. import forms
@@ -22,16 +21,15 @@ class dbGaPWorkspaceFormTest(TestCase):
     def setUp(self):
         """Create a workspace for use in the form."""
         self.workspace = WorkspaceFactory()
-        self.study = StudyFactory.create()
+        self.dbgap_study = factories.dbGaPStudyFactory.create()
         self.data_use_permission = DataUsePermissionFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -44,10 +42,9 @@ class dbGaPWorkspaceFormTest(TestCase):
         """Form is valid with necessary input."""
         DataUseModifierFactory.create()
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -61,10 +58,9 @@ class dbGaPWorkspaceFormTest(TestCase):
         """Form is valid with necessary input."""
         DataUseModifierFactory.create_batch(2)
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -75,11 +71,28 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_invalid_missing_study(self):
-        """Form is invalid when missing study."""
+        """Form is invalid when missing dbgap_study."""
         form_data = {
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
+            "full_consent_code": "GRU",
+            "data_use_limitations": "test limitations",
+            "data_use_permission": self.data_use_permission,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_study", form.errors)
+        self.assertEqual(len(form.errors["dbgap_study"]), 1)
+        self.assertIn("required", form.errors["dbgap_study"][0])
+
+    def test_invalid_missing_dbgap_version(self):
+        """Form is invalid when missing dbgap_version."""
+        form_data = {
+            "dbgap_study": self.dbgap_study,
             "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -88,72 +101,16 @@ class dbGaPWorkspaceFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("study", form.errors)
-        self.assertEqual(len(form.errors["study"]), 1)
-        self.assertIn("required", form.errors["study"][0])
-
-    def test_invalid_missing_phs(self):
-        """Form is invalid when missing phs."""
-        form_data = {
-            "study": self.study,
-            "version": 1,
-            "participant_set": 1,
-            "full_consent_code": "GRU",
-            "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
-            "workspace": self.workspace,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("required", form.errors["phs"][0])
-
-    def test_invalid_phs_zero(self):
-        """Form is invalid when phs is zero."""
-        form_data = {
-            "study": self.study,
-            "phs": 0,
-            "version": 1,
-            "participant_set": 1,
-            "full_consent_code": "GRU",
-            "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
-            "workspace": self.workspace,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("greater than", form.errors["phs"][0])
-
-    def test_invalid_missing_version(self):
-        """Form is invalid when missing version."""
-        form_data = {
-            "study": self.study,
-            "phs": 1,
-            "participant_set": 1,
-            "full_consent_code": "GRU",
-            "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
-            "workspace": self.workspace,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("version", form.errors)
-        self.assertEqual(len(form.errors["version"]), 1)
-        self.assertIn("required", form.errors["version"][0])
+        self.assertIn("dbgap_version", form.errors)
+        self.assertEqual(len(form.errors["dbgap_version"]), 1)
+        self.assertIn("required", form.errors["dbgap_version"][0])
 
     def test_invalid_vesrion_zero(self):
         """Form is invalid when vesrion is zero."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 0,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 0,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -162,16 +119,15 @@ class dbGaPWorkspaceFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("version", form.errors)
-        self.assertEqual(len(form.errors["version"]), 1)
-        self.assertIn("greater than", form.errors["version"][0])
+        self.assertIn("dbgap_version", form.errors)
+        self.assertEqual(len(form.errors["dbgap_version"]), 1)
+        self.assertIn("greater than", form.errors["dbgap_version"][0])
 
-    def test_invalid_missing_participant_set(self):
-        """Form is invalid when missing participant_set."""
+    def test_invalid_missing_dbgap_participant_set(self):
+        """Form is invalid when missing dbgap_participant_set."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -180,17 +136,16 @@ class dbGaPWorkspaceFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("participant_set", form.errors)
-        self.assertEqual(len(form.errors["participant_set"]), 1)
-        self.assertIn("required", form.errors["participant_set"][0])
+        self.assertIn("dbgap_participant_set", form.errors)
+        self.assertEqual(len(form.errors["dbgap_participant_set"]), 1)
+        self.assertIn("required", form.errors["dbgap_participant_set"][0])
 
-    def test_invalid_participant_set_zero(self):
-        """Form is invalid when participant_set is zero."""
+    def test_invalid_dbgap_participant_set_zero(self):
+        """Form is invalid when dbgap_participant_set is zero."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 0,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 0,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -199,17 +154,16 @@ class dbGaPWorkspaceFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("participant_set", form.errors)
-        self.assertEqual(len(form.errors["participant_set"]), 1)
-        self.assertIn("greater than", form.errors["participant_set"][0])
+        self.assertIn("dbgap_participant_set", form.errors)
+        self.assertEqual(len(form.errors["dbgap_participant_set"]), 1)
+        self.assertIn("greater than", form.errors["dbgap_participant_set"][0])
 
     def test_invalid_missing_full_consent_code(self):
         """Form is invalid when missing full_consent_code."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -224,10 +178,9 @@ class dbGaPWorkspaceFormTest(TestCase):
     def test_invalid_missing_data_use_limitations(self):
         """Form is invalid when missing data_use_limitations."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -240,12 +193,11 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.assertIn("required", form.errors["data_use_limitations"][0])
 
     def test_invalid_missing_data_use_permissions(self):
-        """Form is invalid when missing participant_set."""
+        """Form is invalid when missing dbgap_participant_set."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_permission": "",
             "data_use_limitations": "test limitations",
@@ -261,10 +213,9 @@ class dbGaPWorkspaceFormTest(TestCase):
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing phs."""
         form_data = {
-            "study": self.study,
-            "phs": 1,
-            "version": 1,
-            "participant_set": 1,
+            "dbgap_study": self.dbgap_study,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
             "full_consent_code": "GRU",
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
@@ -280,11 +231,10 @@ class dbGaPWorkspaceFormTest(TestCase):
         """Form is invalid with a duplicated object."""
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         form_data = {
-            "study": dbgap_workspace.study,
-            "phs": dbgap_workspace.phs,
-            "version": dbgap_workspace.version,
-            "participant_set": dbgap_workspace.participant_set + 1,
-            "full_consent_code": "TEST",
+            "dbgap_study": dbgap_workspace.dbgap_study,
+            "dbgap_version": dbgap_workspace.dbgap_version,
+            "dbgap_participant_set": dbgap_workspace.dbgap_participant_set + 1,
+            "full_consent_code": dbgap_workspace.full_consent_code,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,

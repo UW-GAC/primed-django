@@ -94,7 +94,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
-        study = factories.StudyFactory.create()
+        dbgap_study = factories.dbGaPStudyFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
         data_use_modifier_1 = DataUseModifierFactory.create()
         data_use_modifier_2 = DataUseModifierFactory.create()
@@ -126,10 +126,9 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-study": study.pk,
-                "workspacedata-0-phs": 1,
-                "workspacedata-0-version": 2,
-                "workspacedata-0-participant_set": 3,
+                "workspacedata-0-dbgap_study": dbgap_study.pk,
+                "workspacedata-0-dbgap_version": 2,
+                "workspacedata-0-dbgap_participant_set": 3,
                 "workspacedata-0-full_consent_code": "GRU-TEST",
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
@@ -146,10 +145,9 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.study, study)
-        self.assertEqual(new_workspace_data.phs, 1)
-        self.assertEqual(new_workspace_data.version, 2)
-        self.assertEqual(new_workspace_data.participant_set, 3)
+        self.assertEqual(new_workspace_data.dbgap_study, dbgap_study)
+        self.assertEqual(new_workspace_data.dbgap_version, 2)
+        self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
         self.assertEqual(new_workspace_data.full_consent_code, "GRU-TEST")
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
@@ -215,7 +213,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_creates_dbgap_workspace(self):
         """Posting valid data to the form creates an UploadWorkspace object."""
-        study = factories.StudyFactory.create()
+        dbgap_study = factories.dbGaPStudyFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
         data_use_modifier_1 = DataUseModifierFactory.create()
         data_use_modifier_2 = DataUseModifierFactory.create()
@@ -255,10 +253,9 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-study": study.pk,
-                "workspacedata-0-phs": 1,
-                "workspacedata-0-version": 2,
-                "workspacedata-0-participant_set": 3,
+                "workspacedata-0-dbgap_study": dbgap_study.pk,
+                "workspacedata-0-dbgap_version": 2,
+                "workspacedata-0-dbgap_participant_set": 3,
                 "workspacedata-0-full_consent_code": "GRU-TEST",
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
@@ -275,10 +272,9 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.study, study)
-        self.assertEqual(new_workspace_data.phs, 1)
-        self.assertEqual(new_workspace_data.version, 2)
-        self.assertEqual(new_workspace_data.participant_set, 3)
+        self.assertEqual(new_workspace_data.dbgap_study, dbgap_study)
+        self.assertEqual(new_workspace_data.dbgap_version, 2)
+        self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
         self.assertEqual(new_workspace_data.full_consent_code, "GRU-TEST")
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)

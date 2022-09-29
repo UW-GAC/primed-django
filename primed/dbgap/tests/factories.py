@@ -1,5 +1,6 @@
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from factory import Faker, SubFactory
+from factory.django import DjangoModelFactory
 
 from primed.primed_anvil.tests.factories import (
     DataUseOntologyModelFactory,
@@ -9,17 +10,27 @@ from primed.primed_anvil.tests.factories import (
 from .. import models
 
 
+class dbGaPStudyFactory(DjangoModelFactory):
+    """A factory for the dbGaPStudy model."""
+
+    study = SubFactory(StudyFactory)
+    phs = Faker("random_int")
+
+    class Meta:
+        model = models.dbGaPStudy
+
+
 class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")
-    study = SubFactory(StudyFactory)
+    dbgap_study = SubFactory(dbGaPStudyFactory)
+    dbgap_version = Faker("random_int")
+    dbgap_participant_set = Faker("random_int")
     # Ideally we would calculate the default full consent code from the data use permission and limitations,
     # but that is not straightforward and it doesn't particularly matter.
     full_consent_code = Faker("word")
-    phs = Faker("random_int")
-    version = Faker("random_int")
-    participant_set = Faker("random_int")
+    data_use_limitations = Faker("paragraph")
 
     class Meta:
         model = models.dbGaPWorkspace

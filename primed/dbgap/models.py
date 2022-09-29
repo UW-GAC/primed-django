@@ -6,13 +6,50 @@ from django_extensions.db.models import TimeStampedModel
 from ..primed_anvil.models import DataUseOntologyModel, Study
 
 
-class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
-    """A model to track additional data about dbGaP data in a workspace."""
+class dbGaPStudy(models.Model):
+    """A model to track dbGaP studies."""
 
+    # Consider making this many to many since some dbgap acessions contain multiple studies.
     study = models.ForeignKey(
         Study,
         on_delete=models.PROTECT,
-        help_text="""The Study associated with this Workspace.""",
+        help_text="The study associated with this dbGaP study accession.",
+    )
+    phs = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        unique=True,
+        help_text="""The dbGaP study accession associated with this workspace (e.g., phs000007).""",
+    )
+
+    class Meta:
+        # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
+        verbose_name = " dbGaP study"
+        verbose_name_plural = " dbGaP studies"
+
+    def __str__(self):
+        return "phs{phs:06d} - {study}".format(
+            phs=self.phs, study=self.study.short_name
+        )
+
+
+class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
+    """A model to track additional data about dbGaP data in a workspace."""
+
+    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
+    # We'll need to add a separate constraint.
+    dbgap_study = models.ForeignKey(dbGaPStudy, on_delete=models.PROTECT)
+
+    # Should dbgap_study, version and participant set be their own model -- dbGaPStudyVersion?
+    # Note that having this -- wec ould have derived data workspaces linking to multiple dbgap study versions.
+    dbgap_version = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="""The dbGaP study version associated with this Workspace.""",
+    )
+
+    # Do we want version here?
+    dbgap_participant_set = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="""The dbGaP participant set associated with this Workspace.""",
     )
 
     # Should this be here or in the abstract DataUseOntology model?
@@ -28,26 +65,6 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         help_text="""The full data use limitations for this workspace."""
     )
 
-    # Should some of these be their own model?
-    # PositiveIntegerField allows 0 and we want this to be 1 or higher.
-    # We'll need to add a separate constraint.
-    phs = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
-        help_text="""The dbGaP study accession associated with this workspace (e.g., phs000007).""",
-    )
-
-    # Do we want version here?
-    version = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
-        help_text="""The dbGaP study version associated with this Workspace.""",
-    )
-
-    # Do we want version here?
-    participant_set = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
-        help_text="""The dbGaP participant set associated with this Workspace.""",
-    )
-
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
         verbose_name = " dbGaP workspace"
@@ -56,7 +73,7 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_dbgap_workspace",
-                fields=["study", "phs", "version"],
+                fields=["dbgap_study", "dbgap_version", "full_consent_code"],
             ),
         ]
 
@@ -65,11 +82,15 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         Returns:
             A string showing the workspace name of the object.
         """
-        return "{} - {}".format(self.get_dbgap_accession(), self.full_consent_code)
+        return "{} ({} - {})".format(
+            self.dbgap_study.study.short_name,
+            self.get_dbgap_accession(),
+            self.full_consent_code,
+        )
 
     def get_dbgap_accession(self):
         return "phs{phs:06d}.v{v}.p{ps}".format(
-            phs=self.phs,
-            v=self.version,
-            ps=self.participant_set,
+            phs=self.dbgap_study.phs,
+            v=self.dbgap_version,
+            ps=self.dbgap_participant_set,
         )
