@@ -3,6 +3,21 @@ from django.contrib import admin
 from . import models
 
 
+@admin.register(models.dbGaPStudy)
+class dbGaPStudyAdmin(admin.ModelAdmin):
+    """Admin class for the `dbGaPStudy` model."""
+
+    list_display = (
+        "study",
+        "phs",
+    )
+    search_fields = ("short_name",)
+    sortable_by = (
+        "short_name",
+        "full_name",
+    )
+
+
 @admin.register(models.dbGaPWorkspace)
 class dbGaPWorkspaceAdmin(admin.ModelAdmin):
     """Admin class for the `dbGaPWorkspace` model."""
