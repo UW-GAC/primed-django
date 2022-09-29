@@ -6,7 +6,7 @@ from django_extensions.db.models import TimeStampedModel
 from ..primed_anvil.models import DataUseOntologyModel, Study
 
 
-class dbGaPStudy(models.Model):
+class dbGaPStudy(TimeStampedModel, models.Model):
     """A model to track dbGaP studies."""
 
     # Consider making this many to many since some dbgap acessions contain multiple studies.
