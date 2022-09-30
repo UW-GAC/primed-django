@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 
-from ..primed_anvil.models import DataUseOntologyModel, Study
+from primed.primed_anvil.models import DataUseOntologyModel, Study
 
 
 class dbGaPStudyAccession(TimeStampedModel, models.Model):

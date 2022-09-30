@@ -6,8 +6,8 @@ from primed.primed_anvil.tests.factories import (
     DataUseOntologyModelFactory,
     StudyFactory,
 )
+from primed.users.tests.factories import UserFactory
 
-from ...users.tests.factories import UserFactory
 from .. import models
 
 
