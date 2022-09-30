@@ -15,7 +15,8 @@ class dbGaPWorkspaceTable(tables.Table):
             "name",
             "dbgapworkspace__dbgap_study__study",
             "dbgapworkspace__dbgap_study__phs",
-            "dbgapworkspace__version",
+            "dbgapworkspace__dbgap_version",
+            "dbgapworkspace__dbgap_participant_set",
             "dbgapworkspace__full_consent_code",
         )
 
