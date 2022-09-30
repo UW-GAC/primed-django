@@ -1,12 +1,16 @@
 """Tests for views related to the `dbgap` app."""
 
 import responses
-from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager import views as acm_views
+from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
 from anvil_consortium_manager.tests import factories as acm_factories
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.exceptions import PermissionDenied
+from django.http.response import Http404
+from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
@@ -15,10 +19,73 @@ from primed.primed_anvil.tests.factories import (
     DataUsePermissionFactory,
 )
 
-from .. import models, tables
+from .. import models, tables, views
 from . import factories
 
 User = get_user_model()
+
+
+class dbGaPStudyDetailTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        # Create an object test this with.
+        self.obj = factories.dbGaPStudyFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("dbgap:dbgap_studies:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPStudyDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(self.obj.pk))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.obj.pk),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, pk=self.obj.pk)
+
+    def test_view_status_code_with_existing_object_not_user(self):
+        """Returns a successful status code for an existing object pk."""
+        # Only clients load the template.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.pk))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_status_code_with_invalid_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        request = self.factory.get(self.get_url(self.obj.pk + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, pk=self.obj.pk + 1)
 
 
 class dbGaPWorkspaceListTest(TestCase):
@@ -31,7 +98,7 @@ class dbGaPWorkspaceListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "dbgap"
@@ -68,12 +135,12 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "dbgap"
@@ -140,7 +207,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         # The workspace is created.
-        new_workspace = acm_models.Workspace.objects.latest("pk")
+        new_workspace = Workspace.objects.latest("pk")
         # Workspace data is added.
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
@@ -170,12 +237,12 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "dbgap"
@@ -267,7 +334,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         # The workspace is created.
-        new_workspace = acm_models.Workspace.objects.latest("pk")
+        new_workspace = Workspace.objects.latest("pk")
         # Workspace data is added.
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")

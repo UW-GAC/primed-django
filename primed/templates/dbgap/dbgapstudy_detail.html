@@ -1,0 +1,17 @@
+{% extends "anvil_consortium_manager/base.html" %}
+
+{% block title %}{{ object.short_name }}{% endblock %}
+
+
+{% block content %}
+
+<h1>dbGaP Study: {{ object }}</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>Study: <a href="{{ object.study.get_absolute_url }}">{{ object.study }}</a></li>
+    <li>dbGaP accession: {{ object.phs }}</li>
+  </ul>
+</div>
+
+{% endblock content %}
