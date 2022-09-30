@@ -1,4 +1,5 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from anvil_consortium_manager.models import Workspace
 from django.views.generic import DetailView
 from django_tables2 import SingleTableMixin
 
@@ -11,8 +12,13 @@ class dbGaPStudyDetail(
     """View to show details about a `dbGaPStudy`."""
 
     model = models.dbGaPStudy
-    table_class = tables.dbGaPWorkspaceTable
     context_table_name = "workspace_table"
 
-    def get_table_data(self):
-        return self.object.dbgapworkspace_set.all()
+    def get_table(self):
+        return tables.dbGaPWorkspaceTable(
+            Workspace.objects.filter(dbgapworkspace__dbgap_study=self.object),
+            exclude=(
+                "dbgapworkspace__dbgap_study__study",
+                "dbgapworkspace__dbgap_study__phs",
+            ),
+        )
