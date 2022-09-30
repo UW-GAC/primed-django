@@ -1,4 +1,5 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -100,3 +101,24 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
             v=self.dbgap_version,
             ps=self.dbgap_participant_set,
         )
+
+
+class dbGaPApplication(TimeStampedModel, models.Model):
+    """A model to track dbGaP applications."""
+
+    principal_investigator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        help_text="The principal investigator associated with on this dbGaP application.",
+    )
+    project_id = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        unique=True,
+        help_text="The dbGaP-assigned project_id for this application.",
+    )
+
+    class Meta:
+        verbose_name = " dbGaP application"
+
+    def __str__(self):
+        return "{}".format(self.project_id)

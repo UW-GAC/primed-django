@@ -7,6 +7,7 @@ from primed.primed_anvil.tests.factories import (
     StudyFactory,
 )
 
+from ...users.tests.factories import UserFactory
 from .. import models
 
 
@@ -34,3 +35,13 @@ class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
 
     class Meta:
         model = models.dbGaPWorkspace
+
+
+class dbGaPApplicationFactory(DjangoModelFactory):
+    """A factory for the dbGaPApplication model."""
+
+    principal_investigator = SubFactory(UserFactory)
+    project_id = Faker("random_int")
+
+    class Meta:
+        model = models.dbGaPApplication

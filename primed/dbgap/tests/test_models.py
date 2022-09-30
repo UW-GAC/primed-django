@@ -8,6 +8,7 @@ from django.test import TestCase
 
 from primed.primed_anvil.tests.factories import DataUsePermissionFactory, StudyFactory
 
+from ...users.tests.factories import UserFactory
 from .. import models
 from . import factories
 
@@ -229,3 +230,90 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_study_accession__phs=1, dbgap_version=2, dbgap_participant_set=3
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")
+
+
+class dbGaPApplicationTest(TestCase):
+    """Tests for the dbGaPApplication model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        pi = UserFactory.create()
+        instance = models.dbGaPApplication(
+            principal_investigator=pi,
+            project_id=1,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.dbGaPApplication)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        pi = UserFactory.create()
+        instance = factories.dbGaPApplicationFactory.create(
+            principal_investigator=pi,
+            project_id=1,
+        )
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "1")
+
+    # def test_get_absolute_url(self):
+    #     """get_absolute_url method works correctly."""
+    #     instance = factories.dbGaPApplicationFactory.create()
+    #     self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_unique_dbgap_application(self):
+        """Saving a duplicate model fails."""
+        obj = factories.dbGaPApplicationFactory.create()
+        pi = UserFactory.create()
+        instance = factories.dbGaPApplicationFactory.build(
+            principal_investigator=pi,
+            project_id=obj.project_id,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("project_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["project_id"]), 1)
+        self.assertIn(
+            "already exists", e.exception.error_dict["project_id"][0].messages[0]
+        )
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_user_protect(self):
+        """Cannot delete a User if it has an associated dbGaPWorkspace."""
+        pi = UserFactory.create()
+        factories.dbGaPApplicationFactory.create(principal_investigator=pi)
+        with self.assertRaises(ProtectedError):
+            pi.delete()
+
+    def test_project_id_cannot_be_zero(self):
+        """project_id cannot be zero."""
+        pi = UserFactory.create()
+        instance = factories.dbGaPApplicationFactory.build(
+            principal_investigator=pi,
+            project_id=0,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("project_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["project_id"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["project_id"][0].messages[0],
+        )
+
+    def test_phs_cannot_be_negative(self):
+        """phs cannot be negative."""
+        pi = UserFactory.create()
+        instance = factories.dbGaPApplicationFactory.build(
+            principal_investigator=pi,
+            project_id=-1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("project_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["project_id"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["project_id"][0].messages[0],
+        )
