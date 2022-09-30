@@ -10,36 +10,36 @@ from django_tables2 import SingleTableMixin, SingleTableView
 from . import forms, models, tables
 
 
-class dbGaPStudyDetail(
+class dbGaPStudyAccessionDetail(
     AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
 ):
-    """View to show details about a `dbGaPStudy`."""
+    """View to show details about a `dbGaPStudyAccession`."""
 
-    model = models.dbGaPStudy
+    model = models.dbGaPStudyAccession
     context_table_name = "workspace_table"
 
     def get_table(self):
         return tables.dbGaPWorkspaceTable(
-            Workspace.objects.filter(dbgapworkspace__dbgap_study=self.object),
+            Workspace.objects.filter(dbgapworkspace__dbgap_study_accession=self.object),
             exclude=(
-                "dbgapworkspace__dbgap_study__study",
-                "dbgapworkspace__dbgap_study__phs",
+                "dbgapworkspace__dbgap_study_accession__study",
+                "dbgapworkspace__dbgap_study_accession__phs",
             ),
         )
 
 
-class dbGaPStudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
-    """View to show a list of dbGaPStudy objects."""
+class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of dbGaPStudyAccession objects."""
 
-    model = models.dbGaPStudy
-    table_class = tables.dbGaPStudyTable
+    model = models.dbGaPStudyAccession
+    table_class = tables.dbGaPStudyAccessionTable
 
 
-class dbGaPStudyCreate(
+class dbGaPStudyAccessionCreate(
     AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
 ):
-    """View to create a new dbGaPStudy."""
+    """View to create a new dbGaPStudyAccession."""
 
-    model = models.dbGaPStudy
-    form_class = forms.dbGaPStudyForm
-    success_msg = "dbGaP Study successfully created."
+    model = models.dbGaPStudyAccession
+    form_class = forms.dbGaPStudyAccessionForm
+    success_msg = "dbGaP study accession successfully created."

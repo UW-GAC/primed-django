@@ -5,11 +5,11 @@ from django import forms
 from . import models
 
 
-class dbGaPStudyForm(forms.ModelForm):
-    """Form for a dbGaPStudy object."""
+class dbGaPStudyAccessionForm(forms.ModelForm):
+    """Form for a dbGaPStudyAccession object."""
 
     class Meta:
-        model = models.dbGaPStudy
+        model = models.dbGaPStudyAccession
         fields = (
             "phs",
             "study",
@@ -22,7 +22,7 @@ class dbGaPWorkspaceForm(forms.ModelForm):
     class Meta:
         model = models.dbGaPWorkspace
         fields = (
-            "dbgap_study",
+            "dbgap_study_accession",
             "dbgap_version",
             "dbgap_participant_set",
             "full_consent_code",

@@ -12,22 +12,22 @@ from .. import models
 from . import factories
 
 
-class dbGaPStudyTest(TestCase):
-    """Tests for the dbGaPStudy model."""
+class dbGaPStudyAccessionTest(TestCase):
+    """Tests for the dbGaPStudyAccession model."""
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         study = StudyFactory.create()
-        instance = models.dbGaPStudy(
+        instance = models.dbGaPStudyAccession(
             study=study,
             phs=1,
         )
         instance.save()
-        self.assertIsInstance(instance, models.dbGaPStudy)
+        self.assertIsInstance(instance, models.dbGaPStudyAccession)
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        instance = factories.dbGaPStudyFactory.create(
+        instance = factories.dbGaPStudyAccessionFactory.create(
             study__short_name="FOO",
             phs=1,
         )
@@ -37,14 +37,14 @@ class dbGaPStudyTest(TestCase):
 
     def test_get_absolute_url(self):
         """get_absolute_url method works correctly."""
-        instance = factories.dbGaPStudyFactory.create()
+        instance = factories.dbGaPStudyAccessionFactory.create()
         self.assertIsInstance(instance.get_absolute_url(), str)
 
-    def test_unique_dbgap_study(self):
+    def test_unique_dbgap_study_accession(self):
         """Saving a duplicate model fails."""
-        obj = factories.dbGaPStudyFactory.create()
+        obj = factories.dbGaPStudyAccessionFactory.create()
         study = StudyFactory.create()
-        instance = factories.dbGaPStudyFactory.build(
+        instance = factories.dbGaPStudyAccessionFactory.build(
             study=study,
             phs=obj.phs,
         )
@@ -59,14 +59,14 @@ class dbGaPStudyTest(TestCase):
     def test_study_protect(self):
         """Cannot delete a Study if it has an associated dbGaPWorkspace."""
         study = StudyFactory.create()
-        factories.dbGaPStudyFactory.create(study=study)
+        factories.dbGaPStudyAccessionFactory.create(study=study)
         with self.assertRaises(ProtectedError):
             study.delete()
 
     def test_phs_cannot_be_zero(self):
         """phs cannot be zero."""
         study = StudyFactory.create()
-        instance = factories.dbGaPStudyFactory.build(
+        instance = factories.dbGaPStudyAccessionFactory.build(
             study=study,
             phs=0,
         )
@@ -81,7 +81,7 @@ class dbGaPStudyTest(TestCase):
     def test_phs_cannot_be_negative(self):
         """phs cannot be negative."""
         study = StudyFactory.create()
-        instance = factories.dbGaPStudyFactory.build(
+        instance = factories.dbGaPStudyAccessionFactory.build(
             study=study,
             phs=-1,
         )
@@ -100,11 +100,11 @@ class dbGaPWorkspaceTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
         instance = models.dbGaPWorkspace(
             workspace=workspace,
-            dbgap_study=dbgap_study,
+            dbgap_study_accession=dbgap_study_accession,
             dbgap_version=1,
             dbgap_participant_set=1,
             data_use_limitations="test limitations",
@@ -117,8 +117,8 @@ class dbGaPWorkspaceTest(TestCase):
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
         instance = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study__study__short_name="TEST",
-            dbgap_study__phs=1,
+            dbgap_study_accession__study__short_name="TEST",
+            dbgap_study_accession__phs=1,
             dbgap_version=2,
             dbgap_participant_set=3,
             full_consent_code="GRU-NPU",
@@ -133,7 +133,7 @@ class dbGaPWorkspaceTest(TestCase):
         workspace = WorkspaceFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            dbgap_study=dbgap_workspace.dbgap_study,
+            dbgap_study_accession=dbgap_workspace.dbgap_study_accession,
             dbgap_version=dbgap_workspace.dbgap_version,
             full_consent_code=dbgap_workspace.full_consent_code,
             # These are here to prevent ValueErrors about unsaved related objects.
@@ -150,18 +150,20 @@ class dbGaPWorkspaceTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance.save()
 
-    def test_dbgap_study_protect(self):
-        """Cannot delete a dbGaPStudy if it has an associated dbGaPWorkspace."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
-        factories.dbGaPWorkspaceFactory.create(dbgap_study=dbgap_study)
+    def test_dbgap_study_accession_protect(self):
+        """Cannot delete a dbGaPStudyAccession if it has an associated dbGaPWorkspace."""
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=dbgap_study_accession
+        )
         with self.assertRaises(ProtectedError):
-            dbgap_study.delete()
+            dbgap_study_accession.delete()
 
     def test_dbgap_version_cannot_be_zero(self):
         """dbgap_version cannot be zero."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            dbgap_study=dbgap_study,
+            dbgap_study_accession=dbgap_study_accession,
             dbgap_version=0,
         )
         with self.assertRaises(ValidationError) as e:
@@ -175,9 +177,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_dbgap_version_cannot_be_negative(self):
         """dbgap_version cannot be negative."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            dbgap_study=dbgap_study,
+            dbgap_study_accession=dbgap_study_accession,
             dbgap_version=-1,
         )
         with self.assertRaises(ValidationError) as e:
@@ -191,9 +193,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_dbgap_participant_cannot_be_zero(self):
         """dbgap_version cannot be zero."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            dbgap_study=dbgap_study,
+            dbgap_study_accession=dbgap_study_accession,
             dbgap_participant_set=0,
         )
         with self.assertRaises(ValidationError) as e:
@@ -207,9 +209,9 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_dbgap_participant_set_cannot_be_negative(self):
         """dbgap_version cannot be negative."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
-            dbgap_study=dbgap_study,
+            dbgap_study_accession=dbgap_study_accession,
             dbgap_participant_set=-1,
         )
         with self.assertRaises(ValidationError) as e:
@@ -224,6 +226,6 @@ class dbGaPWorkspaceTest(TestCase):
     def test_get_dbgap_accession(self):
         """`get_dbgap_accession` returns the correct string"""
         instance = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study__phs=1, dbgap_version=2, dbgap_participant_set=3
+            dbgap_study_accession__phs=1, dbgap_version=2, dbgap_participant_set=3
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")

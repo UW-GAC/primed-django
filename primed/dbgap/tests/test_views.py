@@ -26,8 +26,8 @@ from . import factories
 User = get_user_model()
 
 
-class dbGaPStudyListTest(TestCase):
-    """Tests for the dbGaPStudyList view."""
+class dbGaPStudyAccessionListTest(TestCase):
+    """Tests for the dbGaPStudyAccessionList view."""
 
     def setUp(self):
         """Set up test class."""
@@ -42,11 +42,11 @@ class dbGaPStudyListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("dbgap:dbgap_studies:list", args=args)
+        return reverse("dbgap:dbgap_study_accessions:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPStudyList.as_view()
+        return views.dbGaPStudyAccessionList.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -80,10 +80,12 @@ class dbGaPStudyListTest(TestCase):
         request.user = self.user
         response = self.get_view()(request)
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(response.context_data["table"], tables.dbGaPStudyTable)
+        self.assertIsInstance(
+            response.context_data["table"], tables.dbGaPStudyAccessionTable
+        )
 
     def test_workspace_table_none(self):
-        """No rows are shown if there are no dbGaPStudy objects."""
+        """No rows are shown if there are no dbGaPStudyAccession objects."""
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
@@ -91,8 +93,8 @@ class dbGaPStudyListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 0)
 
     def test_workspace_table_one(self):
-        """One row is shown if there is one dbGaPStudy."""
-        factories.dbGaPStudyFactory.create()
+        """One row is shown if there is one dbGaPStudyAccession."""
+        factories.dbGaPStudyAccessionFactory.create()
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
@@ -100,8 +102,8 @@ class dbGaPStudyListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 1)
 
     def test_workspace_table_two(self):
-        """Two rows are shown if there are two dbGaPStudy objects."""
-        factories.dbGaPStudyFactory.create_batch(2)
+        """Two rows are shown if there are two dbGaPStudyAccession objects."""
+        factories.dbGaPStudyAccessionFactory.create_batch(2)
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
@@ -109,7 +111,7 @@ class dbGaPStudyListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 2)
 
 
-class dbGaPStudyDetailTest(TestCase):
+class dbGaPStudyAccessionDetailTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -121,15 +123,15 @@ class dbGaPStudyDetailTest(TestCase):
             )
         )
         # Create an object test this with.
-        self.obj = factories.dbGaPStudyFactory.create()
+        self.obj = factories.dbGaPStudyAccessionFactory.create()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("dbgap:dbgap_studies:detail", args=args)
+        return reverse("dbgap:dbgap_study_accessions:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPStudyDetail.as_view()
+        return views.dbGaPStudyAccessionDetail.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -157,7 +159,7 @@ class dbGaPStudyDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, pk=self.obj.pk)
 
-    def test_view_status_code_with_existing_object_not_user(self):
+    def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
         self.client.force_login(self.user)
@@ -182,7 +184,7 @@ class dbGaPStudyDetailTest(TestCase):
         )
 
     def test_workspace_table_none(self):
-        """No workspaces are shown if the dbGaPStudy does not have any workspaces."""
+        """No workspaces are shown if the dbGaPStudyAccession does not have any workspaces."""
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
@@ -190,8 +192,8 @@ class dbGaPStudyDetailTest(TestCase):
         self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
 
     def test_workspace_table_one(self):
-        """One workspace is shown if the dbGaPStudy has one workspace."""
-        factories.dbGaPWorkspaceFactory.create(dbgap_study=self.obj)
+        """One workspace is shown if the dbGaPStudyAccession has one workspace."""
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession=self.obj)
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
@@ -199,18 +201,20 @@ class dbGaPStudyDetailTest(TestCase):
         self.assertEqual(len(response.context_data["workspace_table"].rows), 1)
 
     def test_workspace_table_two(self):
-        """Two workspaces are shown if the dbGaPStudy has two workspaces."""
-        factories.dbGaPWorkspaceFactory.create_batch(2, dbgap_study=self.obj)
+        """Two workspaces are shown if the dbGaPStudyAccession has two workspaces."""
+        factories.dbGaPWorkspaceFactory.create_batch(2, dbgap_study_accession=self.obj)
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 2)
 
-    def test_shows_workspace_for_only_this_dbgapstudy(self):
-        """Only shows workspaces for this dbGaPStudy."""
-        other_dbgap_study = factories.dbGaPStudyFactory.create()
-        factories.dbGaPWorkspaceFactory.create(dbgap_study=other_dbgap_study)
+    def test_shows_workspace_for_only_this_dbGaPStudyAccession(self):
+        """Only shows workspaces for this dbGaPStudyAccession."""
+        other_dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=other_dbgap_study_accession
+        )
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
@@ -218,8 +222,8 @@ class dbGaPStudyDetailTest(TestCase):
         self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
 
 
-class dbGaPStudyCreateTest(TestCase):
-    """Tests for the dbGaPStudyCreate view."""
+class dbGaPStudyAccessionCreateTest(TestCase):
+    """Tests for the dbGaPStudyAccessionCreate view."""
 
     def setUp(self):
         """Set up test class."""
@@ -240,11 +244,11 @@ class dbGaPStudyCreateTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("dbgap:dbgap_studies:new", args=args)
+        return reverse("dbgap:dbgap_study_accessions:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPStudyCreate.as_view()
+        return views.dbGaPStudyAccessionCreate.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -298,7 +302,9 @@ class dbGaPStudyCreateTest(TestCase):
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
-        self.assertIsInstance(response.context_data["form"], forms.dbGaPStudyForm)
+        self.assertIsInstance(
+            response.context_data["form"], forms.dbGaPStudyAccessionForm
+        )
 
     def test_can_create_object(self):
         """Can create an object."""
@@ -307,8 +313,8 @@ class dbGaPStudyCreateTest(TestCase):
         response = self.client.post(self.get_url(), {"study": study.pk, "phs": 1})
         self.assertEqual(response.status_code, 302)
         # A new object was created.
-        self.assertEqual(models.dbGaPStudy.objects.count(), 1)
-        new_object = models.dbGaPStudy.objects.latest("pk")
+        self.assertEqual(models.dbGaPStudyAccession.objects.count(), 1)
+        new_object = models.dbGaPStudyAccession.objects.latest("pk")
         self.assertEqual(new_object.study, study)
         self.assertEqual(new_object.phs, 1)
 
@@ -317,7 +323,7 @@ class dbGaPStudyCreateTest(TestCase):
         self.client.force_login(self.user)
         study = StudyFactory.create()
         response = self.client.post(self.get_url(), {"study": study.pk, "phs": 1})
-        new_object = models.dbGaPStudy.objects.latest("pk")
+        new_object = models.dbGaPStudyAccession.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
 
     def test_success_message(self):
@@ -332,7 +338,7 @@ class dbGaPStudyCreateTest(TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(views.dbGaPStudyCreate.success_msg, str(messages[0]))
+        self.assertEqual(views.dbGaPStudyAccessionCreate.success_msg, str(messages[0]))
 
     def test_error_missing_study(self):
         """Form shows an error when study is missing."""
@@ -340,7 +346,7 @@ class dbGaPStudyCreateTest(TestCase):
         response = self.client.post(self.get_url(), {"phs": 1})
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
-        self.assertEqual(models.dbGaPStudy.objects.count(), 0)
+        self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
         # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
@@ -357,7 +363,7 @@ class dbGaPStudyCreateTest(TestCase):
         response = self.client.post(self.get_url(), {"study": study.pk})
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
-        self.assertEqual(models.dbGaPStudy.objects.count(), 0)
+        self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
         # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
@@ -369,15 +375,15 @@ class dbGaPStudyCreateTest(TestCase):
 
     def test_error_duplicate_short_name(self):
         """Form shows an error when trying to create a duplicate phs."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         other_study = factories.StudyFactory.create()
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(), {"phs": dbgap_study.phs, "study": other_study.pk}
+            self.get_url(), {"phs": dbgap_study_accession.phs, "study": other_study.pk}
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
-        self.assertEqual(models.dbGaPStudy.objects.count(), 1)
+        self.assertEqual(models.dbGaPStudyAccession.objects.count(), 1)
         # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
@@ -402,7 +408,7 @@ class dbGaPStudyCreateTest(TestCase):
         self.assertIn("phs", form.errors.keys())
         self.assertEqual(len(form.errors["phs"]), 1)
         self.assertIn("required", form.errors["phs"][0])
-        self.assertEqual(models.dbGaPStudy.objects.count(), 0)
+        self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
 
 
 class dbGaPWorkspaceListTest(TestCase):
@@ -478,7 +484,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_creates_upload_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
         data_use_modifier_1 = DataUseModifierFactory.create()
         data_use_modifier_2 = DataUseModifierFactory.create()
@@ -510,7 +516,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-dbgap_study": dbgap_study.pk,
+                "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
                 "workspacedata-0-dbgap_version": 2,
                 "workspacedata-0-dbgap_participant_set": 3,
                 "workspacedata-0-full_consent_code": "GRU-TEST",
@@ -529,7 +535,9 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.dbgap_study, dbgap_study)
+        self.assertEqual(
+            new_workspace_data.dbgap_study_accession, dbgap_study_accession
+        )
         self.assertEqual(new_workspace_data.dbgap_version, 2)
         self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
         self.assertEqual(new_workspace_data.full_consent_code, "GRU-TEST")
@@ -597,7 +605,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_creates_dbgap_workspace(self):
         """Posting valid data to the form creates an UploadWorkspace object."""
-        dbgap_study = factories.dbGaPStudyFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
         data_use_modifier_1 = DataUseModifierFactory.create()
         data_use_modifier_2 = DataUseModifierFactory.create()
@@ -637,7 +645,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-dbgap_study": dbgap_study.pk,
+                "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
                 "workspacedata-0-dbgap_version": 2,
                 "workspacedata-0-dbgap_participant_set": 3,
                 "workspacedata-0-full_consent_code": "GRU-TEST",
@@ -656,7 +664,9 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.dbgap_study, dbgap_study)
+        self.assertEqual(
+            new_workspace_data.dbgap_study_accession, dbgap_study_accession
+        )
         self.assertEqual(new_workspace_data.dbgap_version, 2)
         self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
         self.assertEqual(new_workspace_data.full_consent_code, "GRU-TEST")

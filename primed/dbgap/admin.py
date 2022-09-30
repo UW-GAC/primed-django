@@ -3,9 +3,9 @@ from django.contrib import admin
 from . import models
 
 
-@admin.register(models.dbGaPStudy)
-class dbGaPStudyAdmin(admin.ModelAdmin):
-    """Admin class for the `dbGaPStudy` model."""
+@admin.register(models.dbGaPStudyAccession)
+class dbGaPStudyAccessionAdmin(admin.ModelAdmin):
+    """Admin class for the `dbGaPStudyAccession` model."""
 
     list_display = (
         "study",
@@ -25,13 +25,13 @@ class dbGaPWorkspaceAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "workspace",
-        "dbgap_study",
+        "dbgap_study_accession",
         "dbgap_version",
         "dbgap_participant_set",
         "full_consent_code",
     )
     list_filter = (
-        "dbgap_study",
+        "dbgap_study_accession",
         "full_consent_code",
     )
     sortable_by = (

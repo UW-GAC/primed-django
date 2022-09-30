@@ -6,8 +6,8 @@ from anvil_consortium_manager.models import Workspace
 from . import models
 
 
-class dbGaPStudyTable(tables.Table):
-    """A table for dbGaPStudy objects."""
+class dbGaPStudyAccessionTable(tables.Table):
+    """A table for dbGaPStudyAccession objects."""
 
     study = tables.columns.Column(linkify=True)
     number_workspaces = tables.Column(
@@ -17,7 +17,7 @@ class dbGaPStudyTable(tables.Table):
     )
 
     class Meta:
-        model = models.dbGaPStudy
+        model = models.dbGaPStudyAccession
         fields = (
             "phs",
             "study",
@@ -36,8 +36,8 @@ class dbGaPWorkspaceTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "dbgapworkspace__dbgap_study__study",
-            "dbgapworkspace__dbgap_study__phs",
+            "dbgapworkspace__dbgap_study_accession__study",
+            "dbgapworkspace__dbgap_study_accession__phs",
             "dbgapworkspace__dbgap_version",
             "dbgapworkspace__dbgap_participant_set",
             "dbgapworkspace__full_consent_code",

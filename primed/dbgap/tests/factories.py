@@ -10,21 +10,21 @@ from primed.primed_anvil.tests.factories import (
 from .. import models
 
 
-class dbGaPStudyFactory(DjangoModelFactory):
+class dbGaPStudyAccessionFactory(DjangoModelFactory):
     """A factory for the dbGaPStudy model."""
 
     study = SubFactory(StudyFactory)
     phs = Faker("random_int")
 
     class Meta:
-        model = models.dbGaPStudy
+        model = models.dbGaPStudyAccession
 
 
 class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")
-    dbgap_study = SubFactory(dbGaPStudyFactory)
+    dbgap_study_accession = SubFactory(dbGaPStudyAccessionFactory)
     dbgap_version = Faker("random_int")
     dbgap_participant_set = Faker("random_int")
     # Ideally we would calculate the default full consent code from the data use permission and limitations,

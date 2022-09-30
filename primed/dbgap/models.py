@@ -7,8 +7,8 @@ from django_extensions.db.models import TimeStampedModel
 from ..primed_anvil.models import DataUseOntologyModel, Study
 
 
-class dbGaPStudy(TimeStampedModel, models.Model):
-    """A model to track dbGaP studies."""
+class dbGaPStudyAccession(TimeStampedModel, models.Model):
+    """A model to track dbGaP study accessions."""
 
     # Consider making this many to many since some dbgap acessions contain multiple studies.
     study = models.ForeignKey(
@@ -24,8 +24,8 @@ class dbGaPStudy(TimeStampedModel, models.Model):
 
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
-        verbose_name = " dbGaP study"
-        verbose_name_plural = " dbGaP studies"
+        verbose_name = " dbGaP study accession"
+        verbose_name_plural = " dbGaP study accessions"
 
     def __str__(self):
         return "phs{phs:06d} - {study}".format(
@@ -33,7 +33,7 @@ class dbGaPStudy(TimeStampedModel, models.Model):
         )
 
     def get_absolute_url(self):
-        return reverse("dbgap:dbgap_studies:detail", kwargs={"pk": self.pk})
+        return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"pk": self.pk})
 
 
 class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
@@ -41,7 +41,9 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint.
-    dbgap_study = models.ForeignKey(dbGaPStudy, on_delete=models.PROTECT)
+    dbgap_study_accession = models.ForeignKey(
+        dbGaPStudyAccession, on_delete=models.PROTECT
+    )
 
     # Should dbgap_study, version and participant set be their own model -- dbGaPStudyVersion?
     # Note that having this -- wec ould have derived data workspaces linking to multiple dbgap study versions.
@@ -77,7 +79,7 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_dbgap_workspace",
-                fields=["dbgap_study", "dbgap_version", "full_consent_code"],
+                fields=["dbgap_study_accession", "dbgap_version", "full_consent_code"],
             ),
         ]
 
@@ -87,14 +89,14 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
             A string showing the workspace name of the object.
         """
         return "{} ({} - {})".format(
-            self.dbgap_study.study.short_name,
+            self.dbgap_study_accession.study.short_name,
             self.get_dbgap_accession(),
             self.full_consent_code,
         )
 
     def get_dbgap_accession(self):
         return "phs{phs:06d}.v{v}.p{ps}".format(
-            phs=self.dbgap_study.phs,
+            phs=self.dbgap_study_accession.phs,
             v=self.dbgap_version,
             ps=self.dbgap_participant_set,
         )
