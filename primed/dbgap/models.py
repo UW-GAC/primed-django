@@ -19,7 +19,7 @@ class dbGaPStudy(TimeStampedModel, models.Model):
     phs = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
         unique=True,
-        help_text="""The dbGaP study accession associated with this workspace (e.g., phs000007).""",
+        help_text="""The dbGaP study accession integer associated with this workspace (e.g., 7 for phs000007).""",
     )
 
     class Meta:

@@ -1,9 +1,13 @@
-from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from anvil_consortium_manager.auth import (
+    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerViewRequired,
+)
 from anvil_consortium_manager.models import Workspace
-from django.views.generic import DetailView
+from anvil_consortium_manager.views import SuccessMessageMixin
+from django.views.generic import CreateView, DetailView
 from django_tables2 import SingleTableMixin, SingleTableView
 
-from . import models, tables
+from . import forms, models, tables
 
 
 class dbGaPStudyDetail(
@@ -29,3 +33,13 @@ class dbGaPStudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.dbGaPStudy
     table_class = tables.dbGaPStudyTable
+
+
+class dbGaPStudyCreate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+):
+    """View to create a new dbGaPStudy."""
+
+    model = models.dbGaPStudy
+    form_class = forms.dbGaPStudyForm
+    success_msg = "dbGaP Study successfully created."

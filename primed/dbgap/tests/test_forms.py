@@ -7,14 +7,86 @@ from primed.primed_anvil.models import DataUseModifier
 from primed.primed_anvil.tests.factories import (
     DataUseModifierFactory,
     DataUsePermissionFactory,
+    StudyFactory,
 )
 
 from .. import forms
 from . import factories
 
 
+class dbGaPStudyFormTest(TestCase):
+    """Tests for the dbGaPStudyForm class."""
+
+    form_class = forms.dbGaPStudyForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.study = StudyFactory.create()
+        self.data_use_permission = DataUsePermissionFactory.create()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "phs": 1,
+            "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_study(self):
+        """Form is invalid when missing study."""
+        form_data = {
+            "phs": 1,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("study", form.errors)
+        self.assertEqual(len(form.errors["study"]), 1)
+        self.assertIn("required", form.errors["study"][0])
+
+    def test_invalid_missing_phs(self):
+        """Form is invalid when missing phs."""
+        form_data = {
+            "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("phs", form.errors)
+        self.assertEqual(len(form.errors["phs"]), 1)
+        self.assertIn("required", form.errors["phs"][0])
+
+    def test_invalid_phs_zero(self):
+        """Form is invalid when phs is zero."""
+        form_data = {
+            "study": self.study,
+            "phs": 0,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("phs", form.errors)
+        self.assertEqual(len(form.errors["phs"]), 1)
+        self.assertIn("greater than", form.errors["phs"][0])
+
+    def test_invalid_duplicate_object(self):
+        """Form is invalid with a duplicated object."""
+        dbgap_study = factories.dbGaPStudyFactory.create()
+        other_study = StudyFactory.create()
+        form_data = {
+            "study": other_study,
+            "phs": dbgap_study.phs,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("phs", form.errors)
+        self.assertEqual(len(form.errors["phs"]), 1)
+        self.assertIn("already exists", form.errors["phs"][0])
+
+
 class dbGaPWorkspaceFormTest(TestCase):
-    """Tests for the dbGaPWorkspace class."""
+    """Tests for the dbGaPWorkspaceForm class."""
 
     form_class = forms.dbGaPWorkspaceForm
 
