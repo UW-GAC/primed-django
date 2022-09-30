@@ -1,5 +1,7 @@
 """Tests of models in the `dbgap` app."""
 
+from unittest import skip
+
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
@@ -256,10 +258,11 @@ class dbGaPApplicationTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "1")
 
-    # def test_get_absolute_url(self):
-    #     """get_absolute_url method works correctly."""
-    #     instance = factories.dbGaPApplicationFactory.create()
-    #     self.assertIsInstance(instance.get_absolute_url(), str)
+    @skip("not implemented yet")
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.dbGaPApplicationFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
     def test_unique_dbgap_application(self):
         """Saving a duplicate model fails."""
