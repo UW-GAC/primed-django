@@ -87,6 +87,52 @@ class dbGaPStudyDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.pk + 1)
 
+    def test_workspace_table(self):
+        """The workspace table exists."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("workspace_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["workspace_table"], tables.dbGaPWorkspaceTable
+        )
+
+    def test_workspace_table_none(self):
+        """No workspaces are shown if the dbGaPStudy does not have any workspaces."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
+
+    def test_workspace_table_one(self):
+        """One workspace is shown if the dbGaPStudy has one workspace."""
+        factories.dbGaPWorkspaceFactory.create(dbgap_study=self.obj)
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["workspace_table"].rows), 1)
+
+    def test_workspace_table_two(self):
+        """Two workspaces are shown if the dbGaPStudy has two workspaces."""
+        factories.dbGaPWorkspaceFactory.create_batch(2, dbgap_study=self.obj)
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["workspace_table"].rows), 2)
+
+    def test_shows_workspace_for_only_this_dbgapstudy(self):
+        """Only shows workspaces for this dbGaPStudy."""
+        other_dbgap_study = factories.dbGaPStudyFactory.create()
+        factories.dbGaPWorkspaceFactory.create(dbgap_study=other_dbgap_study)
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("workspace_table", response.context_data)
+        self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
+
 
 class dbGaPWorkspaceListTest(TestCase):
     """Tests of the anvil_consortium_manager WorkspaceList view using this app's dbGaPWorkspaceAdapter."""

@@ -1,11 +1,12 @@
 {% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
 
 {% block title %}{{ object.short_name }}{% endblock %}
 
 
 {% block content %}
 
-<h1>dbGaP Study: {{ object }}</h1>
+<h1>dbGaP Study</h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
@@ -13,5 +14,9 @@
     <li>dbGaP accession: {{ object.phs }}</li>
   </ul>
 </div>
+
+<h2>Workspaces associated with this dbGaP study accession</h2>
+
+{% render_table workspace_table %}
 
 {% endblock content %}
