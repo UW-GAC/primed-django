@@ -1,6 +1,7 @@
 from anvil_consortium_manager.models import BaseWorkspaceData
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 
 from ..primed_anvil.models import DataUseOntologyModel, Study
@@ -30,6 +31,9 @@ class dbGaPStudy(TimeStampedModel, models.Model):
         return "phs{phs:06d} - {study}".format(
             phs=self.phs, study=self.study.short_name
         )
+
+    def get_absolute_url(self):
+        return reverse("dbgap:dbgap_studies:detail", kwargs={"pk": self.pk})
 
 
 class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):

@@ -35,6 +35,11 @@ class dbGaPStudyTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "phs000001 - FOO")
 
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.dbGaPStudyFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_unique_dbgap_study(self):
         """Saving a duplicate model fails."""
         obj = factories.dbGaPStudyFactory.create()
