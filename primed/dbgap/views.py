@@ -45,10 +45,18 @@ class dbGaPStudyAccessionCreate(
     success_msg = "dbGaP study accession successfully created."
 
 
-class dbGaPApplicationDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class dbGaPApplicationDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
+    context_table_name = "data_access_request_table"
+
+    def get_table(self):
+        return tables.dbGaPDataAccessRequestTable(
+            self.object.dbgapdataaccessrequest_set.all(),
+        )
 
 
 class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):

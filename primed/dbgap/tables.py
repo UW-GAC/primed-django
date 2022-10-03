@@ -63,3 +63,19 @@ class dbGaPApplicationTable(tables.Table):
             "project_id",
             "principal_investigator",
         )
+
+
+class dbGaPDataAccessRequestTable(tables.Table):
+
+    dbgap_study_accession = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = (
+            "dbgap_dar_id",
+            "dbgap_study_accession",
+            "dbgap_version",
+            "dbgap_participant_set",
+            "dbgap_consent_code",
+            "dbgap_consent_abbreviation",
+        )

@@ -768,7 +768,7 @@ class dbGaPApplicationListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 2)
 
 
-class dbGaPStudyApplicationDetailTest(TestCase):
+class dbGaPApplicationDetailTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
@@ -829,6 +829,65 @@ class dbGaPStudyApplicationDetailTest(TestCase):
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.pk + 1)
+
+    def test_workspace_table(self):
+        """The data_access_request_table exists."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["data_access_request_table"],
+            tables.dbGaPDataAccessRequestTable,
+        )
+
+    def test_dar_table_none(self):
+        """No dbGaPDataAccessRequests are shown if the dbGaPApplication does not have any DARs."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 0
+        )
+
+    def test_dar_table_one(self):
+        """One dbGaPDataAccessRequest is shown if the dbGaPApplication has one DAR."""
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_application=self.obj)
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 1
+        )
+
+    def test_dar_table_two(self):
+        """Two dbGaPDataAccessRequests are shown if the dbGaPApplication has two DARs."""
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2, dbgap_application=self.obj
+        )
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 2
+        )
+
+    def test_shows_dar_for_only_this_dbGaPApplication(self):
+        """Only shows workspaces for this dbGaPApplication."""
+        other_dbgap_application = factories.dbGaPApplicationFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=other_dbgap_application
+        )
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 0
+        )
 
 
 class dbGaPApplicationCreateTest(TestCase):
