@@ -9,6 +9,7 @@ from . import models
 class dbGaPStudyAccessionTable(tables.Table):
     """A table for dbGaPStudyAccession objects."""
 
+    phs = tables.columns.Column(linkify=True)
     study = tables.columns.Column(linkify=True)
     number_workspaces = tables.Column(
         verbose_name="Number of workspaces",
