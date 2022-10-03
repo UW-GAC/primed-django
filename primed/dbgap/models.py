@@ -58,6 +58,10 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         validators=[MinValueValidator(1)],
         help_text="""The dbGaP participant set associated with this Workspace.""",
     )
+    dbgap_consent_code = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The numeric code assigned to this consent group by dbGaP",
+    )
     dbgap_consent_abbreviation = models.CharField(
         max_length=63,
         help_text="""The consent abbreviation from dbGaP for this study consent group (e.g., GRU-NPU-MDS).""",
@@ -155,7 +159,6 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         validators=[MinValueValidator(1)],
         help_text="The participant set of the dbGaP study accession that this application grants access to.",
     )
-    # Consider renaming this or the field in Workspace for consistency.
     dbgap_consent_code = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
         help_text="The numeric code assigned to this consent group by dbGaP",

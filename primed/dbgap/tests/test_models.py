@@ -109,6 +109,7 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_version=1,
             dbgap_participant_set=1,
             data_use_limitations="test limitations",
+            dbgap_consent_code=1,
             dbgap_consent_abbreviation="GRU-NPU",
             data_use_permission=data_use_permission,
         )
@@ -222,6 +223,38 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertIn(
             "greater than or equal to 1",
             e.exception.error_dict["dbgap_participant_set"][0].messages[0],
+        )
+
+    def test_dbgap_consent_code_cannot_be_zero(self):
+        """dbgap_consent_code cannot be zero."""
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPWorkspaceFactory.build(
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_consent_code=0,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_consent_code", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_consent_code"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_consent_code"][0].messages[0],
+        )
+
+    def test_dbgap_consent_code_cannot_be_negative(self):
+        """dbgap_consent_code cannot be negative."""
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPWorkspaceFactory.build(
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_consent_code=-1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_consent_code", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_consent_code"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_consent_code"][0].messages[0],
         )
 
     def test_get_dbgap_accession(self):

@@ -104,6 +104,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -119,6 +120,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "data_use_modifiers": DataUseModifier.objects.all(),
@@ -135,6 +137,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "data_use_modifiers": DataUseModifier.objects.all(),
@@ -149,6 +152,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -167,6 +171,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "phs": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -185,6 +190,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 0,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -202,6 +208,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_study_accession": self.dbgap_study_accession,
             "dbgap_version": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -220,6 +227,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 0,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
@@ -238,6 +246,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "data_use_limitations": "test limitations",
+            "dbgap_consent_code": 1,
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
         }
@@ -248,6 +257,24 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["dbgap_consent_abbreviation"]), 1)
         self.assertIn("required", form.errors["dbgap_consent_abbreviation"][0])
 
+    def test_invalid_missing_dbgap_consent_code(self):
+        """Form is invalid when missing dbgap_consent_code."""
+        form_data = {
+            "dbgap_study_accession": self.dbgap_study_accession,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
+            "data_use_limitations": "test limitations",
+            "dbgap_consent_abbreviation": "GRU",
+            "data_use_permission": self.data_use_permission,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_consent_code", form.errors)
+        self.assertEqual(len(form.errors["dbgap_consent_code"]), 1)
+        self.assertIn("required", form.errors["dbgap_consent_code"][0])
+
     def test_invalid_missing_data_use_limitations(self):
         """Form is invalid when missing data_use_limitations."""
         form_data = {
@@ -255,6 +282,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_permission": self.data_use_permission,
             "workspace": self.workspace,
         }
@@ -272,6 +300,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_permission": "",
             "data_use_limitations": "test limitations",
             "workspace": self.workspace,
@@ -290,6 +319,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_version": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
         }

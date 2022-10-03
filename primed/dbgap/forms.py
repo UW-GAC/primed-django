@@ -26,6 +26,7 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "dbgap_version",
             "dbgap_participant_set",
             "dbgap_consent_abbreviation",
+            "dbgap_consent_code",
             "data_use_limitations",
             "data_use_permission",
             "disease_restriction",

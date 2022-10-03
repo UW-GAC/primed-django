@@ -28,8 +28,7 @@ class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
     dbgap_study_accession = SubFactory(dbGaPStudyAccessionFactory)
     dbgap_version = Faker("random_int")
     dbgap_participant_set = Faker("random_int")
-    # Ideally we would calculate the default full consent code from the data use permission and limitations,
-    # but that is not straightforward and it doesn't particularly matter.
+    dbgap_consent_code = Faker("random_int")
     dbgap_consent_abbreviation = Faker("word")
     data_use_limitations = Faker("paragraph")
 
