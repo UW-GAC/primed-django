@@ -39,3 +39,13 @@ class dbGaPWorkspaceAdmin(admin.ModelAdmin):
         "workspace",
         "version",
     )
+
+
+@admin.register(models.dbGaPApplication)
+class dbGaPApplicationAdmin(admin.ModelAdmin):
+    """Admin class for the `dbGaPApplication` model."""
+
+    list_display = (
+        "principal_investigator",
+        "project_id",
+    )
