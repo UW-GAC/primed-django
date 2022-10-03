@@ -49,3 +49,17 @@ class dbGaPApplicationAdmin(admin.ModelAdmin):
         "principal_investigator",
         "project_id",
     )
+
+
+@admin.register(models.dbGaPDataAccessRequest)
+class dbGaPDataAccessRequestAdmin(admin.ModelAdmin):
+    """Admin class for the `dbGaPDataAccessRequest` model."""
+
+    list_display = (
+        "dbgap_dar_id",
+        "dbgap_application",
+        "dbgap_study_accession",
+        "dbgap_version",
+        "dbgap_consent_code",
+        "dbgap_consent_abbreviation",
+    )
