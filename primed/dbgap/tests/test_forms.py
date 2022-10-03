@@ -9,6 +9,7 @@ from primed.primed_anvil.tests.factories import (
     DataUsePermissionFactory,
     StudyFactory,
 )
+from primed.users.tests.factories import UserFactory
 
 from .. import forms
 from . import factories
@@ -316,3 +317,73 @@ class dbGaPWorkspaceFormTest(TestCase):
         non_field_errors = form.non_field_errors()
         self.assertEqual(len(non_field_errors), 1)
         self.assertIn("already exists", non_field_errors[0])
+
+
+class dbGaPApplicationFormTest(TestCase):
+    """Tests for the dbGaPApplicationForm class."""
+
+    form_class = forms.dbGaPApplicationForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.pi = UserFactory.create()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "principal_investigator": self.pi,
+            "project_id": 1,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_pi(self):
+        """Form is invalid when missing principal_investigator."""
+        form_data = {
+            "project_id": 1,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("principal_investigator", form.errors)
+        self.assertEqual(len(form.errors["principal_investigator"]), 1)
+        self.assertIn("required", form.errors["principal_investigator"][0])
+
+    def test_invalid_missing_project_id(self):
+        """Form is invalid when missing phs."""
+        form_data = {
+            "principal_investigator": self.pi,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("project_id", form.errors)
+        self.assertEqual(len(form.errors["project_id"]), 1)
+        self.assertIn("required", form.errors["project_id"][0])
+
+    def test_invalid_project_id_zero(self):
+        """Form is invalid when phs is zero."""
+        form_data = {
+            "principal_investigator": self.pi,
+            "project_id": 0,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("project_id", form.errors)
+        self.assertEqual(len(form.errors["project_id"]), 1)
+        self.assertIn("greater than", form.errors["project_id"][0])
+
+    def test_invalid_duplicate_object(self):
+        """Form is invalid with a duplicated object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        other_pi = UserFactory.create()
+        form_data = {
+            "principal_investigator": other_pi,
+            "project_id": dbgap_application.project_id,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("project_id", form.errors)
+        self.assertEqual(len(form.errors["project_id"]), 1)
+        self.assertIn("already exists", form.errors["project_id"][0])

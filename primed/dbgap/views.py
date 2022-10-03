@@ -49,3 +49,13 @@ class dbGaPApplicationDetail(AnVILConsortiumManagerViewRequired, DetailView):
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
+
+
+class dbGaPApplicationCreate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+):
+    """View to create a new dbGaPApplication."""
+
+    model = models.dbGaPApplication
+    form_class = forms.dbGaPApplicationForm
+    success_msg = "dbGaP application successfully created."

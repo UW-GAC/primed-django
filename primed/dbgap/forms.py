@@ -32,3 +32,14 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "data_use_modifiers",
             "workspace",
         )
+
+
+class dbGaPApplicationForm(forms.ModelForm):
+    """Form for a dbGaPApplication."""
+
+    class Meta:
+        model = models.dbGaPApplication
+        fields = (
+            "principal_investigator",
+            "project_id",
+        )

@@ -19,6 +19,7 @@ from primed.primed_anvil.tests.factories import (
     DataUsePermissionFactory,
     StudyFactory,
 )
+from primed.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
 from . import factories
@@ -739,3 +740,217 @@ class dbGaPStudyApplicationDetailTest(TestCase):
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.pk + 1)
+
+
+class dbGaPApplicationCreateTest(TestCase):
+    """Tests for the dbGaPApplication view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("dbgap:dbgap_applications:new", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPApplicationCreate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has no permissions."""
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertTrue("form" in response.context_data)
+
+    def test_form_class(self):
+        """Form is the expected class."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertIsInstance(response.context_data["form"], forms.dbGaPApplicationForm)
+
+    def test_can_create_object(self):
+        """Can create an object."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+        )
+        self.assertEqual(response.status_code, 302)
+        # A new object was created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 1)
+        new_object = models.dbGaPApplication.objects.latest("pk")
+        self.assertEqual(new_object.principal_investigator, pi)
+        self.assertEqual(new_object.project_id, 1)
+
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+        )
+        new_object = models.dbGaPApplication.objects.latest("pk")
+        self.assertRedirects(response, new_object.get_absolute_url())
+
+    def test_success_message(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {"principal_investigator": pi.pk, "project_id": 1},
+            follow=True,
+        )
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.dbGaPApplicationCreate.success_msg, str(messages[0]))
+
+    def test_error_missing_pi(self):
+        """Form shows an error when principal_investigator is missing."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"project_id": 1})
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("principal_investigator", form.errors)
+        self.assertEqual(len(form.errors["principal_investigator"]), 1)
+        self.assertIn("required", form.errors["principal_investigator"][0])
+
+    def test_invalid_pi(self):
+        """Form shows an error when principal_investigator pk does not exist."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"principal_investigator": self.user.pk + 1, "project_id": 12345},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("principal_investigator", form.errors)
+        self.assertEqual(len(form.errors["principal_investigator"]), 1)
+        self.assertIn("valid choice", form.errors["principal_investigator"][0])
+
+    def test_error_missing_project_id(self):
+        """Form shows an error when phs is missing."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk})
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("project_id", form.errors)
+        self.assertEqual(len(form.errors["project_id"]), 1)
+        self.assertIn("required", form.errors["project_id"][0])
+
+    def test_error_duplicate_project_id(self):
+        """Form shows an error when trying to create a duplicate phs."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        other_pi = UserFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "principal_investigator": other_pi.pk,
+                "project_id": dbgap_application.project_id,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 1)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("project_id", form.errors)
+        self.assertEqual(len(form.errors["project_id"]), 1)
+        self.assertIn("already exists", form.errors["project_id"][0])
+
+    def test_post_blank_data(self):
+        """Posting blank data does not create an object."""
+        request = self.factory.post(self.get_url(), {})
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 2)
+        self.assertIn("principal_investigator", form.errors.keys())
+        self.assertEqual(len(form.errors["principal_investigator"]), 1)
+        self.assertIn("required", form.errors["principal_investigator"][0])
+        self.assertIn("project_id", form.errors.keys())
+        self.assertEqual(len(form.errors["project_id"]), 1)
+        self.assertIn("required", form.errors["project_id"][0])
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
