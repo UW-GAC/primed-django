@@ -16,7 +16,7 @@ dbgap_study_accession_patterns = (
 
 dbgap_application_patterns = (
     [
-        # path("", views.dbGaPApplicationList.as_view(), name="list"),
+        path("", views.dbGaPApplicationList.as_view(), name="list"),
         path("new/", views.dbGaPApplicationCreate.as_view(), name="new"),
         path("<int:pk>/", views.dbGaPApplicationDetail.as_view(), name="detail"),
     ],

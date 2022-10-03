@@ -49,3 +49,17 @@ class dbGaPWorkspaceTable(tables.Table):
 
     def render_dbgapworkspace__version(self, value):
         return "v{}".format(value)
+
+
+class dbGaPApplicationTable(tables.Table):
+    """A table for dbGaPStudyAccession objects."""
+
+    project_id = tables.columns.Column(linkify=True)
+    principal_investigator = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = models.dbGaPApplication
+        fields = (
+            "project_id",
+            "principal_investigator",
+        )

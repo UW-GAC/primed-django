@@ -51,6 +51,13 @@ class dbGaPApplicationDetail(AnVILConsortiumManagerViewRequired, DetailView):
     model = models.dbGaPApplication
 
 
+class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of dbGaPApplication objects."""
+
+    model = models.dbGaPApplication
+    table_class = tables.dbGaPApplicationTable
+
+
 class dbGaPApplicationCreate(
     AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
 ):
