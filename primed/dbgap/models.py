@@ -58,11 +58,9 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         validators=[MinValueValidator(1)],
         help_text="""The dbGaP participant set associated with this Workspace.""",
     )
-
-    # Should this be here or in the abstract DataUseOntology model?
-    full_consent_code = models.CharField(
+    dbgap_consent_abbreviation = models.CharField(
         max_length=63,
-        help_text="""The full consent code from dbGaP for this study consent group (e.g., GRU-NPU-MDS).""",
+        help_text="""The consent abbreviation from dbGaP for this study consent group (e.g., GRU-NPU-MDS).""",
     )
     # This field would ideally be created from the DataUseOntology fields to minimize data duplication.
     # Unfortunately, there are often legacy codes that don't fit into the current main/modifiers model.
@@ -80,7 +78,11 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
             # Model uniqueness.
             models.UniqueConstraint(
                 name="unique_dbgap_workspace",
-                fields=["dbgap_study_accession", "dbgap_version", "full_consent_code"],
+                fields=[
+                    "dbgap_study_accession",
+                    "dbgap_version",
+                    "dbgap_consent_abbreviation",
+                ],
             ),
         ]
 
@@ -92,7 +94,7 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         return "{} ({} - {})".format(
             self.dbgap_study_accession.study.short_name,
             self.get_dbgap_accession(),
-            self.full_consent_code,
+            self.dbgap_consent_abbreviation,
         )
 
     def get_dbgap_accession(self):

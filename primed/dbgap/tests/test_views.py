@@ -520,7 +520,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
                 "workspacedata-0-dbgap_version": 2,
                 "workspacedata-0-dbgap_participant_set": 3,
-                "workspacedata-0-full_consent_code": "GRU-TEST",
+                "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-data_use_modifiers": [
@@ -541,7 +541,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(new_workspace_data.dbgap_version, 2)
         self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
-        self.assertEqual(new_workspace_data.full_consent_code, "GRU-TEST")
+        self.assertEqual(new_workspace_data.dbgap_consent_abbreviation, "GRU-TEST")
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
@@ -649,7 +649,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
                 "workspacedata-0-dbgap_version": 2,
                 "workspacedata-0-dbgap_participant_set": 3,
-                "workspacedata-0-full_consent_code": "GRU-TEST",
+                "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-data_use_modifiers": [
@@ -670,7 +670,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(new_workspace_data.dbgap_version, 2)
         self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
-        self.assertEqual(new_workspace_data.full_consent_code, "GRU-TEST")
+        self.assertEqual(new_workspace_data.dbgap_consent_abbreviation, "GRU-TEST")
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)

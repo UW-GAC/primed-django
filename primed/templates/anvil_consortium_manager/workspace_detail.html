@@ -14,7 +14,7 @@ workspace_detail.html template for the dbGaP workspace types specifically in the
   <ul>
     <li>Study: <a href="{{ object.dbgapworkspace.study.get_absolute_url }}">{{ object.dbgapworkspace.study }}</a></li>
     <li>dbGaP accession: {{ object.dbgapworkspace.get_dbgap_accession }}</li>
-    <li>Consent code: {{ object.dbgapworkspace.full_consent_code }}</li>
+    <li>dbGaP consent abbreviation: {{ object.dbgapworkspace.dbgap_consent_abbreviation }}</li>
   </ul>
 {% else %}
   {{ block.super }}

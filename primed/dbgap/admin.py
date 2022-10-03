@@ -28,11 +28,11 @@ class dbGaPWorkspaceAdmin(admin.ModelAdmin):
         "dbgap_study_accession",
         "dbgap_version",
         "dbgap_participant_set",
-        "full_consent_code",
+        "dbgap_consent_abbreviation",
     )
     list_filter = (
         "dbgap_study_accession",
-        "full_consent_code",
+        "dbgap_consent_abbreviation",
     )
     sortable_by = (
         "id",

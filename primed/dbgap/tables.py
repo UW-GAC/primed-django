@@ -41,7 +41,7 @@ class dbGaPWorkspaceTable(tables.Table):
             "dbgapworkspace__dbgap_study_accession__phs",
             "dbgapworkspace__dbgap_version",
             "dbgapworkspace__dbgap_participant_set",
-            "dbgapworkspace__full_consent_code",
+            "dbgapworkspace__dbgap_consent_abbreviation",
         )
 
     def render_dbgapworkspace__phs(self, value):

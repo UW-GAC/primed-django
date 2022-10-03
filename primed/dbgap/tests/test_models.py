@@ -109,7 +109,7 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_version=1,
             dbgap_participant_set=1,
             data_use_limitations="test limitations",
-            full_consent_code="GRU-NPU",
+            dbgap_consent_abbreviation="GRU-NPU",
             data_use_permission=data_use_permission,
         )
         instance.save()
@@ -122,7 +122,7 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_study_accession__phs=1,
             dbgap_version=2,
             dbgap_participant_set=3,
-            full_consent_code="GRU-NPU",
+            dbgap_consent_abbreviation="GRU-NPU",
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
@@ -136,7 +136,7 @@ class dbGaPWorkspaceTest(TestCase):
         instance = factories.dbGaPWorkspaceFactory.build(
             dbgap_study_accession=dbgap_workspace.dbgap_study_accession,
             dbgap_version=dbgap_workspace.dbgap_version,
-            full_consent_code=dbgap_workspace.full_consent_code,
+            dbgap_consent_abbreviation=dbgap_workspace.dbgap_consent_abbreviation,
             # These are here to prevent ValueErrors about unsaved related objects.
             data_use_permission=data_use_permission,
             workspace=workspace,
