@@ -317,3 +317,218 @@ class dbGaPApplicationTest(TestCase):
             "greater than or equal to 1",
             e.exception.error_dict["project_id"][0].messages[0],
         )
+
+
+class dbGaPDataAccessRequestTest(TestCase):
+    """Tests for the dbGaPDataAccessRequest model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = models.dbGaPDataAccessRequest(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_dar_id=1,
+            dbgap_version=2,
+            dbgap_participant_set=3,
+            dbgap_consent_code=4,
+            dbgap_consent_abbreviation="GRU",
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.dbGaPDataAccessRequest)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_dar_id=1234,
+        )
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "1234")
+
+    # def test_get_absolute_url(self):
+    #     """get_absolute_url method works correctly."""
+    #     instance = factories.dbGaPDataAccessRequestFactory.create()
+    #     self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_unique_dbgap_dar_id(self):
+        """Saving a duplicate model fails."""
+        obj = factories.dbGaPDataAccessRequestFactory.create()
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_dar_id=obj.dbgap_dar_id,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_dar_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_dar_id"]), 1)
+        self.assertIn(
+            "already exists", e.exception.error_dict["dbgap_dar_id"][0].messages[0]
+        )
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_dbgap_application_protect(self):
+        """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessRequest."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application
+        )
+        with self.assertRaises(ProtectedError):
+            dbgap_application.delete()
+
+    def test_dbgap_study_accession_protect(self):
+        """Cannot delete a dbGaPStudyAccession if it has an associated dbGaPDataAccessRequest."""
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_study_accession=dbgap_study_accession
+        )
+        with self.assertRaises(ProtectedError):
+            dbgap_study_accession.delete()
+
+    def test_dbgap_dar_id_cannot_be_zero(self):
+        """dbgap_dar_id cannot be zero."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_dar_id=0,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_dar_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_dar_id"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_dar_id"][0].messages[0],
+        )
+
+    def test_dbgap_dar_id_cannot_be_negative(self):
+        """dbgap_dar_id cannot be negative."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_dar_id=-1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_dar_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_dar_id"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_dar_id"][0].messages[0],
+        )
+
+    def test_dbgap_version_cannot_be_zero(self):
+        """dbgap_version cannot be zero."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_version=0,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_version", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_version"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_version"][0].messages[0],
+        )
+
+    def test_dbgap_version_cannot_be_negative(self):
+        """dbgap_version cannot be negative."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_version=-1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_version", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_version"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_version"][0].messages[0],
+        )
+
+    def test_dbgap_participant_set_cannot_be_zero(self):
+        """dbgap_participant_set cannot be zero."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_participant_set=0,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_participant_set", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_participant_set"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_participant_set"][0].messages[0],
+        )
+
+    def test_dbgap_participant_set_cannot_be_negative(self):
+        """dbgap_participant_set cannot be negative."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_participant_set=-1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_participant_set", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_participant_set"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_participant_set"][0].messages[0],
+        )
+
+    def test_dbgap_consent_code_cannot_be_zero(self):
+        """consent_code cannot be zero."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_consent_code=0,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_consent_code", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_consent_code"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_consent_code"][0].messages[0],
+        )
+
+    def test_dbgap_consent_code_cannot_be_negative(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_consent_code=-1,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_consent_code", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_consent_code"]), 1)
+        self.assertIn(
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_consent_code"][0].messages[0],
+        )

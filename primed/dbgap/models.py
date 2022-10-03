@@ -12,15 +12,15 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
     """A model to track dbGaP study accessions."""
 
     # Consider making this many to many since some dbgap acessions contain multiple studies.
-    study = models.ForeignKey(
-        Study,
-        on_delete=models.PROTECT,
-        help_text="The study associated with this dbGaP study accession.",
-    )
     phs = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
         unique=True,
         help_text="""The dbGaP study accession integer associated with this workspace (e.g., 7 for phs000007).""",
+    )
+    study = models.ForeignKey(
+        Study,
+        on_delete=models.PROTECT,
+        help_text="The study associated with this dbGaP study accession.",
     )
 
     class Meta:
@@ -126,3 +126,44 @@ class dbGaPApplication(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("dbgap:dbgap_applications:detail", kwargs={"pk": self.pk})
+
+
+class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
+    """A model to track dbGaP data access requests."""
+
+    dbgap_dar_id = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        unique=True,
+    )
+    dbgap_application = models.ForeignKey(
+        dbGaPApplication,
+        on_delete=models.PROTECT,
+        help_text="The dbGaP application associated with this DAR.",
+    )
+    dbgap_study_accession = models.ForeignKey(
+        dbGaPStudyAccession,
+        on_delete=models.PROTECT,
+        help_text="The dbGaP study accession associated with this DAR.",
+    )
+    dbgap_version = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The version of the dbGaP study accession that this application grants access to.",
+    )
+    dbgap_participant_set = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The participant set of the dbGaP study accession that this application grants access to.",
+    )
+    # Consider renaming this or the field in Workspace for consistency.
+    dbgap_consent_code = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="The numeric code assigned to this consent group by dbGaP",
+    )
+    dbgap_consent_abbreviation = models.CharField(
+        max_length=31, help_text="The abbreviation for this consent group."
+    )
+
+    class Meta:
+        verbose_name = " dbGaP data access request"
+
+    def __str__(self):
+        return "{}".format(self.dbgap_dar_id)

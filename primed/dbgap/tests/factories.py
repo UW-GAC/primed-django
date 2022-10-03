@@ -45,3 +45,18 @@ class dbGaPApplicationFactory(DjangoModelFactory):
 
     class Meta:
         model = models.dbGaPApplication
+
+
+class dbGaPDataAccessRequestFactory(DjangoModelFactory):
+    """A factory for the dbGaPApplication model."""
+
+    dbgap_application = SubFactory(dbGaPApplicationFactory)
+    dbgap_study_accession = SubFactory(dbGaPStudyAccessionFactory)
+    dbgap_dar_id = Faker("random_int")
+    dbgap_version = Faker("random_int")
+    dbgap_participant_set = Faker("random_int")
+    dbgap_consent_code = Faker("random_int")
+    dbgap_consent_abbreviation = Faker("word")
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
