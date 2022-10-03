@@ -43,3 +43,9 @@ class dbGaPStudyAccessionCreate(
     model = models.dbGaPStudyAccession
     form_class = forms.dbGaPStudyAccessionForm
     success_msg = "dbGaP study accession successfully created."
+
+
+class dbGaPApplicationDetail(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show details about a `dbGaPApplication`."""
+
+    model = models.dbGaPApplication

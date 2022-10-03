@@ -14,6 +14,16 @@ dbgap_study_accession_patterns = (
     "dbgap_study_accessions",
 )
 
+dbgap_application_patterns = (
+    [
+        # path("", views.dbGaPApplicationList.as_view(), name="list"),
+        # path("new/", views.dbGaPApplicationCreate.as_view(), name="new"),
+        path("<int:pk>/", views.dbGaPApplicationDetail.as_view(), name="detail"),
+    ],
+    "dbgap_applications",
+)
+
 urlpatterns = [
     path("studies/", include(dbgap_study_accession_patterns)),
+    path("applications/", include(dbgap_application_patterns)),
 ]
