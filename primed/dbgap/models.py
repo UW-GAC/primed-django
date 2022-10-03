@@ -122,3 +122,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
 
     def __str__(self):
         return "{}".format(self.project_id)
+
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("dbgap:dbgap_applications:detail", kwargs={"pk": self.pk})
