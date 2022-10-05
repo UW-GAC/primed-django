@@ -1,8 +1,10 @@
 """Forms classes for the `dbgap` app."""
 
+import jsonschema
 from django import forms
+from django.core.exceptions import ValidationError
 
-from . import models
+from . import constants, models
 
 
 class dbGaPStudyAccessionForm(forms.ModelForm):
@@ -44,3 +46,22 @@ class dbGaPApplicationForm(forms.ModelForm):
             "principal_investigator",
             "project_id",
         )
+
+
+class dbGaPDataAccessRequestFromJsonForm(forms.Form):
+    """Create dbGaP data access requests from JSON data."""
+
+    json = forms.JSONField()
+    ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"
+
+    def clean_json(self):
+        data = self.cleaned_data["json"]
+        try:
+            jsonschema.validate(data, constants.json_dar_schema)
+        except jsonschema.exceptions.ValidationError as e:
+            # Replace the full json string because it will be very long
+            error_message = e.message.replace(str(e.instance), "JSON array")
+            raise ValidationError(
+                self.ERROR_JSON_VALIDATION, params={"error": error_message}
+            )
+        return data

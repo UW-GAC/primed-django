@@ -14,11 +14,23 @@ dbgap_study_accession_patterns = (
     "dbgap_study_accessions",
 )
 
+data_access_request_patterns = (
+    [
+        path(
+            "new/",
+            views.dbGaPDataAccessRequestCreateFromJson.as_view(),
+            name="new_from_json",
+        ),
+    ],
+    "dbgap_data_access_requests",
+)
+
 dbgap_application_patterns = (
     [
         path("", views.dbGaPApplicationList.as_view(), name="list"),
         path("new/", views.dbGaPApplicationCreate.as_view(), name="new"),
         path("<int:pk>/", views.dbGaPApplicationDetail.as_view(), name="detail"),
+        path("<int:dbgap_application_pk>/dars/", include(data_access_request_patterns)),
     ],
     "dbgap_applications",
 )
