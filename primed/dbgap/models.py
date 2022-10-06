@@ -1,3 +1,7 @@
+import re
+
+import jsonschema
+import requests
 from anvil_consortium_manager.models import BaseWorkspaceData
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -6,6 +10,8 @@ from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 
 from primed.primed_anvil.models import DataUseOntologyModel, Study
+
+from . import constants
 
 
 class dbGaPStudyAccession(TimeStampedModel, models.Model):
@@ -22,6 +28,12 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The study associated with this dbGaP study accession.",
     )
+    # Store a regex for the full accession.
+    PHS_REGEX = r"^phs(?P<phs>\d{6})$"
+    FULL_ACCESSION_REGEX = (
+        r"^phs(?P<phs>\d{6})\.v(?P<version>\d+?)\.p(?P<participant_set>\d+?)$"
+    )
+    DBGAP_STUDY_URL = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi"
 
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
@@ -35,6 +47,23 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
 
     def get_absolute_url(self):
         return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"pk": self.pk})
+
+    def dbgap_get_current_full_accession_numbers(self):
+        """Query dbGaP to get the full accession, including version and participant set numbers, for this phs."""
+        # This url should will resolve to the most recent version/participant set id.
+        response = requests.get(
+            self.DBGAP_STUDY_URL,
+            params={"study_id": "phs{phs:06d}".format(phs=self.phs)},
+            allow_redirects=False,
+        )
+        full_accession = response.next.url.split("study_id=")[1]
+        match = re.match(self.FULL_ACCESSION_REGEX, full_accession)
+        d = {
+            "phs": int(match.group("phs")),
+            "version": int(match.group("version")),
+            "participant_set": int(match.group("participant_set")),
+        }
+        return d
 
 
 class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
@@ -117,6 +146,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The principal investigator associated with on this dbGaP application.",
     )
+    # TODO: change to dbgap_project_id for consistency.
     project_id = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
         unique=True,
@@ -132,6 +162,48 @@ class dbGaPApplication(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("dbgap:dbgap_applications:detail", kwargs={"pk": self.pk})
+
+    def create_dars_from_json(self, json):
+        """Add DARs for this application from the dbGaP json for this project/application."""
+        # Validate the json.
+        jsonschema.validate(json, constants.json_dar_schema)
+        dars = []
+        project_json = json[0]
+        # Make sure that the project_id matches.
+        project_id = project_json["Project_id"]
+        if project_id != self.project_id:
+            raise ValueError("project_id does not match this dbGaPApplication.")
+        # Loop over studies and requests to create DARs.
+        # Do not save them until everything has been successfully created.
+        for study_json in project_json["studies"]:
+            # Consider making this a model manager method for dbGaPStudyAccession, since it may be common.
+            # Get the dbGaPStudyAccession associated with this phs.
+            phs = int(
+                re.match(
+                    dbGaPStudyAccession.PHS_REGEX, study_json["study_accession"]
+                ).group("phs")
+            )
+            study_accession = dbGaPStudyAccession.objects.get(phs=phs)
+            # Get the most recent version and participant set number from dbGaP.
+            accession_numbers = (
+                study_accession.dbgap_get_current_full_accession_numbers()
+            )
+            # Create the DAR.
+            for request_json in study_json["requests"]:
+                dar = dbGaPDataAccessRequest(
+                    dbgap_dar_id=request_json["DAR"],
+                    dbgap_application=self,
+                    dbgap_study_accession=study_accession,
+                    dbgap_version=accession_numbers["version"],
+                    dbgap_participant_set=accession_numbers["participant_set"],
+                    dbgap_consent_code=request_json["consent_code"],
+                    dbgap_consent_abbreviation=request_json["consent_abbrev"],
+                )
+                dar.full_clean()
+                dars.append(dar)
+        # Create the DARs in bulk - there are usually a lot of them.
+        dbGaPDataAccessRequest.objects.bulk_create(dars)
+        return dars
 
 
 class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
