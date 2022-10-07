@@ -423,6 +423,7 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(new_object.dbgap_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
     @responses.activate
@@ -486,6 +487,7 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(new_object.dbgap_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertIn(new_object, dars)
@@ -496,6 +498,7 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(new_object.dbgap_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
 
     @responses.activate
@@ -578,6 +581,7 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(new_object.dbgap_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertIn(new_object, dars)
@@ -588,6 +592,7 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(new_object.dbgap_participant_set, 1)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
 
     @responses.activate
@@ -755,6 +760,79 @@ class dbGaPApplicationTest(TestCase):
             dbgap_application.create_dars_from_json(valid_json)
         self.assertIn("project_id does not match", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    @responses.activate
+    def test_does_not_include_dars_that_are_not_approved(self):
+        """Does creates DARs with a different status than approved."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
+        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
+        valid_json = [
+            {
+                "Project_id": 6512,
+                "PI_name": "Test Investigator",
+                "Project_closed": "no",
+                # Two studies.
+                "studies": [
+                    {
+                        "study_name": "A test study",
+                        "study_accession": "phs000421",
+                        # N requests per study.
+                        "requests": [
+                            {
+                                "DAC_abbrev": "FOOBI",
+                                "consent_abbrev": "GRU",
+                                "consent_code": 1,
+                                "DAR": 23497,
+                                "current_version": 12,
+                                "current_DAR_status": "rejected",
+                                "was_approved": "yes",
+                            },
+                            {
+                                "DAC_abbrev": "FOOBI",
+                                "consent_abbrev": "NPU",
+                                "consent_code": 2,
+                                "DAR": 23498,
+                                "current_version": 12,
+                                "current_DAR_status": "approved",
+                                "was_approved": "yes",
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        dars = dbgap_application.create_dars_from_json(valid_json)
+        self.assertEqual(len(dars), 2)
+        new_object = dars[0]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_application, dbgap_application)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "rejected")
+        new_object = dars[1]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23498)
+        self.assertEqual(new_object.dbgap_application, dbgap_application)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
 
 
 class dbGaPDataAccessRequestTest(TestCase):

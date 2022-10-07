@@ -206,6 +206,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
                     dbgap_participant_set=accession_numbers["participant_set"],
                     dbgap_consent_code=request_json["consent_code"],
                     dbgap_consent_abbreviation=request_json["consent_abbrev"],
+                    dbgap_current_status=request_json["current_DAR_status"],
                 )
                 dar.full_clean()
                 dars.append(dar)
@@ -216,6 +217,21 @@ class dbGaPApplication(TimeStampedModel, models.Model):
 
 class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     """A model to track dbGaP data access requests."""
+
+    # The value here is what appears in the DAR JSON from dbGaP.
+    # So far I am aware of "approved" and "closed".
+    APPROVED = "approved"
+    CLOSED = "closed"
+    REJECTED = "rejected"
+    EXPIRED = "expired"
+    NEW = "new"
+    DBGAP_CURRENT_STATUS_CHOICES = (
+        (APPROVED, "Approved"),
+        (CLOSED, "Closed"),
+        (REJECTED, "Rejected"),
+        (EXPIRED, "Expired"),
+        (NEW, "New"),  # What is the difference between new and approved?
+    )
 
     dbgap_dar_id = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
@@ -245,6 +261,9 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     )
     dbgap_consent_abbreviation = models.CharField(
         max_length=31, help_text="The abbreviation for this consent group."
+    )
+    dbgap_current_status = models.CharField(
+        max_length=31, choices=DBGAP_CURRENT_STATUS_CHOICES
     )
 
     class Meta:
