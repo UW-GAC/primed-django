@@ -63,3 +63,4 @@ class dbGaPDataAccessRequestAdmin(admin.ModelAdmin):
         "dbgap_consent_code",
         "dbgap_consent_abbreviation",
     )
+    list_filter = ("dbgap_application",)
