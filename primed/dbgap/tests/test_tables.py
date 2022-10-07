@@ -82,6 +82,59 @@ class dbGaPApplicationTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_number_approved_dars_zero(self):
+        """Table shows correct count for number of approved DARs when there is zero."""
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell("number_approved_dars"), 0)
+
+    def test_number_approved_dars_one(self):
+        """Table shows correct count for number of approved DARs when there is one."""
+        dbgap_application = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell("number_approved_dars"), 1)
+
+    def test_number_approved_dars_two(self):
+        """Table shows correct count for number of approved DARs when there are two."""
+        dbgap_application = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell("number_approved_dars"), 2)
+
+    def test_number_approved_dars_other(self):
+        """Number of approved DARs does not include DARs with status that is not "approved"."""
+        dbgap_application = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell("number_approved_dars"), 1)
+
 
 class dbGaPDataAccessRequestTableTest(TestCase):
     model = models.dbGaPDataAccessRequest

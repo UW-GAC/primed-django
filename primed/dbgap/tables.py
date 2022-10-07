@@ -56,6 +56,12 @@ class dbGaPApplicationTable(tables.Table):
 
     project_id = tables.columns.Column(linkify=True)
     principal_investigator = tables.columns.Column(linkify=True)
+    number_approved_dars = tables.columns.Column(
+        verbose_name="Number of approved DARs", orderable=False, empty_values=()
+    )
+
+    def render_number_approved_dars(self, value, record):
+        return record.dbgapdataaccessrequest_set.approved().count()
 
     class Meta:
         model = models.dbGaPApplication
