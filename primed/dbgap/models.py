@@ -12,7 +12,7 @@ from django_extensions.db.models import TimeStampedModel
 
 from primed.primed_anvil.models import DataUseOntologyModel, Study
 
-from . import constants
+from . import constants, managers
 
 logger = logging.getLogger(__name__)
 
@@ -265,6 +265,8 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     dbgap_current_status = models.CharField(
         max_length=31, choices=DBGAP_CURRENT_STATUS_CHOICES
     )
+
+    objects = managers.dbGaPDataAccessRequestManager()
 
     class Meta:
         verbose_name = " dbGaP data access request"

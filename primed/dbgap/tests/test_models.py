@@ -1048,3 +1048,26 @@ class dbGaPDataAccessRequestTest(TestCase):
             "greater than or equal to 1",
             e.exception.error_dict["dbgap_consent_code"][0].messages[0],
         )
+
+    def test_approved(self):
+        """The approved manager method works as expected."""
+        approved_dar = factories.dbGaPDataAccessRequestFactory.create()
+        closed_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED
+        )
+        rejected_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED
+        )
+        expired_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED
+        )
+        new_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW
+        )
+        qs = models.dbGaPDataAccessRequest.objects.approved()
+        self.assertEqual(len(qs), 1)
+        self.assertIn(approved_dar, qs)
+        self.assertNotIn(closed_dar, qs)
+        self.assertNotIn(rejected_dar, qs)
+        self.assertNotIn(expired_dar, qs)
+        self.assertNotIn(new_dar, qs)
