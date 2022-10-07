@@ -23,12 +23,14 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
 
     # Consider making this many to many since some dbgap acessions contain multiple studies.
     phs = models.PositiveIntegerField(
+        verbose_name=" phs",
         validators=[MinValueValidator(1)],
         unique=True,
         help_text="""The dbGaP study accession integer associated with this workspace (e.g., 7 for phs000007).""",
     )
     study = models.ForeignKey(
         Study,
+        verbose_name="study",
         on_delete=models.PROTECT,
         help_text="The study associated with this dbGaP study accession.",
     )
@@ -78,26 +80,32 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
     # We'll need to add a separate constraint.
     dbgap_study_accession = models.ForeignKey(
-        dbGaPStudyAccession, on_delete=models.PROTECT
+        dbGaPStudyAccession,
+        verbose_name=" dbGaP study accession",
+        on_delete=models.PROTECT,
     )
 
     # Should dbgap_study, version and participant set be their own model -- dbGaPStudyVersion?
     # Note that having this -- wec ould have derived data workspaces linking to multiple dbgap study versions.
     dbgap_version = models.PositiveIntegerField(
+        verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
         help_text="""The dbGaP study version associated with this Workspace.""",
     )
 
     # Do we want version here?
     dbgap_participant_set = models.PositiveIntegerField(
+        verbose_name=" dbGaP participant set",
         validators=[MinValueValidator(1)],
         help_text="""The dbGaP participant set associated with this Workspace.""",
     )
     dbgap_consent_code = models.PositiveIntegerField(
+        verbose_name=" dbGaP consent code",
         validators=[MinValueValidator(1)],
         help_text="The numeric code assigned to this consent group by dbGaP",
     )
     dbgap_consent_abbreviation = models.CharField(
+        verbose_name=" dbGaP consent abbreviation",
         max_length=63,
         help_text="""The consent abbreviation from dbGaP for this study consent group (e.g., GRU-NPU-MDS).""",
     )
@@ -156,6 +164,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
     )
     # TODO: change to dbgap_project_id for consistency.
     project_id = models.PositiveIntegerField(
+        verbose_name=" dbGaP project id",
         validators=[MinValueValidator(1)],
         unique=True,
         help_text="The dbGaP-assigned project_id for this application.",
@@ -241,36 +250,46 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     )
 
     dbgap_dar_id = models.PositiveIntegerField(
+        verbose_name=" dbGaP DAR id",
         validators=[MinValueValidator(1)],
         unique=True,
     )
     dbgap_application = models.ForeignKey(
         dbGaPApplication,
+        verbose_name="dbGaP application",
         on_delete=models.PROTECT,
         help_text="The dbGaP application associated with this DAR.",
     )
     dbgap_study_accession = models.ForeignKey(
         dbGaPStudyAccession,
+        verbose_name=" dbGaP study accession",
         on_delete=models.PROTECT,
         help_text="The dbGaP study accession associated with this DAR.",
     )
     dbgap_version = models.PositiveIntegerField(
+        verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
-        help_text="The version of the dbGaP study accession that this application grants access to.",
+        help_text="The original version of the dbGaP study accession that this application grants access to.",
     )
     dbgap_participant_set = models.PositiveIntegerField(
+        verbose_name=" dbGaP participant set",
         validators=[MinValueValidator(1)],
-        help_text="The participant set of the dbGaP study accession that this application grants access to.",
+        help_text="The original participant set of the dbGaP study accession that this application grants access to.",
     )
     dbgap_consent_code = models.PositiveIntegerField(
+        verbose_name=" dbGaP consent code",
         validators=[MinValueValidator(1)],
         help_text="The numeric code assigned to this consent group by dbGaP",
     )
     dbgap_consent_abbreviation = models.CharField(
-        max_length=31, help_text="The abbreviation for this consent group."
+        verbose_name=" dbGaP consent abbreviation",
+        max_length=31,
+        help_text="The abbreviation for this consent group.",
     )
     dbgap_current_status = models.CharField(
-        max_length=31, choices=DBGAP_CURRENT_STATUS_CHOICES
+        verbose_name=" dbGaP current status",
+        max_length=31,
+        choices=DBGAP_CURRENT_STATUS_CHOICES,
     )
 
     history = HistoricalRecords()
