@@ -279,6 +279,16 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
 
     class Meta:
         verbose_name = " dbGaP data access request"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "dbgap_application",
+                    "dbgap_study_accession",
+                    "dbgap_consent_code",
+                ],
+                name="unique_dbgap_data_access_request",
+            )
+        ]
 
     def __str__(self):
         return "{}".format(self.dbgap_dar_id)

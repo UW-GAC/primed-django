@@ -888,6 +888,24 @@ class dbGaPDataAccessRequestTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance.save()
 
+    def test_unique_dbgap_data_access_request(self):
+        """Violating the unique_dbgap_data_access_request constraint fails."""
+        obj = factories.dbGaPDataAccessRequestFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_application=obj.dbgap_application,
+            dbgap_study_accession=obj.dbgap_study_accession,
+            dbgap_consent_code=obj.dbgap_consent_code,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("__all__", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
+        self.assertIn(
+            "already exists", e.exception.error_dict["__all__"][0].messages[0]
+        )
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
     def test_dbgap_application_protect(self):
         """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessRequest."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
