@@ -1,5 +1,7 @@
 """Tests for views related to the `dbgap` app."""
 
+import json
+
 import responses
 from anvil_consortium_manager import views as acm_views
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
@@ -9,10 +11,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied
-from django.http.response import Http404
+from django.http import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from faker import Faker
 
 from primed.primed_anvil.tests.factories import (
     DataUseModifierFactory,
@@ -23,6 +26,8 @@ from primed.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
 from . import factories
+
+fake = Faker()
 
 User = get_user_model()
 
@@ -1102,3 +1107,441 @@ class dbGaPApplicationCreateTest(TestCase):
         self.assertEqual(len(form.errors["project_id"]), 1)
         self.assertIn("required", form.errors["project_id"][0])
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+
+
+class dbGaPDataAccessRequestCreateFromJsonTest(TestCase):
+    """Tests for the dbGaPDataAccessRequestCreateFromJson view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.dbgap_application = factories.dbGaPApplicationFactory.create()
+        self.pi_name = fake.name()
+        self.json = {
+            "Project_id": self.dbgap_application.project_id,
+            "PI_name": self.pi_name,
+            "Project_closed": "no",
+            "studies": [],
+        }
+        self.study_accession = factories.dbGaPStudyAccessionFactory.create()
+        self.valid_json = [
+            {
+                "Project_id": self.dbgap_application.project_id,
+                "PI_name": "Test Investigator",
+                "Project_closed": "no",
+                # Two studies.
+                "studies": [
+                    {
+                        "study_name": "Test study 1",
+                        "study_accession": "phs{phs:06d}".format(
+                            phs=self.study_accession.phs
+                        ),
+                        "requests": [
+                            {
+                                "DAC_abbrev": "FOOBI",
+                                "consent_abbrev": "GRU",
+                                "consent_code": 1,
+                                "DAR": 23497,
+                                "current_version": 12,
+                                "current_DAR_status": "approved",
+                                "was_approved": "yes",
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"study_id": "phs{phs:06d}".format(phs=self.study_accession.phs)}
+                )
+            ],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+
+    def add_json_study(self, study_accession, requests=[]):
+        study_json = {
+            "study_name": fake.company(),
+            "study_accession": "phs{phs:06d}".format(phs=study_accession),
+            "requests": requests,
+        }
+        self.json["studies"] = self.json["studies"] + [study_json]
+
+    def get_request_json(
+        self, dar_id, consent_abbreviation, consent_code, status="approved"
+    ):
+        """Returns a pared back version of the DAR JSON for a single consent group that is needed for the view."""
+        request_json = {
+            "DAR": dar_id,
+            "consent_abbrev": consent_abbreviation,
+            "consent_code": consent_code,
+            "current_DAR_status": status,
+        }
+        return request_json
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "dbgap:dbgap_applications:dbgap_data_access_requests:new_from_json",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPDataAccessRequestCreateFromJson.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(self.dbgap_application.pk))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL)
+            + "?next="
+            + self.get_url(self.dbgap_application.pk),
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request.user = self.user
+        response = self.get_view()(
+            request, dbgap_application_pk=self.dbgap_application.pk
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has no permissions."""
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request.user = self.user
+        response = self.get_view()(
+            request, dbgap_application_pk=self.dbgap_application.pk
+        )
+        self.assertTrue("form" in response.context_data)
+
+    def test_form_class(self):
+        """Form is the expected class."""
+        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request.user = self.user
+        response = self.get_view()(
+            request, dbgap_application_pk=self.dbgap_application.pk
+        )
+        self.assertIsInstance(
+            response.context_data["form"], forms.dbGaPDataAccessRequestFromJsonForm
+        )
+
+    @responses.activate
+    def test_can_create_dars_from_json(self):
+        """Can create dbGaPDataAccessRequests for this dbGaPApplication."""
+        study_accession_1 = factories.dbGaPStudyAccessionFactory.create(phs=421)
+        study_accession_2 = factories.dbGaPStudyAccessionFactory.create(phs=896)
+        valid_json = [
+            {
+                "Project_id": self.dbgap_application.project_id,
+                "PI_name": "Test Investigator",
+                "Project_closed": "no",
+                # Two studies.
+                "studies": [
+                    {
+                        "study_name": "Test study 1",
+                        "study_accession": "phs000421",
+                        # N requests per study.
+                        "requests": [
+                            {
+                                "DAC_abbrev": "FOOBI",
+                                "consent_abbrev": "GRU",
+                                "consent_code": 1,
+                                "DAR": 23497,
+                                "current_version": 12,
+                                "current_DAR_status": "approved",
+                                "was_approved": "yes",
+                            },
+                            {
+                                "DAC_abbrev": "FOOBI",
+                                "consent_abbrev": "HMB",
+                                "consent_code": 2,
+                                "DAR": 23498,
+                                "current_version": 12,
+                                "current_DAR_status": "approved",
+                                "was_approved": "yes",
+                            },
+                        ],
+                    },
+                    {
+                        "study_name": "Test study 2",
+                        "study_accession": "phs000896",
+                        # N requests per study.
+                        "requests": [
+                            {
+                                "DAC_abbrev": "BARBI",
+                                "consent_abbrev": "DS-LD",
+                                "consent_code": 1,
+                                "DAR": 23499,
+                                "current_version": 12,
+                                "current_DAR_status": "approved",
+                                "was_approved": "yes",
+                            },
+                        ],
+                    },
+                ],
+            }
+        ]
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000896.v2.p1"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk), {"json": json.dumps(valid_json)}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 3)
+        # Make sure all the correct objects were created.
+        # study 1, 2 requests.
+        new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23497)
+        self.assertEqual(new_object.dbgap_application, self.dbgap_application)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession_1)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23498)
+        self.assertEqual(new_object.dbgap_application, self.dbgap_application)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession_1)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "HMB")
+        # study 2, one rquest
+        new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23499)
+        self.assertEqual(new_object.dbgap_application, self.dbgap_application)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession_2)
+        self.assertEqual(new_object.dbgap_version, 2)
+        self.assertEqual(new_object.dbgap_participant_set, 1)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
+
+    @responses.activate
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk),
+            {"json": json.dumps(self.valid_json)},
+        )
+        self.assertRedirects(response, self.dbgap_application.get_absolute_url())
+
+    @responses.activate
+    def test_success_message(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk),
+            {"json": json.dumps(self.valid_json)},
+            follow=True,
+        )
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessRequestCreateFromJson.success_msg, str(messages[0])
+        )
+
+    def test_error_missing_json(self):
+        """Form shows an error when study is missing."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk), {"json": ""}
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("json", form.errors)
+        self.assertEqual(len(form.errors["json"]), 1)
+        self.assertIn("required", form.errors["json"][0])
+
+    def test_get_dbgap_application_pk_does_not_exist(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        request = self.factory.get(self.get_url(self.dbgap_application.pk + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk + 1)
+
+    def test_post_dbgap_application_pk_does_not_exist(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        request = self.factory.post(self.get_url(self.dbgap_application.pk + 1), {})
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk + 1)
+
+    def test_get_dars_already_added(self):
+        """Redirects get request with a message when DARs have already been added for this application."""
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=self.dbgap_application
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.dbgap_application.pk), follow=True)
+        self.assertRedirects(response, self.dbgap_application.get_absolute_url())
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessRequestCreateFromJson.ERROR_DARS_ALREADY_ADDED,
+            str(messages[0]),
+        )
+
+    def test_post_dars_already_added(self):
+        """Redirects post request with a message when DARs have already been added for this application."""
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=self.dbgap_application
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk),
+            {"json": json.dumps(self.valid_json)},
+            follow=True,
+        )
+        self.assertRedirects(response, self.dbgap_application.get_absolute_url())
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessRequestCreateFromJson.ERROR_DARS_ALREADY_ADDED,
+            str(messages[0]),
+        )
+
+    def test_post_invalid_json(self):
+        """JSON is invalid."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk),
+            {"json": json.dumps({"foo": "bar"})},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("json", form.errors)
+        self.assertEqual(len(form.errors["json"]), 1)
+        self.assertIn("JSON validation error", form.errors["json"][0])
+
+    def test_json_project_id_does_not_match(self):
+        """Error message when project_id in JSON does not match project_id in dbGaPApplication."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(dbgap_application.pk), {"json": json.dumps(self.valid_json)}
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        # Form is valid...
+        self.assertTrue(form.is_valid())
+        # But there is an error.
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessRequestCreateFromJson.ERROR_PROJECT_ID_DOES_NOT_MATCH,
+            str(messages[0]),
+        )
+
+    def test_json_phs_does_not_exist(self):
+        """dbGaPStudyAccession with one of the phs's does not exist"""
+        self.study_accession.delete()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.dbgap_application.pk),
+            {"json": json.dumps(self.valid_json)},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        # Form is valid...
+        self.assertTrue(form.is_valid())
+        # But there is an error.
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessRequestCreateFromJson.ERROR_STUDY_ACCESSION_NOT_FOUND,
+            str(messages[0]),
+        )
