@@ -1,3 +1,4 @@
+import logging
 import re
 
 import jsonschema
@@ -12,6 +13,8 @@ from django_extensions.db.models import TimeStampedModel
 from primed.primed_anvil.models import DataUseOntologyModel, Study
 
 from . import constants
+
+logger = logging.getLogger(__name__)
 
 
 class dbGaPStudyAccession(TimeStampedModel, models.Model):
@@ -167,6 +170,11 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         """Add DARs for this application from the dbGaP json for this project/application."""
         # Validate the json.
         jsonschema.validate(json, constants.json_dar_schema)
+        # Log the json.
+        msg = "Creating DARs using json...\n  {json}".format(
+            json=json,
+        )
+        logger.info(msg)
         dars = []
         project_json = json[0]
         # Make sure that the project_id matches.
