@@ -1,10 +1,11 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from . import models
 
 
 @admin.register(models.dbGaPStudyAccession)
-class dbGaPStudyAccessionAdmin(admin.ModelAdmin):
+class dbGaPStudyAccessionAdmin(SimpleHistoryAdmin):
     """Admin class for the `dbGaPStudyAccession` model."""
 
     list_display = (
@@ -19,7 +20,7 @@ class dbGaPStudyAccessionAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.dbGaPWorkspace)
-class dbGaPWorkspaceAdmin(admin.ModelAdmin):
+class dbGaPWorkspaceAdmin(SimpleHistoryAdmin):
     """Admin class for the `dbGaPWorkspace` model."""
 
     list_display = (
@@ -42,7 +43,7 @@ class dbGaPWorkspaceAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.dbGaPApplication)
-class dbGaPApplicationAdmin(admin.ModelAdmin):
+class dbGaPApplicationAdmin(SimpleHistoryAdmin):
     """Admin class for the `dbGaPApplication` model."""
 
     list_display = (
@@ -52,7 +53,7 @@ class dbGaPApplicationAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.dbGaPDataAccessRequest)
-class dbGaPDataAccessRequestAdmin(admin.ModelAdmin):
+class dbGaPDataAccessRequestAdmin(SimpleHistoryAdmin):
     """Admin class for the `dbGaPDataAccessRequest` model."""
 
     list_display = (

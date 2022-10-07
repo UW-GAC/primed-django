@@ -21,3 +21,6 @@ django-extensions==3.1.5  # https://github.com/django-extensions/django-extensio
 
 # anvil_consortium_manager
 git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.3
+
+# Simple history - model history tracking
+django-simple-history==3.1.1

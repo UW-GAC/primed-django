@@ -9,6 +9,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from simple_history.models import HistoricalRecords
 
 from primed.primed_anvil.models import DataUseOntologyModel, Study
 
@@ -31,6 +32,8 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The study associated with this dbGaP study accession.",
     )
+    history = HistoricalRecords()
+
     # Store a regex for the full accession.
     PHS_REGEX = r"^phs(?P<phs>\d{6})$"
     FULL_ACCESSION_REGEX = (
@@ -106,6 +109,8 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         help_text="""The full data use limitations for this workspace."""
     )
 
+    history = HistoricalRecords()
+
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
         verbose_name = " dbGaP workspace"
@@ -155,6 +160,8 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         unique=True,
         help_text="The dbGaP-assigned project_id for this application.",
     )
+
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = " dbGaP application"
@@ -265,6 +272,8 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     dbgap_current_status = models.CharField(
         max_length=31, choices=DBGAP_CURRENT_STATUS_CHOICES
     )
+
+    history = HistoricalRecords()
 
     objects = managers.dbGaPDataAccessRequestManager()
 

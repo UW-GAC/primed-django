@@ -89,6 +89,8 @@ THIRD_PARTY_APPS = [
     "dal",
     "dal_select2",
     "fontawesomefree",
+    # django-simple-history for model change tracking
+    "simple_history",
 ]
 
 LOCAL_APPS = [
@@ -158,6 +160,7 @@ MIDDLEWARE = [
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 # STATIC
