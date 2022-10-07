@@ -78,4 +78,5 @@ class dbGaPDataAccessRequestTable(tables.Table):
             "dbgap_participant_set",
             "dbgap_consent_code",
             "dbgap_consent_abbreviation",
+            "dbgap_current_status",
         )
