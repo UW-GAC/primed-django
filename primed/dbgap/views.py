@@ -60,6 +60,20 @@ class dbGaPApplicationDetail(
             self.object.dbgapdataaccessrequest_set.all(),
         )
 
+    def get_context_data(self, *args, **kwargs):
+        """Add to the context.
+
+        - A flag indicating whether to display an "add dars" button.
+        - A flag to indicate whether to show a table of dars.
+        """
+        n_dars = self.object.dbgapdataaccessrequest_set.count()
+        print(n_dars)
+        if "show_add_dars_button" not in kwargs:
+            kwargs["show_add_dars_button"] = n_dars == 0
+        if "show_dars" not in kwargs:
+            kwargs["show_dars"] = n_dars > 0
+        return super().get_context_data(*args, **kwargs)
+
 
 class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of dbGaPApplication objects."""

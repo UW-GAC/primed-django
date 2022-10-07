@@ -894,6 +894,85 @@ class dbGaPApplicationDetailTest(TestCase):
             len(response.context_data["data_access_request_table"].rows), 0
         )
 
+    def test_context_show_add_dars_button_no_dars(self):
+        """The show_add_dars_button is True in context when there are no DARs for this application."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_add_dars_button", response.context_data)
+        self.assertTrue(response.context_data["show_add_dars_button"])
+
+    def test_context_show_add_dars_button_dars_with_dars(self):
+        """The show_add_dars_button is False in context when there are DARs for this application."""
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_application=self.obj)
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_add_dars_button", response.context_data)
+        self.assertFalse(response.context_data["show_add_dars_button"])
+
+    def test_context_show_add_dars_button_other_dars(self):
+        """show_add_dars_button in context is True when there are only DARs associated with a different application."""
+        other_application = factories.dbGaPApplicationFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=other_application
+        )
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_add_dars_button", response.context_data)
+        self.assertTrue(response.context_data["show_add_dars_button"])
+
+    def test_context_show_dars_no_dars(self):
+        """show_dars in context is False when there are no DARs for this application."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_dars", response.context_data)
+        self.assertFalse(response.context_data["show_dars"])
+
+    def test_context_show_dars_dars_not_approved(self):
+        """show_dars in context is True when there are only DARs that are not approved."""
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=self.obj,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=self.obj,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=self.obj,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_application=self.obj,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_dars", response.context_data)
+        self.assertTrue(response.context_data["show_dars"])
+
+    def test_context_show_dars_dars_with_dars(self):
+        """show_dars in context is True when there are DARs for this application."""
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_application=self.obj)
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_dars", response.context_data)
+        self.assertTrue(response.context_data["show_dars"])
+
+    def test_context_show_dars_other_dars(self):
+        """show_dars in context is False when there are DARs associated with a different application."""
+        factories.dbGaPDataAccessRequestFactory.create()
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("show_dars", response.context_data)
+        self.assertFalse(response.context_data["show_dars"])
+
 
 class dbGaPApplicationCreateTest(TestCase):
     """Tests for the dbGaPApplication view."""

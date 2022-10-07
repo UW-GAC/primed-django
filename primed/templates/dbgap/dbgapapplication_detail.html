@@ -15,8 +15,16 @@
   </ul>
 </div>
 
-<h2>Data access requests in this application</h2>
+{% if show_add_dars_button %}
+  <p>
+    <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_requests:new_from_json' dbgap_application_pk=object.pk %}" class="btn btn-primary" role="button">Add data access requests</a>
+  </p>
+{% endif %}
 
-{% render_table data_access_request_table %}
+{% if show_dars %}
+  <h2>Data access requests in this application</h2>
+  {% render_table data_access_request_table %}
+{% endif %}
+
 
 {% endblock content %}
