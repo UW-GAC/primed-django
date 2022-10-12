@@ -1,10 +1,12 @@
+from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import Workspace
+from anvil_consortium_manager.models import ManagedGroup, Workspace
 from anvil_consortium_manager.views import SuccessMessageMixin
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponseRedirect
 from django.views.generic import CreateView, DetailView, FormView
 from django_tables2 import SingleTableMixin, SingleTableView
@@ -90,6 +92,32 @@ class dbGaPApplicationCreate(
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationForm
     success_msg = "dbGaP application successfully created."
+    anvil_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
+    ERROR_CREATING_GROUP = "Error creating Managed Group in app."
+
+    # @transaction.atomic
+    def form_valid(self, form):
+        """Create a managed group in the app on AnVIL and link it to this application."""
+        project_id = form.cleaned_data["project_id"]
+        group_name = self.anvil_group_pattern.format(project_id=project_id)
+        managed_group = ManagedGroup(name=group_name)
+        try:
+            managed_group.full_clean()
+        except ValidationError:
+            messages.add_message(
+                self.request, messages.ERROR, self.ERROR_CREATING_GROUP
+            )
+            return self.render_to_response(self.get_context_data(form=form))
+        try:
+            managed_group.anvil_create()
+        except AnVILAPIError as e:
+            messages.add_message(
+                self.request, messages.ERROR, "AnVIL API Error: " + str(e)
+            )
+            return self.render_to_response(self.get_context_data(form=form))
+        managed_group.save()
+        form.instance.anvil_group = managed_group
+        return super().form_valid(form)
 
 
 class dbGaPDataAccessRequestCreateFromJson(

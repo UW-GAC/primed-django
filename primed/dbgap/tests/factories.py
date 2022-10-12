@@ -1,4 +1,7 @@
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceFactory,
+)
 from factory import Faker, SubFactory
 from factory.django import DjangoModelFactory
 
@@ -41,6 +44,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
 
     principal_investigator = SubFactory(UserFactory)
     project_id = Faker("random_int")
+    anvil_group = SubFactory(ManagedGroupFactory)
 
     class Meta:
         model = models.dbGaPApplication

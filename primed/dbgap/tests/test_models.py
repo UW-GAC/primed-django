@@ -2,7 +2,10 @@
 
 import jsonschema
 import responses
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceFactory,
+)
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
@@ -291,18 +294,18 @@ class dbGaPApplicationTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         pi = UserFactory.create()
+        anvil_group = ManagedGroupFactory.create()
         instance = models.dbGaPApplication(
             principal_investigator=pi,
             project_id=1,
+            anvil_group=anvil_group,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPApplication)
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        pi = UserFactory.create()
         instance = factories.dbGaPApplicationFactory.create(
-            principal_investigator=pi,
             project_id=1,
         )
         instance.save()
@@ -318,9 +321,11 @@ class dbGaPApplicationTest(TestCase):
         """Saving a duplicate model fails."""
         obj = factories.dbGaPApplicationFactory.create()
         pi = UserFactory.create()
+        anvil_group = ManagedGroupFactory.create()
         instance = factories.dbGaPApplicationFactory.build(
             principal_investigator=pi,
             project_id=obj.project_id,
+            anvil_group=anvil_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()

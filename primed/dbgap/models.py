@@ -3,7 +3,7 @@ import re
 
 import jsonschema
 import requests
-from anvil_consortium_manager.models import BaseWorkspaceData
+from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -168,6 +168,12 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         validators=[MinValueValidator(1)],
         unique=True,
         help_text="The dbGaP-assigned project_id for this application.",
+    )
+    anvil_group = models.OneToOneField(
+        ManagedGroup,
+        verbose_name=" AnVIL group",
+        on_delete=models.PROTECT,
+        help_text="The AnVIL managed group that can will access to workspaces under this dbGaP application.",
     )
 
     history = HistoricalRecords()

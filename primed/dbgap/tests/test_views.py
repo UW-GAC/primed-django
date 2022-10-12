@@ -4,8 +4,15 @@ import json
 
 import responses
 from anvil_consortium_manager import views as acm_views
-from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
-from anvil_consortium_manager.tests import factories as acm_factories
+from anvil_consortium_manager.models import (
+    AnVILProjectManagerAccess,
+    ManagedGroup,
+    Workspace,
+)
+from anvil_consortium_manager.tests.factories import (
+    BillingProjectFactory,
+    ManagedGroupFactory,
+)
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -496,9 +503,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         data_use_modifier_2 = DataUseModifierFactory.create()
         # Create an extra that won't be specified.
         DataUseModifierFactory.create()
-        billing_project = acm_factories.BillingProjectFactory.create(
-            name="test-billing-project"
-        )
+        billing_project = BillingProjectFactory.create(name="test-billing-project")
         url = self.entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
@@ -619,9 +624,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         data_use_modifier_2 = DataUseModifierFactory.create()
         # Create an extra that won't be specified.
         DataUseModifierFactory.create()
-        billing_project = acm_factories.BillingProjectFactory.create(
-            name="billing-project"
-        )
+        billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
         workspace_list_url = self.entry_point + "/api/workspaces"
@@ -974,11 +977,12 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertFalse(response.context_data["show_dars"])
 
 
-class dbGaPApplicationCreateTest(TestCase):
+class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the dbGaPApplication view."""
 
     def setUp(self):
         """Set up test class."""
+        super().setUp()
         self.factory = RequestFactory()
         self.model_factory = factories.StudyFactory
         # Create a user with both view and edit permission.
@@ -1060,6 +1064,11 @@ class dbGaPApplicationCreateTest(TestCase):
         """Can create an object."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
+        # API response to create the associated anvil_group.
+        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        responses.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
         response = self.client.post(
             self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
         )
@@ -1074,6 +1083,11 @@ class dbGaPApplicationCreateTest(TestCase):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
+        # API response to create the associated anvil_group.
+        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        responses.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
         response = self.client.post(
             self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
         )
@@ -1084,6 +1098,11 @@ class dbGaPApplicationCreateTest(TestCase):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
+        # API response to create the associated anvil_group.
+        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        responses.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
         response = self.client.post(
             self.get_url(),
             {"principal_investigator": pi.pk, "project_id": 1},
@@ -1185,6 +1204,73 @@ class dbGaPApplicationCreateTest(TestCase):
         self.assertIn("project_id", form.errors.keys())
         self.assertEqual(len(form.errors["project_id"]), 1)
         self.assertIn("required", form.errors["project_id"][0])
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+
+    def test_creates_anvil_group(self):
+        """View creates a managed group upon when form is valid."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        # API response to create the associated anvil_group.
+        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_12498"
+        responses.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "project_id": 12498}
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.dbGaPApplication.objects.latest("pk")
+        self.assertEqual(ManagedGroup.objects.count(), 1)
+        # A new group was created.
+        new_group = ManagedGroup.objects.latest("pk")
+        self.assertEqual(new_object.anvil_group, new_group)
+        self.assertEqual(new_group.name, "PRIMED_DBGAP_ACCESS_12498")
+        self.assertTrue(new_group.is_managed_by_app)
+
+    def test_manage_group_create_api_error(self):
+        """Nothing is created when the form is valid but there is an API error when creating the group."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        # API response to create the associated anvil_group.
+        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        responses.add(
+            responses.POST, api_url, status=500, json={"message": "other error"}
+        )
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        # ...but there was some error from the API.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual("AnVIL API Error: other error", str(messages[0]))
+        # No objects were created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 0)
+
+    def test_managed_group_already_exists_in_app(self):
+        """No objects are created if the managed group already exists in the app."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        # Create a group with the same name.
+        ManagedGroupFactory.create(name="PRIMED_DBGAP_ACCESS_1")
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        # ...but there was an error with the group name.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPApplicationCreate.ERROR_CREATING_GROUP, str(messages[0])
+        )
+        # No dbGaPApplication was created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
 
 
