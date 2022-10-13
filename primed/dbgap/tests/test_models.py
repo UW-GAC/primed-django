@@ -1094,3 +1094,54 @@ class dbGaPDataAccessRequestTest(TestCase):
         self.assertNotIn(rejected_dar, qs)
         self.assertNotIn(expired_dar, qs)
         self.assertNotIn(new_dar, qs)
+
+    def test_get_dbgap_workspace_no_matches(self):
+        """Raises DoesNotExist when there is no matching workspace."""
+        dar = factories.dbGaPDataAccessRequestFactory.create()
+        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
+            dar.get_dbgap_workspace()
+
+    def test_get_dbgap_workspace_one_match(self):
+        """Returns the correct workspace when there is one match."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_study_accession=workspace.dbgap_study_accession,
+            dbgap_version=workspace.dbgap_version,
+            dbgap_participant_set=workspace.dbgap_participant_set,
+        )
+        self.assertEqual(dar.get_dbgap_workspace(), workspace)
+
+    def test_get_dbgap_workspace_different_version(self):
+        """Raises ObjectNotFound when there is a workspace with the same phs but different version."""
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=1)
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_study_accession=workspace.dbgap_study_accession,
+            dbgap_version=2,
+            dbgap_participant_set=workspace.dbgap_participant_set,
+        )
+        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
+            dar.get_dbgap_workspace()
+
+    def test_get_dbgap_workspace_different_participant_set(self):
+        """Raises ObjectNotFound when there is a workspace with the same phs/version but different participant set."""
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_participant_set=1)
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_study_accession=workspace.dbgap_study_accession,
+            dbgap_version=workspace.dbgap_version,
+            dbgap_participant_set=2,
+        )
+        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
+            dar.get_dbgap_workspace()
+
+    def test_get_dbgap_workspace_different_dbgap_study_accession(self):
+        """Raises ObjectNotFound when there is a workspace with the same phs/version but different phs."""
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__phs=1.0
+        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_study_accession__phs=2,
+            dbgap_version=workspace.dbgap_version,
+            dbgap_participant_set=workspace.dbgap_participant_set,
+        )
+        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
+            dar.get_dbgap_workspace()

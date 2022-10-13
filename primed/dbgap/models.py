@@ -317,3 +317,14 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
 
     def __str__(self):
         return "{}".format(self.dbgap_dar_id)
+
+    def get_dbgap_workspace(self):
+        """Get a dbGaPWorkspace associated with this data access request.
+
+        This checks that the dbGaP study accession, version, and participant set match between the
+        dbGaPDataAccessRequest and the dbGaPWorkspace."""
+        # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
+        return self.dbgap_study_accession.dbgapworkspace_set.get(
+            dbgap_version=self.dbgap_version,
+            dbgap_participant_set=self.dbgap_participant_set,
+        )
