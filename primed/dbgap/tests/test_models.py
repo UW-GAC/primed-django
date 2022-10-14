@@ -142,7 +142,6 @@ class dbGaPWorkspaceTest(TestCase):
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
         instance = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__study__short_name="TEST",
             dbgap_study_accession__phs=1,
             dbgap_version=2,
             dbgap_participant_set=3,
@@ -150,7 +149,7 @@ class dbGaPWorkspaceTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "TEST (phs000001.v2.p3 - GRU-NPU)")
+        self.assertEqual(instance.__str__(), "phs000001.v2.p3 - GRU-NPU")
 
     def test_unique_dbgap_workspace(self):
         """Saving a duplicate model fails."""

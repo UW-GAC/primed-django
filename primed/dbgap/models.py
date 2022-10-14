@@ -140,8 +140,7 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         Returns:
             A string showing the workspace name of the object.
         """
-        return "{} ({} - {})".format(
-            self.dbgap_study_accession.study.short_name,
+        return "{} - {}".format(
             self.get_dbgap_accession(),
             self.dbgap_consent_abbreviation,
         )
