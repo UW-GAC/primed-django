@@ -74,6 +74,7 @@ class dbGaPApplicationTable(tables.Table):
 class dbGaPDataAccessRequestTable(tables.Table):
 
     dbgap_study_accession = tables.columns.Column(linkify=True)
+    workspace = tables.columns.Column(linkify=True, accessor="get_dbgap_workspace")
 
     class Meta:
         model = models.dbGaPDataAccessRequest
