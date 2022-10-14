@@ -326,4 +326,5 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         return self.dbgap_study_accession.dbgapworkspace_set.get(
             dbgap_version=self.dbgap_version,
             dbgap_participant_set=self.dbgap_participant_set,
+            dbgap_consent_code=self.dbgap_consent_code,
         )
