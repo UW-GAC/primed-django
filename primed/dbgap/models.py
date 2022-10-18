@@ -6,6 +6,7 @@ import jsonschema
 import requests
 from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -175,6 +176,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The AnVIL managed group that can will access to workspaces under this dbGaP application.",
     )
+    dbgap_dar_data = models.JSONField(null=True)
 
     history = HistoricalRecords()
 
@@ -183,6 +185,19 @@ class dbGaPApplication(TimeStampedModel, models.Model):
 
     def __str__(self):
         return "{}".format(self.project_id)
+
+    def clean(self):
+        """Perform custom model cleaning.
+
+        * Check that json_dar_schema validates properly.
+        """
+        if self.dbgap_dar_data:
+            try:
+                jsonschema.validate(self.dbgap_dar_data, constants.json_dar_schema)
+            except jsonschema.exceptions.ValidationError as e:
+                # Replace the full json string because it will be very long
+                error_message = e.message.replace(str(e.instance), "JSON array")
+                raise ValidationError({"dbgap_dar_data": error_message})
 
     def get_absolute_url(self):
         """Return the absolute url for this object."""
