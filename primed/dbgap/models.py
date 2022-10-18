@@ -1,5 +1,6 @@
 import logging
 import re
+from urllib.parse import urlencode
 
 import jsonschema
 import requests
@@ -186,6 +187,19 @@ class dbGaPApplication(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("dbgap:dbgap_applications:detail", kwargs={"pk": self.pk})
+
+    def get_dbgap_dar_json_url(self):
+        """Return the dbGaP URL that lists DARs for this application."""
+        url_params = {
+            "name": "project_report",
+            "page": "getreport",
+            "mode": "json",
+            "filter": ["mode", "project_list"],
+            "project_list": str(self.project_id),
+        }
+        url = "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?%s"
+        # Doseq means to generate the filter key twice, once for "mode" and once for "project_list"
+        return url % urlencode(url_params, doseq=True)
 
     def create_dars_from_json(self, json):
         """Add DARs for this application from the dbGaP json for this project/application."""

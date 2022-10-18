@@ -375,6 +375,11 @@ class dbGaPApplicationTest(TestCase):
             e.exception.error_dict["project_id"][0].messages[0],
         )
 
+    def test_get_dbgap_dar_json_url(self):
+        """get_dbgap_dar_json_url returns a string."""
+        application = factories.dbGaPApplicationFactory.create()
+        self.assertIsInstance(application.get_dbgap_dar_json_url(), str)
+
     @responses.activate
     def test_dbgap_create_dars_from_json_one_study_one_dar(self):
         """Can create one DAR for one study."""
@@ -766,7 +771,7 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
 
     @responses.activate
-    def test_does_not_include_dars_that_are_not_approved(self):
+    def test_does_include_dars_that_are_not_approved(self):
         """Does creates DARs with a different status than approved."""
         study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
         dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)

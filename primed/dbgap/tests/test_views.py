@@ -1710,3 +1710,15 @@ class dbGaPDataAccessRequestCreateFromJsonTest(TestCase):
             views.dbGaPDataAccessRequestCreateFromJson.ERROR_STUDY_ACCESSION_NOT_FOUND,
             str(messages[0]),
         )
+
+    def test_context_includes_dbgap_application(self):
+        """Response context data includes the dbGaP application."""
+        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request.user = self.user
+        response = self.get_view()(
+            request, dbgap_application_pk=self.dbgap_application.pk
+        )
+        self.assertTrue("dbgap_application" in response.context_data)
+        self.assertEqual(
+            response.context_data["dbgap_application"], self.dbgap_application
+        )

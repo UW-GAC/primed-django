@@ -184,3 +184,9 @@ class dbGaPDataAccessRequestCreateFromJson(
             return self.form_invalid(form)
 
         return super().form_valid(form)
+
+    def get_context_data(self, *args, **kwargs):
+        """Add the dbGaPApplication to the context data."""
+        if "dbgap_application" not in kwargs:
+            kwargs["dbgap_application"] = self.dbgap_application
+        return super().get_context_data(*args, **kwargs)
