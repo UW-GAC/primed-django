@@ -20,8 +20,8 @@ django-login-required-middleware==0.7.0 # https://github.com/CleitonDeLima/djang
 django-extensions==3.1.5  # https://github.com/django-extensions/django-extensions
 
 # anvil_consortium_manager
-# Temporary dev branch for now
-git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@56014a37c4c736b223752beafdfecc59a1da4763
+# Temporary dev commit for now
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@83fe06faf3bffc90e187edec17a09159695e370e
 
 # Simple history - model history tracking
 django-simple-history==3.1.1

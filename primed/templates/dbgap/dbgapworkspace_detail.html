@@ -1,28 +1,16 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
 
-{% comment %}
-Ideally this would be a separate template in the dbgap app, but right now you can't specify a template
-in the ACM workspace adapter. Once that's implemented, we can remove this hacky template and extend the
-workspace_detail.html template for the dbGaP workspace types specifically in the dbgap app.
-{% endcomment %}
-
-
 {% block workspace_data %}
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
-{% if object.workspace_type == 'dbgap' %}
   <ul>
     <li>Study: <a href="{{ object.dbgapworkspace.study.get_absolute_url }}">{{ object.dbgapworkspace.study }}</a></li>
     <li>dbGaP accession: {{ object.dbgapworkspace.get_dbgap_accession }}</li>
     <li>dbGaP consent abbreviation: {{ object.dbgapworkspace.dbgap_consent_abbreviation }}</li>
     <li>dbGaP consent code: {{ object.dbgapworkspace.dbgap_consent_code }}</li>
   </ul>
-{% else %}
-  {{ block.super }}
-{% endif %}
 </div>
 
-{% if object.workspace_type == 'dbgap' %}
 <div class="my-3">
   <div class="accordion" id="accordionGroupsDUL">
     <div class="accordion-item">
@@ -40,6 +28,5 @@ workspace_detail.html template for the dbGaP workspace types specifically in the
     </div>
   </div>
 </div>
-{% endif %}
 
 {% endblock workspace_data %}
