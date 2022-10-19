@@ -892,16 +892,25 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             e.exception.error_dict["dbgap_dar_data"][0].messages[0],
         )
 
+    def test_dbgap_application_protect(self):
+        """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessSnapshot."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application
+        )
+        with self.assertRaises(ProtectedError):
+            dbgap_application.delete()
+
 
 class dbGaPDataAccessRequestTest(TestCase):
     """Tests for the dbGaPDataAccessRequest model."""
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = models.dbGaPDataAccessRequest(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_dar_id=1,
             dbgap_version=2,
@@ -929,10 +938,10 @@ class dbGaPDataAccessRequestTest(TestCase):
     def test_unique_dbgap_dar_id(self):
         """Saving a duplicate model fails."""
         obj = factories.dbGaPDataAccessRequestFactory.create()
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_dar_id=obj.dbgap_dar_id,
         )
@@ -950,7 +959,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """Violating the unique_dbgap_data_access_request constraint fails."""
         obj = factories.dbGaPDataAccessRequestFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=obj.dbgap_application,
+            dbgap_data_access_snapshot=obj.dbgap_data_access_snapshot,
             dbgap_study_accession=obj.dbgap_study_accession,
             dbgap_consent_code=obj.dbgap_consent_code,
         )
@@ -964,14 +973,33 @@ class dbGaPDataAccessRequestTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance.save()
 
-    def test_dbgap_application_protect(self):
-        """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessRequest."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+    def test_unique_dbgap_data_access_dar_id(self):
+        """Violating the unique_dbgap_data_access_request_dar_id constraint fails."""
+        obj = factories.dbGaPDataAccessRequestFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        instance = factories.dbGaPDataAccessRequestFactory.build(
+            dbgap_data_access_snapshot=obj.dbgap_data_access_snapshot,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_dar_id=obj.dbgap_dar_id,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("__all__", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
+        self.assertIn(
+            "already exists", e.exception.error_dict["__all__"][0].messages[0]
+        )
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_dbgap_data_access_snapshot_protect(self):
+        """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessSnapshot."""
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=dbgap_application
+            dbgap_data_access_snapshot=dbgap_snapshot
         )
         with self.assertRaises(ProtectedError):
-            dbgap_application.delete()
+            dbgap_snapshot.delete()
 
     def test_dbgap_study_accession_protect(self):
         """Cannot delete a dbGaPStudyAccession if it has an associated dbGaPDataAccessRequest."""
@@ -984,10 +1012,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_dar_id_cannot_be_zero(self):
         """dbgap_dar_id cannot be zero."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_dar_id=0,
         )
@@ -1002,10 +1030,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_dar_id_cannot_be_negative(self):
         """dbgap_dar_id cannot be negative."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_dar_id=-1,
         )
@@ -1020,10 +1048,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_version_cannot_be_zero(self):
         """dbgap_version cannot be zero."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_version=0,
         )
@@ -1038,10 +1066,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_version_cannot_be_negative(self):
         """dbgap_version cannot be negative."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_version=-1,
         )
@@ -1056,10 +1084,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_participant_set_cannot_be_zero(self):
         """dbgap_participant_set cannot be zero."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_participant_set=0,
         )
@@ -1074,10 +1102,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_participant_set_cannot_be_negative(self):
         """dbgap_participant_set cannot be negative."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_participant_set=-1,
         )
@@ -1092,10 +1120,10 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_dbgap_consent_code_cannot_be_zero(self):
         """consent_code cannot be zero."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_consent_code=0,
         )
@@ -1109,10 +1137,10 @@ class dbGaPDataAccessRequestTest(TestCase):
         )
 
     def test_dbgap_consent_code_cannot_be_negative(self):
-        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_application=dbgap_application,
+            dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_consent_code=-1,
         )

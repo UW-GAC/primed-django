@@ -72,7 +72,7 @@ class dbGaPDataAccessSnapshotFactory(DjangoModelFactory):
 class dbGaPDataAccessRequestFactory(DjangoModelFactory):
     """A factory for the dbGaPApplication model."""
 
-    dbgap_application = SubFactory(dbGaPApplicationFactory)
+    dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
     dbgap_study_accession = SubFactory(dbGaPStudyAccessionFactory)
     dbgap_dar_id = Faker("random_int")
     dbgap_version = Faker("random_int")

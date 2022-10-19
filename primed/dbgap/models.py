@@ -310,16 +310,16 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         (NEW, "New"),  # What is the difference between new and approved?
     )
 
+    dbgap_data_access_snapshot = models.ForeignKey(
+        dbGaPDataAccessSnapshot,
+        verbose_name="dbGaP data access snapshot",
+        on_delete=models.PROTECT,
+        help_text="The dbGaP data access snapshot from which this record came.",
+    )
     dbgap_dar_id = models.PositiveIntegerField(
         verbose_name=" dbGaP DAR id",
         validators=[MinValueValidator(1)],
         unique=True,
-    )
-    dbgap_application = models.ForeignKey(
-        dbGaPApplication,
-        verbose_name="dbGaP application",
-        on_delete=models.PROTECT,
-        help_text="The dbGaP application associated with this DAR.",
     )
     dbgap_study_accession = models.ForeignKey(
         dbGaPStudyAccession,
@@ -362,12 +362,19 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=[
-                    "dbgap_application",
+                    "dbgap_data_access_snapshot",
                     "dbgap_study_accession",
                     "dbgap_consent_code",
                 ],
                 name="unique_dbgap_data_access_request",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "dbgap_data_access_snapshot",
+                    "dbgap_dar_id",
+                ],
+                name="unique_dbgap_data_access_dar_id",
+            ),
         ]
 
     def __str__(self):

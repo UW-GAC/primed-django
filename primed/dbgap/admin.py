@@ -69,10 +69,10 @@ class dbGaPDataAccessRequestAdmin(SimpleHistoryAdmin):
 
     list_display = (
         "dbgap_dar_id",
-        "dbgap_application",
+        "dbgap_data_access_snapshot",
         "dbgap_study_accession",
         "dbgap_version",
         "dbgap_consent_code",
         "dbgap_consent_abbreviation",
     )
-    list_filter = ("dbgap_application",)
+    list_filter = ("dbgap_data_access_snapshot",)
