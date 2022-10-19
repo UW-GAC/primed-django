@@ -57,10 +57,24 @@ class dbGaPApplicationDetail(
     model = models.dbGaPApplication
     context_table_name = "data_access_request_table"
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.latest_snapshot = self.get_latest_snapshot()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+    def get_latest_snapshot(self):
+        try:
+            return self.object.dbgapdataaccesssnapshot_set.latest("created")
+        except models.dbGaPDataAccessSnapshot.DoesNotExist:
+            return None
+
     def get_table(self):
-        return tables.dbGaPDataAccessRequestTable(
-            self.object.dbgapdataaccessrequest_set.all(),
-        )
+        if self.latest_snapshot:
+            qs = self.latest_snapshot.dbgapdataaccessrequest_set.all()
+        else:
+            qs = models.dbGaPDataAccessRequest.objects.none()
+        return tables.dbGaPDataAccessRequestTable(qs)
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.
@@ -68,13 +82,14 @@ class dbGaPApplicationDetail(
         - A flag indicating whether to display an "add dars" button.
         - A flag to indicate whether to show a table of dars.
         """
-        n_dars = self.object.dbgapdataaccessrequest_set.count()
-        print(n_dars)
-        if "show_add_dars_button" not in kwargs:
-            kwargs["show_add_dars_button"] = n_dars == 0
-        if "show_dars" not in kwargs:
-            kwargs["show_dars"] = n_dars > 0
-        return super().get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
+        if self.latest_snapshot:
+            context["has_snapshot"] = True
+            context["last_update"] = self.latest_snapshot.created
+        else:
+            context["has_snapshot"] = False
+            context["last_update"] = None
+        return context
 
 
 class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):

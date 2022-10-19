@@ -1,6 +1,7 @@
 """Tests for views related to the `dbgap` app."""
 
 import json
+from datetime import timedelta
 
 import responses
 from anvil_consortium_manager import views as acm_views
@@ -22,6 +23,7 @@ from django.http import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
+from django.utils import timezone
 from faker import Faker
 
 from primed.primed_anvil.tests.factories import (
@@ -692,7 +694,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
 
 class dbGaPApplicationListTest(TestCase):
-    """Tests for the ApplicationList view."""
+    """Tests for the dbGaPApplicationList view."""
 
     def setUp(self):
         """Set up test class."""
@@ -748,32 +750,6 @@ class dbGaPApplicationListTest(TestCase):
         self.assertIsInstance(
             response.context_data["table"], tables.dbGaPApplicationTable
         )
-
-    def test_workspace_table_none(self):
-        """No rows are shown if there are no dbGaPApplication objects."""
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
-        self.assertIn("table", response.context_data)
-        self.assertEqual(len(response.context_data["table"].rows), 0)
-
-    def test_workspace_table_one(self):
-        """One row is shown if there is one dbGaPApplication."""
-        factories.dbGaPApplicationFactory.create()
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
-        self.assertIn("table", response.context_data)
-        self.assertEqual(len(response.context_data["table"].rows), 1)
-
-    def test_workspace_table_two(self):
-        """Two rows are shown if there are two dbGaPApplication objects."""
-        factories.dbGaPApplicationFactory.create_batch(2)
-        request = self.factory.get(self.get_url())
-        request.user = self.user
-        response = self.get_view()(request)
-        self.assertIn("table", response.context_data)
-        self.assertEqual(len(response.context_data["table"].rows), 2)
 
 
 class dbGaPApplicationDetailTest(TestCase):
@@ -838,8 +814,8 @@ class dbGaPApplicationDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.pk + 1)
 
-    def test_workspace_table(self):
-        """The data_access_request_table exists."""
+    def test_context_dar_table(self):
+        """The data_access_request_table exists in the context."""
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
@@ -849,8 +825,19 @@ class dbGaPApplicationDetailTest(TestCase):
             tables.dbGaPDataAccessRequestTable,
         )
 
+    def test_dar_table_no_snapshot(self):
+        """No dbGaPDataAccessRequests are shown if the dbGaPApplication does not have a snapshot."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 0
+        )
+
     def test_dar_table_none(self):
-        """No dbGaPDataAccessRequests are shown if the dbGaPApplication does not have any DARs."""
+        """No dbGaPDataAccessRequests are shown if the dbGaPApplication has a snapshot but no DARs."""
+        factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
@@ -861,7 +848,9 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_dar_table_one(self):
         """One dbGaPDataAccessRequest is shown if the dbGaPApplication has one DAR."""
-        factories.dbGaPDataAccessRequestFactory.create(dbgap_application=self.obj)
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot__dbgap_application=self.obj
+        )
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
@@ -872,8 +861,12 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_dar_table_two(self):
         """Two dbGaPDataAccessRequests are shown if the dbGaPApplication has two DARs."""
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj
+        )
         factories.dbGaPDataAccessRequestFactory.create_batch(
-            2, dbgap_application=self.obj
+            2,
+            dbgap_data_access_snapshot=dbgap_snapshot,
         )
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
@@ -887,7 +880,7 @@ class dbGaPApplicationDetailTest(TestCase):
         """Only shows workspaces for this dbGaPApplication."""
         other_dbgap_application = factories.dbGaPApplicationFactory.create()
         factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=other_dbgap_application
+            dbgap_data_access_snapshot__dbgap_application=other_dbgap_application
         )
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
@@ -897,84 +890,55 @@ class dbGaPApplicationDetailTest(TestCase):
             len(response.context_data["data_access_request_table"].rows), 0
         )
 
-    def test_context_show_add_dars_button_no_dars(self):
-        """The show_add_dars_button is True in context when there are no DARs for this application."""
+    def test_context_has_snapshot_no_snapshot(self):
+        """has_snapshot is False in context when there no dbGaPDataAccessSnapshot for this application."""
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_add_dars_button", response.context_data)
-        self.assertTrue(response.context_data["show_add_dars_button"])
+        self.assertIn("has_snapshot", response.context_data)
+        self.assertFalse(response.context_data["has_snapshot"])
 
-    def test_context_show_add_dars_button_dars_with_dars(self):
-        """The show_add_dars_button is False in context when there are DARs for this application."""
-        factories.dbGaPDataAccessRequestFactory.create(dbgap_application=self.obj)
+    def test_context_has_snapshot_one_snapshot(self):
+        """has_snapshot is True in context when there is a dbGaPDataAccessSnapshot for this application."""
+        factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_add_dars_button", response.context_data)
-        self.assertFalse(response.context_data["show_add_dars_button"])
+        self.assertIn("has_snapshot", response.context_data)
+        self.assertTrue(response.context_data["has_snapshot"])
 
-    def test_context_show_add_dars_button_other_dars(self):
-        """show_add_dars_button in context is True when there are only DARs associated with a different application."""
-        other_application = factories.dbGaPApplicationFactory.create()
-        factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=other_application
+    def test_context_last_update_no_snapshot(self):
+        """last_update is None in context when there are no dbGaPDataAccessSnapshots for this application."""
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("last_update", response.context_data)
+        self.assertIsNone(response.context_data["last_update"])
+
+    def test_context_last_update_one_snapshot(self):
+        """last_update is correct in context when there is one dbGaPDataAccessSnapshot for this application."""
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj
         )
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_add_dars_button", response.context_data)
-        self.assertTrue(response.context_data["show_add_dars_button"])
+        self.assertIn("last_update", response.context_data)
+        self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
 
-    def test_context_show_dars_no_dars(self):
-        """show_dars in context is False when there are no DARs for this application."""
-        request = self.factory.get(self.get_url(self.obj.pk))
-        request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_dars", response.context_data)
-        self.assertFalse(response.context_data["show_dars"])
-
-    def test_context_show_dars_dars_not_approved(self):
-        """show_dars in context is True when there are only DARs that are not approved."""
-        factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=self.obj,
-            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+    def test_context_last_update_two_snapshots(self):
+        """last_update is correct in context when there are two dbGaPDataAccessSnapshots for this application."""
+        factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj, created=timezone.now() - timedelta(weeks=4)
         )
-        factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=self.obj,
-            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
-        )
-        factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=self.obj,
-            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
-        )
-        factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_application=self.obj,
-            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj, created=timezone.now()
         )
         request = self.factory.get(self.get_url(self.obj.pk))
         request.user = self.user
         response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_dars", response.context_data)
-        self.assertTrue(response.context_data["show_dars"])
-
-    def test_context_show_dars_dars_with_dars(self):
-        """show_dars in context is True when there are DARs for this application."""
-        factories.dbGaPDataAccessRequestFactory.create(dbgap_application=self.obj)
-        request = self.factory.get(self.get_url(self.obj.pk))
-        request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_dars", response.context_data)
-        self.assertTrue(response.context_data["show_dars"])
-
-    def test_context_show_dars_other_dars(self):
-        """show_dars in context is False when there are DARs associated with a different application."""
-        factories.dbGaPDataAccessRequestFactory.create()
-        request = self.factory.get(self.get_url(self.obj.pk))
-        request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
-        self.assertIn("show_dars", response.context_data)
-        self.assertFalse(response.context_data["show_dars"])
+        self.assertIn("last_update", response.context_data)
+        self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
 
 
 class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):

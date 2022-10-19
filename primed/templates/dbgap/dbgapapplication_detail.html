@@ -13,16 +13,16 @@
     <li>Principal Investigator: {{ object.principal_investigator }}</li>
     <li>Project ID: {{ object.project_id }}</li>
     <li>AnVIL Group: <a href="{{ object.anvil_group.get_absolute_url }}">{{ object.anvil_group }}</a></li>
+    <li>Last DAR update: {{ last_update|default:"Never" }}</li>
   </ul>
 </div>
 
-{% if show_add_dars_button %}
-  <p>
-    <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_requests:new_from_json' dbgap_application_pk=object.pk %}" class="btn btn-primary" role="button">Add data access requests</a>
-  </p>
-{% endif %}
+<p>
+  <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_requests:new_from_json' dbgap_application_pk=object.pk %}" class="btn btn-primary" role="button">Update data access requests</a>
+</p>
 
-{% if show_dars %}
+
+{% if has_snapshot %}
   <h2>Data access requests in this application</h2>
   {% render_table data_access_request_table %}
 {% endif %}
