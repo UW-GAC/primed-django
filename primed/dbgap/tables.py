@@ -58,11 +58,27 @@ class dbGaPApplicationTable(tables.Table):
     project_id = tables.columns.Column(linkify=True)
     principal_investigator = tables.columns.Column(linkify=True)
     number_approved_dars = tables.columns.Column(
-        verbose_name="Number of approved DARs", orderable=False, empty_values=()
+        verbose_name="Number of approved DARs",
+        orderable=False,
+        empty_values=(False,),
+        accessor="dbgapdataaccesssnapshot_set__exists",
+    )
+    last_update = tables.columns.DateTimeColumn(
+        accessor="dbgapdataaccesssnapshot_set__exists",
+        orderable=False,
+        empty_values=(False,),
     )
 
     def render_number_approved_dars(self, value, record):
-        return record.dbgapdataaccessrequest_set.approved().count()
+        n_dars = (
+            record.dbgapdataaccesssnapshot_set.latest("created")
+            .dbgapdataaccessrequest_set.approved()
+            .count()
+        )
+        return n_dars
+
+    def render_last_update(self, value, record):
+        return record.dbgapdataaccesssnapshot_set.latest("created").created
 
     class Meta:
         model = models.dbGaPApplication
