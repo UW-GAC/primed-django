@@ -2,7 +2,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from factory import Faker, SubFactory
+from factory import Dict, Faker, SelfAttribute, SubFactory
 from factory.django import DjangoModelFactory
 
 from primed.primed_anvil.tests.factories import (
@@ -48,6 +48,25 @@ class dbGaPApplicationFactory(DjangoModelFactory):
 
     class Meta:
         model = models.dbGaPApplication
+
+
+class dbGaPDataAccessSnapshotFactory(DjangoModelFactory):
+    """A factory for the dbGaPDataAccessSnapshot model."""
+
+    dbgap_application = SubFactory(dbGaPApplicationFactory)
+    # From docs, need to use the .. syntax with a Dict:
+    # https://factoryboy.readthedocs.io/en/stable/reference.html#factory.Dict
+    dbgap_dar_data = Dict(
+        {
+            "Project_id": SelfAttribute("..dbgap_application.project_id"),
+            "PI_name": Faker("name"),
+            "Project_closed": "no",
+            "studies": [],
+        }
+    )
+
+    class Meta:
+        model = models.dbGaPDataAccessSnapshot
 
 
 class dbGaPDataAccessRequestFactory(DjangoModelFactory):

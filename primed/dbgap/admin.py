@@ -52,6 +52,17 @@ class dbGaPApplicationAdmin(SimpleHistoryAdmin):
     )
 
 
+@admin.register(models.dbGaPDataAccessSnapshot)
+class dbGaPDataAccessSnapshotAdmin(SimpleHistoryAdmin):
+    """Admin class for the `dbGaPDataAccessSnapshot` model."""
+
+    list_display = (
+        "dbgap_application",
+        "created",
+    )
+    list_filter = ("dbgap_application",)
+
+
 @admin.register(models.dbGaPDataAccessRequest)
 class dbGaPDataAccessRequestAdmin(SimpleHistoryAdmin):
     """Admin class for the `dbGaPDataAccessRequest` model."""

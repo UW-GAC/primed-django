@@ -378,48 +378,6 @@ class dbGaPApplicationTest(TestCase):
             e.exception.error_dict["project_id"][0].messages[0],
         )
 
-    def test_dbgap_dar_data(self):
-        """Can save json data"""
-        json_data = [
-            {
-                "Project_id": 1,
-                "PI_name": fake.name(),
-                "Project_closed": "no",
-                "studies": [],
-            }
-        ]
-        pi = UserFactory.create()
-        anvil_group = ManagedGroupFactory.create()
-        instance = models.dbGaPApplication(
-            principal_investigator=pi,
-            project_id=1,
-            anvil_group=anvil_group,
-            dbgap_dar_data=json_data,
-        )
-        instance.full_clean()
-        instance.save()
-        self.assertIsInstance(instance, models.dbGaPApplication)
-        self.assertEqual(instance.dbgap_dar_data, json_data)
-
-    def test_dbgap_dar_data_invalid_json(self):
-        """Invalid json raises a ValidationError"""
-        json_data = {"foo": "bar"}
-        pi = UserFactory.create()
-        anvil_group = ManagedGroupFactory.create()
-        instance = models.dbGaPApplication(
-            principal_investigator=pi,
-            project_id=1,
-            anvil_group=anvil_group,
-            dbgap_dar_data=json_data,
-        )
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        errors = e.exception.error_dict
-        self.assertEqual(len(errors), 1)
-        self.assertIn("dbgap_dar_data", errors)
-        self.assertEqual(len(errors["dbgap_dar_data"]), 1)
-        self.assertIn("JSON array", errors["dbgap_dar_data"][0].message)
-
     def test_get_dbgap_dar_json_url(self):
         """get_dbgap_dar_json_url returns a string."""
         application = factories.dbGaPApplicationFactory.create()
@@ -887,6 +845,52 @@ class dbGaPApplicationTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+
+
+class dbGaPDataAccessSnapshotTest(TestCase):
+    """Tests for the dbGaPApplication model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        json = {
+            "Project_id": dbgap_application.project_id,
+            "PI_name": fake.name(),
+            "Project_closed": "no",
+            "studies": [],
+        }
+        instance = models.dbGaPDataAccessSnapshot(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=json,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.dbGaPDataAccessSnapshot)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertIsInstance(instance.__str__(), str)
+
+    def test_clean_invalid_json(self):
+        """Creation using the model constructor and .save() works."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        json = {
+            "PI_name": fake.name(),
+            "Project_closed": "no",
+            "studies": [],
+        }
+        instance = factories.dbGaPDataAccessSnapshotFactory.build(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=json,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("dbgap_dar_data", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_dar_data"]), 1)
+        self.assertIn(
+            "required property",
+            e.exception.error_dict["dbgap_dar_data"][0].messages[0],
+        )
 
 
 class dbGaPDataAccessRequestTest(TestCase):
