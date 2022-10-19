@@ -202,54 +202,6 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         # Doseq means to generate the filter key twice, once for "mode" and once for "project_list"
         return url % urlencode(url_params, doseq=True)
 
-    def create_dars_from_json(self, json):
-        """Add DARs for this application from the dbGaP json for this project/application."""
-        # Validate the json.
-        jsonschema.validate(json, constants.json_dar_schema)
-        # Log the json.
-        msg = "Creating DARs using json...\n  {json}".format(
-            json=json,
-        )
-        logger.info(msg)
-        dars = []
-        project_json = json[0]
-        # Make sure that the project_id matches.
-        project_id = project_json["Project_id"]
-        if project_id != self.project_id:
-            raise ValueError("project_id does not match this dbGaPApplication.")
-        # Loop over studies and requests to create DARs.
-        # Do not save them until everything has been successfully created.
-        for study_json in project_json["studies"]:
-            # Consider making this a model manager method for dbGaPStudyAccession, since it may be common.
-            # Get the dbGaPStudyAccession associated with this phs.
-            phs = int(
-                re.match(
-                    dbGaPStudyAccession.PHS_REGEX, study_json["study_accession"]
-                ).group("phs")
-            )
-            study_accession = dbGaPStudyAccession.objects.get(phs=phs)
-            # Get the most recent version and participant set number from dbGaP.
-            accession_numbers = (
-                study_accession.dbgap_get_current_full_accession_numbers()
-            )
-            # Create the DAR.
-            for request_json in study_json["requests"]:
-                dar = dbGaPDataAccessRequest(
-                    dbgap_dar_id=request_json["DAR"],
-                    dbgap_application=self,
-                    dbgap_study_accession=study_accession,
-                    dbgap_version=accession_numbers["version"],
-                    dbgap_participant_set=accession_numbers["participant_set"],
-                    dbgap_consent_code=request_json["consent_code"],
-                    dbgap_consent_abbreviation=request_json["consent_abbrev"],
-                    dbgap_current_status=request_json["current_DAR_status"],
-                )
-                dar.full_clean()
-                dars.append(dar)
-        # Create the DARs in bulk - there are usually a lot of them.
-        dbGaPDataAccessRequest.objects.bulk_create(dars)
-        return dars
-
 
 class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
     """A model to store period checks of a dbGaP application's data access requests."""
@@ -290,6 +242,55 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                         "dbgap_dar_data": "Project_id in JSON does not match dbGaP project_id."
                     }
                 )
+
+    def create_dars_from_json(self):
+        """Add DARs for this application from the dbGaP json for this project snapshot."""
+        # Validate the json. It should already be validated, but it doesn't hurt to check again.
+        jsonschema.validate(self.dbgap_dar_data, constants.json_dar_schema_one_project)
+        # Log the json.
+        msg = "Creating DARs using snapshot pk {pk}...\n".format(
+            pk=self.pk,
+        )
+        logger.info(msg)
+        project_json = self.dbgap_dar_data
+        # Create a list in which to store DARs to create.
+        dars = []
+        # Make sure that the project_id matches.
+        project_id = project_json["Project_id"]
+        if project_id != self.dbgap_application.project_id:
+            raise ValueError("project_id does not match dbgap_application.project_id.")
+        # Loop over studies and requests to create DARs.
+        # Do not save them until everything has been successfully created.
+        for study_json in project_json["studies"]:
+            # Consider making this a model manager method for dbGaPStudyAccession, since it may be common.
+            # Get the dbGaPStudyAccession associated with this phs.
+            phs = int(
+                re.match(
+                    dbGaPStudyAccession.PHS_REGEX, study_json["study_accession"]
+                ).group("phs")
+            )
+            study_accession = dbGaPStudyAccession.objects.get(phs=phs)
+            # Get the most recent version and participant set number from dbGaP.
+            accession_numbers = (
+                study_accession.dbgap_get_current_full_accession_numbers()
+            )
+            # Create the DAR.
+            for request_json in study_json["requests"]:
+                dar = dbGaPDataAccessRequest(
+                    dbgap_dar_id=request_json["DAR"],
+                    dbgap_data_access_snapshot=self,
+                    dbgap_study_accession=study_accession,
+                    dbgap_version=accession_numbers["version"],
+                    dbgap_participant_set=accession_numbers["participant_set"],
+                    dbgap_consent_code=request_json["consent_code"],
+                    dbgap_consent_abbreviation=request_json["consent_abbrev"],
+                    dbgap_current_status=request_json["current_DAR_status"],
+                )
+                dar.full_clean()
+                dars.append(dar)
+        # Create the DARs in bulk - there are usually a lot of them.
+        dbGaPDataAccessRequest.objects.bulk_create(dars)
+        return dars
 
 
 class dbGaPDataAccessRequest(TimeStampedModel, models.Model):

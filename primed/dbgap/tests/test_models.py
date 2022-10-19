@@ -383,469 +383,6 @@ class dbGaPApplicationTest(TestCase):
         application = factories.dbGaPApplicationFactory.create()
         self.assertIsInstance(application.get_dbgap_dar_json_url(), str)
 
-    @responses.activate
-    def test_dbgap_create_dars_from_json_one_study_one_dar(self):
-        """Can create one DAR for one study."""
-        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "A test study",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 2,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
-            },
-        )
-        dars = dbgap_application.create_dars_from_json(valid_json)
-        self.assertEqual(len(dars), 1)
-        new_object = dars[0]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 2)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
-
-    @responses.activate
-    def test_dbgap_create_dars_from_json_one_study_two_dars(self):
-        """Can create two DARs for one study."""
-        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "A test study",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 1,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "NPU",
-                                "consent_code": 2,
-                                "DAR": 23498,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
-            },
-        )
-        dars = dbgap_application.create_dars_from_json(valid_json)
-        self.assertEqual(len(dars), 2)
-        new_object = dars[0]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 1)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-        new_object = dars[1]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertIn(new_object, dars)
-        self.assertEqual(new_object.dbgap_dar_id, 23498)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 2)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
-
-    @responses.activate
-    def test_dbgap_create_dars_from_json_two_studies_one_dar(self):
-        """Can create one DAR for two studies."""
-        study_accession_1 = factories.dbGaPStudyAccessionFactory.create(phs=421)
-        study_accession_2 = factories.dbGaPStudyAccessionFactory.create(phs=896)
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "Test study 1",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 1,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                    {
-                        "study_name": "Test study 2",
-                        "study_accession": "phs000896",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "BARBI",
-                                "consent_abbrev": "DS-LD",
-                                "consent_code": 1,
-                                "DAR": 23498,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
-            },
-        )
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000896.v2.p1"
-            },
-        )
-        dars = dbgap_application.create_dars_from_json(valid_json)
-        self.assertEqual(len(dars), 2)
-        new_object = dars[0]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession_1)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 1)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-        new_object = dars[1]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertIn(new_object, dars)
-        self.assertEqual(new_object.dbgap_dar_id, 23498)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession_2)
-        self.assertEqual(new_object.dbgap_version, 2)
-        self.assertEqual(new_object.dbgap_participant_set, 1)
-        self.assertEqual(new_object.dbgap_consent_code, 1)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
-
-    @responses.activate
-    def test_dbgap_create_dars_from_json_study_accession_does_not_exist(self):
-        """No DARs are created when the dbGaPStudyAccession does not exist."""
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "Test study 1",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 1,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
-            dbgap_application.create_dars_from_json(valid_json)
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
-
-    def test_dbgap_create_dars_from_json_two_studies_second_study_accession_does_not_exist(
-        self,
-    ):
-        """No DARs are created when the second study doesn't have a matching dbGaPStudyAccession."""
-        factories.dbGaPStudyAccessionFactory.create(phs=421)
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "Test study 1",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 1,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                    {
-                        "study_name": "Test study 2",
-                        "study_accession": "phs000896",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "BARBI",
-                                "consent_abbrev": "DS-LD",
-                                "consent_code": 1,
-                                "DAR": 23498,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
-            },
-        )
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000896.v2.p1"
-            },
-        )
-        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
-            dbgap_application.create_dars_from_json(valid_json)
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
-
-    def test_dbgap_create_dars_from_json_invalid_json(self):
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        """JSON is validated."""
-        invalid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-            }
-        ]
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            dbgap_application.create_dars_from_json(invalid_json)
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
-
-    def test_dbgap_create_dars_from_json_mismatched_project_id(self):
-        """No dbGaPDataAccessRequests are created if project_id doesn't match."""
-        factories.dbGaPStudyAccessionFactory.create(phs=421)
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 1,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "A test study",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 2,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
-            },
-        )
-        with self.assertRaises(ValueError) as e:
-            dbgap_application.create_dars_from_json(valid_json)
-        self.assertIn("project_id does not match", str(e.exception))
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
-
-    @responses.activate
-    def test_does_include_dars_that_are_not_approved(self):
-        """Does creates DARs with a different status than approved."""
-        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=6512)
-        valid_json = [
-            {
-                "Project_id": 6512,
-                "PI_name": "Test Investigator",
-                "Project_closed": "no",
-                # Two studies.
-                "studies": [
-                    {
-                        "study_name": "A test study",
-                        "study_accession": "phs000421",
-                        # N requests per study.
-                        "requests": [
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "GRU",
-                                "consent_code": 1,
-                                "DAR": 23497,
-                                "current_version": 12,
-                                "current_DAR_status": "rejected",
-                                "was_approved": "yes",
-                            },
-                            {
-                                "DAC_abbrev": "FOOBI",
-                                "consent_abbrev": "NPU",
-                                "consent_code": 2,
-                                "DAR": 23498,
-                                "current_version": 12,
-                                "current_DAR_status": "approved",
-                                "was_approved": "yes",
-                            },
-                        ],
-                    },
-                ],
-            }
-        ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
-            status=302,
-            headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
-            },
-        )
-        dars = dbgap_application.create_dars_from_json(valid_json)
-        self.assertEqual(len(dars), 2)
-        new_object = dars[0]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 1)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(new_object.dbgap_current_status, "rejected")
-        new_object = dars[1]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23498)
-        self.assertEqual(new_object.dbgap_application, dbgap_application)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 2)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-
 
 class dbGaPDataAccessSnapshotTest(TestCase):
     """Tests for the dbGaPApplication model."""
@@ -900,6 +437,477 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         )
         with self.assertRaises(ProtectedError):
             dbgap_application.delete()
+
+    @responses.activate
+    def test_dbgap_create_dars_from_json_one_study_one_dar(self):
+        """Can create one DAR for one study."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
+        valid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "A test study",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 2,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        dars = dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(len(dars), 1)
+        new_object = dars[0]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
+
+    @responses.activate
+    def test_dbgap_create_dars_from_json_one_study_two_dars(self):
+        """Can create two DARs for one study."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
+        valid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "A test study",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 1,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "NPU",
+                            "consent_code": 2,
+                            "DAR": 23498,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        dars = dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(len(dars), 2)
+        new_object = dars[0]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
+        new_object = dars[1]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertIn(new_object, dars)
+        self.assertEqual(new_object.dbgap_dar_id, 23498)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
+
+    @responses.activate
+    def test_dbgap_create_dars_from_json_two_studies_one_dar(self):
+        """Can create one DAR for two studies."""
+        study_accession_1 = factories.dbGaPStudyAccessionFactory.create(phs=421)
+        study_accession_2 = factories.dbGaPStudyAccessionFactory.create(phs=896)
+        valid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "Test study 1",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 1,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+                {
+                    "study_name": "Test study 2",
+                    "study_accession": "phs000896",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "BARBI",
+                            "consent_abbrev": "DS-LD",
+                            "consent_code": 1,
+                            "DAR": 23498,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000896.v2.p1"
+            },
+        )
+        dars = dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(len(dars), 2)
+        new_object = dars[0]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession_1)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
+        new_object = dars[1]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertIn(new_object, dars)
+        self.assertEqual(new_object.dbgap_dar_id, 23498)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession_2)
+        self.assertEqual(new_object.dbgap_version, 2)
+        self.assertEqual(new_object.dbgap_participant_set, 1)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
+
+    @responses.activate
+    def test_dbgap_create_dars_from_json_study_accession_does_not_exist(self):
+        """No DARs are created when the dbGaPStudyAccession does not exist."""
+        valid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "Test study 1",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 1,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
+            dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_dbgap_create_dars_from_json_two_studies_second_study_accession_does_not_exist(
+        self,
+    ):
+        """No DARs are created when the second study doesn't have a matching dbGaPStudyAccession."""
+        factories.dbGaPStudyAccessionFactory.create(phs=421)
+        valid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "Test study 1",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 1,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+                {
+                    "study_name": "Test study 2",
+                    "study_accession": "phs000896",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "BARBI",
+                            "consent_abbrev": "DS-LD",
+                            "consent_code": 1,
+                            "DAR": 23498,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000896.v2.p1"
+            },
+        )
+        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
+            dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_dbgap_create_dars_from_json_invalid_json(self):
+        """JSON is validated."""
+        invalid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=invalid_json,
+        )
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_dbgap_create_dars_from_json_mismatched_project_id(self):
+        """No dbGaPDataAccessRequests are created if project_id doesn't match."""
+        factories.dbGaPStudyAccessionFactory.create(phs=421)
+        valid_json = {
+            "Project_id": 1,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "A test study",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 2,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        with self.assertRaises(ValueError) as e:
+            dbgap_snapshot.create_dars_from_json()
+        self.assertIn("project_id does not match", str(e.exception))
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    @responses.activate
+    def test_does_include_dars_that_are_not_approved(self):
+        """Does creates DARs with a different status than approved."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create(phs=421)
+        valid_json = {
+            "Project_id": 6512,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "A test study",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 1,
+                            "DAR": 23497,
+                            "current_version": 12,
+                            "current_DAR_status": "rejected",
+                            "was_approved": "yes",
+                        },
+                        {
+                            "DAC_abbrev": "FOOBI",
+                            "consent_abbrev": "NPU",
+                            "consent_code": 2,
+                            "DAR": 23498,
+                            "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application__project_id=6512,
+            dbgap_dar_data=valid_json,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            status=302,
+            headers={
+                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
+                + "?study_id=phs000421.v32.p18"
+            },
+        )
+        dars = dbgap_snapshot.create_dars_from_json()
+        self.assertEqual(len(dars), 2)
+        new_object = dars[0]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_current_status, "rejected")
+        new_object = dars[1]
+        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
+        self.assertEqual(new_object.dbgap_dar_id, 23498)
+        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
+        self.assertEqual(new_object.dbgap_study_accession, study_accession)
+        self.assertEqual(new_object.dbgap_version, 32)
+        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
+        self.assertEqual(new_object.dbgap_current_status, "approved")
 
 
 class dbGaPDataAccessRequestTest(TestCase):
