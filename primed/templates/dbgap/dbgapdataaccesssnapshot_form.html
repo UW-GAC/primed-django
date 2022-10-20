@@ -1,0 +1,30 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add DARs{% endblock %}
+
+
+{% block content %}
+
+<h1>Update data access requests for dbGaP application {{ dbgap_application }}</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <h3>Instructions</h3>
+  <ol>
+    <li><p>Log into dbGaP in a new tab using <a href="https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?page=login" target="_blank" rel="noopener noreferrer">this link</a>.</p></li>
+
+    <li>Cut and paste the following link into the tab where you've logged in: <p>{{ dbgap_application.get_dbgap_dar_json_url }}</p></li>
+
+    <li><p>Select the entire JSON text from the page, copy it, and paste it into the box below.</p></li>
+  </ol>
+</div>
+
+  <form method="post">
+
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button type="submit" class="btn btn-success">Save DARs</button>
+  </form>
+
+{% endblock content %}

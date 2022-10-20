@@ -1,3 +1,6 @@
+import logging
+
+import requests
 from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
@@ -7,11 +10,15 @@ from anvil_consortium_manager.models import ManagedGroup, Workspace
 from anvil_consortium_manager.views import SuccessMessageMixin
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.http import Http404, HttpResponseRedirect
+from django.db import transaction
+from django.db.utils import IntegrityError
+from django.http import Http404
 from django.views.generic import CreateView, DetailView, FormView
 from django_tables2 import SingleTableMixin, SingleTableView
 
 from . import forms, models, tables
+
+logger = logging.getLogger(__name__)
 
 
 class dbGaPStudyAccessionDetail(
@@ -135,12 +142,12 @@ class dbGaPApplicationCreate(
         return super().form_valid(form)
 
 
-class dbGaPDataAccessRequestCreateFromJson(
+class dbGaPDataAccessSnapshotCreate(
     AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
 ):
 
-    form_class = forms.dbGaPDataAccessRequestFromJsonForm
-    template_name = "dbgap/dbgapdataaccessrequest_json_form.html"
+    form_class = forms.dbGaPDataAccessJSONForm
+    template_name = "dbgap/dbgapdataaccesssnapshot_form.html"
     ERROR_DARS_ALREADY_ADDED = (
         "Data Access Requests have already been added for this application."
     )
@@ -148,56 +155,58 @@ class dbGaPDataAccessRequestCreateFromJson(
         "Project id in JSON does not match dbGaP application project id."
     )
     ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
+    ERROR_CREATING_DARS = "Error creating Data Access Requests."
     success_msg = "Successfully added Data Access Requests for this dbGaP application."
 
-    def get(self, request, *args, **kwargs):
+    def get_dbgap_application(self):
         try:
-            self.dbgap_application = models.dbGaPApplication.objects.get(
-                pk=kwargs["dbgap_application_pk"]
+            dbgap_application = models.dbGaPApplication.objects.get(
+                pk=self.kwargs["dbgap_application_pk"]
             )
         except models.dbGaPApplication.DoesNotExist:
             raise Http404(
                 "No %(verbose_name)s found matching the query"
                 % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
             )
-        if self.dbgap_application.dbgapdataaccessrequest_set.count() > 0:
-            # Add a message and redirect.
-            messages.error(self.request, self.ERROR_DARS_ALREADY_ADDED)
-            return HttpResponseRedirect(self.dbgap_application.get_absolute_url())
+        return dbgap_application
+
+    def get(self, request, *args, **kwargs):
+        self.dbgap_application = self.get_dbgap_application()
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        try:
-            self.dbgap_application = models.dbGaPApplication.objects.get(
-                pk=kwargs["dbgap_application_pk"]
-            )
-        except models.dbGaPApplication.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
-            )
-        if self.dbgap_application.dbgapdataaccessrequest_set.count() > 0:
-            # Add a message and redirect.
-            messages.error(self.request, self.ERROR_DARS_ALREADY_ADDED)
-            return HttpResponseRedirect(self.dbgap_application.get_absolute_url())
+        self.dbgap_application = self.get_dbgap_application()
         return super().post(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["dbgap_application"] = self.dbgap_application
+        return initial
 
     def get_success_url(self):
         return self.dbgap_application.get_absolute_url()
 
     def form_valid(self, form):
-        """Create the dbGaPDataAccessRequests from the json."""
+        """Create a dbGaPDataAccessSnapshot and associated dbGaPDataAccessRequests."""
         try:
-            self.dbgap_application.create_dars_from_json(form.cleaned_data["json"])
-        except ValueError:
-            # project_id doesn't match.
-            messages.error(self.request, self.ERROR_PROJECT_ID_DOES_NOT_MATCH)
-            return self.form_invalid(form)
-        except models.dbGaPStudyAccession.DoesNotExist:
-            # At least one study accession was not found in the app.
-            messages.error(self.request, self.ERROR_STUDY_ACCESSION_NOT_FOUND)
-            return self.form_invalid(form)
-
+            # Use a transaction because we don't want either the snapshot or the requests
+            # to be saved upon failure.
+            with transaction.atomic():
+                self.object = form.save()
+                self.object.create_dars_from_json()
+        except (ValidationError, IntegrityError):
+            # Log the JSON as an error.
+            msg = "JSON: {}".format(form.cleaned_data["dbgap_dar_data"])
+            logger.error(msg)
+            # Add an error message.
+            messages.error(self.request, self.ERROR_CREATING_DARS)
+            return self.render_to_response(self.get_context_data(form=form))
+        except requests.exceptions.HTTPError as e:
+            # log the error.
+            logger.error(str(e))
+            # Add an error message.
+            messages.error(self.request, self.ERROR_CREATING_DARS)
+            return self.render_to_response(self.get_context_data(form=form))
         return super().form_valid(form)
 
     def get_context_data(self, *args, **kwargs):

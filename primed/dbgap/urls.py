@@ -18,11 +18,11 @@ data_access_request_patterns = (
     [
         path(
             "new/",
-            views.dbGaPDataAccessRequestCreateFromJson.as_view(),
-            name="new_from_json",
+            views.dbGaPDataAccessSnapshotCreate.as_view(),
+            name="new",
         ),
     ],
-    "dbgap_data_access_requests",
+    "dbgap_data_access_snapshots",
 )
 
 dbgap_application_patterns = (

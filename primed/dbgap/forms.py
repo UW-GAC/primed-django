@@ -48,14 +48,46 @@ class dbGaPApplicationForm(forms.ModelForm):
         )
 
 
-class dbGaPDataAccessRequestFromJsonForm(forms.Form):
-    """Create dbGaP data access requests from JSON data."""
+# class dbGaPDataAccessJSONForm(forms.Form):
+#     """Create a dbGaP data access snapshot and DARs from JSON data."""
+#
+#     # This is not a ModelForm. The dbGaP API returns an JSON array with one object for the
+#     # project, and the dbGaPDataAccessSnapshot model wants the JSON object. This form
+#     # will clean the JSON that you can cut and paste from dbGaP.
+#
+#     json = forms.JSONField()
+#     ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"
+#
+#     def clean_json(self):
+#         data = self.cleaned_data["json"]
+#         try:
+#             jsonschema.validate(data, constants.json_dar_schema)
+#         except jsonschema.exceptions.ValidationError as e:
+#             # Replace the full json string because it will be very long
+#             error_message = e.message.replace(str(e.instance), "JSON array")
+#             raise ValidationError(
+#                 self.ERROR_JSON_VALIDATION, params={"error": error_message}
+#             )
+#         return data
 
-    json = forms.JSONField()
+
+class dbGaPDataAccessJSONForm(forms.ModelForm):
+    """Create a dbGaP data access snapshot and DARs from JSON data."""
+
     ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"
 
-    def clean_json(self):
-        data = self.cleaned_data["json"]
+    class Meta:
+        model = models.dbGaPDataAccessSnapshot
+        fields = (
+            "dbgap_application",
+            "dbgap_dar_data",
+        )
+        # widgets = {
+        #     "dbgap_application": forms.HiddenInput(required=False),
+        # }
+
+    def clean_dbgap_dar_data(self):
+        data = self.cleaned_data["dbgap_dar_data"]
         try:
             jsonschema.validate(data, constants.json_dar_schema)
         except jsonschema.exceptions.ValidationError as e:
@@ -64,4 +96,7 @@ class dbGaPDataAccessRequestFromJsonForm(forms.Form):
             raise ValidationError(
                 self.ERROR_JSON_VALIDATION, params={"error": error_message}
             )
-        return data
+        # Return the first object in the array, since people will be cutting and pasting
+        # from the dbGaP interface. It returns an array with one object, and we want to
+        # store only object.
+        return data[0]

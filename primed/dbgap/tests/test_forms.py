@@ -424,21 +424,22 @@ class dbGaPApplicationFormTest(TestCase):
         self.assertIn("already exists", form.errors["project_id"][0])
 
 
-class dbGaPDataAccessRequestFromJsonFormTest(TestCase):
-    """Tests for the dbGaPDataAccessRequestFromJsonForm class."""
+class dbGaPDataAccessJSONFormTest(TestCase):
+    """Tests for the dbGaPDataAccessJSONForm class."""
 
-    form_class = forms.dbGaPDataAccessRequestFromJsonForm
+    form_class = forms.dbGaPDataAccessJSONForm
 
     def setUp(self):
         """Create some data for use in the form."""
         self.pi = UserFactory.create()
+        self.dbgap_application = factories.dbGaPApplicationFactory.create()
         # Replicate the json we expect to get from dbGaP.
 
     def get_valid_dbgap_application_json(self):
         """Return a valid json string for testing."""
 
         valid_json = {
-            "Project_id": fake.random_int(),
+            "Project_id": self.dbgap_application.project_id,
             "PI_name": fake.name(),
             "Project_closed": "no",
             # Two studies.
@@ -470,168 +471,226 @@ class dbGaPDataAccessRequestFromJsonFormTest(TestCase):
         form_data = {
             # Note the get_valid_json function returns valid project_id, which is one element of what dbGaP returns.
             # Therefore we need to add []'s around it.
-            "json": json.dumps([self.get_valid_dbgap_application_json()]),
+            "dbgap_dar_data": json.dumps([self.get_valid_dbgap_application_json()]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
+    def test_missing_dbgap_application(self):
+        """Form is invalid when dbgap_application is missing."""
+        form = self.form_class(
+            data={
+                "dbgap_dar_data": json.dumps([self.get_valid_dbgap_application_json()])
+            }
+        )
+        from django.core.exceptions import ObjectDoesNotExist
+
+        with self.assertRaises(ObjectDoesNotExist):
+            # Model clean method needs the dbgap_application...
+            form.is_valid()
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_application", form.errors)
+        self.assertEqual(len(form.errors["dbgap_application"]), 1)
+        self.assertIn("required", form.errors["dbgap_application"][0])
+
     def test_json_missing(self):
         """Form is invalid when json is missing."""
-        form = self.form_class(data={})
+        form = self.form_class(data={"dbgap_application": self.dbgap_application})
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("required", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("required", form.errors["dbgap_dar_data"][0])
 
     def test_json_blank(self):
-        form_data = {"json": ""}
+        form_data = {
+            "dbgap_dar_data": "",
+            "dbgap_application": self.dbgap_application,
+        }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("required", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("required", form.errors["dbgap_dar_data"][0])
 
     def test_json_zero_elements_in_array(self):
         """Form is invalid when there are no elements in the json array."""
         form_data = {
             # Get responses for two project_ids.
-            "json": "[]",
+            "dbgap_dar_data": "[]",
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("required", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("required", form.errors["dbgap_dar_data"][0])
 
     def test_json_extra_elements(self):
         """Form is invalid when there are two elements in the json array."""
         form_data = {
             # Get responses for two project_ids.
-            "json": json.dumps(
+            "dbgap_dar_data": json.dumps(
                 [
                     self.get_valid_dbgap_application_json(),
                     self.get_valid_dbgap_application_json(),
                 ]
             ),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("JSON array", form.errors["json"][0])
-        self.assertIn("too long", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("JSON array", form.errors["dbgap_dar_data"][0])
+        self.assertIn("too long", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_project_id(self):
         """Form is invalid when project_id is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json.pop("Project_id")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("Project_id", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("Project_id", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_studies(self):
         """Form is invalid when studies is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json.pop("studies")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("studies", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("studies", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_study_accession(self):
         """Form is invalid when study_accession is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json["studies"][0].pop("study_accession")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("study_accession", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("study_accession", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_requests(self):
         """Form is invalid when requests is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json["studies"][0].pop("requests")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("requests", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("requests", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_consent_abbrev(self):
         """Form is invalid when consent_abbrev is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json["studies"][0]["requests"][0].pop("consent_abbrev")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("consent_abbrev", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("consent_abbrev", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_consent_code(self):
         """Form is invalid when consent_code is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json["studies"][0]["requests"][0].pop("consent_code")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("consent_code", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("consent_code", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_dar(self):
         """Form is invalid when DAR is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json["studies"][0]["requests"][0].pop("DAR")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("DAR", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("DAR", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_current_DAR_status(self):
         """Form is invalid when current_DAR_status is missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json["studies"][0]["requests"][0].pop("current_DAR_status")
         form_data = {
-            "json": json.dumps([invalid_json]),
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("json", form.errors)
-        self.assertEqual(len(form.errors["json"]), 1)
-        self.assertIn("JSON validation error:", form.errors["json"][0])
-        self.assertIn("current_DAR_status", form.errors["json"][0])
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("current_DAR_status", form.errors["dbgap_dar_data"][0])
+
+    def test_project_id_does_not_match(self):
+        """Form is not valid when the project_id does not match."""
+        other_application = factories.dbGaPApplicationFactory.create(
+            project_id=self.dbgap_application.project_id + 1
+        )
+        form_data = {
+            "dbgap_dar_data": json.dumps([self.get_valid_dbgap_application_json()]),
+            "dbgap_application": other_application,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("__all__", form.errors)
+        self.assertEqual(len(form.errors["__all__"]), 1)
+        self.assertIn("Project_id", form.errors["__all__"][0])

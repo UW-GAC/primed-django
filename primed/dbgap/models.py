@@ -66,6 +66,8 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
             params={"study_id": "phs{phs:06d}".format(phs=self.phs)},
             allow_redirects=False,
         )
+        # Raise an error if an error code was returned.
+        response.raise_for_status()
         full_accession = response.next.url.split("study_id=")[1]
         match = re.match(self.FULL_ACCESSION_REGEX, full_accession)
         d = {
@@ -235,12 +237,9 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                 # Replace the full json string because it will be very long
                 error_message = e.message.replace(str(e.instance), "JSON array")
                 raise ValidationError({"dbgap_dar_data": error_message})
-            # Check that the project ID matches.
             if self.dbgap_dar_data["Project_id"] != self.dbgap_application.project_id:
                 raise ValidationError(
-                    {
-                        "dbgap_dar_data": "Project_id in JSON does not match dbGaP project_id."
-                    }
+                    "Project_id in JSON does not match dbgap_application.project_id."
                 )
 
     def create_dars_from_json(self):
@@ -314,13 +313,13 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     dbgap_data_access_snapshot = models.ForeignKey(
         dbGaPDataAccessSnapshot,
         verbose_name="dbGaP data access snapshot",
+        # Todo: change to CASCADE.
         on_delete=models.PROTECT,
         help_text="The dbGaP data access snapshot from which this record came.",
     )
     dbgap_dar_id = models.PositiveIntegerField(
         verbose_name=" dbGaP DAR id",
         validators=[MinValueValidator(1)],
-        unique=True,
     )
     dbgap_study_accession = models.ForeignKey(
         dbGaPStudyAccession,

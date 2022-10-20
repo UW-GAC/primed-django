@@ -946,19 +946,18 @@ class dbGaPDataAccessRequestTest(TestCase):
     def test_unique_dbgap_dar_id(self):
         """Saving a duplicate model fails."""
         obj = factories.dbGaPDataAccessRequestFactory.create()
-        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
-            dbgap_data_access_snapshot=dbgap_snapshot,
+            dbgap_data_access_snapshot=obj.dbgap_data_access_snapshot,
             dbgap_study_accession=dbgap_study_accession,
             dbgap_dar_id=obj.dbgap_dar_id,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("dbgap_dar_id", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["dbgap_dar_id"]), 1)
+        self.assertIn("__all__", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
         self.assertIn(
-            "already exists", e.exception.error_dict["dbgap_dar_id"][0].messages[0]
+            "already exists", e.exception.error_dict["__all__"][0].messages[0]
         )
         with self.assertRaises(IntegrityError):
             instance.save()
