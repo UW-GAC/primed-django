@@ -48,29 +48,6 @@ class dbGaPApplicationForm(forms.ModelForm):
         )
 
 
-# class dbGaPDataAccessJSONForm(forms.Form):
-#     """Create a dbGaP data access snapshot and DARs from JSON data."""
-#
-#     # This is not a ModelForm. The dbGaP API returns an JSON array with one object for the
-#     # project, and the dbGaPDataAccessSnapshot model wants the JSON object. This form
-#     # will clean the JSON that you can cut and paste from dbGaP.
-#
-#     json = forms.JSONField()
-#     ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"
-#
-#     def clean_json(self):
-#         data = self.cleaned_data["json"]
-#         try:
-#             jsonschema.validate(data, constants.json_dar_schema)
-#         except jsonschema.exceptions.ValidationError as e:
-#             # Replace the full json string because it will be very long
-#             error_message = e.message.replace(str(e.instance), "JSON array")
-#             raise ValidationError(
-#                 self.ERROR_JSON_VALIDATION, params={"error": error_message}
-#             )
-#         return data
-
-
 # TODO: rename to dbGaPDataAccessSnapshotForm.
 class dbGaPDataAccessJSONForm(forms.ModelForm):
     """Create a dbGaP data access snapshot and DARs from JSON data."""

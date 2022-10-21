@@ -1163,11 +1163,6 @@ class dbGaPDataAccessRequestTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "1234")
 
-    # def test_get_absolute_url(self):
-    #     """get_absolute_url method works correctly."""
-    #     instance = factories.dbGaPDataAccessRequestFactory.create()
-    #     self.assertIsInstance(instance.get_absolute_url(), str)
-
     def test_unique_dbgap_dar_id(self):
         """Saving a duplicate model fails."""
         obj = factories.dbGaPDataAccessRequestFactory.create()

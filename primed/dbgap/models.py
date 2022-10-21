@@ -51,25 +51,6 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"pk": self.pk})
 
-    # def dbgap_get_current_full_accession_numbers(self):
-    #     """Query dbGaP to get the full accession, including version and participant set numbers, for this phs."""
-    #     # This url should will resolve to the most recent version/participant set id.
-    #     response = requests.get(
-    #         self.DBGAP_STUDY_URL,
-    #         params={"study_id": "phs{phs:06d}".format(phs=self.phs)},
-    #         allow_redirects=False,
-    #     )
-    #     # Raise an error if an error code was returned.
-    #     response.raise_for_status()
-    #     full_accession = response.next.url.split("study_id=")[1]
-    #     match = re.match(self.FULL_ACCESSION_REGEX, full_accession)
-    #     d = {
-    #         "phs": int(match.group("phs")),
-    #         "version": int(match.group("version")),
-    #         "participant_set": int(match.group("participant_set")),
-    #     }
-    #     return d
-
 
 class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""
