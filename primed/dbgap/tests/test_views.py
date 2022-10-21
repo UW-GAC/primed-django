@@ -1293,20 +1293,6 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                 ],
             }
         ]
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            constants.DBGAP_STUDY_URL,
-            match=[
-                responses.matchers.query_param_matcher(
-                    {"study_id": "phs{phs:06d}".format(phs=self.study_accession_phs)}
-                )
-            ],
-            status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
-        )
         # Make sure no actual calls are made, so activate responses for every test.
         responses.start()
 
@@ -1525,6 +1511,18 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
 
     def test_redirect_url(self):
         """Redirects to successful url."""
+        # Add responses with the study version and participant_set.
+        accession = "phs{phs:06d}".format(phs=self.study_accession_phs)
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": accession})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL
+                + "?study_id={}.v32.p18".format(accession)
+            },
+        )
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.dbgap_application.pk),
@@ -1538,6 +1536,18 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
 
     def test_success_message(self):
         """Redirects to successful url."""
+        # Add responses with the study version and participant_set.
+        accession = "phs{phs:06d}".format(phs=self.study_accession_phs)
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": accession})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL
+                + "?study_id={}.v32.p18".format(accession)
+            },
+        )
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.dbgap_application.pk),
@@ -1598,8 +1608,24 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_dar_data=self.valid_json[0],
             created=timezone.now() - timedelta(weeks=4),
         )
-        existing_snapshot.create_dars_from_json()
-        # Now try to add a new one.
+        # Create DARs for it.
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=existing_snapshot,
+            dbgap_dar_id=self.valid_json[0]["studies"][0]["requests"][0]["DAR"],
+            dbgap_phs=self.study_accession_phs,
+            dbgap_consent_code=self.valid_json[0]["studies"][0]["requests"][0][
+                "consent_code"
+            ],
+            dbgap_consent_abbreviation=self.valid_json[0]["studies"][0]["requests"][0][
+                "consent_abbrev"
+            ],
+            dbgap_current_status=self.valid_json[0]["studies"][0]["requests"][0][
+                "current_DAR_status"
+            ],
+            dbgap_version=3,
+            dbgap_participant_set=2,
+        )
+        # Now try to load the page again.
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.dbgap_application.pk))
         self.assertEqual(response.status_code, 200)
@@ -1612,7 +1638,21 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_dar_data=self.valid_json[0],
             created=timezone.now() - timedelta(weeks=4),
         )
-        existing_snapshot.create_dars_from_json()
+        # Create DARs for it.
+        original_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=existing_snapshot,
+            dbgap_dar_id=self.valid_json[0]["studies"][0]["requests"][0]["DAR"],
+            dbgap_phs=self.study_accession_phs,
+            dbgap_consent_code=self.valid_json[0]["studies"][0]["requests"][0][
+                "consent_code"
+            ],
+            dbgap_consent_abbreviation=self.valid_json[0]["studies"][0]["requests"][0][
+                "consent_abbrev"
+            ],
+            dbgap_current_status="new",
+            dbgap_version=3,
+            dbgap_participant_set=2,
+        )
         # Now try to add a new one.
         self.client.force_login(self.user)
         response = self.client.post(
@@ -1629,6 +1669,26 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertEqual(new_snapshot.dbgap_application, self.dbgap_application)
         self.assertEqual(new_snapshot.dbgap_dar_data, self.valid_json[0])
         self.assertEqual(new_snapshot.dbgapdataaccessrequest_set.count(), 1)
+        new_dar = models.dbGaPDataAccessRequest.objects.latest("pk")
+        self.assertEqual(new_dar.dbgap_data_access_snapshot, new_snapshot)
+        self.assertEqual(
+            new_dar.dbgap_dar_id, self.valid_json[0]["studies"][0]["requests"][0]["DAR"]
+        )
+        self.assertEqual(new_dar.dbgap_phs, self.study_accession_phs)
+        self.assertEqual(
+            new_dar.dbgap_consent_code,
+            self.valid_json[0]["studies"][0]["requests"][0]["consent_code"],
+        )
+        self.assertEqual(
+            new_dar.dbgap_consent_abbreviation,
+            self.valid_json[0]["studies"][0]["requests"][0]["consent_abbrev"],
+        )
+        self.assertEqual(new_dar.dbgap_current_status, "approved")
+        # These should be obtained from the original dar.
+        self.assertEqual(new_dar.dbgap_version, original_dar.dbgap_version)
+        self.assertEqual(
+            new_dar.dbgap_participant_set, original_dar.dbgap_participant_set
+        )
 
     def test_post_invalid_json(self):
         """JSON is invalid."""

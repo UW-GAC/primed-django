@@ -71,6 +71,7 @@ class dbGaPApplicationForm(forms.ModelForm):
 #         return data
 
 
+# TODO: rename to dbGaPDataAccessSnapshotForm.
 class dbGaPDataAccessJSONForm(forms.ModelForm):
     """Create a dbGaP data access snapshot and DARs from JSON data."""
 

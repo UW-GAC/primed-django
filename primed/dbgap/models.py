@@ -236,7 +236,15 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                 )
 
     def create_dars_from_json(self):
-        """Add DARs for this application from the dbGaP json for this project snapshot."""
+        """Add DARs for this application from the dbGaP json for this project snapshot.
+
+        This function loops through the studies and requests in the JSON for this snapshot
+        and adds individual dbGaPDataAccessRequests for each one. Because dbGaP does not
+        give us the original version and participant set that the DAR grants access to, we
+        need to look that up when adding the first DAR with a specific DAR/dbgap_dar_id.
+        For new DARs with the same DAR/dbgap_dar_id, we can look up the original version/
+        participant set from the previous dbGaPDataAccessRequest.
+        """
         # Validate the json. It should already be validated, but it doesn't hurt to check again.
         jsonschema.validate(self.dbgap_dar_data, constants.json_dar_schema_one_project)
         # Log the json.
@@ -262,39 +270,60 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     "phs"
                 )
             )
-
-            # # Cut and paste from above.
-            # """Query dbGaP to get the full accession, including version and participant set numbers, for this phs."""
-            # This url should will resolve to the most recent version/participant set id.
-            response = requests.get(
-                constants.DBGAP_STUDY_URL,
-                params={"study_id": "phs{phs:06d}".format(phs=phs)},
-                allow_redirects=False,
-            )
-            # Raise an error if an error code was returned.
-            response.raise_for_status()
-            full_accession = response.next.url.split("study_id=")[1]
-            match = re.match(constants.FULL_ACCESSION_REGEX, full_accession)
-            accession_numbers = {
-                "phs": int(match.group("phs")),
-                "version": int(match.group("version")),
-                "participant_set": int(match.group("participant_set")),
-            }
-            # return d
-
-            # study_accession = dbGaPStudyAccession.objects.get(phs=phs)
-            # # Get the most recent version and participant set number from dbGaP.
-            # accession_numbers = (
-            #     study_accession.dbgap_get_current_full_accession_numbers()
-            # )
             # Create the DAR.
             for request_json in study_json["requests"]:
+                # dbGaP does not keep track of the original version and participant set associated with a DAR.
+                # Therefore, we need to get it ourselves.
+                # Try looking up the original version and participant set from a previous DAR.
+                try:
+                    # This assumes that a DAR/dbgap_dar_id remains the same for the same phs and consent code.
+                    previous_dar = dbGaPDataAccessRequest.objects.filter(
+                        dbgap_dar_id=request_json["DAR"]
+                    ).latest("created")
+                    # Make sure that excepted values match.
+                    # Is ValueError the best error to raise?
+                    if previous_dar.dbgap_phs != phs:
+                        raise ValueError("dbgap_phs mismatch")
+                    if previous_dar.dbgap_consent_code != request_json["consent_code"]:
+                        raise ValueError("dbgap_consent_code mismatch")
+                    if (
+                        previous_dar.dbgap_data_access_snapshot.dbgap_application.project_id
+                        != project_id
+                    ):
+                        raise ValueError("project_id mismatch")
+                    # If everything looks good, pull the original version and participant set from the previous DAR.
+                    original_version = previous_dar.dbgap_version
+                    original_participant_set = previous_dar.dbgap_participant_set
+                except dbGaPDataAccessRequest.DoesNotExist:
+                    # If we don't have info about it from a previous DAR, query dbGaP to get the current
+                    # version and participant set numbers for this phs.
+                    # This url should resolve to url for the current version/participant set.
+                    response = requests.get(
+                        constants.DBGAP_STUDY_URL,
+                        params={"study_id": "phs{phs:06d}".format(phs=phs)},
+                        allow_redirects=False,
+                    )
+                    # Raise an error if an error code was returned.
+                    response.raise_for_status()
+                    full_accession = response.next.url.split("study_id=")[1]
+                    match = re.match(constants.FULL_ACCESSION_REGEX, full_accession)
+                    original_version = int(match.group("version"))
+                    original_participant_set = int(match.group("participant_set"))
+                except ValueError as e:
+                    # Log an error and re-raise.
+                    msg = "DAR ID mismatch for snapshot pk {} and DAR ID {}".format(
+                        self.pk, previous_dar.dbgap_dar_id
+                    )
+                    logger.error(msg)
+                    logger.error(str(e))
+                    raise
+
                 dar = dbGaPDataAccessRequest(
                     dbgap_dar_id=request_json["DAR"],
                     dbgap_data_access_snapshot=self,
                     dbgap_phs=phs,
-                    dbgap_version=accession_numbers["version"],
-                    dbgap_participant_set=accession_numbers["participant_set"],
+                    dbgap_version=original_version,
+                    dbgap_participant_set=original_participant_set,
                     dbgap_consent_code=request_json["consent_code"],
                     dbgap_consent_abbreviation=request_json["consent_abbrev"],
                     dbgap_current_status=request_json["current_DAR_status"],
@@ -302,12 +331,22 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                 dar.full_clean()
                 dars.append(dar)
         # Create the DARs in bulk - there are usually a lot of them.
-        dbGaPDataAccessRequest.objects.bulk_create(dars)
+        dars = dbGaPDataAccessRequest.objects.bulk_create(dars)
         return dars
 
 
 class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
-    """A model to track dbGaP data access requests."""
+    """A model to track dbGaP data access requests.
+
+    This model is not entirely normalized, since the dbgap_dar_id, dbgap_phs, and dbgap_consent_code
+    are likely constant and should not change. dbgap_version, dbgap_participant_set, dbgap_current_status,
+    dgap_consent_abbreviation are expected to change with each new dbGaPDataAccessSnapshot. However, we
+    have no guarantee that this is true and we are pulling directly from the JSON from dbGaP. In that case,
+    it might be safer to store redundant information.
+
+    Note that dbgap_version and dbgap_participant set do *not* from the JSON; see the
+    dbGaPDataAccessSnapshot.create_dars_from_json method for details about how they are obtained.
+    """
 
     # The value here is what appears in the DAR JSON from dbGaP.
     # So far I am aware of "approved" and "closed".
