@@ -2,7 +2,6 @@
 
 import json
 from datetime import timedelta
-from unittest import skip
 
 import responses
 from anvil_consortium_manager import views as acm_views
@@ -34,7 +33,7 @@ from primed.primed_anvil.tests.factories import (
 )
 from primed.users.tests.factories import UserFactory
 
-from .. import forms, models, tables, views
+from .. import constants, forms, models, tables, views
 from . import factories
 
 fake = Faker()
@@ -1266,7 +1265,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             "Project_closed": "no",
             "studies": [],
         }
-        self.study_accession = factories.dbGaPStudyAccessionFactory.create()
+        self.study_accession_phs = fake.random_int()
         self.valid_json = [
             {
                 "Project_id": self.dbgap_application.project_id,
@@ -1277,7 +1276,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                     {
                         "study_name": "Test study 1",
                         "study_accession": "phs{phs:06d}".format(
-                            phs=self.study_accession.phs
+                            phs=self.study_accession_phs
                         ),
                         "requests": [
                             {
@@ -1297,18 +1296,24 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # Add responses with the study version and participant_set.
         responses.add(
             responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            constants.DBGAP_STUDY_URL,
             match=[
                 responses.matchers.query_param_matcher(
-                    {"study_id": "phs{phs:06d}".format(phs=self.study_accession.phs)}
+                    {"study_id": "phs{phs:06d}".format(phs=self.study_accession_phs)}
                 )
             ],
             status=302,
             headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
             },
         )
+        # Make sure no actual calls are made, so activate responses for every test.
+        responses.start()
+
+    def tearDown(self):
+        super().tearDown()
+        responses.stop()
+        responses.reset()
 
     def add_json_study(self, study_accession, requests=[]):
         study_json = {
@@ -1406,11 +1411,8 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             response.context_data["form"], forms.dbGaPDataAccessJSONForm
         )
 
-    @responses.activate
     def test_can_create_dars_from_json(self):
         """Can create dbGaPDataAccessRequests for this dbGaPApplication."""
-        study_accession_1 = factories.dbGaPStudyAccessionFactory.create(phs=421)
-        study_accession_2 = factories.dbGaPStudyAccessionFactory.create(phs=896)
         valid_json = [
             {
                 "Project_id": self.dbgap_application.project_id,
@@ -1465,22 +1467,20 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # Add responses with the study version and participant_set.
         responses.add(
             responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
             status=302,
             headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
             },
         )
         responses.add(
             responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
             status=302,
             headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000896.v2.p1"
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000896.v2.p1"
             },
         )
         self.client.force_login(self.user)
@@ -1502,14 +1502,14 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # study 1, 2 requests.
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23497)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession_1)
+        self.assertEqual(new_object.dbgap_phs, 421)
         self.assertEqual(new_object.dbgap_version, 32)
         self.assertEqual(new_object.dbgap_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23498)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession_1)
+        self.assertEqual(new_object.dbgap_phs, 421)
         self.assertEqual(new_object.dbgap_version, 32)
         self.assertEqual(new_object.dbgap_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
@@ -1517,13 +1517,12 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # study 2, one request.
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23499)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
-        self.assertEqual(new_object.dbgap_study_accession, study_accession_2)
+        self.assertEqual(new_object.dbgap_phs, 896)
         self.assertEqual(new_object.dbgap_version, 2)
         self.assertEqual(new_object.dbgap_participant_set, 1)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
 
-    @responses.activate
     def test_redirect_url(self):
         """Redirects to successful url."""
         self.client.force_login(self.user)
@@ -1537,7 +1536,6 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.assertRedirects(response, self.dbgap_application.get_absolute_url())
 
-    @responses.activate
     def test_success_message(self):
         """Redirects to successful url."""
         self.client.force_login(self.user)
@@ -1594,7 +1592,6 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk + 1)
 
-    @responses.activate
     def test_has_form_when_one_snapshot_exists(self):
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.dbgap_application,
@@ -1608,7 +1605,6 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue("form" in response.context_data)
 
-    @responses.activate
     def test_can_add_a_second_snapshot_with_dars(self):
         """Can add a second snapshot and new DARs."""
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -1683,32 +1679,6 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertIn("Project_id", form.errors["__all__"][0])
         self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 0)
 
-    @skip("will remove this functionality")
-    def test_json_phs_does_not_exist(self):
-        """dbGaPStudyAccession with one of the phs's does not exist"""
-        self.study_accession.delete()
-        self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
-            {"dbgap_dar_data": json.dumps(self.valid_json)},
-        )
-        self.assertEqual(response.status_code, 200)
-        # No new objects were created.
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
-        # Form has errors in the correct field.
-        self.assertIn("form", response.context_data)
-        form = response.context_data["form"]
-        # Form is valid...
-        self.assertTrue(form.is_valid())
-        # But there is an error.
-        self.assertIn("messages", response.context)
-        messages = list(response.context["messages"])
-        self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.dbGaPDataAccessRequestCreateFromJson.ERROR_STUDY_ACCESSION_NOT_FOUND,
-            str(messages[0]),
-        )
-
     def test_context_includes_dbgap_application(self):
         """Response context data includes the dbGaP application."""
         request = self.factory.get(self.get_url(self.dbgap_application.pk))
@@ -1721,10 +1691,8 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             response.context_data["dbgap_application"], self.dbgap_application
         )
 
-    @responses.activate
     def test_snapshot_not_created_if_http404(self):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a ValidationError."""
-        factories.dbGaPStudyAccessionFactory.create(phs=421)
         valid_json = [
             {
                 "Project_id": self.dbgap_application.project_id,
@@ -1752,7 +1720,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # Add responses with the study version and participant_set.
         responses.add(
             responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
             status=404,
         )
@@ -1777,10 +1745,8 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             views.dbGaPDataAccessSnapshotCreate.ERROR_CREATING_DARS, str(messages[0])
         )
 
-    @responses.activate
     def test_snapshot_not_created_if_dar_validation_error(self):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created."""
-        factories.dbGaPStudyAccessionFactory.create(phs=421)
         valid_json = [
             {
                 "Project_id": self.dbgap_application.project_id,
@@ -1817,12 +1783,11 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # Add responses with the study version and participant_set.
         responses.add(
             responses.GET,
-            models.dbGaPStudyAccession.DBGAP_STUDY_URL,
+            constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
             status=302,
             headers={
-                "Location": models.dbGaPStudyAccession.DBGAP_STUDY_URL
-                + "?study_id=phs000421.v32.p18"
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
             },
         )
         self.client.force_login(self.user)

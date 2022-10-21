@@ -38,13 +38,6 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
     )
     history = HistoricalRecords()
 
-    # Store a regex for the full accession.
-    PHS_REGEX = r"^phs(?P<phs>\d{6})$"
-    FULL_ACCESSION_REGEX = (
-        r"^phs(?P<phs>\d{6})\.v(?P<version>\d+?)\.p(?P<participant_set>\d+?)$"
-    )
-    DBGAP_STUDY_URL = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi"
-
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
         verbose_name = " dbGaP study accession"
@@ -58,24 +51,24 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"pk": self.pk})
 
-    def dbgap_get_current_full_accession_numbers(self):
-        """Query dbGaP to get the full accession, including version and participant set numbers, for this phs."""
-        # This url should will resolve to the most recent version/participant set id.
-        response = requests.get(
-            self.DBGAP_STUDY_URL,
-            params={"study_id": "phs{phs:06d}".format(phs=self.phs)},
-            allow_redirects=False,
-        )
-        # Raise an error if an error code was returned.
-        response.raise_for_status()
-        full_accession = response.next.url.split("study_id=")[1]
-        match = re.match(self.FULL_ACCESSION_REGEX, full_accession)
-        d = {
-            "phs": int(match.group("phs")),
-            "version": int(match.group("version")),
-            "participant_set": int(match.group("participant_set")),
-        }
-        return d
+    # def dbgap_get_current_full_accession_numbers(self):
+    #     """Query dbGaP to get the full accession, including version and participant set numbers, for this phs."""
+    #     # This url should will resolve to the most recent version/participant set id.
+    #     response = requests.get(
+    #         self.DBGAP_STUDY_URL,
+    #         params={"study_id": "phs{phs:06d}".format(phs=self.phs)},
+    #         allow_redirects=False,
+    #     )
+    #     # Raise an error if an error code was returned.
+    #     response.raise_for_status()
+    #     full_accession = response.next.url.split("study_id=")[1]
+    #     match = re.match(self.FULL_ACCESSION_REGEX, full_accession)
+    #     d = {
+    #         "phs": int(match.group("phs")),
+    #         "version": int(match.group("version")),
+    #         "participant_set": int(match.group("participant_set")),
+    #     }
+    #     return d
 
 
 class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
@@ -263,22 +256,43 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         for study_json in project_json["studies"]:
             # Consider making this a model manager method for dbGaPStudyAccession, since it may be common.
             # Get the dbGaPStudyAccession associated with this phs.
+            # TODO: change this to look up the minimum existing version from the database if it exists.
             phs = int(
-                re.match(
-                    dbGaPStudyAccession.PHS_REGEX, study_json["study_accession"]
-                ).group("phs")
+                re.match(constants.PHS_REGEX, study_json["study_accession"]).group(
+                    "phs"
+                )
             )
-            study_accession = dbGaPStudyAccession.objects.get(phs=phs)
-            # Get the most recent version and participant set number from dbGaP.
-            accession_numbers = (
-                study_accession.dbgap_get_current_full_accession_numbers()
+
+            # # Cut and paste from above.
+            # """Query dbGaP to get the full accession, including version and participant set numbers, for this phs."""
+            # This url should will resolve to the most recent version/participant set id.
+            response = requests.get(
+                constants.DBGAP_STUDY_URL,
+                params={"study_id": "phs{phs:06d}".format(phs=phs)},
+                allow_redirects=False,
             )
+            # Raise an error if an error code was returned.
+            response.raise_for_status()
+            full_accession = response.next.url.split("study_id=")[1]
+            match = re.match(constants.FULL_ACCESSION_REGEX, full_accession)
+            accession_numbers = {
+                "phs": int(match.group("phs")),
+                "version": int(match.group("version")),
+                "participant_set": int(match.group("participant_set")),
+            }
+            # return d
+
+            # study_accession = dbGaPStudyAccession.objects.get(phs=phs)
+            # # Get the most recent version and participant set number from dbGaP.
+            # accession_numbers = (
+            #     study_accession.dbgap_get_current_full_accession_numbers()
+            # )
             # Create the DAR.
             for request_json in study_json["requests"]:
                 dar = dbGaPDataAccessRequest(
                     dbgap_dar_id=request_json["DAR"],
                     dbgap_data_access_snapshot=self,
-                    dbgap_study_accession=study_accession,
+                    dbgap_phs=phs,
                     dbgap_version=accession_numbers["version"],
                     dbgap_participant_set=accession_numbers["participant_set"],
                     dbgap_consent_code=request_json["consent_code"],
@@ -321,12 +335,13 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         verbose_name=" dbGaP DAR id",
         validators=[MinValueValidator(1)],
     )
-    dbgap_study_accession = models.ForeignKey(
-        dbGaPStudyAccession,
-        verbose_name=" dbGaP study accession",
-        on_delete=models.PROTECT,
-        help_text="The dbGaP study accession associated with this DAR.",
+    dbgap_phs = models.PositiveIntegerField(
+        verbose_name=" dbGaP study accession phs",
+        validators=[MinValueValidator(1)],
+        help_text="The phs number of the study accession that this DAR grants access to.",
     )
+    # TODO: rename to include "original"?
+    # TODO: should these even be HERE?
     dbgap_version = models.PositiveIntegerField(
         verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
@@ -363,7 +378,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
             models.UniqueConstraint(
                 fields=[
                     "dbgap_data_access_snapshot",
-                    "dbgap_study_accession",
+                    "dbgap_phs",
                     "dbgap_consent_code",
                 ],
                 name="unique_dbgap_data_access_request",
@@ -386,8 +401,10 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         This checks that the dbGaP study accession, version, and participant set match between the
         dbGaPDataAccessRequest and the dbGaPWorkspace."""
         # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
-        return self.dbgap_study_accession.dbgapworkspace_set.get(
+        study_accession = dbGaPStudyAccession.objects.get(phs=self.dbgap_phs)
+        workspace = study_accession.dbgapworkspace_set.get(
             dbgap_version=self.dbgap_version,
             dbgap_participant_set=self.dbgap_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
         )
+        return workspace

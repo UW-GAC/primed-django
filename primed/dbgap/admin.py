@@ -70,7 +70,7 @@ class dbGaPDataAccessRequestAdmin(SimpleHistoryAdmin):
     list_display = (
         "dbgap_dar_id",
         "dbgap_data_access_snapshot",
-        "dbgap_study_accession",
+        "dbgap_phs",
         "dbgap_version",
         "dbgap_consent_code",
         "dbgap_consent_abbreviation",

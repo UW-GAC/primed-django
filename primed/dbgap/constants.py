@@ -1,3 +1,9 @@
+DBGAP_STUDY_URL = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi"
+PHS_REGEX = r"^phs(?P<phs>\d{6})$"
+FULL_ACCESSION_REGEX = (
+    r"^phs(?P<phs>\d{6})\.v(?P<version>\d+?)\.p(?P<participant_set>\d+?)$"
+)
+
 json_dar_defs = {
     "project": {
         "required": ["Project_id", "studies"],
