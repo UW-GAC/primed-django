@@ -82,9 +82,9 @@ class dbGaPDataAccessJSONForm(forms.ModelForm):
             "dbgap_application",
             "dbgap_dar_data",
         )
-        # widgets = {
-        #     "dbgap_application": forms.HiddenInput(required=False),
-        # }
+        widgets = {
+            "dbgap_application": forms.HiddenInput(),
+        }
 
     def clean_dbgap_dar_data(self):
         data = self.cleaned_data["dbgap_dar_data"]
