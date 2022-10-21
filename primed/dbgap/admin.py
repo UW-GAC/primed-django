@@ -71,7 +71,7 @@ class dbGaPDataAccessRequestAdmin(SimpleHistoryAdmin):
         "dbgap_dar_id",
         "dbgap_data_access_snapshot",
         "dbgap_phs",
-        "dbgap_version",
+        "original_version",
         "dbgap_consent_code",
         "dbgap_consent_abbreviation",
     )

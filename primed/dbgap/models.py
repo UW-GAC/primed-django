@@ -292,8 +292,8 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     ):
                         raise ValueError("project_id mismatch")
                     # If everything looks good, pull the original version and participant set from the previous DAR.
-                    original_version = previous_dar.dbgap_version
-                    original_participant_set = previous_dar.dbgap_participant_set
+                    original_version = previous_dar.original_version
+                    original_participant_set = previous_dar.original_participant_set
                 except dbGaPDataAccessRequest.DoesNotExist:
                     # If we don't have info about it from a previous DAR, query dbGaP to get the current
                     # version and participant set numbers for this phs.
@@ -322,8 +322,8 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     dbgap_dar_id=request_json["DAR"],
                     dbgap_data_access_snapshot=self,
                     dbgap_phs=phs,
-                    dbgap_version=original_version,
-                    dbgap_participant_set=original_participant_set,
+                    original_version=original_version,
+                    original_participant_set=original_participant_set,
                     dbgap_consent_code=request_json["consent_code"],
                     dbgap_consent_abbreviation=request_json["consent_abbrev"],
                     dbgap_current_status=request_json["current_DAR_status"],
@@ -339,12 +339,12 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     """A model to track dbGaP data access requests.
 
     This model is not entirely normalized, since the dbgap_dar_id, dbgap_phs, and dbgap_consent_code
-    are likely constant and should not change. dbgap_version, dbgap_participant_set, dbgap_current_status,
+    are likely constant and should not change. original_version, dbgap_participant_set, dbgap_current_status,
     dgap_consent_abbreviation are expected to change with each new dbGaPDataAccessSnapshot. However, we
     have no guarantee that this is true and we are pulling directly from the JSON from dbGaP. In that case,
     it might be safer to store redundant information.
 
-    Note that dbgap_version and dbgap_participant set do *not* from the JSON; see the
+    Note that original_version and dbgap_participant set do *not* from the JSON; see the
     dbGaPDataAccessSnapshot.create_dars_from_json method for details about how they are obtained.
     """
 
@@ -379,14 +379,12 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         validators=[MinValueValidator(1)],
         help_text="The phs number of the study accession that this DAR grants access to.",
     )
-    # TODO: rename to include "original"?
-    # TODO: should these even be HERE?
-    dbgap_version = models.PositiveIntegerField(
+    original_version = models.PositiveIntegerField(
         verbose_name=" dbGaP version",
         validators=[MinValueValidator(1)],
         help_text="The original version of the dbGaP study accession that this application grants access to.",
     )
-    dbgap_participant_set = models.PositiveIntegerField(
+    original_participant_set = models.PositiveIntegerField(
         verbose_name=" dbGaP participant set",
         validators=[MinValueValidator(1)],
         help_text="The original participant set of the dbGaP study accession that this application grants access to.",
@@ -442,8 +440,8 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
         study_accession = dbGaPStudyAccession.objects.get(phs=self.dbgap_phs)
         workspace = study_accession.dbgapworkspace_set.get(
-            dbgap_version=self.dbgap_version,
-            dbgap_participant_set=self.dbgap_participant_set,
+            dbgap_version=self.original_version,
+            dbgap_participant_set=self.original_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
         )
         return workspace

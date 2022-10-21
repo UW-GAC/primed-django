@@ -470,8 +470,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23497)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
@@ -533,8 +533,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23497)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
@@ -544,8 +544,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23498)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
@@ -624,8 +624,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23497)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
@@ -635,8 +635,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23498)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 896)
-        self.assertEqual(new_object.dbgap_version, 2)
-        self.assertEqual(new_object.dbgap_participant_set, 1)
+        self.assertEqual(new_object.original_version, 2)
+        self.assertEqual(new_object.original_participant_set, 1)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
         self.assertEqual(new_object.dbgap_current_status, "approved")
@@ -759,8 +759,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23497)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "rejected")
@@ -769,8 +769,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_dar_id, 23498)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
@@ -820,8 +820,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             dbgap_current_status=valid_json["studies"][0]["requests"][0][
                 "current_DAR_status"
             ],  # Make sure the current status is different.
-            dbgap_version=32,
-            dbgap_participant_set=18,
+            original_version=32,
+            original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
         # Update the current status.
@@ -845,9 +845,9 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(updated_dar.dbgap_current_status, "approved")
         # These should be pulled from the original dar.
-        self.assertEqual(updated_dar.dbgap_version, original_dar.dbgap_version)
+        self.assertEqual(updated_dar.original_version, original_dar.original_version)
         self.assertEqual(
-            updated_dar.dbgap_participant_set, original_dar.dbgap_participant_set
+            updated_dar.original_participant_set, original_dar.original_participant_set
         )
 
     @responses.activate
@@ -895,8 +895,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             dbgap_current_status=valid_json["studies"][0]["requests"][0][
                 "current_DAR_status"
             ],  # Make sure the current status is different.
-            dbgap_version=32,
-            dbgap_participant_set=18,
+            original_version=32,
+            original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
         # Add a new request to the JSON.
@@ -941,9 +941,9 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(updated_dar.dbgap_current_status, "approved")
         # These should be pulled from the original dar.
-        self.assertEqual(updated_dar.dbgap_version, original_dar.dbgap_version)
+        self.assertEqual(updated_dar.original_version, original_dar.original_version)
         self.assertEqual(
-            updated_dar.dbgap_participant_set, original_dar.dbgap_participant_set
+            updated_dar.original_participant_set, original_dar.original_participant_set
         )
         new_dar = models.dbGaPDataAccessRequest.objects.filter(
             dbgap_dar_id=23498
@@ -956,8 +956,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_dar.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_dar.dbgap_current_status, "approved")
         # These should be pulled from the original dar.
-        self.assertEqual(new_dar.dbgap_version, 33)
-        self.assertEqual(new_dar.dbgap_participant_set, 19)
+        self.assertEqual(new_dar.original_version, 33)
+        self.assertEqual(new_dar.original_participant_set, 19)
 
     @responses.activate
     def test_created_dars_from_json_assertion_error_phs(self):
@@ -1005,8 +1005,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             dbgap_current_status=valid_json["studies"][0]["requests"][0][
                 "current_DAR_status"
             ],  # Make sure the current status is different.
-            dbgap_version=32,
-            dbgap_participant_set=18,
+            original_version=32,
+            original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
         # Change the phs
@@ -1065,8 +1065,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             dbgap_current_status=valid_json["studies"][0]["requests"][0][
                 "current_DAR_status"
             ],  # Make sure the current status is different.
-            dbgap_version=32,
-            dbgap_participant_set=18,
+            original_version=32,
+            original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
         # Change the phs
@@ -1120,8 +1120,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             dbgap_current_status=valid_json["studies"][0]["requests"][0][
                 "current_DAR_status"
             ],  # Make sure the current status is different.
-            dbgap_version=32,
-            dbgap_participant_set=18,
+            original_version=32,
+            original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
         # Change the phs
@@ -1146,8 +1146,8 @@ class dbGaPDataAccessRequestTest(TestCase):
             dbgap_data_access_snapshot=dbgap_snapshot,
             dbgap_phs=1,
             dbgap_dar_id=1,
-            dbgap_version=2,
-            dbgap_participant_set=3,
+            original_version=2,
+            original_participant_set=3,
             dbgap_consent_code=4,
             dbgap_consent_abbreviation="GRU",
         )
@@ -1294,68 +1294,68 @@ class dbGaPDataAccessRequestTest(TestCase):
             e.exception.error_dict["dbgap_phs"][0].messages[0],
         )
 
-    def test_dbgap_version_cannot_be_zero(self):
-        """dbgap_version cannot be zero."""
+    def test_original_version_cannot_be_zero(self):
+        """original_version cannot be zero."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
             dbgap_data_access_snapshot=dbgap_snapshot,
-            dbgap_version=0,
+            original_version=0,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("dbgap_version", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["dbgap_version"]), 1)
+        self.assertIn("original_version", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["original_version"]), 1)
         self.assertIn(
             "greater than or equal to 1",
-            e.exception.error_dict["dbgap_version"][0].messages[0],
+            e.exception.error_dict["original_version"][0].messages[0],
         )
 
-    def test_dbgap_version_cannot_be_negative(self):
-        """dbgap_version cannot be negative."""
+    def test_original_version_cannot_be_negative(self):
+        """original_version cannot be negative."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
             dbgap_data_access_snapshot=dbgap_snapshot,
-            dbgap_version=-1,
+            original_version=-1,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("dbgap_version", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["dbgap_version"]), 1)
+        self.assertIn("original_version", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["original_version"]), 1)
         self.assertIn(
             "greater than or equal to 1",
-            e.exception.error_dict["dbgap_version"][0].messages[0],
+            e.exception.error_dict["original_version"][0].messages[0],
         )
 
-    def test_dbgap_participant_set_cannot_be_zero(self):
-        """dbgap_participant_set cannot be zero."""
+    def test_original_participant_set_cannot_be_zero(self):
+        """original_participant_set cannot be zero."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
             dbgap_data_access_snapshot=dbgap_snapshot,
-            dbgap_participant_set=0,
+            original_participant_set=0,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("dbgap_participant_set", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["dbgap_participant_set"]), 1)
+        self.assertIn("original_participant_set", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["original_participant_set"]), 1)
         self.assertIn(
             "greater than or equal to 1",
-            e.exception.error_dict["dbgap_participant_set"][0].messages[0],
+            e.exception.error_dict["original_participant_set"][0].messages[0],
         )
 
-    def test_dbgap_participant_set_cannot_be_negative(self):
-        """dbgap_participant_set cannot be negative."""
+    def test_original_participant_set_cannot_be_negative(self):
+        """original_participant_set cannot be negative."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
             dbgap_data_access_snapshot=dbgap_snapshot,
-            dbgap_participant_set=-1,
+            original_participant_set=-1,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("dbgap_participant_set", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["dbgap_participant_set"]), 1)
+        self.assertIn("original_participant_set", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["original_participant_set"]), 1)
         self.assertIn(
             "greater than or equal to 1",
-            e.exception.error_dict["dbgap_participant_set"][0].messages[0],
+            e.exception.error_dict["original_participant_set"][0].messages[0],
         )
 
     def test_dbgap_consent_code_cannot_be_zero(self):
@@ -1432,8 +1432,8 @@ class dbGaPDataAccessRequestTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.phs,
-            dbgap_version=workspace.dbgap_version,
-            dbgap_participant_set=workspace.dbgap_participant_set,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
         self.assertEqual(dar.get_dbgap_workspace(), workspace)
@@ -1443,8 +1443,8 @@ class dbGaPDataAccessRequestTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.phs,
-            dbgap_version=2,
-            dbgap_participant_set=workspace.dbgap_participant_set,
+            original_version=2,
+            original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
@@ -1455,8 +1455,8 @@ class dbGaPDataAccessRequestTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_participant_set=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.phs,
-            dbgap_version=workspace.dbgap_version,
-            dbgap_participant_set=2,
+            original_version=workspace.dbgap_version,
+            original_participant_set=2,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
@@ -1467,8 +1467,8 @@ class dbGaPDataAccessRequestTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__phs=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=2,
-            dbgap_version=workspace.dbgap_version,
-            dbgap_participant_set=workspace.dbgap_participant_set,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
         with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
@@ -1479,8 +1479,8 @@ class dbGaPDataAccessRequestTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_consent_code=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.phs,
-            dbgap_version=workspace.dbgap_version,
-            dbgap_participant_set=workspace.dbgap_participant_set,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=2,
         )
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):

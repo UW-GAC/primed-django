@@ -1489,23 +1489,23 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23497)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23498)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.dbgap_version, 32)
-        self.assertEqual(new_object.dbgap_participant_set, 18)
+        self.assertEqual(new_object.original_version, 32)
+        self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "HMB")
         # study 2, one request.
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23499)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
         self.assertEqual(new_object.dbgap_phs, 896)
-        self.assertEqual(new_object.dbgap_version, 2)
-        self.assertEqual(new_object.dbgap_participant_set, 1)
+        self.assertEqual(new_object.original_version, 2)
+        self.assertEqual(new_object.original_participant_set, 1)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
 
@@ -1622,8 +1622,8 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_current_status=self.valid_json[0]["studies"][0]["requests"][0][
                 "current_DAR_status"
             ],
-            dbgap_version=3,
-            dbgap_participant_set=2,
+            original_version=3,
+            original_participant_set=2,
         )
         # Now try to load the page again.
         self.client.force_login(self.user)
@@ -1650,8 +1650,8 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                 "consent_abbrev"
             ],
             dbgap_current_status="new",
-            dbgap_version=3,
-            dbgap_participant_set=2,
+            original_version=3,
+            original_participant_set=2,
         )
         # Now try to add a new one.
         self.client.force_login(self.user)
@@ -1685,9 +1685,9 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.assertEqual(new_dar.dbgap_current_status, "approved")
         # These should be obtained from the original dar.
-        self.assertEqual(new_dar.dbgap_version, original_dar.dbgap_version)
+        self.assertEqual(new_dar.original_version, original_dar.original_version)
         self.assertEqual(
-            new_dar.dbgap_participant_set, original_dar.dbgap_participant_set
+            new_dar.original_participant_set, original_dar.original_participant_set
         )
 
     def test_post_invalid_json(self):
