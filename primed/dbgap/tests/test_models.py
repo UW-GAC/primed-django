@@ -1219,11 +1219,14 @@ class dbGaPDataAccessRequestTest(TestCase):
     def test_dbgap_data_access_snapshot_protect(self):
         """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessSnapshot."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
-        factories.dbGaPDataAccessRequestFactory.create(
+        dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot=dbgap_snapshot
         )
-        with self.assertRaises(ProtectedError):
-            dbgap_snapshot.delete()
+        dbgap_snapshot.delete()
+        with self.assertRaises(models.dbGaPDataAccessSnapshot.DoesNotExist):
+            dbgap_snapshot.refresh_from_db()
+        with self.assertRaises(models.dbGaPDataAccessRequest.DoesNotExist):
+            dar.refresh_from_db()
 
     def test_dbgap_dar_id_cannot_be_zero(self):
         """dbgap_dar_id cannot be zero."""

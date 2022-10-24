@@ -350,8 +350,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     dbgap_data_access_snapshot = models.ForeignKey(
         dbGaPDataAccessSnapshot,
         verbose_name="dbGaP data access snapshot",
-        # Todo: change to CASCADE.
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         help_text="The dbGaP data access snapshot from which this record came.",
     )
     dbgap_dar_id = models.PositiveIntegerField(
