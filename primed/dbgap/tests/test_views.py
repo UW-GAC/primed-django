@@ -890,6 +890,36 @@ class dbGaPApplicationDetailTest(TestCase):
             len(response.context_data["data_access_request_table"].rows), 0
         )
 
+    def test_dar_table_two_snapshots(self):
+        """Shows the correct DARs if there are two snapshots."""
+        # Create an old snapshot and an old DAR.
+        previous_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj, created=timezone.now() - timedelta(weeks=4)
+        )
+        previous_dar = factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=previous_snapshot,
+        )
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj
+        )
+        dars = factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=dbgap_snapshot,
+        )
+        request = self.factory.get(self.get_url(self.obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=self.obj.pk)
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 2
+        )
+        self.assertIn(dars[0], response.context_data["data_access_request_table"].data)
+        self.assertIn(dars[1], response.context_data["data_access_request_table"].data)
+        self.assertNotIn(
+            previous_dar, response.context_data["data_access_request_table"].data
+        )
+
     def test_context_has_snapshot_no_snapshot(self):
         """has_snapshot is False in context when there no dbGaPDataAccessSnapshot for this application."""
         request = self.factory.get(self.get_url(self.obj.pk))
