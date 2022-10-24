@@ -44,7 +44,7 @@ class dbGaPApplicationForm(forms.ModelForm):
         model = models.dbGaPApplication
         fields = (
             "principal_investigator",
-            "project_id",
+            "dbgap_project_id",
         )
 
 

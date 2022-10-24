@@ -48,7 +48,7 @@ class dbGaPApplicationAdmin(SimpleHistoryAdmin):
 
     list_display = (
         "principal_investigator",
-        "project_id",
+        "dbgap_project_id",
     )
 
 

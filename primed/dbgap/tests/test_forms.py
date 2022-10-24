@@ -367,7 +367,7 @@ class dbGaPApplicationFormTest(TestCase):
         """Form is valid with necessary input."""
         form_data = {
             "principal_investigator": self.pi,
-            "project_id": 1,
+            "dbgap_project_id": 1,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -375,7 +375,7 @@ class dbGaPApplicationFormTest(TestCase):
     def test_invalid_pi(self):
         """Form is invalid when missing principal_investigator."""
         form_data = {
-            "project_id": 1,
+            "dbgap_project_id": 1,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -384,7 +384,7 @@ class dbGaPApplicationFormTest(TestCase):
         self.assertEqual(len(form.errors["principal_investigator"]), 1)
         self.assertIn("required", form.errors["principal_investigator"][0])
 
-    def test_invalid_missing_project_id(self):
+    def test_invalid_missing_dbgap_project_id(self):
         """Form is invalid when missing phs."""
         form_data = {
             "principal_investigator": self.pi,
@@ -392,22 +392,22 @@ class dbGaPApplicationFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("project_id", form.errors)
-        self.assertEqual(len(form.errors["project_id"]), 1)
-        self.assertIn("required", form.errors["project_id"][0])
+        self.assertIn("dbgap_project_id", form.errors)
+        self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
+        self.assertIn("required", form.errors["dbgap_project_id"][0])
 
-    def test_invalid_project_id_zero(self):
+    def test_invalid_dbgap_project_id_zero(self):
         """Form is invalid when phs is zero."""
         form_data = {
             "principal_investigator": self.pi,
-            "project_id": 0,
+            "dbgap_project_id": 0,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("project_id", form.errors)
-        self.assertEqual(len(form.errors["project_id"]), 1)
-        self.assertIn("greater than", form.errors["project_id"][0])
+        self.assertIn("dbgap_project_id", form.errors)
+        self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
+        self.assertIn("greater than", form.errors["dbgap_project_id"][0])
 
     def test_invalid_duplicate_object(self):
         """Form is invalid with a duplicated object."""
@@ -415,13 +415,13 @@ class dbGaPApplicationFormTest(TestCase):
         other_pi = UserFactory.create()
         form_data = {
             "principal_investigator": other_pi,
-            "project_id": dbgap_application.project_id,
+            "dbgap_project_id": dbgap_application.dbgap_project_id,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
-        self.assertIn("project_id", form.errors)
-        self.assertEqual(len(form.errors["project_id"]), 1)
-        self.assertIn("already exists", form.errors["project_id"][0])
+        self.assertIn("dbgap_project_id", form.errors)
+        self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
+        self.assertIn("already exists", form.errors["dbgap_project_id"][0])
 
 
 class dbGaPDataAccessJSONFormTest(TestCase):
@@ -439,7 +439,7 @@ class dbGaPDataAccessJSONFormTest(TestCase):
         """Return a valid json string for testing."""
 
         valid_json = {
-            "Project_id": self.dbgap_application.project_id,
+            "Project_id": self.dbgap_application.dbgap_project_id,
             "PI_name": fake.name(),
             "Project_closed": "no",
             # Two studies.
@@ -519,7 +519,7 @@ class dbGaPDataAccessJSONFormTest(TestCase):
     def test_json_zero_elements_in_array(self):
         """Form is invalid when there are no elements in the json array."""
         form_data = {
-            # Get responses for two project_ids.
+            # Get responses for two dbgap_project_ids.
             "dbgap_dar_data": "[]",
             "dbgap_application": self.dbgap_application,
         }
@@ -533,7 +533,7 @@ class dbGaPDataAccessJSONFormTest(TestCase):
     def test_json_extra_elements(self):
         """Form is invalid when there are two elements in the json array."""
         form_data = {
-            # Get responses for two project_ids.
+            # Get responses for two dbgap_project_ids.
             "dbgap_dar_data": json.dumps(
                 [
                     self.get_valid_dbgap_application_json(),
@@ -551,8 +551,8 @@ class dbGaPDataAccessJSONFormTest(TestCase):
         self.assertIn("JSON array", form.errors["dbgap_dar_data"][0])
         self.assertIn("too long", form.errors["dbgap_dar_data"][0])
 
-    def test_json_missing_project_id(self):
-        """Form is invalid when project_id is missing from the JSON."""
+    def test_json_missing_dbgap_project_id(self):
+        """Form is invalid when dbgap_project_idis missing from the JSON."""
         invalid_json = self.get_valid_dbgap_application_json()
         invalid_json.pop("Project_id")
         form_data = {
@@ -679,10 +679,10 @@ class dbGaPDataAccessJSONFormTest(TestCase):
         self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
         self.assertIn("current_DAR_status", form.errors["dbgap_dar_data"][0])
 
-    def test_project_id_does_not_match(self):
-        """Form is not valid when the project_id does not match."""
+    def test_dbgap_project_id_does_not_match(self):
+        """Form is not valid when the dbgap_project_id does not match."""
         other_application = factories.dbGaPApplicationFactory.create(
-            project_id=self.dbgap_application.project_id + 1
+            dbgap_project_id=self.dbgap_application.dbgap_project_id + 1
         )
         form_data = {
             "dbgap_dar_data": json.dumps([self.get_valid_dbgap_application_json()]),

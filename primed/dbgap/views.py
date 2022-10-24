@@ -120,7 +120,7 @@ class dbGaPApplicationCreate(
     # @transaction.atomic
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
-        project_id = form.cleaned_data["project_id"]
+        project_id = form.cleaned_data["dbgap_project_id"]
         group_name = self.anvil_group_pattern.format(project_id=project_id)
         managed_group = ManagedGroup(name=group_name)
         try:

@@ -142,8 +142,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
         help_text="The principal investigator associated with on this dbGaP application.",
     )
-    # TODO: change to dbgap_project_id for consistency.
-    project_id = models.PositiveIntegerField(
+    dbgap_project_id = models.PositiveIntegerField(
         verbose_name=" dbGaP project id",
         validators=[MinValueValidator(1)],
         unique=True,
@@ -162,7 +161,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         verbose_name = " dbGaP application"
 
     def __str__(self):
-        return "{}".format(self.project_id)
+        return "{}".format(self.dbgap_project_id)
 
     def get_absolute_url(self):
         """Return the absolute url for this object."""
@@ -175,7 +174,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
             "page": "getreport",
             "mode": "json",
             "filter": ["mode", "project_list"],
-            "project_list": str(self.project_id),
+            "project_list": str(self.dbgap_project_id),
         }
         url = "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?%s"
         # Doseq means to generate the filter key twice, once for "mode" and once for "project_list"
@@ -214,9 +213,12 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                 # Replace the full json string because it will be very long
                 error_message = e.message.replace(str(e.instance), "JSON array")
                 raise ValidationError({"dbgap_dar_data": error_message})
-            if self.dbgap_dar_data["Project_id"] != self.dbgap_application.project_id:
+            if (
+                self.dbgap_dar_data["Project_id"]
+                != self.dbgap_application.dbgap_project_id
+            ):
                 raise ValidationError(
-                    "Project_id in JSON does not match dbgap_application.project_id."
+                    "Project_id in JSON does not match dbgap_application.dbgap_project_id."
                 )
 
     def create_dars_from_json(self):
@@ -239,16 +241,17 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         project_json = self.dbgap_dar_data
         # Create a list in which to store DARs to create.
         dars = []
-        # Make sure that the project_id matches.
+        # Make sure that the dbgap_project_id matches.
         project_id = project_json["Project_id"]
-        if project_id != self.dbgap_application.project_id:
-            raise ValueError("project_id does not match dbgap_application.project_id.")
+        if project_id != self.dbgap_application.dbgap_project_id:
+            raise ValueError(
+                "project_id does not match dbgap_application.dbgap_project_id."
+            )
         # Loop over studies and requests to create DARs.
         # Do not save them until everything has been successfully created.
         for study_json in project_json["studies"]:
             # Consider making this a model manager method for dbGaPStudyAccession, since it may be common.
             # Get the dbGaPStudyAccession associated with this phs.
-            # TODO: change this to look up the minimum existing version from the database if it exists.
             phs = int(
                 re.match(constants.PHS_REGEX, study_json["study_accession"]).group(
                     "phs"
@@ -271,7 +274,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     if previous_dar.dbgap_consent_code != request_json["consent_code"]:
                         raise ValueError("dbgap_consent_code mismatch")
                     if (
-                        previous_dar.dbgap_data_access_snapshot.dbgap_application.project_id
+                        previous_dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id
                         != project_id
                     ):
                         raise ValueError("project_id mismatch")

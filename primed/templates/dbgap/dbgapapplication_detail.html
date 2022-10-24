@@ -11,7 +11,7 @@
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
     <li>Principal Investigator: {{ object.principal_investigator }}</li>
-    <li>Project ID: {{ object.project_id }}</li>
+    <li>dbGaP Project ID: {{ object.dbgap_project_id }}</li>
     <li>AnVIL Group: <a href="{{ object.anvil_group.get_absolute_url }}">{{ object.anvil_group }}</a></li>
     <li>Last DAR update: {{ last_update|default:"Never" }}</li>
   </ul>

@@ -1064,14 +1064,14 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
         self.assertEqual(response.status_code, 302)
         # A new object was created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 1)
         new_object = models.dbGaPApplication.objects.latest("pk")
         self.assertEqual(new_object.principal_investigator, pi)
-        self.assertEqual(new_object.project_id, 1)
+        self.assertEqual(new_object.dbgap_project_id, 1)
 
     def test_redirect_url(self):
         """Redirects to successful url."""
@@ -1083,7 +1083,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
         new_object = models.dbGaPApplication.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
@@ -1099,7 +1099,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         response = self.client.post(
             self.get_url(),
-            {"principal_investigator": pi.pk, "project_id": 1},
+            {"principal_investigator": pi.pk, "dbgap_project_id": 1},
             follow=True,
         )
         self.assertIn("messages", response.context)
@@ -1110,7 +1110,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_error_missing_pi(self):
         """Form shows an error when principal_investigator is missing."""
         self.client.force_login(self.user)
-        response = self.client.post(self.get_url(), {"project_id": 1})
+        response = self.client.post(self.get_url(), {"dbgap_project_id": 1})
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
@@ -1128,7 +1128,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(),
-            {"principal_investigator": self.user.pk + 1, "project_id": 12345},
+            {"principal_investigator": self.user.pk + 1, "dbgap_project_id": 12345},
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
@@ -1155,9 +1155,9 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("project_id", form.errors)
-        self.assertEqual(len(form.errors["project_id"]), 1)
-        self.assertIn("required", form.errors["project_id"][0])
+        self.assertIn("dbgap_project_id", form.errors)
+        self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
+        self.assertIn("required", form.errors["dbgap_project_id"][0])
 
     def test_error_duplicate_project_id(self):
         """Form shows an error when trying to create a duplicate phs."""
@@ -1168,7 +1168,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             self.get_url(),
             {
                 "principal_investigator": other_pi.pk,
-                "project_id": dbgap_application.project_id,
+                "dbgap_project_id": dbgap_application.dbgap_project_id,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -1179,9 +1179,9 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("project_id", form.errors)
-        self.assertEqual(len(form.errors["project_id"]), 1)
-        self.assertIn("already exists", form.errors["project_id"][0])
+        self.assertIn("dbgap_project_id", form.errors)
+        self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
+        self.assertIn("already exists", form.errors["dbgap_project_id"][0])
 
     def test_post_blank_data(self):
         """Posting blank data does not create an object."""
@@ -1195,9 +1195,9 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("principal_investigator", form.errors.keys())
         self.assertEqual(len(form.errors["principal_investigator"]), 1)
         self.assertIn("required", form.errors["principal_investigator"][0])
-        self.assertIn("project_id", form.errors.keys())
-        self.assertEqual(len(form.errors["project_id"]), 1)
-        self.assertIn("required", form.errors["project_id"][0])
+        self.assertIn("dbgap_project_id", form.errors.keys())
+        self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
+        self.assertIn("required", form.errors["dbgap_project_id"][0])
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
 
     def test_creates_anvil_group(self):
@@ -1210,7 +1210,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "project_id": 12498}
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.dbGaPApplication.objects.latest("pk")
@@ -1231,7 +1231,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             responses.POST, api_url, status=500, json={"message": "other error"}
         )
         response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
         self.assertEqual(response.status_code, 200)
         # The form is valid...
@@ -1252,7 +1252,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a group with the same name.
         ManagedGroupFactory.create(name="PRIMED_DBGAP_ACCESS_1")
         response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "project_id": 1}
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
         self.assertEqual(response.status_code, 200)
         # The form is valid...
@@ -1290,7 +1290,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.dbgap_application = factories.dbGaPApplicationFactory.create()
         self.pi_name = fake.name()
         self.json = {
-            "Project_id": self.dbgap_application.project_id,
+            "Project_id": self.dbgap_application.dbgap_project_id,
             "PI_name": self.pi_name,
             "Project_closed": "no",
             "studies": [],
@@ -1298,7 +1298,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.study_accession_phs = fake.random_int()
         self.valid_json = [
             {
-                "Project_id": self.dbgap_application.project_id,
+                "Project_id": self.dbgap_application.dbgap_project_id,
                 "PI_name": "Test Investigator",
                 "Project_closed": "no",
                 # Two studies.
@@ -1431,7 +1431,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         """Can create dbGaPDataAccessRequests for this dbGaPApplication."""
         valid_json = [
             {
-                "Project_id": self.dbgap_application.project_id,
+                "Project_id": self.dbgap_application.dbgap_project_id,
                 "PI_name": "Test Investigator",
                 "Project_closed": "no",
                 # Two studies.
@@ -1785,7 +1785,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a ValidationError."""
         valid_json = [
             {
-                "Project_id": self.dbgap_application.project_id,
+                "Project_id": self.dbgap_application.dbgap_project_id,
                 "PI_name": "Test Investigator",
                 "Project_closed": "no",
                 "studies": [
@@ -1839,7 +1839,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created."""
         valid_json = [
             {
-                "Project_id": self.dbgap_application.project_id,
+                "Project_id": self.dbgap_application.dbgap_project_id,
                 "PI_name": "Test Investigator",
                 "Project_closed": "no",
                 "studies": [

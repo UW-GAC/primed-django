@@ -59,7 +59,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
     """A factory for the dbGaPApplication model."""
 
     principal_investigator = SubFactory(UserFactory)
-    project_id = Faker("random_int")
+    dbgap_project_id = Faker("random_int")
     anvil_group = SubFactory(ManagedGroupFactory)
 
     class Meta:
@@ -74,7 +74,7 @@ class dbGaPDataAccessSnapshotFactory(TimeStampedModelFactory, DjangoModelFactory
     # https://factoryboy.readthedocs.io/en/stable/reference.html#factory.Dict
     dbgap_dar_data = Dict(
         {
-            "Project_id": SelfAttribute("..dbgap_application.project_id"),
+            "Project_id": SelfAttribute("..dbgap_application.dbgap_project_id"),
             "PI_name": Faker("name"),
             "Project_closed": "no",
             "studies": [],

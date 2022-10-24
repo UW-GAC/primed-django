@@ -55,7 +55,7 @@ class dbGaPWorkspaceTable(tables.Table):
 class dbGaPApplicationTable(tables.Table):
     """A table for dbGaPStudyAccession objects."""
 
-    project_id = tables.columns.Column(linkify=True)
+    dbgap_project_id = tables.columns.Column(linkify=True)
     principal_investigator = tables.columns.Column(linkify=True)
     number_approved_dars = tables.columns.Column(
         verbose_name="Number of approved DARs",
@@ -83,7 +83,7 @@ class dbGaPApplicationTable(tables.Table):
     class Meta:
         model = models.dbGaPApplication
         fields = (
-            "project_id",
+            "dbgap_project_id",
             "principal_investigator",
         )
 

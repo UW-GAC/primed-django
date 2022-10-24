@@ -284,7 +284,7 @@ class dbGaPApplicationTest(TestCase):
         anvil_group = ManagedGroupFactory.create()
         instance = models.dbGaPApplication(
             principal_investigator=pi,
-            project_id=1,
+            dbgap_project_id=1,
             anvil_group=anvil_group,
         )
         instance.save()
@@ -293,7 +293,7 @@ class dbGaPApplicationTest(TestCase):
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
         instance = factories.dbGaPApplicationFactory.create(
-            project_id=1,
+            dbgap_project_id=1,
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
@@ -311,15 +311,15 @@ class dbGaPApplicationTest(TestCase):
         anvil_group = ManagedGroupFactory.create()
         instance = factories.dbGaPApplicationFactory.build(
             principal_investigator=pi,
-            project_id=obj.project_id,
+            dbgap_project_id=obj.dbgap_project_id,
             anvil_group=anvil_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("project_id", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["project_id"]), 1)
+        self.assertIn("dbgap_project_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_project_id"]), 1)
         self.assertIn(
-            "already exists", e.exception.error_dict["project_id"][0].messages[0]
+            "already exists", e.exception.error_dict["dbgap_project_id"][0].messages[0]
         )
         with self.assertRaises(IntegrityError):
             instance.save()
@@ -336,15 +336,15 @@ class dbGaPApplicationTest(TestCase):
         pi = UserFactory.create()
         instance = factories.dbGaPApplicationFactory.build(
             principal_investigator=pi,
-            project_id=0,
+            dbgap_project_id=0,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("project_id", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["project_id"]), 1)
+        self.assertIn("dbgap_project_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_project_id"]), 1)
         self.assertIn(
             "greater than or equal to 1",
-            e.exception.error_dict["project_id"][0].messages[0],
+            e.exception.error_dict["dbgap_project_id"][0].messages[0],
         )
 
     def test_phs_cannot_be_negative(self):
@@ -352,15 +352,15 @@ class dbGaPApplicationTest(TestCase):
         pi = UserFactory.create()
         instance = factories.dbGaPApplicationFactory.build(
             principal_investigator=pi,
-            project_id=-1,
+            dbgap_project_id=-1,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("project_id", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["project_id"]), 1)
+        self.assertIn("dbgap_project_id", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_project_id"]), 1)
         self.assertIn(
             "greater than or equal to 1",
-            e.exception.error_dict["project_id"][0].messages[0],
+            e.exception.error_dict["dbgap_project_id"][0].messages[0],
         )
 
     def test_get_dbgap_dar_json_url(self):
@@ -376,7 +376,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         """Creation using the model constructor and .save() works."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         json = {
-            "Project_id": dbgap_application.project_id,
+            "Project_id": dbgap_application.dbgap_project_id,
             "PI_name": fake.name(),
             "Project_closed": "no",
             "studies": [],
@@ -451,7 +451,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             ],
         }
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__project_id=6512,
+            dbgap_application__dbgap_project_id=6512,
             dbgap_dar_data=valid_json,
         )
         # Add responses with the study version and participant_set.
@@ -514,7 +514,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             ],
         }
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__project_id=6512,
+            dbgap_application__dbgap_project_id=6512,
             dbgap_dar_data=valid_json,
         )
         # Add responses with the study version and participant_set.
@@ -595,7 +595,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             ],
         }
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__project_id=6512,
+            dbgap_application__dbgap_project_id=6512,
             dbgap_dar_data=valid_json,
         )
         # Add responses with the study version and participant_set.
@@ -651,7 +651,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             "Project_closed": "no",
         }
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__project_id=6512,
+            dbgap_application__dbgap_project_id=6512,
             dbgap_dar_data=invalid_json,
         )
         with self.assertRaises(jsonschema.exceptions.ValidationError):
@@ -686,7 +686,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             ],
         }
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__project_id=6512,
+            dbgap_application__dbgap_project_id=6512,
             dbgap_dar_data=valid_json,
         )
         # Add responses with the study version and participant_set.
@@ -740,7 +740,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             ],
         }
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__project_id=6512,
+            dbgap_application__dbgap_project_id=6512,
             dbgap_dar_data=valid_json,
         )
         # Add responses with the study version and participant_set.
@@ -780,7 +780,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         """Can create updated DARs and keep original version and participant set."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         valid_json = {
-            "Project_id": dbgap_application.project_id,
+            "Project_id": dbgap_application.dbgap_project_id,
             "PI_name": "Test Investigator",
             "Project_closed": "no",
             # Two studies.
@@ -855,7 +855,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         """Can create updated DARs and keep original version and participant set."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         valid_json = {
-            "Project_id": dbgap_application.project_id,
+            "Project_id": dbgap_application.dbgap_project_id,
             "PI_name": "Test Investigator",
             "Project_closed": "no",
             # Two studies.
@@ -965,7 +965,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         """Can create updated DARs and keep original version and participant set."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         valid_json = {
-            "Project_id": dbgap_application.project_id,
+            "Project_id": dbgap_application.dbgap_project_id,
             "PI_name": "Test Investigator",
             "Project_closed": "no",
             # Two studies.
@@ -1021,11 +1021,12 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertIn("dbgap_phs", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
+    @responses.activate
     def test_created_dars_from_json_assertion_error_consent_code(self):
         """Test that an AssertionError is raised when consent_code in updated json is unexpected for DAR ID."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         valid_json = {
-            "Project_id": dbgap_application.project_id,
+            "Project_id": dbgap_application.dbgap_project_id,
             "PI_name": "Test Investigator",
             "Project_closed": "no",
             # Two studies.
@@ -1081,11 +1082,12 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertIn("dbgap_consent_code", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
-    def test_created_dars_from_json_assertion_error_project_id(self):
-        """Test that an AssertionError is raised when project_id in updated json is unexpected for DAR ID."""
-        dbgap_application = factories.dbGaPApplicationFactory.create(project_id=2)
+    @responses.activate
+    def test_created_dars_from_json_assertion_error_dbgap_project_id(self):
+        """Test that an AssertionError is raised when dbgap_project_id in updated json is unexpected for DAR ID."""
+        dbgap_application = factories.dbGaPApplicationFactory.create(dbgap_project_id=2)
         valid_json = {
-            "Project_id": dbgap_application.project_id,
+            "Project_id": dbgap_application.dbgap_project_id,
             "PI_name": "Test Investigator",
             "Project_closed": "no",
             # Two studies.
@@ -1110,7 +1112,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         }
         # Create an original DAR with a different project id. This shouldn't happen but...
         factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot__dbgap_application__project_id=1,
+            dbgap_data_access_snapshot__dbgap_application__dbgap_project_id=1,
             dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
             dbgap_phs=421,
             dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
