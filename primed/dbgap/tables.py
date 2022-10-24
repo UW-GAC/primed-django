@@ -90,7 +90,6 @@ class dbGaPApplicationTable(tables.Table):
 
 class dbGaPDataAccessRequestTable(tables.Table):
 
-    dbgap_study_accession = tables.columns.Column(linkify=True)
     workspace = tables.columns.Column(
         linkify=True, accessor="get_dbgap_workspace", orderable=False
     )
@@ -118,13 +117,16 @@ class dbGaPDataAccessRequestTable(tables.Table):
         )
         return html
 
+    def render_dbgap_phs(self, value):
+        return "phs{0:06d}".format(value)
+
     class Meta:
         model = models.dbGaPDataAccessRequest
         fields = (
             "dbgap_dar_id",
-            "dbgap_study_accession",
-            "dbgap_version",
-            "dbgap_participant_set",
+            "dbgap_phs",
+            "original_version",
+            "original_participant_set",
             "dbgap_consent_code",
             "dbgap_consent_abbreviation",
             "dbgap_current_status",
