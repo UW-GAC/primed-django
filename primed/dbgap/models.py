@@ -20,6 +20,9 @@ from . import constants, managers
 logger = logging.getLogger(__name__)
 
 
+# TODO: clean up model field names using naming conventions
+
+
 class dbGaPStudyAccession(TimeStampedModel, models.Model):
     """A model to track dbGaP study accessions."""
 

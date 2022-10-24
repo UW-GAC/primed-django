@@ -14,6 +14,22 @@ from primed.users.tests.factories import UserFactory
 from .. import models
 
 
+class TimeStampedModelFactory(DjangoModelFactory):
+    """A factory that allows `created` to be set to some specified value."""
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        created = kwargs.pop("created", None)
+        obj = super()._create(target_class, *args, **kwargs)
+        if created:
+            obj.created = created
+            obj.save()
+        return obj
+
+
 class dbGaPStudyAccessionFactory(DjangoModelFactory):
     """A factory for the dbGaPStudy model."""
 
@@ -50,7 +66,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
         model = models.dbGaPApplication
 
 
-class dbGaPDataAccessSnapshotFactory(DjangoModelFactory):
+class dbGaPDataAccessSnapshotFactory(TimeStampedModelFactory, DjangoModelFactory):
     """A factory for the dbGaPDataAccessSnapshot model."""
 
     dbgap_application = SubFactory(dbGaPApplicationFactory)
@@ -64,7 +80,6 @@ class dbGaPDataAccessSnapshotFactory(DjangoModelFactory):
             "studies": [],
         }
     )
-    # TODO: add a range of reasoanble times for created and modified.
 
     class Meta:
         model = models.dbGaPDataAccessSnapshot
