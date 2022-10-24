@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from anvil_consortium_manager import models as acm_models
+from anvil_consortium_manager.tests.factories import WorkspaceGroupAccessFactory
 from django.test import TestCase
 from django.utils import timezone
 
@@ -232,3 +233,33 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
+
+    def test_matching_workspace(self):
+        """Table works if there is a matching workspace."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertIn("square-fill", table.rows[0].get_cell_value("has_access"))
+
+    def test_matching_workspace_with_access(self):
+        """Table works if there is a matching workspace."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        WorkspaceGroupAccessFactory.create(
+            workspace=workspace.workspace,
+            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertIn("circle-fill", table.rows[0].get_cell_value("has_access"))
