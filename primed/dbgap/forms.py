@@ -48,8 +48,7 @@ class dbGaPApplicationForm(forms.ModelForm):
         )
 
 
-# TODO: rename to dbGaPDataAccessSnapshotForm.
-class dbGaPDataAccessJSONForm(forms.ModelForm):
+class dbGaPDataAccessSnapshotForm(forms.ModelForm):
     """Create a dbGaP data access snapshot and DARs from JSON data."""
 
     ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"

@@ -1425,7 +1425,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             request, dbgap_application_pk=self.dbgap_application.pk
         )
         self.assertIsInstance(
-            response.context_data["form"], forms.dbGaPDataAccessJSONForm
+            response.context_data["form"], forms.dbGaPDataAccessSnapshotForm
         )
 
     def test_can_create_dars_from_json(self):

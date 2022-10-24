@@ -146,7 +146,7 @@ class dbGaPDataAccessSnapshotCreate(
     AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
 ):
 
-    form_class = forms.dbGaPDataAccessJSONForm
+    form_class = forms.dbGaPDataAccessSnapshotForm
     template_name = "dbgap/dbgapdataaccesssnapshot_form.html"
     ERROR_DARS_ALREADY_ADDED = (
         "Data Access Requests have already been added for this application."

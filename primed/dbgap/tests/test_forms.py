@@ -424,10 +424,10 @@ class dbGaPApplicationFormTest(TestCase):
         self.assertIn("already exists", form.errors["dbgap_project_id"][0])
 
 
-class dbGaPDataAccessJSONFormTest(TestCase):
-    """Tests for the dbGaPDataAccessJSONForm class."""
+class dbGaPDataAccessSnapshotFormTest(TestCase):
+    """Tests for the dbGaPDataAccessSnapshotForm class."""
 
-    form_class = forms.dbGaPDataAccessJSONForm
+    form_class = forms.dbGaPDataAccessSnapshotForm
 
     def setUp(self):
         """Create some data for use in the form."""
