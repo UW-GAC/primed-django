@@ -8,6 +8,7 @@ from anvil_consortium_manager.auth import (
 )
 from anvil_consortium_manager.models import ManagedGroup, Workspace
 from anvil_consortium_manager.views import SuccessMessageMixin
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -143,7 +144,9 @@ class dbGaPApplicationCreate(
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
         project_id = form.cleaned_data["dbgap_project_id"]
-        group_name = self.anvil_group_pattern.format(project_id=project_id)
+        group_name = "{}_{}".format(
+            settings.ANVIL_DBGAP_APPLICATION_GROUP_PREFIX, project_id
+        )
         managed_group = ManagedGroup(name=group_name)
         try:
             managed_group.full_clean()

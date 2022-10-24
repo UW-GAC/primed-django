@@ -28,3 +28,4 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # Your stuff...
 # ------------------------------------------------------------------------------
 ANVIL_API_SERVICE_ACCOUNT_FILE = "foo"
+ANVIL_DBGAP_APPLICATION_GROUP_PREFIX = "TEST_PRIMED_DBGAP_ACCESS"

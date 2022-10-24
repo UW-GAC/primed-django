@@ -21,7 +21,7 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import resolve_url
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from faker import Faker
@@ -1064,7 +1064,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
         responses.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -1083,7 +1083,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
         responses.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -1098,7 +1098,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
         responses.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -1210,7 +1210,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_12498"
+        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_12498"
         responses.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -1223,7 +1223,29 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_group, new_group)
-        self.assertEqual(new_group.name, "PRIMED_DBGAP_ACCESS_12498")
+        self.assertEqual(new_group.name, "TEST_PRIMED_DBGAP_ACCESS_12498")
+        self.assertTrue(new_group.is_managed_by_app)
+
+    @override_settings(ANVIL_DBGAP_APPLICATION_GROUP_PREFIX="foo")
+    def test_creates_anvil_group_different_setting(self):
+        """View creates a managed group upon when form is valid."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        # API response to create the associated anvil_group.
+        api_url = self.entry_point + "/api/groups/foo_12498"
+        responses.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.dbGaPApplication.objects.latest("pk")
+        self.assertEqual(ManagedGroup.objects.count(), 1)
+        # A new group was created.
+        new_group = ManagedGroup.objects.latest("pk")
+        self.assertEqual(new_object.anvil_group, new_group)
+        self.assertEqual(new_group.name, "foo_12498")
         self.assertTrue(new_group.is_managed_by_app)
 
     def test_manage_group_create_api_error(self):
@@ -1231,7 +1253,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/PRIMED_DBGAP_ACCESS_1"
+        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
         responses.add(
             responses.POST, api_url, status=500, json={"message": "other error"}
         )
@@ -1255,7 +1277,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # Create a group with the same name.
-        ManagedGroupFactory.create(name="PRIMED_DBGAP_ACCESS_1")
+        ManagedGroupFactory.create(name="TEST_PRIMED_DBGAP_ACCESS_1")
         response = self.client.post(
             self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
