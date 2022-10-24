@@ -21,11 +21,11 @@ class dbGaPStudyAccessionTable(tables.Table):
     class Meta:
         model = models.dbGaPStudyAccession
         fields = (
-            "phs",
+            "dbgap_phs",
             "study",
         )
 
-    def render_phs(self, value):
+    def render_dbgap_phs(self, value):
         return "phs{0:06d}".format(value)
 
 
