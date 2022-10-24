@@ -94,17 +94,14 @@ class dbGaPDataAccessRequestTable(tables.Table):
         linkify=True, accessor="get_dbgap_workspace", orderable=False
     )
     has_access = tables.columns.Column(
-        accessor="get_dbgap_workspace",
+        accessor="has_anvil_access",
         empty_values=(None),
         orderable=False,
         verbose_name="Has access?",
     )
 
     def render_has_access(self, value, record):
-        has_access = record.dbgap_data_access_snapshot.dbgap_application.anvil_group.workspacegroupaccess_set.filter(
-            workspace=value.workspace
-        ).exists()
-        if has_access:
+        if value:
             icon = "check-circle-fill"
             color = "green"
         else:

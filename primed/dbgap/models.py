@@ -438,9 +438,17 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         dbGaPDataAccessRequest and the dbGaPWorkspace."""
         # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
         study_accession = dbGaPStudyAccession.objects.get(dbgap_phs=self.dbgap_phs)
-        workspace = study_accession.dbgapworkspace_set.get(
+        dbgap_workspace = study_accession.dbgapworkspace_set.get(
             dbgap_version=self.original_version,
             dbgap_participant_set=self.original_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
         )
-        return workspace
+        return dbgap_workspace
+
+    def has_anvil_access(self):
+        """Check if the dbGaPApplication associated with this DAR has access to the matching dbGaP workspace."""
+        dbgap_workspace = self.get_dbgap_workspace()
+        has_access = self.dbgap_data_access_snapshot.dbgap_application.anvil_group.workspacegroupaccess_set.filter(
+            workspace=dbgap_workspace.workspace
+        ).exists()
+        return has_access

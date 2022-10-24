@@ -7,6 +7,7 @@ import responses
 from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
+    WorkspaceGroupAccessFactory,
 )
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
@@ -1491,3 +1492,44 @@ class dbGaPDataAccessRequestTest(TestCase):
         )
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
             dar.get_dbgap_workspace()
+
+    def test_has_anvil_access_no_match_no_study_accession(self):
+        """has_anvil_access raises exception when no matching workspace exists."""
+        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
+        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
+            data_access_request.has_anvil_access()
+
+    def test_has_anvil_access_no_match(self):
+        """has_anvil_access raises exception when no matching workspace exists."""
+        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
+        factories.dbGaPStudyAccessionFactory.create(
+            dbgap_phs=data_access_request.dbgap_phs
+        )
+        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
+            data_access_request.has_anvil_access()
+
+    def test_has_anvil_access_match_no_access(self):
+        """has_anvil_access returns False when the managed group does not have access to the workspace for this DAR."""
+        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
+        factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__dbgap_phs=data_access_request.dbgap_phs,
+            dbgap_version=data_access_request.original_version,
+            dbgap_participant_set=data_access_request.original_participant_set,
+            dbgap_consent_code=data_access_request.dbgap_consent_code,
+        )
+        self.assertFalse(data_access_request.has_anvil_access())
+
+    def test_has_anvil_access_match_access(self):
+        """has_anvil_access returns True when the managed group has access to the workspace for this DAR."""
+        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__dbgap_phs=data_access_request.dbgap_phs,
+            dbgap_version=data_access_request.original_version,
+            dbgap_participant_set=data_access_request.original_participant_set,
+            dbgap_consent_code=data_access_request.dbgap_consent_code,
+        )
+        WorkspaceGroupAccessFactory.create(
+            workspace=workspace.workspace,
+            group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+        )
+        self.assertTrue(data_access_request.has_anvil_access())
