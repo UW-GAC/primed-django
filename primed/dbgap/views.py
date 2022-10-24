@@ -29,6 +29,17 @@ class dbGaPStudyAccessionDetail(
     model = models.dbGaPStudyAccession
     context_table_name = "workspace_table"
 
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
     def get_table(self):
         return tables.dbGaPWorkspaceTable(
             Workspace.objects.filter(dbgapworkspace__dbgap_study_accession=self.object),
@@ -63,6 +74,17 @@ class dbGaPApplicationDetail(
 
     model = models.dbGaPApplication
     context_table_name = "data_access_request_table"
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -161,7 +183,7 @@ class dbGaPDataAccessSnapshotCreate(
     def get_dbgap_application(self):
         try:
             dbgap_application = models.dbGaPApplication.objects.get(
-                pk=self.kwargs["dbgap_application_pk"]
+                dbgap_project_id=self.kwargs["dbgap_project_id"]
             )
         except models.dbGaPApplication.DoesNotExist:
             raise Http404(

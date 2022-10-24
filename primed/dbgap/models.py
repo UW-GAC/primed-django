@@ -58,7 +58,9 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         )
 
     def get_absolute_url(self):
-        return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"pk": self.pk})
+        return reverse(
+            "dbgap:dbgap_study_accessions:detail", kwargs={"dbgap_phs": self.dbgap_phs}
+        )
 
 
 class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
@@ -171,7 +173,10 @@ class dbGaPApplication(TimeStampedModel, models.Model):
 
     def get_absolute_url(self):
         """Return the absolute url for this object."""
-        return reverse("dbgap:dbgap_applications:detail", kwargs={"pk": self.pk})
+        return reverse(
+            "dbgap:dbgap_applications:detail",
+            kwargs={"dbgap_project_id": self.dbgap_project_id},
+        )
 
     def get_dbgap_dar_json_url(self):
         """Return the dbGaP URL that lists DARs for this application."""

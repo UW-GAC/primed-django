@@ -151,17 +151,19 @@ class dbGaPStudyAccessionDetailTest(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
-        response = self.client.get(self.get_url(self.obj.pk))
+        response = self.client.get(self.get_url(self.obj.dbgap_phs))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.obj.pk),
+            resolve_url(settings.LOGIN_URL)
+            + "?next="
+            + self.get_url(self.obj.dbgap_phs),
         )
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -169,30 +171,30 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         user_no_perms = User.objects.create_user(
             username="test-none", password="test-none"
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
-            self.get_view()(request, pk=self.obj.pk)
+            self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
 
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.pk))
+        response = self.client.get(self.get_url(self.obj.dbgap_phs))
         self.assertEqual(response.status_code, 200)
 
     def test_view_status_code_with_invalid_pk(self):
         """Raises a 404 error with an invalid object pk."""
-        request = self.factory.get(self.get_url(self.obj.pk + 1))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs + 1))
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, pk=self.obj.pk + 1)
+            self.get_view()(request, pk=self.obj.dbgap_phs + 1)
 
     def test_workspace_table(self):
         """The workspace table exists."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
         self.assertIsInstance(
             response.context_data["workspace_table"], tables.dbGaPWorkspaceTable
@@ -200,27 +202,27 @@ class dbGaPStudyAccessionDetailTest(TestCase):
 
     def test_workspace_table_none(self):
         """No workspaces are shown if the dbGaPStudyAccession does not have any workspaces."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
 
     def test_workspace_table_one(self):
         """One workspace is shown if the dbGaPStudyAccession has one workspace."""
         factories.dbGaPWorkspaceFactory.create(dbgap_study_accession=self.obj)
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 1)
 
     def test_workspace_table_two(self):
         """Two workspaces are shown if the dbGaPStudyAccession has two workspaces."""
         factories.dbGaPWorkspaceFactory.create_batch(2, dbgap_study_accession=self.obj)
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 2)
 
@@ -230,9 +232,9 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         factories.dbGaPWorkspaceFactory.create(
             dbgap_study_accession=other_dbgap_study_accession
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
 
@@ -778,17 +780,19 @@ class dbGaPApplicationDetailTest(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
-        response = self.client.get(self.get_url(self.obj.pk))
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.obj.pk),
+            resolve_url(settings.LOGIN_URL)
+            + "?next="
+            + self.get_url(self.obj.dbgap_project_id),
         )
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -796,30 +800,30 @@ class dbGaPApplicationDetailTest(TestCase):
         user_no_perms = User.objects.create_user(
             username="test-none", password="test-none"
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
-            self.get_view()(request, pk=self.obj.pk)
+            self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
 
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.pk))
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertEqual(response.status_code, 200)
 
     def test_view_status_code_with_invalid_pk(self):
         """Raises a 404 error with an invalid object pk."""
-        request = self.factory.get(self.get_url(self.obj.pk + 1))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id + 1))
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, pk=self.obj.pk + 1)
+            self.get_view()(request, pk=self.obj.dbgap_project_id + 1)
 
     def test_context_dar_table(self):
         """The data_access_request_table exists in the context."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertIsInstance(
             response.context_data["data_access_request_table"],
@@ -828,9 +832,9 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_dar_table_no_snapshot(self):
         """No dbGaPDataAccessRequests are shown if the dbGaPApplication does not have a snapshot."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertEqual(
             len(response.context_data["data_access_request_table"].rows), 0
@@ -839,9 +843,9 @@ class dbGaPApplicationDetailTest(TestCase):
     def test_dar_table_none(self):
         """No dbGaPDataAccessRequests are shown if the dbGaPApplication has a snapshot but no DARs."""
         factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertEqual(
             len(response.context_data["data_access_request_table"].rows), 0
@@ -852,9 +856,9 @@ class dbGaPApplicationDetailTest(TestCase):
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot__dbgap_application=self.obj
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertEqual(
             len(response.context_data["data_access_request_table"].rows), 1
@@ -869,9 +873,9 @@ class dbGaPApplicationDetailTest(TestCase):
             2,
             dbgap_data_access_snapshot=dbgap_snapshot,
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertEqual(
             len(response.context_data["data_access_request_table"].rows), 2
@@ -883,9 +887,9 @@ class dbGaPApplicationDetailTest(TestCase):
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot__dbgap_application=other_dbgap_application
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertEqual(
             len(response.context_data["data_access_request_table"].rows), 0
@@ -908,9 +912,9 @@ class dbGaPApplicationDetailTest(TestCase):
             2,
             dbgap_data_access_snapshot=dbgap_snapshot,
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_request_table", response.context_data)
         self.assertEqual(
             len(response.context_data["data_access_request_table"].rows), 2
@@ -923,26 +927,26 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_context_has_snapshot_no_snapshot(self):
         """has_snapshot is False in context when there no dbGaPDataAccessSnapshot for this application."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("has_snapshot", response.context_data)
         self.assertFalse(response.context_data["has_snapshot"])
 
     def test_context_has_snapshot_one_snapshot(self):
         """has_snapshot is True in context when there is a dbGaPDataAccessSnapshot for this application."""
         factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("has_snapshot", response.context_data)
         self.assertTrue(response.context_data["has_snapshot"])
 
     def test_context_last_update_no_snapshot(self):
         """last_update is None in context when there are no dbGaPDataAccessSnapshots for this application."""
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("last_update", response.context_data)
         self.assertIsNone(response.context_data["last_update"])
 
@@ -951,9 +955,9 @@ class dbGaPApplicationDetailTest(TestCase):
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.obj
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("last_update", response.context_data)
         self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
 
@@ -965,9 +969,9 @@ class dbGaPApplicationDetailTest(TestCase):
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.obj, created=timezone.now()
         )
-        request = self.factory.get(self.get_url(self.obj.pk))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(request, pk=self.obj.pk)
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("last_update", response.context_data)
         self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
 
@@ -1366,20 +1370,24 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
-        response = self.client.get(self.get_url(self.dbgap_application.pk))
+        response = self.client.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         self.assertRedirects(
             response,
             resolve_url(settings.LOGIN_URL)
             + "?next="
-            + self.get_url(self.dbgap_application.pk),
+            + self.get_url(self.dbgap_application.dbgap_project_id),
         )
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
-        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request = self.factory.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         request.user = self.user
         response = self.get_view()(
-            request, dbgap_application_pk=self.dbgap_application.pk
+            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
         )
         self.assertEqual(response.status_code, 200)
 
@@ -1388,10 +1396,14 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         user_no_perms = User.objects.create_user(
             username="test-none", password="test-none"
         )
-        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request = self.factory.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
-            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk)
+            self.get_view()(
+                request, dbgap_project_id=self.dbgap_application.dbgap_project_id
+            )
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has no permissions."""
@@ -1403,26 +1415,34 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                 codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request = self.factory.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         request.user = user_view_perm
         with self.assertRaises(PermissionDenied):
-            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk)
+            self.get_view()(
+                request, dbgap_project_id=self.dbgap_application.dbgap_project_id
+            )
 
     def test_has_form_in_context(self):
         """Response includes a form."""
-        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request = self.factory.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         request.user = self.user
         response = self.get_view()(
-            request, dbgap_application_pk=self.dbgap_application.pk
+            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
         )
         self.assertTrue("form" in response.context_data)
 
     def test_form_class(self):
         """Form is the expected class."""
-        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request = self.factory.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         request.user = self.user
         response = self.get_view()(
-            request, dbgap_application_pk=self.dbgap_application.pk
+            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
         )
         self.assertIsInstance(
             response.context_data["form"], forms.dbGaPDataAccessSnapshotForm
@@ -1502,7 +1522,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1556,7 +1576,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(self.valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1581,7 +1601,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(self.valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1600,7 +1620,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         """Form shows an error when study is missing."""
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": "",
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1624,14 +1644,14 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         request = self.factory.get(self.get_url(self.dbgap_application.pk + 1))
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk + 1)
+            self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 1)
 
     def test_post_dbgap_application_pk_does_not_exist(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
         request = self.factory.post(self.get_url(self.dbgap_application.pk + 1), {})
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, dbgap_application_pk=self.dbgap_application.pk + 1)
+            self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 1)
 
     def test_has_form_when_one_snapshot_exists(self):
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -1658,7 +1678,9 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         # Now try to load the page again.
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.dbgap_application.pk))
+        response = self.client.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         self.assertEqual(response.status_code, 200)
         self.assertTrue("form" in response.context_data)
 
@@ -1687,7 +1709,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         # Now try to add a new one.
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(self.valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1725,7 +1747,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         """JSON is invalid."""
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps({"foo": "bar"}),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1749,7 +1771,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         dbgap_application = factories.dbGaPApplicationFactory.create()
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(dbgap_application.pk),
+            self.get_url(dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(self.valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1772,10 +1794,12 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
 
     def test_context_includes_dbgap_application(self):
         """Response context data includes the dbGaP application."""
-        request = self.factory.get(self.get_url(self.dbgap_application.pk))
+        request = self.factory.get(
+            self.get_url(self.dbgap_application.dbgap_project_id)
+        )
         request.user = self.user
         response = self.get_view()(
-            request, dbgap_application_pk=self.dbgap_application.pk
+            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
         )
         self.assertTrue("dbgap_application" in response.context_data)
         self.assertEqual(
@@ -1817,7 +1841,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.
@@ -1883,7 +1907,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(self.dbgap_application.pk),
+            self.get_url(self.dbgap_application.dbgap_project_id),
             {
                 "dbgap_dar_data": json.dumps(valid_json),
                 # Note that the post data needs to include the dbGaP application in tests.

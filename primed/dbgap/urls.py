@@ -10,7 +10,9 @@ dbgap_study_accession_patterns = (
     [
         path("", views.dbGaPStudyAccessionList.as_view(), name="list"),
         path("new/", views.dbGaPStudyAccessionCreate.as_view(), name="new"),
-        path("<int:pk>", views.dbGaPStudyAccessionDetail.as_view(), name="detail"),
+        path(
+            "<int:dbgap_phs>", views.dbGaPStudyAccessionDetail.as_view(), name="detail"
+        ),
     ],
     "dbgap_study_accessions",
 )
@@ -30,8 +32,12 @@ dbgap_application_patterns = (
     [
         path("", views.dbGaPApplicationList.as_view(), name="list"),
         path("new/", views.dbGaPApplicationCreate.as_view(), name="new"),
-        path("<int:pk>/", views.dbGaPApplicationDetail.as_view(), name="detail"),
-        path("<int:dbgap_application_pk>/dars/", include(data_access_request_patterns)),
+        path(
+            "<int:dbgap_project_id>/",
+            views.dbGaPApplicationDetail.as_view(),
+            name="detail",
+        ),
+        path("<int:dbgap_project_id>/dars/", include(data_access_request_patterns)),
     ],
     "dbgap_applications",
 )
