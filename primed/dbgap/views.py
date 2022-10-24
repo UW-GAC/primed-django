@@ -34,7 +34,7 @@ class dbGaPStudyAccessionDetail(
             Workspace.objects.filter(dbgapworkspace__dbgap_study_accession=self.object),
             exclude=(
                 "dbgapworkspace__dbgap_study_accession__study",
-                "dbgapworkspace__dbgap_study_accession__phs",
+                "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             ),
         )
 

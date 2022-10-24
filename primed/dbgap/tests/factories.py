@@ -34,7 +34,7 @@ class dbGaPStudyAccessionFactory(DjangoModelFactory):
     """A factory for the dbGaPStudy model."""
 
     study = SubFactory(StudyFactory)
-    phs = Faker("random_int")
+    dbgap_phs = Faker("random_int")
 
     class Meta:
         model = models.dbGaPStudyAccession

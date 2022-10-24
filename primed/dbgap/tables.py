@@ -10,7 +10,7 @@ from . import models
 class dbGaPStudyAccessionTable(tables.Table):
     """A table for dbGaPStudyAccession objects."""
 
-    phs = tables.columns.Column(linkify=True)
+    dbgap_phs = tables.columns.Column(linkify=True)
     study = tables.columns.Column(linkify=True)
     number_workspaces = tables.Column(
         verbose_name="Number of workspaces",
@@ -39,13 +39,13 @@ class dbGaPWorkspaceTable(tables.Table):
         fields = (
             "name",
             "dbgapworkspace__dbgap_study_accession__study",
-            "dbgapworkspace__dbgap_study_accession__phs",
+            "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
             "dbgapworkspace__dbgap_participant_set",
             "dbgapworkspace__dbgap_consent_abbreviation",
         )
 
-    def render_dbgapworkspace__phs(self, value):
+    def render_dbgapworkspace__dbgap_phs(self, value):
         return "phs{0:06d}".format(value)
 
     def render_dbgapworkspace__version(self, value):

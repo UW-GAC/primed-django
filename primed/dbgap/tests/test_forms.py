@@ -33,7 +33,7 @@ class dbGaPStudyAccessionFormTest(TestCase):
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
-            "phs": 1,
+            "dbgap_phs": 1,
             "study": self.study,
         }
         form = self.form_class(data=form_data)
@@ -42,7 +42,7 @@ class dbGaPStudyAccessionFormTest(TestCase):
     def test_invalid_missing_study(self):
         """Form is invalid when missing study."""
         form_data = {
-            "phs": 1,
+            "dbgap_phs": 1,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -51,30 +51,30 @@ class dbGaPStudyAccessionFormTest(TestCase):
         self.assertEqual(len(form.errors["study"]), 1)
         self.assertIn("required", form.errors["study"][0])
 
-    def test_invalid_missing_phs(self):
-        """Form is invalid when missing phs."""
+    def test_invalid_missing_dbgap_phs(self):
+        """Form is invalid when missing dbgap_phs."""
         form_data = {
             "study": self.study,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("required", form.errors["phs"][0])
+        self.assertIn("dbgap_phs", form.errors)
+        self.assertEqual(len(form.errors["dbgap_phs"]), 1)
+        self.assertIn("required", form.errors["dbgap_phs"][0])
 
-    def test_invalid_phs_zero(self):
-        """Form is invalid when phs is zero."""
+    def test_invalid_dbgap_phs_zero(self):
+        """Form is invalid when dbgap_phs is zero."""
         form_data = {
             "study": self.study,
-            "phs": 0,
+            "dbgap_phs": 0,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("greater than", form.errors["phs"][0])
+        self.assertIn("dbgap_phs", form.errors)
+        self.assertEqual(len(form.errors["dbgap_phs"]), 1)
+        self.assertIn("greater than", form.errors["dbgap_phs"][0])
 
     def test_invalid_duplicate_object(self):
         """Form is invalid with a duplicated object."""
@@ -82,13 +82,13 @@ class dbGaPStudyAccessionFormTest(TestCase):
         other_study = StudyFactory.create()
         form_data = {
             "study": other_study,
-            "phs": dbgap_study_accession.phs,
+            "dbgap_phs": dbgap_study_accession.dbgap_phs,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("already exists", form.errors["phs"][0])
+        self.assertIn("dbgap_phs", form.errors)
+        self.assertEqual(len(form.errors["dbgap_phs"]), 1)
+        self.assertIn("already exists", form.errors["dbgap_phs"][0])
 
 
 class dbGaPWorkspaceFormTest(TestCase):
@@ -173,7 +173,7 @@ class dbGaPWorkspaceFormTest(TestCase):
         """Form is invalid when missing dbgap_version."""
         form_data = {
             "dbgap_study_accession": self.dbgap_study_accession,
-            "phs": 1,
+            "dbgap_phs": 1,
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,

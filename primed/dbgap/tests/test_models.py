@@ -32,7 +32,7 @@ class dbGaPStudyAccessionTest(TestCase):
         study = StudyFactory.create()
         instance = models.dbGaPStudyAccession(
             study=study,
-            phs=1,
+            dbgap_phs=1,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPStudyAccession)
@@ -41,7 +41,7 @@ class dbGaPStudyAccessionTest(TestCase):
         """The custom __str__ method returns the correct string."""
         instance = factories.dbGaPStudyAccessionFactory.create(
             study__short_name="FOO",
-            phs=1,
+            dbgap_phs=1,
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
@@ -58,13 +58,15 @@ class dbGaPStudyAccessionTest(TestCase):
         study = StudyFactory.create()
         instance = factories.dbGaPStudyAccessionFactory.build(
             study=study,
-            phs=obj.phs,
+            dbgap_phs=obj.dbgap_phs,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("phs", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["phs"]), 1)
-        self.assertIn("already exists", e.exception.error_dict["phs"][0].messages[0])
+        self.assertIn("dbgap_phs", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_phs"]), 1)
+        self.assertIn(
+            "already exists", e.exception.error_dict["dbgap_phs"][0].messages[0]
+        )
         with self.assertRaises(IntegrityError):
             instance.save()
 
@@ -75,34 +77,36 @@ class dbGaPStudyAccessionTest(TestCase):
         with self.assertRaises(ProtectedError):
             study.delete()
 
-    def test_phs_cannot_be_zero(self):
-        """phs cannot be zero."""
+    def test_dbgap_phs_cannot_be_zero(self):
+        """dbgap_phs cannot be zero."""
         study = StudyFactory.create()
         instance = factories.dbGaPStudyAccessionFactory.build(
             study=study,
-            phs=0,
+            dbgap_phs=0,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("phs", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["phs"]), 1)
+        self.assertIn("dbgap_phs", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_phs"]), 1)
         self.assertIn(
-            "greater than or equal to 1", e.exception.error_dict["phs"][0].messages[0]
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_phs"][0].messages[0],
         )
 
-    def test_phs_cannot_be_negative(self):
-        """phs cannot be negative."""
+    def test_dbgap_phs_cannot_be_negative(self):
+        """dbgap_phs cannot be negative."""
         study = StudyFactory.create()
         instance = factories.dbGaPStudyAccessionFactory.build(
             study=study,
-            phs=-1,
+            dbgap_phs=-1,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
-        self.assertIn("phs", e.exception.error_dict)
-        self.assertEqual(len(e.exception.error_dict["phs"]), 1)
+        self.assertIn("dbgap_phs", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["dbgap_phs"]), 1)
         self.assertIn(
-            "greater than or equal to 1", e.exception.error_dict["phs"][0].messages[0]
+            "greater than or equal to 1",
+            e.exception.error_dict["dbgap_phs"][0].messages[0],
         )
 
 
@@ -130,7 +134,7 @@ class dbGaPWorkspaceTest(TestCase):
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
         instance = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__phs=1,
+            dbgap_study_accession__dbgap_phs=1,
             dbgap_version=2,
             dbgap_participant_set=3,
             dbgap_consent_abbreviation="GRU-NPU",
@@ -270,7 +274,7 @@ class dbGaPWorkspaceTest(TestCase):
     def test_get_dbgap_accession(self):
         """`get_dbgap_accession` returns the correct string"""
         instance = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__phs=1, dbgap_version=2, dbgap_participant_set=3
+            dbgap_study_accession__dbgap_phs=1, dbgap_version=2, dbgap_participant_set=3
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")
 
@@ -347,8 +351,8 @@ class dbGaPApplicationTest(TestCase):
             e.exception.error_dict["dbgap_project_id"][0].messages[0],
         )
 
-    def test_phs_cannot_be_negative(self):
-        """phs cannot be negative."""
+    def test_dbgap_phs_cannot_be_negative(self):
+        """dbgap_phs cannot be negative."""
         pi = UserFactory.create()
         instance = factories.dbGaPApplicationFactory.build(
             principal_investigator=pi,
@@ -1422,7 +1426,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """Raises DoesNotExist when there is no matching workspace."""
         study_accession = factories.dbGaPStudyAccessionFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=study_accession.phs
+            dbgap_phs=study_accession.dbgap_phs
         )
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
             dar.get_dbgap_workspace()
@@ -1431,7 +1435,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """Returns the correct workspace when there is one match."""
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=workspace.dbgap_study_accession.phs,
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=workspace.dbgap_version,
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
@@ -1442,7 +1446,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """Raises ObjectNotFound for workspace with the same phs but different version."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=workspace.dbgap_study_accession.phs,
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=2,
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
@@ -1454,7 +1458,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """Raises ObjectNotFound for workspace with the same phs/version but different participant set."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_participant_set=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=workspace.dbgap_study_accession.phs,
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=workspace.dbgap_version,
             original_participant_set=2,
             dbgap_consent_code=workspace.dbgap_consent_code,
@@ -1464,7 +1468,9 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_get_dbgap_workspace_different_dbgap_study_accession(self):
         """Raises ObjectNotFound for workspace with the same phs/version but different phs."""
-        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__phs=1)
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__dbgap_phs=1
+        )
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=2,
             original_version=workspace.dbgap_version,
@@ -1478,7 +1484,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """Raises ObjectNotFound for workspace with the same phs/version/participant set but different consent code."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_consent_code=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=workspace.dbgap_study_accession.phs,
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=workspace.dbgap_version,
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=2,

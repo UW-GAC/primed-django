@@ -325,19 +325,19 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         """Can create an object."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(self.get_url(), {"study": study.pk, "phs": 1})
+        response = self.client.post(self.get_url(), {"study": study.pk, "dbgap_phs": 1})
         self.assertEqual(response.status_code, 302)
         # A new object was created.
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 1)
         new_object = models.dbGaPStudyAccession.objects.latest("pk")
         self.assertEqual(new_object.study, study)
-        self.assertEqual(new_object.phs, 1)
+        self.assertEqual(new_object.dbgap_phs, 1)
 
     def test_redirect_url(self):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(self.get_url(), {"study": study.pk, "phs": 1})
+        response = self.client.post(self.get_url(), {"study": study.pk, "dbgap_phs": 1})
         new_object = models.dbGaPStudyAccession.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
 
@@ -347,7 +347,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         study = StudyFactory.create()
         response = self.client.post(
             self.get_url(),
-            {"study": study.pk, "phs": 1},
+            {"study": study.pk, "dbgap_phs": 1},
             follow=True,
         )
         self.assertIn("messages", response.context)
@@ -358,7 +358,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
     def test_error_missing_study(self):
         """Form shows an error when study is missing."""
         self.client.force_login(self.user)
-        response = self.client.post(self.get_url(), {"phs": 1})
+        response = self.client.post(self.get_url(), {"dbgap_phs": 1})
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
@@ -371,8 +371,8 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.assertEqual(len(form.errors["study"]), 1)
         self.assertIn("required", form.errors["study"][0])
 
-    def test_error_missing_phs(self):
-        """Form shows an error when phs is missing."""
+    def test_error_missing_dbgap_phs(self):
+        """Form shows an error when dbgap_phs is missing."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
         response = self.client.post(self.get_url(), {"study": study.pk})
@@ -384,17 +384,18 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("required", form.errors["phs"][0])
+        self.assertIn("dbgap_phs", form.errors)
+        self.assertEqual(len(form.errors["dbgap_phs"]), 1)
+        self.assertIn("required", form.errors["dbgap_phs"][0])
 
     def test_error_duplicate_short_name(self):
-        """Form shows an error when trying to create a duplicate phs."""
+        """Form shows an error when trying to create a duplicate dbgap_phs."""
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         other_study = factories.StudyFactory.create()
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(), {"phs": dbgap_study_accession.phs, "study": other_study.pk}
+            self.get_url(),
+            {"dbgap_phs": dbgap_study_accession.dbgap_phs, "study": other_study.pk},
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
@@ -404,9 +405,9 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("phs", form.errors)
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("already exists", form.errors["phs"][0])
+        self.assertIn("dbgap_phs", form.errors)
+        self.assertEqual(len(form.errors["dbgap_phs"]), 1)
+        self.assertIn("already exists", form.errors["dbgap_phs"][0])
 
     def test_post_blank_data(self):
         """Posting blank data does not create an object."""
@@ -420,9 +421,9 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.assertIn("study", form.errors.keys())
         self.assertEqual(len(form.errors["study"]), 1)
         self.assertIn("required", form.errors["study"][0])
-        self.assertIn("phs", form.errors.keys())
-        self.assertEqual(len(form.errors["phs"]), 1)
-        self.assertIn("required", form.errors["phs"][0])
+        self.assertIn("dbgap_phs", form.errors.keys())
+        self.assertEqual(len(form.errors["dbgap_phs"]), 1)
+        self.assertIn("required", form.errors["dbgap_phs"][0])
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
 
 
@@ -1143,7 +1144,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("valid choice", form.errors["principal_investigator"][0])
 
     def test_error_missing_project_id(self):
-        """Form shows an error when phs is missing."""
+        """Form shows an error when dbgap_phs is missing."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
         response = self.client.post(self.get_url(), {"principal_investigator": pi.pk})
@@ -1160,7 +1161,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("required", form.errors["dbgap_project_id"][0])
 
     def test_error_duplicate_project_id(self):
-        """Form shows an error when trying to create a duplicate phs."""
+        """Form shows an error when trying to create a duplicate dbgap_phs."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         other_pi = UserFactory.create()
         self.client.force_login(self.user)

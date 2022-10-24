@@ -1,3 +1,12 @@
+"""Model definitions for the `dbgap` app.
+
+Naming conventions:
+
+Fields for information obtained, assigned by dbGaP, or referring to external resources on dbGaP are typically
+prefixed with "dbgap". The exception is for ForeignKeys, which use the snake_case name of the model they are
+referencing (e.g., "dbgap_study_accession").
+"""
+
 import logging
 import re
 from urllib.parse import urlencode
@@ -20,15 +29,12 @@ from . import constants, managers
 logger = logging.getLogger(__name__)
 
 
-# TODO: clean up model field names using naming conventions
-
-
 class dbGaPStudyAccession(TimeStampedModel, models.Model):
     """A model to track dbGaP study accessions."""
 
     # Consider making this many to many since some dbgap acessions contain multiple studies.
-    phs = models.PositiveIntegerField(
-        verbose_name=" phs",
+    dbgap_phs = models.PositiveIntegerField(
+        verbose_name=" dbGaP phs",
         validators=[MinValueValidator(1)],
         unique=True,
         help_text="""The dbGaP study accession integer associated with this workspace (e.g., 7 for phs000007).""",
@@ -48,7 +54,7 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
 
     def __str__(self):
         return "phs{phs:06d} - {study}".format(
-            phs=self.phs, study=self.study.short_name
+            phs=self.dbgap_phs, study=self.study.short_name
         )
 
     def get_absolute_url(self):
@@ -128,7 +134,7 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
 
     def get_dbgap_accession(self):
         return "phs{phs:06d}.v{v}.p{ps}".format(
-            phs=self.dbgap_study_accession.phs,
+            phs=self.dbgap_study_accession.dbgap_phs,
             v=self.dbgap_version,
             ps=self.dbgap_participant_set,
         )
@@ -426,7 +432,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         This checks that the dbGaP study accession, version, and participant set match between the
         dbGaPDataAccessRequest and the dbGaPWorkspace."""
         # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
-        study_accession = dbGaPStudyAccession.objects.get(phs=self.dbgap_phs)
+        study_accession = dbGaPStudyAccession.objects.get(dbgap_phs=self.dbgap_phs)
         workspace = study_accession.dbgapworkspace_set.get(
             dbgap_version=self.original_version,
             dbgap_participant_set=self.original_participant_set,

@@ -13,7 +13,7 @@ class dbGaPStudyAccessionForm(forms.ModelForm):
     class Meta:
         model = models.dbGaPStudyAccession
         fields = (
-            "phs",
+            "dbgap_phs",
             "study",
         )
 

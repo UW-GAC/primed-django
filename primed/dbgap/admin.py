@@ -10,7 +10,7 @@ class dbGaPStudyAccessionAdmin(SimpleHistoryAdmin):
 
     list_display = (
         "study",
-        "phs",
+        "dbgap_phs",
     )
     search_fields = ("short_name",)
     sortable_by = (
