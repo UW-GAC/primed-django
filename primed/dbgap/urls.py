@@ -4,8 +4,6 @@ from . import views
 
 app_name = "dbgap"
 
-# TODO: Use unique identifiers in urls (dbgap_phs, dbgap_project_id, etc)
-
 dbgap_study_accession_patterns = (
     [
         path("", views.dbGaPStudyAccessionList.as_view(), name="list"),
