@@ -192,6 +192,8 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
     )
     dbgap_dar_data = models.JSONField(null=True)
 
+    history = HistoricalRecords()
+
     class Meta:
         verbose_name = " dbGaP data access snapshot"
 
@@ -336,7 +338,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     """
 
     # The value here is what appears in the DAR JSON from dbGaP.
-    # So far I am aware of "approved" and "closed".
+    # These are the values I've seen so far.
     APPROVED = "approved"
     CLOSED = "closed"
     REJECTED = "rejected"
