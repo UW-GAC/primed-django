@@ -13,11 +13,7 @@ from urllib.parse import urlencode
 
 import jsonschema
 import requests
-from anvil_consortium_manager.models import (
-    BaseWorkspaceData,
-    ManagedGroup,
-    WorkspaceGroupAccess,
-)
+from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -449,19 +445,10 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         )
         return dbgap_workspace
 
-    def has_anvil_access(self):
+    def has_access(self):
         """Check if the dbGaPApplication associated with this DAR has access to the matching dbGaP workspace."""
-        # Check if there is a matching group.
+        # Check if there is a matching workspace.
         dbgap_workspace = self.get_dbgap_workspace()
-        # TODO: check if workspace is shared with any groups this group is in.
-        # Get a list of all parent groups.
-        application_group = (
+        return dbgap_workspace.workspace.has_access(
             self.dbgap_data_access_snapshot.dbgap_application.anvil_group
         )
-        all_parents = application_group.get_all_parents()
-        is_shared = WorkspaceGroupAccess.objects.filter(
-            models.Q(group=application_group) | models.Q(group__in=all_parents),
-            workspace=dbgap_workspace.workspace,
-        ).exists()
-        # TODO: check if in auth domain once Winnie's branch is done?
-        return is_shared

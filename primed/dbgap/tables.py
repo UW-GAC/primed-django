@@ -94,7 +94,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
         linkify=True, accessor="get_dbgap_workspace", orderable=False
     )
     has_access = tables.columns.Column(
-        accessor="has_anvil_access",
+        accessor="has_access",
         empty_values=(None),
         orderable=False,
         verbose_name="Has access?",
