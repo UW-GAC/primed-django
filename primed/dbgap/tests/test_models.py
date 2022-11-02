@@ -280,6 +280,135 @@ class dbGaPWorkspaceTest(TestCase):
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")
 
+    def test_get_data_access_requests_no_dars(self):
+        """Returns no results when there no DARs."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        self.assertEqual(len(workspace.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_different_phs(self):
+        """Does not return a DAR where participant set doesn't match."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs + 1,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        self.assertEqual(len(workspace.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_different_version(self):
+        """Does not return a DAR where version doesn't match."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version + 1,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        self.assertEqual(len(workspace.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_different_participant_set(self):
+        """Does not return a DAR where participant set doesn't match."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set + 1,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        self.assertEqual(len(workspace.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_different_consent_code(self):
+        """Does not return a DAR where consent code doesn't match."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code + 1,
+        )
+        self.assertEqual(len(workspace.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_one_application_one_snapshot_one_match(self):
+        """Returns 1 results when there is one matching DARs."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace
+        )
+        results = workspace.get_data_access_requests()
+        self.assertEqual(len(results), 1)
+        self.assertIn(dar, results)
+
+    def test_get_data_access_requests_one_application_two_snapshots_one_match(self):
+        """Returns 2 results when there are two matchign DARs from different snapshots of the same application."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application
+        )
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application
+        )
+        dar_1 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace, dbgap_data_access_snapshot=snapshot_1
+        )
+        dar_2 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace, dbgap_data_access_snapshot=snapshot_2
+        )
+        results = workspace.get_data_access_requests()
+        self.assertEqual(len(results), 2)
+        self.assertIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
+    def test_get_data_access_requests_two_applications_with_match(self):
+        """Returns 2 results when there are two matchign DARs from different applications."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        application_1 = factories.dbGaPApplicationFactory.create()
+        application_2 = factories.dbGaPApplicationFactory.create()
+        dar_1 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_data_access_snapshot__dbgap_application=application_1,
+        )
+        dar_2 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_data_access_snapshot__dbgap_application=application_2,
+        )
+        results = workspace.get_data_access_requests()
+        self.assertEqual(len(results), 2)
+        self.assertIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
+    def test_get_data_access_requests_all_statuses(self):
+        """Returns 1 results when there is one matching DARs."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar_approved = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        dar_closed = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        dar_rejected = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        dar_expired = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        dar_new = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        results = workspace.get_data_access_requests()
+        self.assertEqual(len(results), 5)
+        self.assertIn(dar_approved, results)
+        self.assertIn(dar_closed, results)
+        self.assertIn(dar_rejected, results)
+        self.assertIn(dar_expired, results)
+        self.assertIn(dar_new, results)
+
 
 class dbGaPApplicationTest(TestCase):
     """Tests for the dbGaPApplication model."""
@@ -1417,6 +1546,34 @@ class dbGaPDataAccessRequestTest(TestCase):
         self.assertNotIn(rejected_dar, qs)
         self.assertNotIn(expired_dar, qs)
         self.assertNotIn(new_dar, qs)
+
+    def test_is_approved(self):
+        """The is_approved property works correctly."""
+        self.assertTrue(
+            factories.dbGaPDataAccessRequestFactory.create(
+                dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED
+            ).is_approved
+        )
+        self.assertFalse(
+            factories.dbGaPDataAccessRequestFactory.create(
+                dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED
+            ).is_approved
+        )
+        self.assertFalse(
+            factories.dbGaPDataAccessRequestFactory.create(
+                dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED
+            ).is_approved
+        )
+        self.assertFalse(
+            factories.dbGaPDataAccessRequestFactory.create(
+                dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED
+            ).is_approved
+        )
+        self.assertFalse(
+            factories.dbGaPDataAccessRequestFactory.create(
+                dbgap_current_status=models.dbGaPDataAccessRequest.NEW
+            ).is_approved
+        )
 
     def test_get_dbgap_workspace_no_study_accession(self):
         """Raises DoesNotExist when there is no matching study accession."""

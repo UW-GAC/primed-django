@@ -2,7 +2,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from factory import Dict, Faker, SelfAttribute, SubFactory
+from factory import Dict, Faker, LazyAttribute, SelfAttribute, SubFactory
 from factory.django import DjangoModelFactory
 
 from primed.primed_anvil.tests.factories import (
@@ -40,7 +40,7 @@ class dbGaPStudyAccessionFactory(DjangoModelFactory):
         model = models.dbGaPStudyAccession
 
 
-class dbGaPWorkspaceFactory(DataUseOntologyModelFactory):
+class dbGaPWorkspaceFactory(TimeStampedModelFactory, DataUseOntologyModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")
@@ -96,6 +96,29 @@ class dbGaPDataAccessRequestFactory(DjangoModelFactory):
     dbgap_consent_code = Faker("random_int")
     dbgap_consent_abbreviation = Faker("word")
     dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+
+
+class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
+    """A factory for the dbGaPApplication model to match a workspace."""
+
+    dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
+    dbgap_phs = LazyAttribute(
+        lambda o: o.dbgap_workspace.dbgap_study_accession.dbgap_phs
+    )
+    dbgap_dar_id = Faker("random_int")
+    original_version = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_version)
+    original_participant_set = LazyAttribute(
+        lambda o: o.dbgap_workspace.dbgap_participant_set
+    )
+    dbgap_consent_code = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_code)
+    dbgap_consent_abbreviation = Faker("word")
+    dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
+
+    class Params:
+        dbgap_workspace = None
 
     class Meta:
         model = models.dbGaPDataAccessRequest

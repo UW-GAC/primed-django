@@ -141,6 +141,15 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
             ps=self.dbgap_participant_set,
         )
 
+    def get_data_access_requests(self):
+        """Get a list of data access requests associated with this dbGaPWorkspace."""
+        return dbGaPDataAccessRequest.objects.filter(
+            dbgap_phs=self.dbgap_study_accession.dbgap_phs,
+            original_version=self.dbgap_version,
+            original_participant_set=self.dbgap_participant_set,
+            dbgap_consent_code=self.dbgap_consent_code,
+        )
+
 
 class dbGaPApplication(TimeStampedModel, models.Model):
     """A model to track dbGaP applications."""
@@ -430,6 +439,10 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
 
     def __str__(self):
         return "{}".format(self.dbgap_dar_id)
+
+    @property
+    def is_approved(self):
+        return self.dbgap_current_status == self.APPROVED
 
     def get_dbgap_workspace(self):
         """Get a dbGaPWorkspace associated with this data access request.
