@@ -22,6 +22,11 @@ data_access_request_patterns = (
             views.dbGaPDataAccessSnapshotCreate.as_view(),
             name="new",
         ),
+        path(
+            "<int:dbgap_data_access_snapshot_pk>/",
+            views.dbGaPDataAccessSnapshotDetail.as_view(),
+            name="detail",
+        ),
     ],
     "dbgap_data_access_snapshots",
 )
@@ -39,6 +44,7 @@ dbgap_application_patterns = (
     ],
     "dbgap_applications",
 )
+
 
 urlpatterns = [
     path("studies/", include(dbgap_study_accession_patterns)),

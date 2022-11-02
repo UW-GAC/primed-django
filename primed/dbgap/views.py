@@ -239,3 +239,42 @@ class dbGaPDataAccessSnapshotCreate(
         if "dbgap_application" not in kwargs:
             kwargs["dbgap_application"] = self.dbgap_application
         return super().get_context_data(*args, **kwargs)
+
+
+class dbGaPDataAccessSnapshotDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
+    """View to show details about a `dbGaPDataAccessSnapshot`."""
+
+    model = models.dbGaPDataAccessSnapshot
+    pk_url_kwarg = "dbgap_data_access_snapshot_pk"
+    context_table_name = "data_access_request_table"
+
+    def get_dbgap_application(self):
+        model = models.dbGaPApplication
+        try:
+            application = model.objects.get(
+                dbgap_project_id=self.kwargs.get("dbgap_project_id")
+            )
+        except model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
+            )
+        return application
+
+    def get_object(self, queryset=None):
+        # Get the dbGaP application using the URL parameter.
+        # self.dbgap_application = self.get_dbgap_application()
+        # return super().get_object(queryset=queryset)
+        self.dbgap_application = self.get_dbgap_application()
+        if not queryset:
+            queryset = self.model.objects
+        return super().get_object(
+            queryset=queryset.filter(dbgap_application=self.dbgap_application)
+        )
+
+    def get_table(self):
+        return tables.dbGaPDataAccessRequestTable(
+            self.object.dbgapdataaccessrequest_set.all()
+        )

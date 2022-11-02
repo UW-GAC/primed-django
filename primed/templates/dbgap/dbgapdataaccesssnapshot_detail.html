@@ -1,0 +1,22 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}DAR snapshot{% endblock %}
+
+
+{% block content %}
+
+<h1>DAR snapshot</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>dbGaP application: <a href="{{ object.dbgap_application.get_absolute_url }}">{{ object.dbgap_application }}</a></li>
+    <li>Date created: {{ object.created }}</li>
+  </ul>
+</div>
+
+<h2>Data access requests</h2>
+
+{% render_table data_access_request_table %}
+
+{% endblock content %}
