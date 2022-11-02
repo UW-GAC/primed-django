@@ -3,7 +3,10 @@
 from datetime import timedelta
 
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager.tests.factories import WorkspaceGroupAccessFactory
+from anvil_consortium_manager.tests.factories import (
+    WorkspaceAuthorizationDomainFactory,
+    WorkspaceGroupAccessFactory,
+)
 from django.test import TestCase
 from django.utils import timezone
 
@@ -291,8 +294,9 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
     def test_matching_workspace(self):
-        """Table works if there is a matching workspace."""
+        """Table works if there is a matching workspace without access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=workspace.dbgap_version,
@@ -304,7 +308,7 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         self.assertIn("square-fill", table.rows[0].get_cell_value("has_access"))
 
     def test_matching_workspace_with_access(self):
-        """Table works if there is a matching workspace."""
+        """Table works if there is a matching workspace with access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,

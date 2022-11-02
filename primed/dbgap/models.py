@@ -468,9 +468,11 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         return dbgap_workspace
 
     def has_access(self):
-        """Check if the dbGaPApplication associated with this DAR has access to the matching dbGaP workspace."""
-        # Check if there is a matching workspace.
+        """Check if the dbGaPApplication associated with this DAR has access to the matching dbGaP workspace.
+
+        For dbGaP workspaces, the dbGaPApplication anvil_group is considered to have access if it is in all auth
+        domains of the workspace, but the workspace does not need to be shared with it."""
         dbgap_workspace = self.get_dbgap_workspace()
-        return dbgap_workspace.workspace.has_access(
+        return dbgap_workspace.workspace.is_in_authorization_domain(
             self.dbgap_data_access_snapshot.dbgap_application.anvil_group
         )

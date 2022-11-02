@@ -7,6 +7,7 @@ import responses
 from anvil_consortium_manager.tests.factories import (
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
+    WorkspaceAuthorizationDomainFactory,
     WorkspaceFactory,
     WorkspaceGroupAccessFactory,
 )
@@ -1671,208 +1672,109 @@ class dbGaPDataAccessRequestTest(TestCase):
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
             data_access_request.has_access()
 
-    def test_has_access_match_no_access(self):
-        """has_access returns False when the managed group does not have access to the workspace for this DAR."""
-        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
-        factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__dbgap_phs=data_access_request.dbgap_phs,
-            dbgap_version=data_access_request.original_version,
-            dbgap_participant_set=data_access_request.original_participant_set,
-            dbgap_consent_code=data_access_request.dbgap_consent_code,
-        )
-        self.assertFalse(data_access_request.has_access())
-
-    def test_has_access_match_access(self):
-        """has_access returns True when the managed group has access to the workspace for this DAR."""
-        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__dbgap_phs=data_access_request.dbgap_phs,
-            dbgap_version=data_access_request.original_version,
-            dbgap_participant_set=data_access_request.original_participant_set,
-            dbgap_consent_code=data_access_request.dbgap_consent_code,
-        )
-        WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+    def test_has_access_match_no_auth_domain(self):
+        """has_access returns True when there is no auth domain."""
+        # Create a workspace and no auth domain
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        data_access_request = (
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+                dbgap_workspace=workspace
+            )
         )
         self.assertTrue(data_access_request.has_access())
 
-    def test_has_access_shared_in_auth_domain(self):
-        """Returns True if the workspace is shared and the group is in the auth domain."""
-        # Create a workspace with an auth domain.
-        auth_domain = ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain)
-        # Create a DAR.
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
+    def test_has_access_match_not_in_auth_domain_not_shared(self):
+        """has_access returns False when the anvil group is not in auth domain and workspace is not shared."""
+        # Create a workspace and an auth domain
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
+        # Create a matching dar.
+        data_access_request = (
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+                dbgap_workspace=workspace
+            )
         )
-        # Share the workspace with the group.
-        WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        # Add the group to the auth domain.
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        self.assertTrue(dar.has_access())
+        # Do not add the anvil group to the workspace auth domain.
+        self.assertFalse(data_access_request.has_access())
 
-    def test_has_access_shared_not_in_auth_domain(self):
-        """Returns False if the workspace is shared but the group is not in the auth domain."""
-        # Create a workspace with an auth domain.
-        auth_domain = ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain)
-        # Create a DAR.
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
+    def test_has_access_match_in_auth_domain_not_shared(self):
+        """has_access returns True when the anvil group is in auth domain but workspace is not shared."""
+        # Create a workspace and an auth domain.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(
+            workspace=workspace.workspace
         )
-        # Share the workspace with the group.
-        WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+        # Create a matching DAR
+        data_access_request = (
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+                dbgap_workspace=workspace
+            )
         )
-        # Do not add the group to the auth domain.
-        self.assertFalse(dar.has_access())
+        # Add the AnVIL group to the workspace authorization domain
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domain.group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+        )
+        self.assertTrue(data_access_request.has_access())
 
-    def test_has_access_in_auth_domain_not_shared(self):
-        """Returns False if the workspace is not shared but the group is in the auth domain."""
-        # Create a workspace with an auth domain.
-        auth_domain = ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain)
-        # Create a DAR.
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
+    def test_has_access_match_two_auth_domains_in_both(self):
+        """has_access returns True when the anvil group is in both auth domains."""
+        # Create a workspace and a auth domains.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        auth_domains = WorkspaceAuthorizationDomainFactory.create_batch(
+            2, workspace=workspace.workspace
         )
-        # Do not share the workspace with the group.
-        # Add the group to the auth domain.
+        # Create a matching DAR
+        data_access_request = (
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+                dbgap_workspace=workspace
+            )
+        )
+        # Add the AnVIL group to the workspace authorization domains
         GroupGroupMembershipFactory.create(
-            parent_group=auth_domain,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            parent_group=auth_domains[0].group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
         )
-        self.assertFalse(dar.has_access())
+        GroupGroupMembershipFactory.create(
+            parent_group=auth_domains[1].group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+        )
+        self.assertTrue(data_access_request.has_access())
 
-    def test_has_access_shared_in_auth_domain_indirectly(self):
-        """Returns True if the workspace is shared and the group is indirectly in the auth domain."""
-        # Create a workspace with an auth domain.
-        auth_domain = ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain)
-        # Create a DAR.
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
+    def test_has_access_match_two_auth_domains_in_one(self):
+        """has_access returns false when the anvil group is in only one of the auth domains."""
+        # Create a workspace and a auth domains.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        auth_domains = WorkspaceAuthorizationDomainFactory.create_batch(
+            2, workspace=workspace.workspace
         )
-        # Share the workspace with the group.
-        WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+        # Create a matching DAR
+        data_access_request = (
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+                dbgap_workspace=workspace
+            )
         )
-        # Create a parent group
-        parent_group = ManagedGroupFactory.create()
-        # Add the group to the parent group.
+        # Add the AnVIL group to the workspace authorization domains
         GroupGroupMembershipFactory.create(
-            parent_group=parent_group,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            parent_group=auth_domains[0].group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
         )
-        # Add the parent group to the auth domain.
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain, child_group=parent_group
-        )
-        self.assertTrue(dar.has_access())
+        self.assertFalse(data_access_request.has_access())
 
-    def test_has_access_shared_two_auth_domains(self):
-        """Returns True if the workspace is shared and the group is in both auth domains."""
-        # Create a workspace with an auth domain.
-        auth_domain_1 = ManagedGroupFactory.create()
-        auth_domain_2 = ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain_1)
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain_2)
-        # Create a DAR.
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
+    def test_has_access_match_not_in_auth_domain_shared(self):
+        """has_access returns False when the anvil group is not in auth domain but workspace is shared."""
+        # Create a workspace and an auth domain.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
+        # Create a matching DAR
+        data_access_request = (
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+                dbgap_workspace=workspace
+            )
         )
-        # Share the workspace with the group.
+        # Share the workspace with the group but do not add to the auth domain.
         WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            workspace=workspace.workspace,
+            group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
         )
-        # Add the group to the auth domains.
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain_1,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain_2,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        self.assertTrue(dar.has_access())
-
-    def test_has_access_shared_two_auth_domains_only_in_one(self):
-        """Returns False if the workspace is shared and the group is in only one of the two auth domains."""
-        # Create a workspace with an auth domain.
-        auth_domain_1 = ManagedGroupFactory.create()
-        auth_domain_2 = ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain_1)
-        dbgap_workspace.workspace.authorization_domains.add(auth_domain_2)
-        # Create a DAR.
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
-        )
-        # Share the workspace with the group.
-        WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        # Add the group to only one of the auth domains.
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain_2,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        self.assertFalse(dar.has_access())
-
-    def test_has_access_indirectly_shared(self):
-        """Returns True if the workspace is indirectly shared with the dbGaP group."""
-        # Create a workspace and matching DAR.
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=dbgap_workspace.dbgap_study_accession.dbgap_phs,
-            original_version=dbgap_workspace.dbgap_version,
-            original_participant_set=dbgap_workspace.dbgap_participant_set,
-            dbgap_consent_code=dbgap_workspace.dbgap_consent_code,
-        )
-        # Create a parent group
-        parent_group = ManagedGroupFactory.create()
-        # Share the workspace with the parent group.
-        WorkspaceGroupAccessFactory.create(
-            workspace=dbgap_workspace.workspace,
-            group=parent_group,
-        )
-        # Add the group to the parent group.
-        GroupGroupMembershipFactory.create(
-            parent_group=parent_group,
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
-        )
-        self.assertTrue(dar.has_access())
+        self.assertFalse(data_access_request.has_access())
