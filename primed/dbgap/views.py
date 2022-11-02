@@ -74,7 +74,8 @@ class dbGaPApplicationDetail(
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
-    context_table_name = "data_access_request_table"
+    table_class = tables.dbGaPDataAccessSnapshotTable
+    context_table_name = "data_access_snapshot_table"
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
@@ -99,12 +100,10 @@ class dbGaPApplicationDetail(
         except models.dbGaPDataAccessSnapshot.DoesNotExist:
             return None
 
-    def get_table(self):
-        if self.latest_snapshot:
-            qs = self.latest_snapshot.dbgapdataaccessrequest_set.all()
-        else:
-            qs = models.dbGaPDataAccessRequest.objects.none()
-        return tables.dbGaPDataAccessRequestTable(qs)
+    def get_table_data(self):
+        return models.dbGaPDataAccessSnapshot.objects.filter(
+            dbgap_application=self.object
+        )
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.

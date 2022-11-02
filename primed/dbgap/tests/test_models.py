@@ -528,6 +528,11 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         instance = factories.dbGaPDataAccessSnapshotFactory.create()
         self.assertIsInstance(instance.__str__(), str)
 
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_clean_invalid_json(self):
         """Creation using the model constructor and .save() works."""
         dbgap_application = factories.dbGaPApplicationFactory.create()

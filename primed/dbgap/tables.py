@@ -88,6 +88,32 @@ class dbGaPApplicationTable(tables.Table):
         )
 
 
+class dbGaPDataAccessSnapshotTable(tables.Table):
+    """Class to render a dbGaPDataAccessSnapshot table."""
+
+    class Meta:
+        model = models.dbGaPDataAccessSnapshot
+        fields = (
+            "pk",
+            "created",
+        )
+
+    pk = tables.Column(linkify=True, verbose_name="Details", orderable=False)
+    number_approved_dars = tables.columns.Column(
+        verbose_name="Number of approved DARs",
+        orderable=False,
+        empty_values=(False,),
+        accessor="dbgapdataaccessrequest_set__exists",
+    )
+
+    def render_pk(self, record):
+        return "See details"
+
+    def render_number_approved_dars(self, value, record):
+        n_dars = record.dbgapdataaccessrequest_set.approved().count()
+        return n_dars
+
+
 class dbGaPDataAccessRequestTable(tables.Table):
 
     workspace = tables.columns.Column(

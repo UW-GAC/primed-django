@@ -215,6 +215,62 @@ class dbGaPApplicationTableTest(TestCase):
         )
 
 
+class dbGaPDataAccessSnapshotTableTest(TestCase):
+    model = models.dbGaPDataAccessSnapshot
+    model_factory = factories.dbGaPDataAccessSnapshotFactory
+    table_class = tables.dbGaPDataAccessSnapshotTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+    def test_number_approved_dars(self):
+        snapshot = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        other_snapshot = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=other_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 1)
+        self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), 2)
+
+
 class dbGaPDataAccessRequestTableTest(TestCase):
     model = models.dbGaPDataAccessRequest
     model_factory = factories.dbGaPDataAccessRequestFactory
