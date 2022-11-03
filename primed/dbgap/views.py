@@ -17,7 +17,7 @@ from django.http import Http404
 from django.views.generic import CreateView, DetailView, FormView
 from django_tables2 import SingleTableMixin, SingleTableView
 
-from . import forms, models, tables
+from . import audit, forms, models, tables
 
 logger = logging.getLogger(__name__)
 
@@ -277,3 +277,43 @@ class dbGaPDataAccessSnapshotDetail(
         return tables.dbGaPDataAccessRequestTable(
             self.object.dbgapdataaccessrequest_set.all()
         )
+
+
+class dbGaPDataAccessSnapshotAudit(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show audit results for `dbGaPDataAccessSnapshot`."""
+
+    model = models.dbGaPDataAccessSnapshot
+    pk_url_kwarg = "dbgap_data_access_snapshot_pk"
+    template_name = "dbgap/dbgapdataaccesssnapshot_audit.html"
+
+    def get_dbgap_application(self):
+        model = models.dbGaPApplication
+        try:
+            application = model.objects.get(
+                dbgap_project_id=self.kwargs.get("dbgap_project_id")
+            )
+        except model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
+            )
+        return application
+
+    def get_object(self, queryset=None):
+        # Get the dbGaP application using the URL parameter.
+        # self.dbgap_application = self.get_dbgap_application()
+        # return super().get_object(queryset=queryset)
+        self.dbgap_application = self.get_dbgap_application()
+        if not queryset:
+            queryset = self.model.objects
+        return super().get_object(
+            queryset=queryset.filter(dbgap_application=self.dbgap_application)
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        data_access_audit = audit.dbGaPDataAccessSnapshotAudit(self.object)
+        data_access_audit.run_audit()
+        context["data_access_audit"] = data_access_audit
+        return context

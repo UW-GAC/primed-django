@@ -33,7 +33,7 @@ from primed.primed_anvil.tests.factories import (
 )
 from primed.users.tests.factories import UserFactory
 
-from .. import constants, forms, models, tables, views
+from .. import audit, constants, forms, models, tables, views
 from . import factories
 
 fake = Faker()
@@ -2072,3 +2072,139 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         )
         self.assertIn(dars[0], response.context_data["data_access_request_table"].data)
         self.assertIn(dars[1], response.context_data["data_access_request_table"].data)
+
+
+class dbGaPDataAccessSnapshotAuditTest(TestCase):
+    """Tests for the dbGaPDataAccessRequestAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.application = factories.dbGaPApplicationFactory.create()
+        self.snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.application
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        responses.stop()
+        responses.reset()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "dbgap:dbgap_applications:dbgap_data_access_snapshots:audit",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPDataAccessSnapshotAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL)
+            + "?next="
+            + self.get_url(self.application.dbgap_project_id, self.snapshot.pk),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        request = self.factory.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        request.user = self.user
+        response = self.get_view()(
+            request,
+            dbgap_project_id=self.application.dbgap_project_id,
+            dbgap_data_access_snapshot_pk=self.snapshot.pk,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                dbgap_project_id=self.application.dbgap_project_id,
+                dbgap_data_access_snapshot_pk=self.snapshot.pk,
+            )
+
+    def test_invalid_dbgap_application_pk(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        request = self.factory.get(
+            self.get_url(self.application.dbgap_project_id + 1, self.snapshot.pk)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                dbgap_project_id=self.application.dbgap_project_id + 1,
+                dbgap_data_access_snapshot_pk=self.snapshot.pk,
+            )
+
+    def test_invalid_dbgap_data_access_snapshot_pk(self):
+        """Raises a 404 error with an invalid object dbgap_data_access_snapshot_pk."""
+        request = self.factory.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk + 1)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                dbgap_project_id=self.application.dbgap_project_id,
+                dbgap_data_access_snapshot_pk=self.snapshot.pk + 1,
+            )
+
+    def test_mismatch_application_snapshot(self):
+        """Raises a 404 error when dbgap application and snapshot pk don't match."""
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        request = self.factory.get(
+            self.get_url(self.application.dbgap_project_id, other_snapshot.pk)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                dbgap_project_id=self.application.dbgap_project_id,
+                dbgap_data_access_snapshot_pk=other_snapshot.pk,
+            )
+
+    def test_context_data_access_audit(self):
+        """The data_access_audit exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertIn("data_access_audit", response.context_data)
+        self.assertIsInstance(
+            response.context_data["data_access_audit"],
+            audit.dbGaPDataAccessSnapshotAudit,
+        )
+        self.assertTrue(response.context_data["data_access_audit"].completed)
+        self.assertEqual(
+            response.context_data["data_access_audit"].snapshot, self.snapshot
+        )
+
+    def test_context_data_access_audit_contents(self):
+        pass

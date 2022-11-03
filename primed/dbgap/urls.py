@@ -27,6 +27,11 @@ data_access_request_patterns = (
             views.dbGaPDataAccessSnapshotDetail.as_view(),
             name="detail",
         ),
+        path(
+            "<int:dbgap_data_access_snapshot_pk>/audit/",
+            views.dbGaPDataAccessSnapshotAudit.as_view(),
+            name="audit",
+        ),
     ],
     "dbgap_data_access_snapshots",
 )
