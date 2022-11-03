@@ -58,14 +58,12 @@ class dbGaPDataAccessSnapshotAudit:
         self.completed = False
         # Set up lists to hold audit results.
         self.verified = None
-        self.grant_access = None
-        self.remove_access = None
+        self.needs_action = None
         self.errors = None
 
     def run_audit(self):
         self.verified = []
-        self.grant_access = []
-        self.remove_access = []
+        self.needs_action = []
         self.errors = []
 
         # Get a list of all dbGaP workspaces.
@@ -116,7 +114,7 @@ class dbGaPDataAccessSnapshotAudit:
             # Check why we should grant access.
             # Do we need to differentiate between NEW and UPDATED dars? I don't think so.
             if dbgap_workspace.created > dar.dbgap_data_access_snapshot.created:
-                self.grant_access.append(
+                self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
                         data_access_request=dar,
@@ -124,7 +122,7 @@ class dbGaPDataAccessSnapshotAudit:
                     )
                 )
             else:
-                self.grant_access.append(
+                self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
                         data_access_request=dar,
@@ -145,7 +143,7 @@ class dbGaPDataAccessSnapshotAudit:
                 .exists()
             )
             if previously_approved:
-                self.remove_access.append(
+                self.needs_action.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
                         data_access_request=dar,

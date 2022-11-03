@@ -63,8 +63,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 0)
 
     def test_snapshot_has_no_dars(self):
@@ -77,8 +76,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dbgap_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 1)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 0)
         record = dbgap_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
@@ -103,8 +101,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 1)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 0)
         record = dbgap_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
@@ -139,8 +136,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dbgap_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 2)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 0)
         record = dbgap_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
@@ -165,8 +161,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 1)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 0)
         record = dbgap_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
@@ -192,10 +187,9 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 1)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
         self.assertEqual(len(dbgap_audit.errors), 0)
-        record = dbgap_audit.grant_access[0]
+        record = dbgap_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.workspace, dbgap_workspace)
         self.assertEqual(record.data_access_request, dar)
@@ -219,10 +213,9 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 1)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
         self.assertEqual(len(dbgap_audit.errors), 0)
-        record = dbgap_audit.grant_access[0]
+        record = dbgap_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.workspace, dbgap_workspace)
         self.assertEqual(record.data_access_request, dar)
@@ -251,10 +244,9 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 1)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
         self.assertEqual(len(dbgap_audit.errors), 0)
-        record = dbgap_audit.grant_access[0]
+        record = dbgap_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.workspace, dbgap_workspace)
         self.assertEqual(record.data_access_request, dar)
@@ -287,10 +279,9 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
         self.assertEqual(len(dbgap_audit.errors), 0)
-        record = dbgap_audit.remove_access[0]
+        record = dbgap_audit.needs_action[0]
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.workspace, dbgap_workspace)
         self.assertEqual(record.data_access_request, dar)
@@ -324,8 +315,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 1)
         record = dbgap_audit.errors[0]
         self.assertIsInstance(record, audit.RemoveAccess)
@@ -349,8 +339,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 1)
         record = dbgap_audit.errors[0]
         self.assertIsInstance(record, audit.RemoveAccess)
@@ -377,8 +366,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         dbgap_audit = audit.dbGaPDataAccessSnapshotAudit(dar.dbgap_data_access_snapshot)
         dbgap_audit.run_audit()
         self.assertEqual(len(dbgap_audit.verified), 1)
-        self.assertEqual(len(dbgap_audit.grant_access), 0)
-        self.assertEqual(len(dbgap_audit.remove_access), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
         self.assertEqual(len(dbgap_audit.errors), 0)
         record = dbgap_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
