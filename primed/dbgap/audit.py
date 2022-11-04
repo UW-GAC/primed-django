@@ -10,38 +10,51 @@ from .models import dbGaPDataAccessRequest, dbGaPWorkspace
 @dataclass
 class AuditResult:
     workspace: dbGaPWorkspace
+    note: str
+    data_access_request: dbGaPDataAccessRequest = None
+
+    def get_action(self):
+        return None
+
+    def get_table_dictionary(self):
+        row = {
+            "workspace": self.workspace,
+            "data_access_request": self.data_access_request,
+            "note": self.note,
+            "action": self.get_action(),
+        }
+        return row
 
 
 @dataclass
 class VerifiedAccess(AuditResult):
-    data_access_request: dbGaPDataAccessRequest
+    pass
 
 
 @dataclass
 class VerifiedNoAccess(AuditResult):
-    note: str
-    data_access_request: dbGaPDataAccessRequest = None
+    pass
 
 
 @dataclass
 class GrantAccess(AuditResult):
-    data_access_request: dbGaPDataAccessRequest
-    note: str
+    pass
 
 
 @dataclass
 class RemoveAccess(AuditResult):
-    data_access_request: dbGaPDataAccessRequest
-    note: str
+    pass
 
 
 @dataclass
 class Error(AuditResult):
-    note: str
-    data_access_request: dbGaPDataAccessRequest = None
+    pass
 
 
 class dbGaPDataAccessSnapshotAudit:
+
+    # Access verified.
+    APPROVED_DAR = "Approved DAR."
 
     # Allowed reasons for no access.
     NO_DAR = "No matching DAR."
@@ -110,7 +123,11 @@ class dbGaPDataAccessSnapshotAudit:
         if dar.is_approved and in_auth_domain:
             # Verified access!
             self.verified.append(
-                VerifiedAccess(workspace=dbgap_workspace, data_access_request=dar)
+                VerifiedAccess(
+                    workspace=dbgap_workspace,
+                    data_access_request=dar,
+                    note=self.APPROVED_DAR,
+                )
             )
         elif dar.is_approved and not in_auth_domain:
             # Check why we should grant access.
@@ -173,33 +190,19 @@ class dbGaPDataAccessSnapshotAudit:
             )
 
     def get_verified_table(self):
-        data = [
-            {"workspace": x.workspace, "data_access_request": x.data_access_request}
-            for x in self.verified
-        ]
-        return dbGaPDataAccessSnapshotAuditTable(data)
+        return dbGaPDataAccessSnapshotAuditTable(
+            [x.get_table_dictionary() for x in self.verified]
+        )
 
     def get_needs_action_table(self):
-        data = [
-            {
-                "workspace": x.workspace,
-                "data_access_request": x.data_access_request,
-                "note": x.note,
-            }
-            for x in self.needs_action
-        ]
-        return dbGaPDataAccessSnapshotAuditTable(data)
+        return dbGaPDataAccessSnapshotAuditTable(
+            [x.get_table_dictionary() for x in self.needs_action]
+        )
 
     def get_errors_table(self):
-        data = [
-            {
-                "workspace": x.workspace,
-                "data_access_request": x.data_access_request,
-                "note": x.note,
-            }
-            for x in self.errors
-        ]
-        return dbGaPDataAccessSnapshotAuditTable(data)
+        return dbGaPDataAccessSnapshotAuditTable(
+            [x.get_table_dictionary() for x in self.errors]
+        )
 
 
 class dbGaPDataAccessSnapshotAuditTable(tables.Table):

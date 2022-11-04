@@ -2236,7 +2236,10 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
-        self.assertIsNone(table.rows[0].get_cell_value("note"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPDataAccessSnapshotAudit.APPROVED_DAR,
+        )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
     def test_context_verified_table_no_access(self):
@@ -2257,7 +2260,10 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
-        self.assertIsNone(table.rows[0].get_cell_value("note"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPDataAccessSnapshotAudit.NO_DAR,
+        )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
     def test_context_needs_action_table_grant(self):

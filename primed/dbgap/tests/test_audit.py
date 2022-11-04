@@ -17,7 +17,9 @@ class AuditResultTest(TestCase):
     def test_verified_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create()
-        audit.VerifiedAccess(workspace=dbgap_workspace, data_access_request=dar)
+        audit.VerifiedAccess(
+            workspace=dbgap_workspace, data_access_request=dar, note="foo"
+        )
 
     def test_verified_no_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
