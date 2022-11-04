@@ -315,5 +315,8 @@ class dbGaPDataAccessSnapshotAudit(AnVILConsortiumManagerViewRequired, DetailVie
         # Run the audit.
         data_access_audit = audit.dbGaPDataAccessSnapshotAudit(self.object)
         data_access_audit.run_audit()
+        context["verified_table"] = data_access_audit.get_verified_table()
+        context["errors_table"] = data_access_audit.get_errors_table()
+        context["needs_action_table"] = data_access_audit.get_needs_action_table()
         context["data_access_audit"] = data_access_audit
         return context

@@ -1,12 +1,12 @@
 {% extends "anvil_consortium_manager/base.html" %}
 {% load django_tables2 %}
 
-{% block title %}DAR snapshot{% endblock %}
+{% block title %}DAR snapshot audit{% endblock %}
 
 
 {% block content %}
 
-<h1>DAR snapshot</h1>
+<h1>DAR snapshot audit</h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
@@ -17,16 +17,73 @@
 
 <h2>Audit results</h2>
 
-<h3>Verified</h3>
 
-{{ data_access_audit.verified }}
+<!-- Verified -->
+<div class="my-3">
+  <div class="accordion" id="accordionVerified">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingVerifiedOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVerifiedOne" aria-expanded="falase" aria-controls="collapseVerifiedOne">
+          <span class="fa-solid fa-circle-check mx-2"></span>
+          Verified
+          <span class="badge mx-2 {% if verified_table.rows|length %}bg-success{% else %}bg-secondary{% endif %} pill"> {{ verified_table.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseVerifiedOne" class="accordion-collapse collapse" aria-labelledby="headingVerifiedOne" data-bs-parent="#accordionVerified">
+        <div class="accordion-body">
 
-<h3>Needs action</h3>
+          {% render_table verified_table %}
 
-{{ data_access_audit.needs_action}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<h3>Errors</h3>
 
-{{ data_access_audit.errors }}
+<!-- Action needed -->
+<div class="my-3">
+  <div class="accordion" id="accordionNeedsAction">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingNeedsActionOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNeedsActionOne" aria-expanded="falase" aria-controls="collapseNeedsActionOne">
+          <span class="fa-solid fa-circle-check mx-2"></span>
+          Needs action
+          <span class="badge mx-2 {% if needs_action_table.rows|length %}bg-warning{% else %}bg-secondary{% endif %} pill"> {{ needs_action_table.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseNeedsActionOne" class="accordion-collapse collapse" aria-labelledby="headingNeedsActionOne" data-bs-parent="#accordionNeedsAction">
+        <div class="accordion-body">
+
+          {% render_table needs_action_table %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Errors -->
+<div class="my-3">
+  <div class="accordion" id="accordionErrors">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingErrorsOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseErrorsOne" aria-expanded="falase" aria-controls="collapseErrorsOne">
+          <span class="fa-solid fa-circle-check mx-2"></span>
+          Errors
+          <span class="badge mx-2 {% if not needs_action_table.rows|length %}bg-danger{% else %}bg-secondary{% endif %} pill"> {{ errors_table.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseErrorsOne" class="accordion-collapse collapse" aria-labelledby="headingErrorsOne" data-bs-parent="#accordionErrors">
+        <div class="accordion-body">
+
+          {% render_table errors_table %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock content %}

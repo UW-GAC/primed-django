@@ -375,3 +375,56 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         self.assertEqual(
             record.note, audit.dbGaPDataAccessSnapshotAudit.DAR_NOT_APPROVED
         )
+
+
+class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
+    """Tests for the `dbGaPDataAccessSnapshotAuditTableTest` table."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = audit.dbGaPDataAccessSnapshotAuditTable([])
+        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_rowt(self):
+        """Table works with one row."""
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        data = [
+            {
+                "workspace": dbgap_workspace,
+                "data_access_request": factories.dbGaPDataAccessRequestForWorkspaceFactory(
+                    dbgap_workspace=dbgap_workspace
+                ),
+                "note": "a note",
+                "action": "",
+            }
+        ]
+        table = audit.dbGaPDataAccessSnapshotAuditTable(data)
+        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        dbgap_workspace_1 = factories.dbGaPWorkspaceFactory.create()
+        dbgap_workspace_2 = factories.dbGaPWorkspaceFactory.create()
+        data = [
+            {
+                "workspace": dbgap_workspace_1,
+                "data_access_request": factories.dbGaPDataAccessRequestForWorkspaceFactory(
+                    dbgap_workspace=dbgap_workspace_1
+                ),
+                "note": "a note",
+                "action": "",
+            },
+            {
+                "workspace": dbgap_workspace_2,
+                "data_access_request": factories.dbGaPDataAccessRequestForWorkspaceFactory(
+                    dbgap_workspace=dbgap_workspace_2
+                ),
+                "note": "a note",
+                "action": "",
+            },
+        ]
+        table = audit.dbGaPDataAccessSnapshotAuditTable(data)
+        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        self.assertEqual(len(table.rows), 2)

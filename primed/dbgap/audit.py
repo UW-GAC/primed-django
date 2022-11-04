@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+import django_tables2 as tables
+
 # from . import models
 from .models import dbGaPDataAccessRequest, dbGaPWorkspace
 
@@ -169,3 +171,41 @@ class dbGaPDataAccessSnapshotAudit:
                     note=self.DAR_NOT_APPROVED,
                 )
             )
+
+    def get_verified_table(self):
+        data = [
+            {"workspace": x.workspace, "data_access_request": x.data_access_request}
+            for x in self.verified
+        ]
+        return dbGaPDataAccessSnapshotAuditTable(data)
+
+    def get_needs_action_table(self):
+        data = [
+            {
+                "workspace": x.workspace,
+                "data_access_request": x.data_access_request,
+                "note": x.note,
+            }
+            for x in self.needs_action
+        ]
+        return dbGaPDataAccessSnapshotAuditTable(data)
+
+    def get_errors_table(self):
+        data = [
+            {
+                "workspace": x.workspace,
+                "data_access_request": x.data_access_request,
+                "note": x.note,
+            }
+            for x in self.errors
+        ]
+        return dbGaPDataAccessSnapshotAuditTable(data)
+
+
+class dbGaPDataAccessSnapshotAuditTable(tables.Table):
+    """A table to show results from a dbGaPDataAccessSnapshotAudit."""
+
+    workspace = tables.Column(linkify=True)
+    data_access_request = tables.Column()
+    note = tables.Column()
+    action = tables.Column()
