@@ -72,7 +72,7 @@
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseErrorsOne" aria-expanded="falase" aria-controls="collapseErrorsOne">
           <span class="fa-solid fa-circle-check mx-2"></span>
           Errors
-          <span class="badge mx-2 {% if not needs_action_table.rows|length %}bg-danger{% else %}bg-secondary{% endif %} pill"> {{ errors_table.rows|length }}</span>
+          <span class="badge mx-2 {% if errors_table.rows|length %}bg-danger{% else %}bg-secondary{% endif %} pill"> {{ errors_table.rows|length }}</span>
         </button>
       </h2>
       <div id="collapseErrorsOne" class="accordion-collapse collapse" aria-labelledby="headingErrorsOne" data-bs-parent="#accordionErrors">
