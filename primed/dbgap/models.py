@@ -106,6 +106,10 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         help_text="""The full data use limitations for this workspace."""
     )
 
+    acknowledgments = models.TextField(
+        help_text="Acknowledgments associated with data in this workspace."
+    )
+
     history = HistoricalRecords()
 
     class Meta:

@@ -540,6 +540,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
                 "workspacedata-0-dbgap_consent_code": 4,
                 "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-data_use_modifiers": [
                     data_use_modifier_1.pk,
@@ -562,6 +563,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.dbgap_consent_abbreviation, "GRU-TEST")
         self.assertEqual(new_workspace_data.dbgap_consent_code, 4)
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
+        self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
@@ -669,6 +671,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-dbgap_consent_code": 4,
                 "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
                 "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-data_use_modifiers": [
                     data_use_modifier_1.pk,
@@ -691,6 +694,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.dbgap_consent_abbreviation, "GRU-TEST")
         self.assertEqual(new_workspace_data.dbgap_consent_code, 4)
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
+        self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())

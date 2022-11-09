@@ -50,6 +50,7 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DataUseOntologyModelFactory
     dbgap_consent_code = Faker("random_int")
     dbgap_consent_abbreviation = Faker("word")
     data_use_limitations = Faker("paragraph")
+    acknowledgments = Faker("paragraph")
 
     class Meta:
         model = models.dbGaPWorkspace

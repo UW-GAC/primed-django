@@ -129,6 +129,7 @@ class dbGaPWorkspaceTest(TestCase):
             data_use_limitations="test limitations",
             dbgap_consent_code=1,
             dbgap_consent_abbreviation="GRU-NPU",
+            acknowledgments="test acknowledgments",
             data_use_permission=data_use_permission,
         )
         instance.save()
