@@ -388,7 +388,7 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
         self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
         self.assertEqual(len(table.rows), 0)
 
-    def test_one_rowt(self):
+    def test_one_row(self):
         """Table works with one row."""
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         data = [
@@ -399,6 +399,7 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
                 ),
                 "note": "a note",
                 "action": "",
+                "action_url": "",
             }
         ]
         table = audit.dbGaPDataAccessSnapshotAuditTable(data)
@@ -417,6 +418,7 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
                 ),
                 "note": "a note",
                 "action": "",
+                "action_url": "",
             },
             {
                 "workspace": dbgap_workspace_2,
@@ -425,8 +427,29 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
                 ),
                 "note": "a note",
                 "action": "",
+                "action_url": "",
             },
         ]
         table = audit.dbGaPDataAccessSnapshotAuditTable(data)
         self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
         self.assertEqual(len(table.rows), 2)
+
+    def test_render_action(self):
+        """Render action works as expected for grant access types."""
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        data = [
+            {
+                "workspace": dbgap_workspace,
+                "data_access_request": factories.dbGaPDataAccessRequestForWorkspaceFactory(
+                    dbgap_workspace=dbgap_workspace
+                ),
+                "note": "a note",
+                "action": "Grant",
+                "action_url": "foo",
+            }
+        ]
+        table = audit.dbGaPDataAccessSnapshotAuditTable(data)
+        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn("foo", table.rows[0].get_cell("action"))
+        self.assertIn("Grant", table.rows[0].get_cell("action"))

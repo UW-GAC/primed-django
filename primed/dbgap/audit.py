@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
 import django_tables2 as tables
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 # from . import models
 from .models import dbGaPDataAccessRequest, dbGaPWorkspace
@@ -13,6 +15,9 @@ class AuditResult:
     note: str
     data_access_request: dbGaPDataAccessRequest = None
 
+    def get_action_url(self):
+        return None
+
     def get_action(self):
         return None
 
@@ -22,6 +27,7 @@ class AuditResult:
             "data_access_request": self.data_access_request,
             "note": self.note,
             "action": self.get_action(),
+            "action_url": self.get_action_url(),
         }
         return row
 
@@ -38,12 +44,32 @@ class VerifiedNoAccess(AuditResult):
 
 @dataclass
 class GrantAccess(AuditResult):
-    pass
+    def get_action_url(self):
+        return reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            args=[
+                self.workspace.workspace.authorization_domains.first(),
+                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            ],
+        )
+
+    def get_action(self):
+        return "Grant access"
 
 
 @dataclass
 class RemoveAccess(AuditResult):
-    pass
+    def get_action(self):
+        return "Remove access"
+
+    def get_action_url(self):
+        return reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            args=[
+                self.workspace.workspace.authorization_domains.first(),
+                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            ],
+        )
 
 
 @dataclass
@@ -212,3 +238,10 @@ class dbGaPDataAccessSnapshotAuditTable(tables.Table):
     data_access_request = tables.Column()
     note = tables.Column()
     action = tables.Column()
+
+    def render_action(self, record, value):
+        return mark_safe(
+            """<a href="{}" class="btn btn-primary">{}</a>""".format(
+                record["action_url"], value
+            )
+        )

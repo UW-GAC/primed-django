@@ -2293,7 +2293,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPDataAccessSnapshotAudit.NEW_APPROVED_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
     def test_context_needs_action_table_remove(self):
         """needs_action_table shows a record when audit finds that access needs to be removed."""
@@ -2337,7 +2337,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPDataAccessSnapshotAudit.PREVIOUS_APPROVAL,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
     def test_context_error_table_has_access(self):
         """needs_action_table shows a record when audit finds that access needs to be removed."""
@@ -2372,4 +2372,4 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPDataAccessSnapshotAudit.ERROR_HAS_ACCESS,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
