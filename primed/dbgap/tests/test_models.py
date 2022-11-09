@@ -9,7 +9,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceAuthorizationDomainFactory,
     WorkspaceFactory,
-    WorkspaceGroupAccessFactory,
+    WorkspaceGroupSharingFactory,
 )
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
@@ -1773,7 +1773,7 @@ class dbGaPDataAccessRequestTest(TestCase):
             )
         )
         # Share the workspace with the group but do not add to the auth domain.
-        WorkspaceGroupAccessFactory.create(
+        WorkspaceGroupSharingFactory.create(
             workspace=workspace.workspace,
             group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
         )

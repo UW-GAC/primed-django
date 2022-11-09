@@ -5,7 +5,7 @@ from datetime import timedelta
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.tests.factories import (
     WorkspaceAuthorizationDomainFactory,
-    WorkspaceGroupAccessFactory,
+    WorkspaceGroupSharingFactory,
 )
 from django.test import TestCase
 from django.utils import timezone
@@ -316,7 +316,7 @@ class dbGaPDataAccessRequestTableTest(TestCase):
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
-        WorkspaceGroupAccessFactory.create(
+        WorkspaceGroupSharingFactory.create(
             workspace=workspace.workspace,
             group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
         )
