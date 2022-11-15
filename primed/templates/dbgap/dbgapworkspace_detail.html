@@ -4,7 +4,12 @@
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
-    <li>Study: <a href="{{ object.dbgapworkspace.study.get_absolute_url }}">{{ object.dbgapworkspace.study }}</a></li>
+    <li>
+      Studies:
+      {% for study in object.dbgapworkspace.dbgap_study_accession.studies.all %}
+      <a href="{{ study.get_absolute_url }}">{{ study }}</a>{% if not forloop.last %} , {% endif %}
+      {% endfor %}
+    </li>
     <li>dbGaP accession: {{ object.dbgapworkspace.get_dbgap_accession }}</li>
     <li>dbGaP consent abbreviation: {{ object.dbgapworkspace.dbgap_consent_abbreviation }}</li>
     <li>dbGaP consent code: {{ object.dbgapworkspace.dbgap_consent_code }}</li>

@@ -2,7 +2,14 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from factory import Dict, Faker, LazyAttribute, SelfAttribute, SubFactory
+from factory import (
+    Dict,
+    Faker,
+    LazyAttribute,
+    SelfAttribute,
+    SubFactory,
+    post_generation,
+)
 from factory.django import DjangoModelFactory
 
 from primed.primed_anvil.tests.factories import (
@@ -33,8 +40,22 @@ class TimeStampedModelFactory(DjangoModelFactory):
 class dbGaPStudyAccessionFactory(DjangoModelFactory):
     """A factory for the dbGaPStudy model."""
 
-    study = SubFactory(StudyFactory)
     dbgap_phs = Faker("random_int")
+
+    @post_generation
+    def studies(self, create, extracted, **kwargs):
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        if extracted:
+            # A list of groups were passed in, use them
+            for study in extracted:
+                self.studies.add(study)
+        else:
+            # Create a study and save it.
+            study = StudyFactory.create()
+            self.studies.add(study)
 
     class Meta:
         model = models.dbGaPStudyAccession

@@ -11,7 +11,7 @@ class dbGaPStudyAccessionTable(tables.Table):
     """A table for dbGaPStudyAccession objects."""
 
     dbgap_phs = tables.columns.Column(linkify=True)
-    study = tables.columns.Column(linkify=True)
+    studies = tables.columns.ManyToManyColumn(linkify_item=True)
     number_workspaces = tables.Column(
         verbose_name="Number of workspaces",
         orderable=False,
@@ -22,7 +22,7 @@ class dbGaPStudyAccessionTable(tables.Table):
         model = models.dbGaPStudyAccession
         fields = (
             "dbgap_phs",
-            "study",
+            "studies",
         )
 
     def render_dbgap_phs(self, value):

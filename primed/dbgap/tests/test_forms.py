@@ -34,27 +34,44 @@ class dbGaPStudyAccessionFormTest(TestCase):
         """Form is valid with necessary input."""
         form_data = {
             "dbgap_phs": 1,
-            "study": self.study,
+            "studies": [self.study],
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
-    def test_invalid_missing_study(self):
-        """Form is invalid when missing study."""
+    def test_invalid_missing_studies(self):
+        """Form is invalid when missing studies."""
         form_data = {
             "dbgap_phs": 1,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("study", form.errors)
-        self.assertEqual(len(form.errors["study"]), 1)
-        self.assertIn("required", form.errors["study"][0])
+        self.assertIn("studies", form.errors)
+        self.assertEqual(len(form.errors["studies"]), 1)
+        self.assertIn("required", form.errors["studies"][0])
+
+    def test_two_studies(self):
+        """Form is invalid when missing studies."""
+        study_2 = StudyFactory.create()
+        form_data = {"dbgap_phs": 1, "studies": [self.study, study_2]}
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_empty_studies(self):
+        """Form is invalid when missing studies."""
+        form_data = {"dbgap_phs": 1, "studies": []}
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("studies", form.errors)
+        self.assertEqual(len(form.errors["studies"]), 1)
+        self.assertIn("required", form.errors["studies"][0])
 
     def test_invalid_missing_dbgap_phs(self):
         """Form is invalid when missing dbgap_phs."""
         form_data = {
-            "study": self.study,
+            "studies": [self.study],
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -66,7 +83,7 @@ class dbGaPStudyAccessionFormTest(TestCase):
     def test_invalid_dbgap_phs_zero(self):
         """Form is invalid when dbgap_phs is zero."""
         form_data = {
-            "study": self.study,
+            "studies": [self.study],
             "dbgap_phs": 0,
         }
         form = self.form_class(data=form_data)
@@ -81,7 +98,7 @@ class dbGaPStudyAccessionFormTest(TestCase):
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         other_study = StudyFactory.create()
         form_data = {
-            "study": other_study,
+            "studies": [other_study],
             "dbgap_phs": dbgap_study_accession.dbgap_phs,
         }
         form = self.form_class(data=form_data)

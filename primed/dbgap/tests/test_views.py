@@ -329,19 +329,24 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         """Can create an object."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(self.get_url(), {"study": study.pk, "dbgap_phs": 1})
+        response = self.client.post(
+            self.get_url(), {"studies": [study.pk], "dbgap_phs": 1}
+        )
         self.assertEqual(response.status_code, 302)
         # A new object was created.
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 1)
         new_object = models.dbGaPStudyAccession.objects.latest("pk")
-        self.assertEqual(new_object.study, study)
+        self.assertEqual(new_object.studies.count(), 1)
+        self.assertIn(study, new_object.studies.all())
         self.assertEqual(new_object.dbgap_phs, 1)
 
     def test_redirect_url(self):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(self.get_url(), {"study": study.pk, "dbgap_phs": 1})
+        response = self.client.post(
+            self.get_url(), {"studies": [study.pk], "dbgap_phs": 1}
+        )
         new_object = models.dbGaPStudyAccession.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
 
@@ -351,7 +356,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         study = StudyFactory.create()
         response = self.client.post(
             self.get_url(),
-            {"study": study.pk, "dbgap_phs": 1},
+            {"studies": [study.pk], "dbgap_phs": 1},
             follow=True,
         )
         self.assertIn("messages", response.context)
@@ -359,8 +364,8 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(views.dbGaPStudyAccessionCreate.success_msg, str(messages[0]))
 
-    def test_error_missing_study(self):
-        """Form shows an error when study is missing."""
+    def test_error_missing_studies(self):
+        """Form shows an error when studies is missing."""
         self.client.force_login(self.user)
         response = self.client.post(self.get_url(), {"dbgap_phs": 1})
         self.assertEqual(response.status_code, 200)
@@ -371,15 +376,15 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("study", form.errors)
-        self.assertEqual(len(form.errors["study"]), 1)
-        self.assertIn("required", form.errors["study"][0])
+        self.assertIn("studies", form.errors)
+        self.assertEqual(len(form.errors["studies"]), 1)
+        self.assertIn("required", form.errors["studies"][0])
 
     def test_error_missing_dbgap_phs(self):
         """Form shows an error when dbgap_phs is missing."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(self.get_url(), {"study": study.pk})
+        response = self.client.post(self.get_url(), {"studies": [study.pk]})
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
@@ -399,7 +404,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(),
-            {"dbgap_phs": dbgap_study_accession.dbgap_phs, "study": other_study.pk},
+            {"dbgap_phs": dbgap_study_accession.dbgap_phs, "studies": [other_study.pk]},
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
@@ -422,9 +427,9 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 2)
-        self.assertIn("study", form.errors.keys())
-        self.assertEqual(len(form.errors["study"]), 1)
-        self.assertIn("required", form.errors["study"][0])
+        self.assertIn("studies", form.errors.keys())
+        self.assertEqual(len(form.errors["studies"]), 1)
+        self.assertIn("required", form.errors["studies"][0])
         self.assertIn("dbgap_phs", form.errors.keys())
         self.assertEqual(len(form.errors["dbgap_phs"]), 1)
         self.assertIn("required", form.errors["dbgap_phs"][0])

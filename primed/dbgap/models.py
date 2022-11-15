@@ -39,11 +39,9 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         unique=True,
         help_text="""The dbGaP study accession integer associated with this workspace (e.g., 7 for phs000007).""",
     )
-    study = models.ForeignKey(
+    studies = models.ManyToManyField(
         Study,
-        verbose_name="study",
-        on_delete=models.PROTECT,
-        help_text="The study associated with this dbGaP study accession.",
+        help_text="The studies associated with this dbGaP study accession.",
     )
     history = HistoricalRecords()
 
@@ -53,9 +51,7 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         verbose_name_plural = " dbGaP study accessions"
 
     def __str__(self):
-        return "phs{phs:06d} - {study}".format(
-            phs=self.dbgap_phs, study=self.study.short_name
-        )
+        return "phs{phs:06d}".format(phs=self.dbgap_phs)
 
     def get_absolute_url(self):
         return reverse(

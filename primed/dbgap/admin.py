@@ -8,11 +8,11 @@ from . import models
 class dbGaPStudyAccessionAdmin(SimpleHistoryAdmin):
     """Admin class for the `dbGaPStudyAccession` model."""
 
-    list_display = (
-        "study",
-        "dbgap_phs",
+    list_display = ("dbgap_phs",)
+    search_fields = (
+        "short_name",
+        "full_name",
     )
-    search_fields = ("short_name",)
     sortable_by = (
         "short_name",
         "full_name",

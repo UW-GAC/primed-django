@@ -10,7 +10,12 @@
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
-    <li>Study: <a href="{{ object.study.get_absolute_url }}">{{ object.study }}</a></li>
+    <li>
+      Studies:
+      {% for study in object.studies.all %}
+      <a href="{{ study.get_absolute_url }}">{{ study }}</a>{% if not forloop.last %} , {% endif %}
+      {% endfor %}
+    </li>
     <li>dbGaP accession: {{ object.dbgap_phs }}</li>
   </ul>
 </div>

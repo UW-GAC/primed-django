@@ -14,7 +14,7 @@ class dbGaPStudyAccessionForm(forms.ModelForm):
         model = models.dbGaPStudyAccession
         fields = (
             "dbgap_phs",
-            "study",
+            "studies",
         )
 
 
