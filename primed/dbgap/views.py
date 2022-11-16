@@ -216,6 +216,18 @@ class dbGaPDataAccessSnapshotCreate(
             # Use a transaction because we don't want either the snapshot or the requests
             # to be saved upon failure.
             with transaction.atomic():
+                # Update the most recent snapshot if it exists.
+                try:
+                    previous_snapshot = models.dbGaPDataAccessSnapshot.objects.get(
+                        dbgap_application=self.dbgap_application,
+                        is_most_recent=True,
+                    )
+                    previous_snapshot.is_most_recent = False
+                    previous_snapshot.save()
+                except models.dbGaPDataAccessSnapshot.DoesNotExist:
+                    pass
+                # Now save the new object.
+                form.instance.is_most_recent = True
                 self.object = form.save()
                 self.object.create_dars_from_json()
         except (ValidationError, IntegrityError):

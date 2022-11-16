@@ -211,6 +211,12 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         help_text="The dbGaP application associated with this DAR.",
     )
     dbgap_dar_data = models.JSONField(null=True)
+    # This field allows us to determine which is the most recent snapshot for a given application.
+    # Ideally we could do this with group_by and select the most recent created, but that is not
+    # straightforward to do in MySQL. Instead, we'll have to handle it in the app logic.
+    is_most_recent = models.BooleanField(
+        help_text="Indicator of whether this is the most recent snapshot for this applicaiton."
+    )
 
     history = HistoricalRecords()
 

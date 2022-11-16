@@ -526,6 +526,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         instance = models.dbGaPDataAccessSnapshot(
             dbgap_application=dbgap_application,
             dbgap_dar_data=json,
+            is_most_recent=True,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPDataAccessSnapshot)
@@ -551,6 +552,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         instance = factories.dbGaPDataAccessSnapshotFactory.build(
             dbgap_application=dbgap_application,
             dbgap_dar_data=json,
+            is_most_recent=True,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()

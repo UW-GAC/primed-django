@@ -102,6 +102,7 @@ class dbGaPDataAccessSnapshotFactory(TimeStampedModelFactory, DjangoModelFactory
             "studies": [],
         }
     )
+    is_most_recent = True
 
     class Meta:
         model = models.dbGaPDataAccessSnapshot
