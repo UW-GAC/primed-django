@@ -8,6 +8,12 @@
 
 <h1>DAR snapshot</h1>
 
+{% if not object.is_most_recent %}
+<div class="alert alert-danger" role="alert">
+  This is not the most recent snapshot for this dbGaP application!
+</div>
+{% endif %}
+
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
     <li>dbGaP application: <a href="{{ object.dbgap_application.get_absolute_url }}">{{ object.dbgap_application }}</a></li>
