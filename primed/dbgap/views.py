@@ -103,7 +103,7 @@ class dbGaPApplicationDetail(
     def get_table_data(self):
         return models.dbGaPDataAccessSnapshot.objects.filter(
             dbgap_application=self.object
-        )
+        ).order_by("-created")
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.

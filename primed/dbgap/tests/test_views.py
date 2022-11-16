@@ -939,6 +939,21 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertIn("last_update", response.context_data)
         self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
 
+    def test_table_default_ordering(self):
+        """Most recent dbGaPDataAccessSnapshots appear first."""
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj, created=timezone.now() - timedelta(weeks=4)
+        )
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.obj, created=timezone.now()
+        )
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+        table = response.context_data["data_access_snapshot_table"]
+        self.assertEqual(table.data[0], snapshot_2)
+        self.assertEqual(table.data[1], snapshot_1)
+
 
 class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the dbGaPApplication view."""
