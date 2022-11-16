@@ -305,7 +305,9 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
-        self.assertIn("square-fill", table.rows[0].get_cell_value("has_access"))
+        self.assertIn(
+            "square-fill", table.rows[0].get_cell_value("in_authorization_domain")
+        )
 
     def test_matching_workspace_with_access(self):
         """Table works if there is a matching workspace with access."""
@@ -322,4 +324,6 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
-        self.assertIn("circle-fill", table.rows[0].get_cell_value("has_access"))
+        self.assertIn(
+            "circle-fill", table.rows[0].get_cell_value("in_authorization_domain")
+        )
