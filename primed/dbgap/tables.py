@@ -119,14 +119,14 @@ class dbGaPDataAccessRequestTable(tables.Table):
     workspace = tables.columns.Column(
         linkify=True, accessor="get_dbgap_workspace", orderable=False
     )
-    has_access = tables.columns.Column(
+    in_authorization_domain = tables.columns.Column(
         accessor="has_access",
-        empty_values=(None),
+        empty_values=(None,),
         orderable=False,
-        verbose_name="Has access?",
+        verbose_name="In auth domain?",
     )
 
-    def render_has_access(self, value, record):
+    def render_in_authorization_domain(self, value, record):
         if value:
             icon = "check-circle-fill"
             color = "green"
