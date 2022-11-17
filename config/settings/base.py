@@ -309,6 +309,10 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "admin:login",
 ]
 
+# django-dbbackup
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+DBBACKUP_STORAGE_OPTIONS = {"location": ROOT_DIR / "dbbackups"}
+
 # PRIMED
 # ------------------------------------------------------------------------------
 # Allauth
