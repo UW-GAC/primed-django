@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from simple_history.models import HistoricalRecords
 
 
 class Study(TimeStampedModel, models.Model):
@@ -13,6 +14,7 @@ class Study(TimeStampedModel, models.Model):
     full_name = models.CharField(
         max_length=255, help_text="The full name for this Study."
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name_plural = "studies"
@@ -51,6 +53,7 @@ class DataUsePermission(TimeStampedModel, models.Model):
         default=False,
         help_text="Indicator of whether an additional disease restriction is required for this term.",
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         """String method.
@@ -78,6 +81,7 @@ class DataUseModifier(TimeStampedModel, models.Model):
         unique=True,
         help_text="""The identifier of this modifier (e.g., DUO:0000045).""",
     )
+    history = HistoricalRecords()
 
     def __str__(self):
         """String method.
@@ -106,6 +110,7 @@ class DataUseOntologyModel(models.Model):
         null=True,
         help_text="The disease restriction if required by data_use_permission.",
     )
+    history = HistoricalRecords()
 
     class Meta:
         abstract = True
