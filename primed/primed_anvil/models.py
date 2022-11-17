@@ -110,7 +110,6 @@ class DataUseOntologyModel(models.Model):
         null=True,
         help_text="The disease restriction if required by data_use_permission.",
     )
-    history = HistoricalRecords()
 
     class Meta:
         abstract = True
