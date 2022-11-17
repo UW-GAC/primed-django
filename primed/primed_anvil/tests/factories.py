@@ -24,6 +24,7 @@ class DataUsePermissionFactory(DjangoModelFactory):
 
     class Meta:
         model = models.DataUsePermission
+        django_get_or_create = ("code",)
 
 
 class DataUseModifierFactory(DjangoModelFactory):
