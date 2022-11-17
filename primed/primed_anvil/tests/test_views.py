@@ -84,7 +84,7 @@ class StudyDetailTest(TestCase):
         """Contains a table of dbGaPWorkspaces with the correct studies."""
         obj = self.model_factory.create()
         dbgap_study_accession = dbGaPStudyAccessionFactory.create(studies=[obj])
-        workspace = dbGaPWorkspaceFactory.create(
+        dbgap_workspace = dbGaPWorkspaceFactory.create(
             dbgap_study_accession=dbgap_study_accession
         )
         other_workspace = dbGaPWorkspaceFactory.create()
@@ -94,8 +94,8 @@ class StudyDetailTest(TestCase):
         self.assertIn("dbgap_workspace_table", response.context_data)
         table = response.context_data["dbgap_workspace_table"]
         self.assertEqual(len(table.rows), 1)
-        self.assertIn(workspace, table.data)
-        self.assertNotIn(other_workspace, table.data)
+        self.assertIn(dbgap_workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
 
 
 class StudyAutocompleteTest(TestCase):
