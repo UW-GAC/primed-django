@@ -11,17 +11,22 @@ from .models import dbGaPDataAccessRequest, dbGaPWorkspace
 # Dataclasses for storing audit results?
 @dataclass
 class AuditResult:
+    """Base class to hold results for auditing dbGaP workspace access for a dbGaPDataAccessSnapshot."""
+
     workspace: dbGaPWorkspace
     note: str
     data_access_request: dbGaPDataAccessRequest = None
 
     def get_action_url(self):
+        """The URL that handles the action needed."""
         return None
 
     def get_action(self):
+        """An indicator of what action needs to be taken."""
         return None
 
     def get_table_dictionary(self):
+        """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
         row = {
             "workspace": self.workspace,
             "data_access_request": self.data_access_request,
@@ -34,16 +39,22 @@ class AuditResult:
 
 @dataclass
 class VerifiedAccess(AuditResult):
+    """Audit results class for when access has been verified."""
+
     pass
 
 
 @dataclass
 class VerifiedNoAccess(AuditResult):
+    """Audit results class for when no access has been verified."""
+
     pass
 
 
 @dataclass
 class GrantAccess(AuditResult):
+    """Audit results class for when access should be granted."""
+
     def get_action_url(self):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
@@ -59,6 +70,8 @@ class GrantAccess(AuditResult):
 
 @dataclass
 class RemoveAccess(AuditResult):
+    """Audit results class for when access should be removed for a known reason."""
+
     def get_action(self):
         return "Remove access"
 
@@ -74,6 +87,8 @@ class RemoveAccess(AuditResult):
 
 @dataclass
 class Error(AuditResult):
+    """Audit results class for when an error has been detected (e.g., has access and never should have)."""
+
     pass
 
 
@@ -103,6 +118,7 @@ class dbGaPDataAccessSnapshotAudit:
         self.errors = None
 
     def run_audit(self):
+        """Audit all workspaces against access provided by this dbGaPDataAccessSnasphot."""
         self.verified = []
         self.needs_action = []
         self.errors = []
@@ -216,16 +232,19 @@ class dbGaPDataAccessSnapshotAudit:
             )
 
     def get_verified_table(self):
+        """Return a table of verified results."""
         return dbGaPDataAccessSnapshotAuditTable(
             [x.get_table_dictionary() for x in self.verified]
         )
 
     def get_needs_action_table(self):
+        """Return a table of results where action is needed."""
         return dbGaPDataAccessSnapshotAuditTable(
             [x.get_table_dictionary() for x in self.needs_action]
         )
 
     def get_errors_table(self):
+        """Return a table of audit errors."""
         return dbGaPDataAccessSnapshotAuditTable(
             [x.get_table_dictionary() for x in self.errors]
         )

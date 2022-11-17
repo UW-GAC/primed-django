@@ -8,7 +8,7 @@ from . import models
 
 
 class dbGaPStudyAccessionTable(tables.Table):
-    """A table for dbGaPStudyAccession objects."""
+    """Class to render a table of dbGaPStudyAccession objects."""
 
     dbgap_phs = tables.columns.Column(linkify=True)
     studies = tables.columns.ManyToManyColumn(linkify_item=True)
@@ -30,7 +30,7 @@ class dbGaPStudyAccessionTable(tables.Table):
 
 
 class dbGaPWorkspaceTable(tables.Table):
-    """A table for Workspaces that includes fields from dbGaPWorkspace."""
+    """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
 
@@ -53,7 +53,7 @@ class dbGaPWorkspaceTable(tables.Table):
 
 
 class dbGaPApplicationTable(tables.Table):
-    """A table for dbGaPStudyAccession objects."""
+    """Class to render a table of dbGaPApplication objects."""
 
     dbgap_project_id = tables.columns.Column(linkify=True)
     principal_investigator = tables.columns.Column(linkify=True)
@@ -89,7 +89,7 @@ class dbGaPApplicationTable(tables.Table):
 
 
 class dbGaPDataAccessSnapshotTable(tables.Table):
-    """Class to render a dbGaPDataAccessSnapshot table."""
+    """Class to render a table of dbGaPDataAccessSnapshot objects."""
 
     class Meta:
         model = models.dbGaPDataAccessSnapshot
@@ -115,6 +115,7 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
 
 
 class dbGaPDataAccessRequestTable(tables.Table):
+    """Class to render a table of dbGaPDataAccessRequest objects."""
 
     workspace = tables.columns.Column(
         linkify=True, accessor="get_dbgap_workspace", orderable=False

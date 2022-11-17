@@ -135,6 +135,7 @@ class dbGaPWorkspace(DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
         )
 
     def get_dbgap_accession(self):
+        """Return the full dbGaP accession including phs, version, and participant set."""
         return "phs{phs:06d}.v{v}.p{ps}".format(
             phs=self.dbgap_study_accession.dbgap_phs,
             v=self.dbgap_version,
@@ -457,6 +458,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
 
     @property
     def is_approved(self):
+        """Return an boolean indicating whether this data access request is approved to access data."""
         return self.dbgap_current_status == self.APPROVED
 
     def get_dbgap_workspace(self):
