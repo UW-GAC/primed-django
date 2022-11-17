@@ -38,7 +38,7 @@ class dbGaPWorkspaceTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "dbgapworkspace__dbgap_study_accession__study",
+            "dbgapworkspace__dbgap_study_accession__studies",
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
             "dbgapworkspace__dbgap_participant_set",
