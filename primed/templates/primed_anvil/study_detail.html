@@ -1,4 +1,5 @@
 {% extends "anvil_consortium_manager/base.html" %}
+{% load render_table from django_tables2 %}
 
 {% block title %}{{ object.short_name }}{% endblock %}
 
@@ -13,5 +14,10 @@
     <li>Full name: {{ object.full_name }}</li>
   </ul>
 </div>
+
+<h2>dbGaP workspaces</h2>
+
+{% render_table dbgap_workspace_table %}
+
 
 {% endblock content %}

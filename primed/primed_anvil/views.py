@@ -2,19 +2,29 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
+from anvil_consortium_manager.models import Workspace
 from anvil_consortium_manager.views import SuccessMessageMixin
 from dal import autocomplete
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView
-from django_tables2 import SingleTableView
+from django_tables2 import SingleTableMixin, SingleTableView
+
+from primed.dbgap.tables import dbGaPWorkspaceTable
 
 from . import models, tables
 
 
-class StudyDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class StudyDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `Study`."""
 
     model = models.Study
+    table_class = dbGaPWorkspaceTable
+    context_table_name = "dbgap_workspace_table"
+
+    def get_table_data(self):
+        return Workspace.objects.filter(
+            dbgapworkspace__dbgap_study_accession__studies=self.object
+        )
 
 
 class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):

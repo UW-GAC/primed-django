@@ -10,6 +10,11 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.dbgap.tests.factories import (
+    dbGaPStudyAccessionFactory,
+    dbGaPWorkspaceFactory,
+)
+
 from .. import models, views
 from . import factories
 
@@ -74,6 +79,23 @@ class StudyDetailTest(TestCase):
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
+
+    def test_dbgap_workspace_table(self):
+        """Contains a table of dbGaPWorkspaces with the correct studies."""
+        obj = self.model_factory.create()
+        dbgap_study_accession = dbGaPStudyAccessionFactory.create(studies=[obj])
+        workspace = dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=dbgap_study_accession
+        )
+        other_workspace = dbGaPWorkspaceFactory.create()
+        # import ipdb; ipdb.set_trace()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("dbgap_workspace_table", response.context_data)
+        table = response.context_data["dbgap_workspace_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(workspace, table.data)
+        self.assertNotIn(other_workspace, table.data)
 
 
 class StudyAutocompleteTest(TestCase):
