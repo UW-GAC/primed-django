@@ -32,7 +32,6 @@ logger = logging.getLogger(__name__)
 class dbGaPStudyAccession(TimeStampedModel, models.Model):
     """A model to track dbGaP study accessions."""
 
-    # Consider making this many to many since some dbgap acessions contain multiple studies.
     dbgap_phs = models.PositiveIntegerField(
         verbose_name=" dbGaP phs",
         validators=[MinValueValidator(1)],
@@ -369,7 +368,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     have no guarantee that this is true and we are pulling directly from the JSON from dbGaP. In that case,
     it might be safer to store redundant information.
 
-    Note that original_version and dbgap_participant set do *not* from the JSON; see the
+    Note that original_version and dbgap_participant set do *not* come from the JSON; see the
     dbGaPDataAccessSnapshot.create_dars_from_json method for details about how they are obtained.
     """
 
