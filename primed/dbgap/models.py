@@ -235,7 +235,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         if self.dbgap_dar_data:
             try:
                 jsonschema.validate(
-                    self.dbgap_dar_data, constants.json_dar_schema_one_project
+                    self.dbgap_dar_data, constants.JSON_DAR_SCHEMA_ONE_PROJECT
                 )
             except jsonschema.exceptions.ValidationError as e:
                 # Replace the full json string because it will be very long
@@ -269,7 +269,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         participant set from the previous dbGaPDataAccessRequest.
         """
         # Validate the json. It should already be validated, but it doesn't hurt to check again.
-        jsonschema.validate(self.dbgap_dar_data, constants.json_dar_schema_one_project)
+        jsonschema.validate(self.dbgap_dar_data, constants.JSON_DAR_SCHEMA_ONE_PROJECT)
         # Log the json.
         msg = "Creating DARs using snapshot pk {pk}...\n".format(
             pk=self.pk,

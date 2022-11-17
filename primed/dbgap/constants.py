@@ -4,7 +4,7 @@ FULL_ACCESSION_REGEX = (
     r"^phs(?P<phs>\d{6})\.v(?P<version>\d+?)\.p(?P<participant_set>\d+?)$"
 )
 
-json_dar_defs = {
+JSON_DAR_DEFS = {
     "project": {
         "required": ["Project_id", "studies"],
         "type": "object",
@@ -47,20 +47,20 @@ json_dar_defs = {
 
 
 # Validation of dbGaP DAR JSON from their web service (a array of multiple project DARs).
-json_dar_schema = {
+JSON_DAR_SCHEMA = {
     "title": "dbGaP DAR schema",
     "description": "json schema for the dbGaP DAR data",
     "type": "array",
     "items": {"$ref": "#/$defs/project"},
     "minItems": 1,
     "maxItems": 1,
-    "$defs": json_dar_defs,
+    "$defs": JSON_DAR_DEFS,
 }
 
 # Validation fo dbGaP DAR JSON for a single project (one entry in what's returned by their web servce).
-json_dar_schema_one_project = {
+JSON_DAR_SCHEMA_ONE_PROJECT = {
     "title": "dbGaP Project DAR schema",
     "description": "json schema for DARs for a single dbGaP project",
     "$ref": "#/$defs/project",
-    "$defs": json_dar_defs,
+    "$defs": JSON_DAR_DEFS,
 }

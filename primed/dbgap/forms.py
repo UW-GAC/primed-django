@@ -67,7 +67,7 @@ class dbGaPDataAccessSnapshotForm(forms.ModelForm):
     def clean_dbgap_dar_data(self):
         data = self.cleaned_data["dbgap_dar_data"]
         try:
-            jsonschema.validate(data, constants.json_dar_schema)
+            jsonschema.validate(data, constants.JSON_DAR_SCHEMA)
         except jsonschema.exceptions.ValidationError as e:
             # Replace the full json string because it will be very long
             error_message = e.message.replace(str(e.instance), "JSON array")
