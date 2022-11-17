@@ -91,6 +91,7 @@ THIRD_PARTY_APPS = [
     "fontawesomefree",
     # django-simple-history for model change tracking
     "simple_history",
+    "dbbackup",
 ]
 
 LOCAL_APPS = [
