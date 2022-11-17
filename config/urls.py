@@ -23,6 +23,7 @@ urlpatterns = [
     path(
         "primed_anvil/", include("primed.primed_anvil.urls", namespace="primed_anvil")
     ),
+    path("dbgap/", include("primed.dbgap.urls", namespace="dbgap")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

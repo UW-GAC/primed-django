@@ -1,10 +1,11 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
 from . import models
 
 
 @admin.register(models.Study)
-class StudyAdmin(admin.ModelAdmin):
+class StudyAdmin(SimpleHistoryAdmin):
     """Admin class for the `Study` model."""
 
     list_display = (
@@ -22,7 +23,7 @@ class StudyAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.DataUsePermission)
-class DataUsePermissionAdmin(admin.ModelAdmin):
+class DataUsePermissionAdmin(SimpleHistoryAdmin):
     """Admin class for the `DataUsePermission` model."""
 
     list_display = (
@@ -43,7 +44,7 @@ class DataUsePermissionAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.DataUseModifier)
-class DataUseModifierAdmin(admin.ModelAdmin):
+class DataUseModifierAdmin(SimpleHistoryAdmin):
     """Admin class for the `DataUseModifier` model."""
 
     list_display = (

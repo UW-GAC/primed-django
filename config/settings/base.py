@@ -89,6 +89,8 @@ THIRD_PARTY_APPS = [
     "dal",
     "dal_select2",
     "fontawesomefree",
+    # django-simple-history for model change tracking
+    "simple_history",
 ]
 
 LOCAL_APPS = [
@@ -97,6 +99,7 @@ LOCAL_APPS = [
     # Your stuff: custom apps go here
     "primed.drupal_oauth_provider",
     "primed.primed_anvil",
+    "primed.dbgap",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -157,6 +160,7 @@ MIDDLEWARE = [
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 # STATIC
@@ -343,6 +347,4 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # ------------------------------------------------------------------------------
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
-ANVIL_WORKSPACE_ADAPTERS = [
-    "anvil_consortium_manager.adapters.default.DefaultWorkspaceAdapter",
-]
+ANVIL_WORKSPACE_ADAPTERS = ["primed.dbgap.adapters.dbGaPWorkspaceAdapter"]

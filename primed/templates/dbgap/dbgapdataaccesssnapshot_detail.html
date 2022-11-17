@@ -1,0 +1,32 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}DAR snapshot{% endblock %}
+
+
+{% block content %}
+
+<h1>DAR snapshot</h1>
+
+{% if not object.is_most_recent %}
+<div class="alert alert-danger" role="alert">
+  This is not the most recent snapshot for this dbGaP application!
+</div>
+{% endif %}
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>dbGaP application: <a href="{{ object.dbgap_application.get_absolute_url }}">{{ object.dbgap_application }}</a></li>
+    <li>Date created: {{ object.created }}</li>
+  </ul>
+</div>
+
+<p>
+  <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:audit' dbgap_project_id=object.dbgap_application.dbgap_project_id dbgap_data_access_snapshot_pk=object.pk %}" class="btn btn-primary"> Audit this snapshot</a>
+</p>
+
+<h2>Data access requests</h2>
+
+{% render_table data_access_request_table %}
+
+{% endblock content %}
