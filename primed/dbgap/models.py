@@ -461,6 +461,14 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         """Return an boolean indicating whether this data access request is approved to access data."""
         return self.dbgap_current_status == self.APPROVED
 
+    def get_dbgap_accession(self):
+        """Return the dbGaP accession for this DAR."""
+        return "phs{phs:06d}.v{version}.p{participant_set}".format(
+            phs=self.dbgap_phs,
+            version=self.original_version,
+            participant_set=self.original_participant_set,
+        )
+
     def get_dbgap_workspace(self):
         """Get a dbGaPWorkspace associated with this data access request.
 

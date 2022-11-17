@@ -1786,3 +1786,10 @@ class dbGaPDataAccessRequestTest(TestCase):
             group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
         )
         self.assertFalse(data_access_request.has_access())
+
+    def test_get_dbgap_accession(self):
+        """`get_dbgap_accession` returns the correct string"""
+        instance = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=1, original_version=2, original_participant_set=3
+        )
+        self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")

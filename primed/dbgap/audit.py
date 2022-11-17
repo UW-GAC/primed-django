@@ -27,9 +27,17 @@ class AuditResult:
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
+        if self.data_access_request:
+            dar_accession = self.data_access_request.get_dbgap_accession()
+            dar_consent = self.data_access_request.dbgap_consent_abbreviation
+        else:
+            dar_accession = None
+            dar_consent = None
         row = {
             "workspace": self.workspace,
             "data_access_request": self.data_access_request,
+            "dar_accession": dar_accession,
+            "dar_consent": dar_consent,
             "note": self.note,
             "action": self.get_action(),
             "action_url": self.get_action_url(),
@@ -55,6 +63,9 @@ class VerifiedNoAccess(AuditResult):
 class GrantAccess(AuditResult):
     """Audit results class for when access should be granted."""
 
+    def get_action(self):
+        return "Grant access"
+
     def get_action_url(self):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
@@ -63,9 +74,6 @@ class GrantAccess(AuditResult):
                 self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
             ],
         )
-
-    def get_action(self):
-        return "Grant access"
 
 
 @dataclass
@@ -255,6 +263,8 @@ class dbGaPDataAccessSnapshotAuditTable(tables.Table):
 
     workspace = tables.Column(linkify=True)
     data_access_request = tables.Column()
+    dar_accession = tables.Column(verbose_name="DAR accession")
+    dar_consent = tables.Column(verbose_name="DAR consent")
     note = tables.Column()
     action = tables.Column()
 
