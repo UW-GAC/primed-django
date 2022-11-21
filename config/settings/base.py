@@ -353,7 +353,10 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # ------------------------------------------------------------------------------
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
-ANVIL_WORKSPACE_ADAPTERS = ["primed.dbgap.adapters.dbGaPWorkspaceAdapter"]
+ANVIL_WORKSPACE_ADAPTERS = [
+    "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
+    "primed.workspaces.adapters.SimulatedDataWorkspaceAdapter",
+]
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
 ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
