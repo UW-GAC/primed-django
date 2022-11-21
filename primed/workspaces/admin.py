@@ -1,3 +1,11 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 
-# Register your models here.
+from . import models
+
+
+@admin.register(models.SimulatedDataWorkspace)
+class SimulatedDataWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the `SimulatedDataWorkspace` model."""
+
+    list_display = ("workspace",)
