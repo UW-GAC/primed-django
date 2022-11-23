@@ -101,7 +101,7 @@ LOCAL_APPS = [
     "primed.drupal_oauth_provider",
     "primed.primed_anvil",
     "primed.dbgap",
-    "primed.workspaces",
+    "primed.miscellaneous_workspaces",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -355,7 +355,7 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
-    "primed.workspaces.adapters.SimulatedDataWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
 ]
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
