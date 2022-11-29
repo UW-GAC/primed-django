@@ -1,31 +1,28 @@
-{% extends "anvil_consortium_manager/base.html" %}
+{% extends "anvil_consortium_manager/__object_detail.html" %}
 {% load django_tables2 %}
 
-{% block title %}{{ object.short_name }}{% endblock %}
+{% block title %}dbGaP application {{ object }}{% endblock %}
 
-
-{% block content %}
-
-<h1>dbGaP application</h1>
-
-<div class="my-3 p-3 bg-light border rounded shadow-sm">
+{% block panel %}
   <ul>
     <li>Principal Investigator: {{ object.principal_investigator }}</li>
     <li>dbGaP Project ID: {{ object.dbgap_project_id }}</li>
     <li>AnVIL Group: <a href="{{ object.anvil_group.get_absolute_url }}">{{ object.anvil_group }}</a></li>
+    <li>Date created: {{ object.created }}</li>
+    <li>Date modified: {{ object.modified }}</li>
     <li>Last DAR update: {{ last_update|default:"Never" }}</li>
   </ul>
-</div>
+{% endblock panel %}
 
-<p>
-  <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
-</p>
+{% block after_panel %}
+  {% if has_snapshot %}
+    <h3>Data access snapshots</h3>
+    {% render_table data_access_snapshot_table %}
+  {% endif %}
+{% endblock after_panel %}
 
-
-{% if has_snapshot %}
-  <h2>Data access snapshots</h2>
-  {% render_table data_access_snapshot_table %}
-{% endif %}
-
-
-{% endblock content %}
+{% block action_buttons %}
+  <p>
+    <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
+  </p>
+{% endblock action_buttons %}

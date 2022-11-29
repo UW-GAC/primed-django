@@ -1,14 +1,9 @@
-{% extends "anvil_consortium_manager/base.html" %}
+{% extends "anvil_consortium_manager/__object_detail.html" %}
 {% load django_tables2 %}
 
-{% block title %}{{ object.short_name }}{% endblock %}
+{% block title %}dbGaP study accession: {{ object }}{% endblock title %}
 
-
-{% block content %}
-
-<h1>dbGaP study accession</h1>
-
-<div class="my-3 p-3 bg-light border rounded shadow-sm">
+{% block panel %}
   <ul>
     <li>
       Studies:
@@ -16,12 +11,13 @@
       <a href="{{ study.get_absolute_url }}">{{ study }}</a>{% if not forloop.last %} , {% endif %}
       {% endfor %}
     </li>
-    <li>dbGaP accession: {{ object.dbgap_phs }}</li>
+    <li>dbGaP accession: {{ object }}</li>
+    <li>Date created: {{ object.created }}</li>
+    <li>Date modified: {{ object.modified }}</li>
   </ul>
-</div>
+{% endblock panel %}
 
-<h2>Workspaces associated with this dbGaP study accession</h2>
-
-{% render_table workspace_table %}
-
-{% endblock content %}
+{% block after_panel %}
+  <h3>Workspaces associated with this dbGaP study accession</h3>
+  {% render_table workspace_table %}
+{% endblock after_panel %}
