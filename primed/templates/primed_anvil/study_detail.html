@@ -1,23 +1,19 @@
-{% extends "anvil_consortium_manager/base.html" %}
+{% extends "anvil_consortium_manager/__object_detail.html" %}
 {% load render_table from django_tables2 %}
 
-{% block title %}{{ object.short_name }}{% endblock %}
+{% block title %}Study: {{ object.short_name }}{% endblock %}
 
 
-{% block content %}
-
-<h1>Study: {{ object.full_name }}</h1>
-
-<div class="my-3 p-3 bg-light border rounded shadow-sm">
+{% block panel %}
   <ul>
     <li>Short name: {{ object.short_name }}</li>
     <li>Full name: {{ object.full_name }}</li>
+    <li>Date created: {{ object.created }}</li>
+    <li>Date modified: {{ object.modified }}</li>
   </ul>
-</div>
+{% endblock panel %}
 
-<h2>dbGaP workspaces</h2>
-
-{% render_table dbgap_workspace_table %}
-
-
-{% endblock content %}
+{% block after_panel %}
+  <h3>dbGaP workspaces</h3>
+  {% render_table dbgap_workspace_table %}
+{% endblock after_panel %}
