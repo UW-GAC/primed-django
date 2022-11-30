@@ -1,9 +1,9 @@
 {% load static i18n %}<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>{% block title %}PRIMED{% endblock title %}</title>
+    <title>{% block title %}{% if not LIVE_SITE %}DEV {% endif %}PRIMED{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Placeholder">
     <meta name="author" content="Jonas Carson">
@@ -46,14 +46,22 @@
 
   </head>
 
-  <body>
+  <body class="d-flex flex-column h-100">
     <nav id="top-nav">
       <div class="container">
+
         <ul class="nav justify-content-end">
+          {% if not LIVE_SITE %}
+          <li class='nav-item'>
+            <a class="bg-danger text-white nav-link disabled" href="#" tabindex="-1" aria-disabled="true">-- DEV SITE! DEV SITE! --</a>
+          </li>
+          {% endif %}
+
           {% if request.user.is_authenticated %}
+
           <li class="nav-item">
             {# URL provided by django-allauth/account/urls.py #}
-            <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% translate "My Profile" %}</a>
+            <a class="nav-link" href="{% url 'users:redirect' %}">{% translate "My Profile" %}</a>
           </li>
           <li class="nav-item">
             {# URL provided by django-allauth/account/urls.py #}
@@ -64,10 +72,6 @@
             <a class="nav-link" title="Sign Out" href="#" onclick="document.getElementById('logout-form').submit()">{% translate "Sign Out" %}</a>
           </li>
           {% else %}
-          {% comment %} <li class="nav-item">
-            {# URL provided by django-allauth/account/urls.py #}
-            <a class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
-          </li> {% endcomment %}
           <li class="nav-item">
             {# URL provided by django-allauth/account/urls.py #}
             <a class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In/Sign Up" %}</a>
@@ -76,6 +80,7 @@
         </ul>
       </div>
     </nav>
+
     <nav id="main-nav" class="navbar navbar-expand-md">
       <div class="container">
         <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
@@ -92,21 +97,19 @@
             <li class="nav-item">
               <a class="nav-link" href="{% url 'about' %}">About</a>
             </li>
-
             {% if perms.anvil_consortium_manager.anvil_project_manager_view %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'anvil_consortium_manager:index' %}">AnVIL Consortium Manager</a>
             </li>
             {% endif %}
-
-
           </ul>
+
       </div>
     </nav>
 
     {% block extra_navbar %}
-    {% endblock extra_navbar %}
-
+    {% endblock %}
+    <main class="flex-shrink-0">
     <div class="container">
 
       {% if messages %}
@@ -116,19 +119,46 @@
       {% endif %}
 
       {% block content %}
-        <div class="my-3 alert alert-warning" role="alert">
-          <i class="bi bi-cone-striped"></i>
-          Thanks for visiting!
-          This site is still under construction.
-        </div>
+
+              <div class="my-3 alert alert-warning" role="alert">
+                <i class="bi bi-cone-striped"></i>
+                Thanks for visiting!
+                This site is still under construction.
+              </div>
+
       {% endblock content %}
 
     </div> <!-- /container -->
-
+    </main>
     {% block modal %}{% endblock modal %}
 
     {% block inline_javascript %}
     {# Script tags with only code, no src (defer by default) #}
     {% endblock inline_javascript %}
+
+    <footer class="footer mt-auto py-3 bg-light" id="footer">
+      <div class="container">
+        <div class="row mt-0">
+          <div class="col">
+          <span class="text-muted">Questions? Contact the <a href="{{ DRUPAL_SITE_URL }}/contact">PRIMED Coordinating Center</a></span>
+          </div>
+          <div class="col">
+            <a target="_blank" href="{{ DRUPAL_SITE_URL }}">Main PRIMED Website <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a>
+          </div>
+        </div>
+        <div class="row mt-0">
+          <div class="col">
+            <p>
+              © 2001 - {% now 'Y' %} <a href="http://www.biostat.washington.edu" target="_blank" class="ext" data-extlink="" rel="noopener nofollow noreferrer">University of Washington Department of Biostatistics <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a> -
+              <a href="http://www.washington.edu" target="_blank" class="ext" data-extlink="" rel="noopener nofollow noreferrer">University of Washington <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a>, Seattle, WA
+            <br>
+              <a href="https://www.washington.edu/accessibility/" class="ext" data-extlink="" target="_blank" rel="noopener nofollow noreferrer">Accessibility <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a> |
+              <a href="http://www.washington.edu/online/terms" class="ext" data-extlink="" target="_blank" rel="noopener nofollow noreferrer">Terms <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a> |
+              <a href="http://www.washington.edu/online/privacy" class="ext" data-extlink="" target="_blank" rel="noopener nofollow noreferrer">Privacy <i class="fa-solid fa-arrow-up-right-from-square fa-2xs"></i></a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
