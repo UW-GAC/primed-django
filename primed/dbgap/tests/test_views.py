@@ -470,6 +470,27 @@ class dbGaPWorkspaceListTest(TestCase):
         )
 
 
+class dbGaPWorkspaceDetailTest(TestCase):
+    """Tests of the WorkspaceDetail view from ACM with this app's dbGaPWorkspace model."""
+
+    def setUp(self):
+        """Set up test class."""
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+
+
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""
 
