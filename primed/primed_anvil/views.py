@@ -60,3 +60,16 @@ class StudyAutocomplete(
             )
 
         return qs
+
+
+class StudySiteDetail(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show details about a `StudySite`."""
+
+    model = models.StudySite
+
+
+class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `StudySite`s."""
+
+    model = models.StudySite
+    table_class = tables.StudySiteTable

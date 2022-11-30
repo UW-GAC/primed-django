@@ -15,7 +15,7 @@ from primed.dbgap.tests.factories import (
     dbGaPWorkspaceFactory,
 )
 
-from .. import models, views
+from .. import models, tables, views
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -455,3 +455,163 @@ class StudyCreateTest(TestCase):
         self.assertEqual(len(form.errors["full_name"]), 1)
         self.assertIn("required", form.errors["full_name"][0])
         self.assertEqual(models.Study.objects.count(), 0)
+
+
+class StudySiteDetailTest(TestCase):
+    """Tests for the StudySiteDetail view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudySiteFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:study_sites:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.StudySiteDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_view_render(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+
+        self.assertContains(response, obj.short_name)
+        self.assertTemplateUsed(response, "primed_anvil/studysite_detail.html")
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=obj.pk)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_view_status_code_with_invalid_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.pk + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, pk=obj.pk + 1)
+
+
+class StudySiteListTest(TestCase):
+    """Tests for the StudySiteList view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudySiteFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:study_sites:list")
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.StudySiteList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_view_render(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+
+        self.assertContains(response, obj.short_name)
+        self.assertTemplateUsed(response, "primed_anvil/studysite_list.html")
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_view_has_correct_table_class(self):
+        """View has the correct table class in the context."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], tables.StudySiteTable)
+
+    def test_view_with_no_objects(self):
+        """The table has no rows when there are no StudySite objects."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_view_with_one_object(self):
+        """The table has one row when there is one StudySite object."""
+        self.model_factory.create()
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_view_with_two_objects(self):
+        """The table has two rows when there are two StudySite objects."""
+        self.model_factory.create_batch(2)
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 2)

@@ -136,3 +136,25 @@ class DataUseOntologyModel(models.Model):
                         "because data_use_permission does not require a disease restriction."
                     )
                 )
+
+
+class StudySite(TimeStampedModel, models.Model):
+    """A model to track Research Centers."""
+
+    short_name = models.CharField(max_length=15, unique=True)
+    """The short name of the Research Center."""
+
+    full_name = models.CharField(max_length=255)
+    """The full name of the Research Center."""
+
+    def __str__(self):
+        """String method.
+
+        Returns:
+            A string showing the short name of the object.
+        """
+        return self.short_name
+
+    def get_absolute_url(self):
+        """Return the absolute url for this object."""
+        return reverse("primed_anvil:study_sites:detail", args=[self.pk])

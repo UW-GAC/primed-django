@@ -22,6 +22,24 @@ class StudyAdmin(SimpleHistoryAdmin):
     )
 
 
+@admin.register(models.StudySite)
+class StudySiteAdmin(admin.ModelAdmin):
+    """Admin class for the `Study` model."""
+
+    list_display = (
+        "short_name",
+        "full_name",
+    )
+    search_fields = (
+        "short_name",
+        "full_name",
+    )
+    sortable_by = (
+        "short_name",
+        "full_name",
+    )
+
+
 @admin.register(models.DataUsePermission)
 class DataUsePermissionAdmin(SimpleHistoryAdmin):
     """Admin class for the `DataUsePermission` model."""

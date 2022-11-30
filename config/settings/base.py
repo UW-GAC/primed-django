@@ -325,10 +325,11 @@ DBBACKUP_STORAGE_OPTIONS = {"location": ROOT_DIR / "dbbackups"}
 # The scopes 'oauth_client_user' and 'authenticated' automatically to anyone who logs in
 # via oauth (as configured in the drupal consumer) and will be returned even if we do not request
 # them but are not currently mapped to django groups.
+DRUPAL_SITE_URL = "https://dev.primedconsortium.org"
 SOCIALACCOUNT_PROVIDERS = {
     "drupal_oauth_provider": {
         "OVERRIDE_NAME": "Primed Consortium Site Login",
-        "API_URL": "https://dev.primedconsortium.org",
+        "API_URL": DRUPAL_SITE_URL,
         "SCOPES": [
             {
                 "drupal_machine_name": "dcc_staff",
@@ -343,6 +344,13 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+
+# Setting for whether the config represents the live production site (apps.gregorconsortium.org)
+# Initially used to style all non dev sites differently
+LIVE_SITE = False
+
+# Help contact email
+DCC_CONTACT_EMAIL = "primedconsortium@uw.org"
 
 # django-tables2
 # ------------------------------------------------------------------------------
