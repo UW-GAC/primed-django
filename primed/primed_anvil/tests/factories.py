@@ -14,6 +14,16 @@ class StudyFactory(DjangoModelFactory):
         model = models.Study
 
 
+class StudySiteFactory(DjangoModelFactory):
+    """A factory for the StudySite model."""
+
+    short_name = Sequence(lambda n: "Study:{0:07d}".format(n))
+    full_name = Faker("company")
+
+    class Meta:
+        model = models.StudySite
+
+
 class DataUsePermissionFactory(DjangoModelFactory):
     """A factory for the MainConsent model."""
 

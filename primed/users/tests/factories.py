@@ -1,6 +1,7 @@
 from typing import Any, Sequence
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from factory import Faker, post_generation
 from factory.django import DjangoModelFactory
 
@@ -30,3 +31,10 @@ class UserFactory(DjangoModelFactory):
     class Meta:
         model = get_user_model()
         django_get_or_create = ["username"]
+
+
+class GroupFactory(DjangoModelFactory):
+    name = Faker("name")
+
+    class Meta:
+        model = Group

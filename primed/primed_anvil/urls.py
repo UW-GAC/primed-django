@@ -4,6 +4,13 @@ from . import views
 
 app_name = "primed_anvil"
 
+study_site_patterns = (
+    [
+        path("<int:pk>", views.StudySiteDetail.as_view(), name="detail"),
+        path("", views.StudySiteList.as_view(), name="list"),
+    ],
+    "study_sites",
+)
 
 study_patterns = (
     [
@@ -17,4 +24,5 @@ study_patterns = (
 
 urlpatterns = [
     path("studies/", include(study_patterns)),
+    path("study_sites/", include(study_site_patterns)),
 ]

@@ -48,6 +48,37 @@ class StudyTest(TestCase):
             instance2.save()
 
 
+class StudySiteTest(TestCase):
+    """Tests for the StudySite model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        instance = models.StudySite(full_name="Test name", short_name="TEST")
+        instance.save()
+        self.assertIsInstance(instance, models.StudySite)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.StudySiteFactory.create(short_name="Test")
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "Test")
+
+    def test_get_absolute_url(self):
+        """The get_absolute_url() method works."""
+        instance = factories.StudySiteFactory()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_unique_short_name(self):
+        """Saving a model with a duplicate short name fails."""
+        factories.StudySiteFactory.create(short_name="FOO")
+        instance2 = models.StudySite(short_name="FOO", full_name="full name")
+        with self.assertRaises(ValidationError):
+            instance2.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance2.save()
+
+
 class DataUsePermissionTest(TestCase):
     """Tests for the DataUsePermission model."""
 

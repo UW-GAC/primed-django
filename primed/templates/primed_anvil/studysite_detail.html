@@ -1,0 +1,10 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+
+{% block title %}Study Site: {{ object.short_name }}{% endblock %}
+
+{% block panel %}
+  <ul>
+    <li>Full name: {{ object.full_name }}</li>
+    <li>Short name: {{ object.short_name }}</li>
+  </ul>
+{% endblock panel %}
