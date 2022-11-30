@@ -21,3 +21,12 @@ class ConsortiumDevelWorkspace(TimeStampedModel, BaseWorkspaceData):
 
     def __str__(self):
         return self.workspace.__str__()
+
+
+class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
+    """A model to track example workspaces."""
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.workspace.__str__()

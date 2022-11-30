@@ -58,3 +58,30 @@ class ConsortiumDevelWorkspaceFormTest(TestCase):
         self.assertIn("workspace", form.errors)
         self.assertEqual(len(form.errors["workspace"]), 1)
         self.assertIn("required", form.errors["workspace"][0])
+
+
+class ExampleWorkspaceFormTest(TestCase):
+
+    form_class = forms.ExampleWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory.create()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_workspace(self):
+        """Form is invalid when missing workspace."""
+        form_data = {}
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("required", form.errors["workspace"][0])

@@ -24,3 +24,15 @@ class ConsortiumDevelWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.ConsortiumDevelWorkspace
+
+
+class ExampleWorkspaceFactory(DjangoModelFactory):
+    """A factory for the ExampleWorkspace model."""
+
+    workspace = SubFactory(
+        WorkspaceFactory,
+        workspace_type=adapters.ExampleWorkspaceAdapter().get_type(),
+    )
+
+    class Meta:
+        model = models.ExampleWorkspace

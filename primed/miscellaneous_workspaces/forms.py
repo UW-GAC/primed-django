@@ -19,3 +19,11 @@ class ConsortiumDevelWorkspaceForm(forms.ModelForm):
     class Meta:
         model = models.ConsortiumDevelWorkspace
         fields = ("workspace",)
+
+
+class ExampleWorkspaceForm(forms.ModelForm):
+    """Form for a ExampleWorkspace object."""
+
+    class Meta:
+        model = models.ExampleWorkspace
+        fields = ("workspace",)

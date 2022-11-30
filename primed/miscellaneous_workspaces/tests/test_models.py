@@ -43,3 +43,22 @@ class ConsortiumDevelWorkspaceTest(TestCase):
         instance = factories.ConsortiumDevelWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
+
+
+class ExampleWorkspaceTest(TestCase):
+    """Tests for the ExampleWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        instance = models.ExampleWorkspace(workspace=workspace)
+        instance.save()
+        self.assertIsInstance(instance, models.ExampleWorkspace)
+
+    def test_str_method(self):
+        workspace = WorkspaceFactory.create(
+            billing_project__name="test-bp", name="test-ws"
+        )
+        instance = factories.ExampleWorkspaceFactory.create(workspace=workspace)
+        self.assertIsInstance(str(instance), str)
+        self.assertEqual(str(instance), "test-bp/test-ws")
