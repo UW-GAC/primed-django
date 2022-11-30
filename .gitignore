@@ -278,7 +278,7 @@ primed/media/
 .pytest_cache/
 
 primed.db
+backup_primed.db
 
 ### dbbackups
 dbbackups/
-
