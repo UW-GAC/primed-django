@@ -356,6 +356,7 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
 ]
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
