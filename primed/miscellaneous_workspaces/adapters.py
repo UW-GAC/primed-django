@@ -14,4 +14,6 @@ class SimulatedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = WorkspaceTable
     workspace_data_model = models.SimulatedDataWorkspace
     workspace_data_form_class = forms.SimulatedDataWorkspaceForm
-    workspace_detail_template_name = "workspaces/simulateddataworkspace_detail.html"
+    workspace_detail_template_name = (
+        "miscellaneous_workspaces/simulateddataworkspace_detail.html"
+    )
