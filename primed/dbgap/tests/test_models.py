@@ -1301,6 +1301,7 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=3,
             dbgap_consent_code=4,
             dbgap_consent_abbreviation="GRU",
+            dbgap_dac="TEST",
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPDataAccessRequest)

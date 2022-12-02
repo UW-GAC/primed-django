@@ -417,6 +417,11 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         validators=[MinValueValidator(1)],
         help_text="The numeric code assigned to this consent group by dbGaP",
     )
+    dbgap_dac = models.CharField(
+        verbose_name=" dbGaP DAC",
+        max_length=31,
+        help_text="The Data Access Committee for this DAR.",
+    )
     dbgap_consent_abbreviation = models.CharField(
         verbose_name=" dbGaP consent abbreviation",
         max_length=31,

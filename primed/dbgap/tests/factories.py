@@ -139,6 +139,7 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
     dbgap_consent_code = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_code)
     dbgap_consent_abbreviation = Faker("word")
     dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
+    dbgap_dac = Faker("word")
 
     class Params:
         dbgap_workspace = None
