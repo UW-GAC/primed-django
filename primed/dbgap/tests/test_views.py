@@ -1337,7 +1337,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                         ),
                         "requests": [
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "FOO",
                                 "consent_abbrev": "GRU",
                                 "consent_code": 1,
                                 "DAR": 23497,
@@ -1514,7 +1514,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                         # N requests per study.
                         "requests": [
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "FOO",
                                 "consent_abbrev": "GRU",
                                 "consent_code": 1,
                                 "DAR": 23497,
@@ -1523,7 +1523,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                                 "was_approved": "yes",
                             },
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "BAR",
                                 "consent_abbrev": "HMB",
                                 "consent_code": 2,
                                 "DAR": 23498,
@@ -1539,7 +1539,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                         # N requests per study.
                         "requests": [
                             {
-                                "DAC_abbrev": "BARBI",
+                                "DAC_abbrev": "BAR",
                                 "consent_abbrev": "DS-LD",
                                 "consent_code": 1,
                                 "DAR": 23499,
@@ -1596,6 +1596,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(new_object.dbgap_dac, "FOO")
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23498)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
@@ -1603,6 +1604,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertEqual(new_object.original_participant_set, 18)
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "HMB")
+        self.assertEqual(new_object.dbgap_dac, "BAR")
         # study 2, one request.
         new_object = models.dbGaPDataAccessRequest.objects.get(dbgap_dar_id=23499)
         self.assertEqual(new_object.dbgap_data_access_snapshot, new_snapshot)
@@ -1611,6 +1613,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertEqual(new_object.original_participant_set, 1)
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
+        self.assertEqual(new_object.dbgap_dac, "BAR")
 
     def test_redirect_url(self):
         """Redirects to successful url."""
@@ -1915,7 +1918,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                         "study_accession": "phs000421",
                         "requests": [
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "FOO",
                                 "consent_abbrev": "GRU",
                                 "consent_code": 1,
                                 "DAR": 23497,
@@ -1999,7 +2002,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                         "study_accession": "phs000421",
                         "requests": [
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "FOO",
                                 "consent_abbrev": "GRU",
                                 "consent_code": 1,
                                 "DAR": 23497,
@@ -2008,7 +2011,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                                 "was_approved": "yes",
                             },
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "BAR",
                                 "consent_abbrev": "NPU",
                                 "consent_code": 2,
                                 "DAR": 23497,
@@ -2058,7 +2061,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                         "study_accession": "phs000421",
                         "requests": [
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "FOO",
                                 "consent_abbrev": "GRU",
                                 "consent_code": 1,
                                 "DAR": 23497,
@@ -2067,7 +2070,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                                 "was_approved": "yes",
                             },
                             {
-                                "DAC_abbrev": "FOOBI",
+                                "DAC_abbrev": "BAR",
                                 "consent_abbrev": "NPU",
                                 "consent_code": 2,
                                 "DAR": 23497,

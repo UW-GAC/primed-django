@@ -1121,7 +1121,6 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_created_dars_from_json_assertion_error_phs(self):
         """Test that an AssertionError is raised when phs in updated json is unexpected for DAR ID."""
-        """Can create updated DARs and keep original version and participant set."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         valid_json = {
             "Project_id": dbgap_application.dbgap_project_id,
