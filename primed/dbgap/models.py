@@ -351,6 +351,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     dbgap_consent_code=request_json["consent_code"],
                     dbgap_consent_abbreviation=request_json["consent_abbrev"],
                     dbgap_current_status=request_json["current_DAR_status"],
+                    dbgap_dac=request_json["DAC_abbrev"],
                 )
                 dar.full_clean()
                 dars.append(dar)
