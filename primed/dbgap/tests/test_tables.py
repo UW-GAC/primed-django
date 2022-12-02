@@ -187,6 +187,71 @@ class dbGaPApplicationTableTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 2)
         self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), 1)
 
+    def test_number_requested_dars_zero(self):
+        """Table shows correct count for number of requested DARs when an application has a snapshot but no DARs."""
+        dbgap_application = self.model_factory.create()
+        factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), 0)
+
+    def test_number_requested_dars_zero_no_snapshot(self):
+        """Table shows correct count for number of requested DARs when no snapshots have been added."""
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertIsNone(table.rows[0].get_cell_value("number_requested_dars"))
+
+    def test_number_requested_dars(self):
+        """Table shows correct count for number of requested DARs when there is one."""
+        dbgap_application = self.model_factory.create()
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), 5)
+
+    def test_number_requested_dars_two_applications(self):
+        """Number of requested DARs is correct for two applications."""
+        dbgap_application_1 = self.model_factory.create()
+        dbgap_snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application_1
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=dbgap_snapshot_1,
+        )
+        dbgap_application_2 = self.model_factory.create()
+        dbgap_snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application_2
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot_2,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), 2)
+        self.assertEqual(table.rows[1].get_cell_value("number_requested_dars"), 1)
+
     def test_last_update_no_snapshot(self):
         """Last update is --- with no snapshot."""
         self.model_factory.create()

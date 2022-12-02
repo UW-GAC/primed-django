@@ -63,6 +63,12 @@ class dbGaPApplicationTable(tables.Table):
         empty_values=(False,),
         accessor="dbgapdataaccesssnapshot_set__exists",
     )
+    number_requested_dars = tables.columns.Column(
+        verbose_name="Number of requested DARs",
+        orderable=False,
+        empty_values=(False,),
+        accessor="dbgapdataaccesssnapshot_set__exists",
+    )
     last_update = tables.columns.DateTimeColumn(
         accessor="dbgapdataaccesssnapshot_set__exists",
         orderable=False,
@@ -75,6 +81,12 @@ class dbGaPApplicationTable(tables.Table):
             .dbgapdataaccessrequest_set.approved()
             .count()
         )
+        return n_dars
+
+    def render_number_requested_dars(self, value, record):
+        n_dars = record.dbgapdataaccesssnapshot_set.latest(
+            "created"
+        ).dbgapdataaccessrequest_set.count()
         return n_dars
 
     def render_last_update(self, value, record):
@@ -146,6 +158,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
         model = models.dbGaPDataAccessRequest
         fields = (
             "dbgap_dar_id",
+            "dbgap_dac",
             "dbgap_phs",
             "original_version",
             "original_participant_set",
