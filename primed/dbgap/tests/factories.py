@@ -119,6 +119,7 @@ class dbGaPDataAccessRequestFactory(DjangoModelFactory):
     dbgap_consent_code = Faker("random_int")
     dbgap_consent_abbreviation = Faker("word")
     dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
+    dbgap_dac = Faker("word")
 
     class Meta:
         model = models.dbGaPDataAccessRequest

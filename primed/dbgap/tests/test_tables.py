@@ -7,6 +7,7 @@ from anvil_consortium_manager.tests.factories import (
     WorkspaceAuthorizationDomainFactory,
     WorkspaceGroupSharingFactory,
 )
+from django.db.models import Count
 from django.test import TestCase
 from django.utils import timezone
 
@@ -392,3 +393,32 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         self.assertIn(
             "circle-fill", table.rows[0].get_cell_value("in_authorization_domain")
         )
+
+
+class dbGaPDataAccessRequestSummaryTable(TestCase):
+
+    model = models.dbGaPDataAccessRequest
+    model_factory = factories.dbGaPDataAccessRequestFactory
+    table_class = tables.dbGaPDataAccessRequestSummaryTable
+
+    def annotate(self, qs):
+        return qs.values("dbgap_dac", "dbgap_current_status").annotate(
+            total=Count("pk")
+        )
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.annotate(self.model.objects.all()))
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_row(self):
+        self.model_factory.create()
+        table = self.table_class(self.annotate(self.model.objects.all()))
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_dacs(self):
+        self.model_factory.create(
+            dbgap_dac="FOO", dbgap_current_status=self.model.APPROVED
+        )
+        self.model_factory.create(dbgap_dac="BAR", dbgap_current_status=self.model.NEW)
+        table = self.table_class(self.annotate(self.model.objects.all()))
+        self.assertEqual(len(table.rows), 2)

@@ -2285,6 +2285,130 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         self.assertIn(dars[0], response.context_data["data_access_request_table"].data)
         self.assertIn(dars[1], response.context_data["data_access_request_table"].data)
 
+    def test_context_dar_table_only_shows_dars_for_this_snapshot(self):
+        """The data_access_request_table only shows DARs associated with this snapshot."""
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=self.snapshot
+        )
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.application
+        )
+        other_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=other_snapshot
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertIn("data_access_request_table", response.context_data)
+        self.assertEqual(
+            len(response.context_data["data_access_request_table"].rows), 1
+        )
+        self.assertIn(dar, response.context_data["data_access_request_table"].data)
+        self.assertNotIn(
+            other_dar, response.context_data["data_access_request_table"].data
+        )
+
+    def test_context_summary_table(self):
+        """The data_access_request_table exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertIn("summary_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["summary_table"],
+            tables.dbGaPDataAccessRequestSummaryTable,
+        )
+
+    def test_context_summary_table_none(self):
+        """The data_access_request_table works with no DARs."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 0)
+
+    def test_context_summary_table_contents(self):
+        """The data_access_request_table contents are correct."""
+        # 1 FOO approved
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=self.snapshot,
+            dbgap_dac="FOO",
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        # 2 FOO New
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=self.snapshot,
+            dbgap_dac="FOO",
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        # 3 BAR Approved
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            3,
+            dbgap_data_access_snapshot=self.snapshot,
+            dbgap_dac="BAR",
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        # 4 BAR New
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            4,
+            dbgap_data_access_snapshot=self.snapshot,
+            dbgap_dac="BAR",
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertIn("summary_table", response.context_data)
+        table = response.context_data["summary_table"]
+        self.assertEqual(len(table.rows), 4)
+        self.assertEqual(table.rows[0].get_cell_value("dbgap_dac"), "BAR")
+        self.assertEqual(
+            table.rows[0].get_cell_value("dbgap_current_status"),
+            models.dbGaPDataAccessRequest.APPROVED,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("total"), 3)
+        self.assertEqual(table.rows[1].get_cell_value("dbgap_dac"), "BAR")
+        self.assertEqual(
+            table.rows[1].get_cell_value("dbgap_current_status"),
+            models.dbGaPDataAccessRequest.NEW,
+        )
+        self.assertEqual(table.rows[1].get_cell_value("total"), 4)
+        self.assertEqual(table.rows[2].get_cell_value("dbgap_dac"), "FOO")
+        self.assertEqual(
+            table.rows[2].get_cell_value("dbgap_current_status"),
+            models.dbGaPDataAccessRequest.APPROVED,
+        )
+        self.assertEqual(table.rows[2].get_cell_value("total"), 1)
+        self.assertEqual(table.rows[3].get_cell_value("dbgap_dac"), "FOO")
+        self.assertEqual(
+            table.rows[3].get_cell_value("dbgap_current_status"),
+            models.dbGaPDataAccessRequest.NEW,
+        )
+        self.assertEqual(table.rows[3].get_cell_value("total"), 2)
+
+    def test_context_summary_table_only_shows_dars_for_this_snapshot(self):
+        """The data_access_request_table only shows DARs associated with this snapshot."""
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.application
+        )
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=other_snapshot,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+            dbgap_dac="FOO",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertIn("summary_table", response.context_data)
+        table = response.context_data["summary_table"]
+        self.assertEqual(len(table.rows), 0)
+
 
 class dbGaPDataAccessSnapshotAuditTest(TestCase):
     """Tests for the dbGaPDataAccessRequestAudit view."""

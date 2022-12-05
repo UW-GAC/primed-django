@@ -166,3 +166,16 @@ class dbGaPDataAccessRequestTable(tables.Table):
             "dbgap_consent_abbreviation",
             "dbgap_current_status",
         )
+
+
+class dbGaPDataAccessRequestSummaryTable(tables.Table):
+    """Table intended to show a summary of data access requests, grouped by DAC and current status."""
+
+    dbgap_dac = tables.columns.Column(attrs={"class": "col-auto"})
+    dbgap_current_status = tables.columns.Column()
+    total = tables.columns.Column()
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = ("dbgap_dac", "dbgap_current_status", "total")
+        attrs = {"class": "table table-sm"}
