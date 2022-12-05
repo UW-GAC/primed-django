@@ -117,12 +117,22 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
         empty_values=(False,),
         accessor="dbgapdataaccessrequest_set__exists",
     )
+    number_requested_dars = tables.columns.Column(
+        verbose_name="Number of requested DARs",
+        orderable=False,
+        empty_values=(False,),
+        accessor="dbgapdataaccesssnapshot_set__exists",
+    )
 
     def render_pk(self, record):
         return "See details"
 
     def render_number_approved_dars(self, value, record):
         n_dars = record.dbgapdataaccessrequest_set.approved().count()
+        return n_dars
+
+    def render_number_requested_dars(self, value, record):
+        n_dars = record.dbgapdataaccessrequest_set.count()
         return n_dars
 
 
