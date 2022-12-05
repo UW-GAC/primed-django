@@ -351,6 +351,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     dbgap_consent_code=request_json["consent_code"],
                     dbgap_consent_abbreviation=request_json["consent_abbrev"],
                     dbgap_current_status=request_json["current_DAR_status"],
+                    dbgap_dac=request_json["DAC_abbrev"],
                 )
                 dar.full_clean()
                 dars.append(dar)
@@ -416,6 +417,11 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         verbose_name=" dbGaP consent code",
         validators=[MinValueValidator(1)],
         help_text="The numeric code assigned to this consent group by dbGaP",
+    )
+    dbgap_dac = models.CharField(
+        verbose_name=" dbGaP DAC",
+        max_length=31,
+        help_text="The Data Access Committee for this DAR.",
     )
     dbgap_consent_abbreviation = models.CharField(
         verbose_name=" dbGaP consent abbreviation",

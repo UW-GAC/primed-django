@@ -63,6 +63,12 @@ class dbGaPApplicationTable(tables.Table):
         empty_values=(False,),
         accessor="dbgapdataaccesssnapshot_set__exists",
     )
+    number_requested_dars = tables.columns.Column(
+        verbose_name="Number of requested DARs",
+        orderable=False,
+        empty_values=(False,),
+        accessor="dbgapdataaccesssnapshot_set__exists",
+    )
     last_update = tables.columns.DateTimeColumn(
         accessor="dbgapdataaccesssnapshot_set__exists",
         orderable=False,
@@ -75,6 +81,12 @@ class dbGaPApplicationTable(tables.Table):
             .dbgapdataaccessrequest_set.approved()
             .count()
         )
+        return n_dars
+
+    def render_number_requested_dars(self, value, record):
+        n_dars = record.dbgapdataaccesssnapshot_set.latest(
+            "created"
+        ).dbgapdataaccessrequest_set.count()
         return n_dars
 
     def render_last_update(self, value, record):
@@ -105,12 +117,22 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
         empty_values=(False,),
         accessor="dbgapdataaccessrequest_set__exists",
     )
+    number_requested_dars = tables.columns.Column(
+        verbose_name="Number of requested DARs",
+        orderable=False,
+        empty_values=(False,),
+        accessor="dbgapdataaccesssnapshot_set__exists",
+    )
 
     def render_pk(self, record):
         return "See details"
 
     def render_number_approved_dars(self, value, record):
         n_dars = record.dbgapdataaccessrequest_set.approved().count()
+        return n_dars
+
+    def render_number_requested_dars(self, value, record):
+        n_dars = record.dbgapdataaccessrequest_set.count()
         return n_dars
 
 
@@ -146,6 +168,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
         model = models.dbGaPDataAccessRequest
         fields = (
             "dbgap_dar_id",
+            "dbgap_dac",
             "dbgap_phs",
             "original_version",
             "original_participant_set",
@@ -153,3 +176,16 @@ class dbGaPDataAccessRequestTable(tables.Table):
             "dbgap_consent_abbreviation",
             "dbgap_current_status",
         )
+
+
+class dbGaPDataAccessRequestSummaryTable(tables.Table):
+    """Table intended to show a summary of data access requests, grouped by DAC and current status."""
+
+    dbgap_dac = tables.columns.Column(attrs={"class": "col-auto"})
+    dbgap_current_status = tables.columns.Column()
+    total = tables.columns.Column()
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = ("dbgap_dac", "dbgap_current_status", "total")
+        attrs = {"class": "table table-sm"}

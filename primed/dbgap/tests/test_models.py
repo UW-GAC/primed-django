@@ -587,7 +587,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 2,
                             "DAR": 23497,
@@ -624,6 +624,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(new_object.dbgap_dac, "FOO")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
     @responses.activate
@@ -641,7 +642,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 1,
                             "DAR": 23497,
@@ -650,7 +651,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                             "was_approved": "yes",
                         },
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "BAR",
                             "consent_abbrev": "NPU",
                             "consent_code": 2,
                             "DAR": 23498,
@@ -687,6 +688,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(new_object.dbgap_dac, "FOO")
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertIn(new_object, dars)
@@ -698,6 +700,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(new_object.dbgap_dac, "BAR")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
 
     @responses.activate
@@ -715,7 +718,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 1,
                             "DAR": 23497,
@@ -731,7 +734,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "BARBI",
+                            "DAC_abbrev": "BAR",
                             "consent_abbrev": "DS-LD",
                             "consent_code": 1,
                             "DAR": 23498,
@@ -778,6 +781,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(new_object.dbgap_dac, "FOO")
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertIn(new_object, dars)
@@ -789,6 +793,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(new_object.dbgap_dac, "BAR")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
 
     @responses.activate
@@ -822,7 +827,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 2,
                             "DAR": 23497,
@@ -867,7 +872,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 1,
                             "DAR": 23497,
@@ -876,7 +881,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                             "was_approved": "yes",
                         },
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "BAR",
                             "consent_abbrev": "NPU",
                             "consent_code": 2,
                             "DAR": 23498,
@@ -913,6 +918,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "rejected")
+        self.assertEqual(new_object.dbgap_dac, "FOO")
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertEqual(new_object.dbgap_dar_id, 23498)
@@ -923,6 +929,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
+        self.assertEqual(new_object.dbgap_dac, "BAR")
 
     @responses.activate
     def test_dbgap_create_dars_updated_dars(self):
@@ -940,7 +947,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 2,
                             "DAR": 23497,
@@ -993,6 +1000,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(updated_dar.dbgap_consent_code, 2)
         self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(updated_dar.dbgap_current_status, "approved")
+        self.assertEqual(updated_dar.dbgap_dac, "FOO")
         # These should be pulled from the original dar.
         self.assertEqual(updated_dar.original_version, original_dar.original_version)
         self.assertEqual(
@@ -1015,7 +1023,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 1,
                             "DAR": 23497,
@@ -1051,7 +1059,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         # Add a new request to the JSON.
         valid_json["studies"][0]["requests"].append(
             {
-                "DAC_abbrev": "FOOBI",
+                "DAC_abbrev": "BAR",
                 "consent_abbrev": "NPU",
                 "consent_code": 2,
                 "DAR": 23498,
@@ -1089,6 +1097,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(updated_dar.dbgap_consent_code, 1)
         self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(updated_dar.dbgap_current_status, "approved")
+        self.assertEqual(updated_dar.dbgap_dac, "FOO")
         # These should be pulled from the original dar.
         self.assertEqual(updated_dar.original_version, original_dar.original_version)
         self.assertEqual(
@@ -1104,6 +1113,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_dar.dbgap_consent_code, 2)
         self.assertEqual(new_dar.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_dar.dbgap_current_status, "approved")
+        self.assertEqual(new_dar.dbgap_dac, "BAR")
         # These should be pulled from the original dar.
         self.assertEqual(new_dar.original_version, 33)
         self.assertEqual(new_dar.original_participant_set, 19)
@@ -1111,7 +1121,6 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_created_dars_from_json_assertion_error_phs(self):
         """Test that an AssertionError is raised when phs in updated json is unexpected for DAR ID."""
-        """Can create updated DARs and keep original version and participant set."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         valid_json = {
             "Project_id": dbgap_application.dbgap_project_id,
@@ -1125,7 +1134,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 2,
                             "DAR": 23497,
@@ -1186,7 +1195,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 1,
                             "DAR": 23497,
@@ -1247,7 +1256,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                     # N requests per study.
                     "requests": [
                         {
-                            "DAC_abbrev": "FOOBI",
+                            "DAC_abbrev": "FOO",
                             "consent_abbrev": "GRU",
                             "consent_code": 1,
                             "DAR": 23497,
@@ -1301,6 +1310,7 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=3,
             dbgap_consent_code=4,
             dbgap_consent_abbreviation="GRU",
+            dbgap_dac="TEST",
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPDataAccessRequest)

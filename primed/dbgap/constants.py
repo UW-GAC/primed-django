@@ -35,12 +35,19 @@ JSON_DAR_DEFS = {
     },
     "request": {
         "type": "object",
-        "required": ["consent_abbrev", "consent_code", "DAR", "current_DAR_status"],
+        "required": [
+            "consent_abbrev",
+            "consent_code",
+            "DAR",
+            "current_DAR_status",
+            "DAC_abbrev",
+        ],
         "properties": {
             "consent_abbrev": {"type": "string"},
             "consent_code": {"type": "number"},
             "DAR": {"type": "number"},
             "current_DAR_status": {"type": "string"},
+            "DAC_abbrev": {"type": "string"},
         },
     },
 }

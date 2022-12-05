@@ -729,6 +729,23 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
         self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
         self.assertIn("current_DAR_status", form.errors["dbgap_dar_data"][0])
 
+    def test_json_missing_DAC_abbrev(self):
+        """Form is invalid when DAC_abbrev is missing from the JSON."""
+        invalid_json = self.get_valid_dbgap_application_json()
+        invalid_json["studies"][0]["requests"][0].pop("DAC_abbrev")
+        print(invalid_json)
+        form_data = {
+            "dbgap_dar_data": json.dumps([invalid_json]),
+            "dbgap_application": self.dbgap_application,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
+        self.assertIn("DAC_abbrev", form.errors["dbgap_dar_data"][0])
+
     def test_dbgap_project_id_does_not_match(self):
         """Form is not valid when the dbgap_project_id does not match."""
         other_application = factories.dbGaPApplicationFactory.create(

@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.views.generic import CreateView, DetailView, FormView
@@ -252,14 +253,11 @@ class dbGaPDataAccessSnapshotCreate(
         return super().get_context_data(*args, **kwargs)
 
 
-class dbGaPDataAccessSnapshotDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
-):
+class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailView):
     """View to show details about a `dbGaPDataAccessSnapshot`."""
 
     model = models.dbGaPDataAccessSnapshot
     pk_url_kwarg = "dbgap_data_access_snapshot_pk"
-    context_table_name = "data_access_request_table"
 
     def get_dbgap_application(self):
         model = models.dbGaPApplication
@@ -285,10 +283,17 @@ class dbGaPDataAccessSnapshotDetail(
             queryset=queryset.filter(dbgap_application=self.dbgap_application)
         )
 
-    def get_table(self):
-        return tables.dbGaPDataAccessRequestTable(
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["data_access_request_table"] = tables.dbGaPDataAccessRequestTable(
             self.object.dbgapdataaccessrequest_set.all()
         )
+        context["summary_table"] = tables.dbGaPDataAccessRequestSummaryTable(
+            self.object.dbgapdataaccessrequest_set.all()
+            .values("dbgap_dac", "dbgap_current_status")
+            .annotate(total=Count("pk"))
+        )
+        return context
 
 
 class dbGaPDataAccessSnapshotAudit(AnVILConsortiumManagerViewRequired, DetailView):
