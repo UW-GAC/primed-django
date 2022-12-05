@@ -2409,6 +2409,29 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         table = response.context_data["summary_table"]
         self.assertEqual(len(table.rows), 0)
 
+    def test_no_alert_for_most_recent_snapshot(self):
+        """No alert is shown when this is the most recent snapshot for an application."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertNotContains(
+            response, "not the most recent snapshot", status_code=200
+        )
+
+    def test_alert_when_not_most_recent_snapshot(self):
+        """An alert is shown when this is not the most recent snapshot for an application."""
+        old_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.application,
+            created=timezone.now() - timedelta(weeks=5),
+            is_most_recent=False,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, old_snapshot.pk)
+        )
+        self.assertContains(response, "not the most recent snapshot", status_code=200)
+
 
 class dbGaPDataAccessSnapshotAuditTest(TestCase):
     """Tests for the dbGaPDataAccessRequestAudit view."""
@@ -2707,3 +2730,26 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
             audit.dbGaPDataAccessSnapshotAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    def test_no_alert_for_most_recent_snapshot(self):
+        """No alert is shown when this is the most recent snapshot for an application."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
+        )
+        self.assertNotContains(
+            response, "not the most recent snapshot", status_code=200
+        )
+
+    def test_alert_when_not_most_recent_snapshot(self):
+        """An alert is shown when this is not the most recent snapshot for an application."""
+        old_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=self.application,
+            created=timezone.now() - timedelta(weeks=5),
+            is_most_recent=False,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.application.dbgap_project_id, old_snapshot.pk)
+        )
+        self.assertContains(response, "not the most recent snapshot", status_code=200)
