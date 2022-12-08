@@ -301,9 +301,13 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                 # Try looking up the original version and participant set from a previous DAR.
                 try:
                     # This assumes that a DAR/dbgap_dar_id remains the same for the same phs and consent code.
-                    previous_dar = dbGaPDataAccessRequest.objects.filter(
-                        dbgap_dar_id=request_json["DAR"]
-                    ).latest("created")
+                    previous_dar = (
+                        dbGaPDataAccessRequest.objects.approved()
+                        .filter(
+                            dbgap_dar_id=request_json["DAR"],
+                        )
+                        .latest("created")
+                    )
                     # Make sure that excepted values match.
                     # Is ValueError the best error to raise?
                     if previous_dar.dbgap_phs != phs:

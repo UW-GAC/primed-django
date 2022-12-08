@@ -952,6 +952,79 @@ class dbGaPDataAccessSnapshotTest(TestCase):
                             "consent_code": 2,
                             "DAR": 23497,
                             "current_version": 12,
+                            "current_DAR_status": "approved",
+                            "was_approved": "yes",
+                        },
+                    ],
+                },
+            ],
+        }
+        original_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=valid_json,
+            created=timezone.now() - timedelta(weeks=4),
+        )
+        # Create the original DAR.
+        original_dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=original_snapshot,
+            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
+            dbgap_phs=421,
+            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
+            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
+                "consent_abbrev"
+            ],
+            dbgap_current_status=valid_json["studies"][0]["requests"][0][
+                "current_DAR_status"
+            ],  # Make sure the current status is different.
+            original_version=32,
+            original_participant_set=18,
+        )
+        # Now create a new snapshot and DARs from that.
+        second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=valid_json,
+            created=timezone.now(),
+        )
+        updated_dars = second_snapshot.create_dars_from_json()
+        self.assertEqual(len(updated_dars), 1)
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
+        updated_dar = updated_dars[0]
+        self.assertIsInstance(updated_dar, models.dbGaPDataAccessRequest)
+        self.assertNotEqual(updated_dar.pk, original_dar.pk)
+        self.assertEqual(updated_dar.dbgap_dar_id, 23497)
+        self.assertEqual(updated_dar.dbgap_data_access_snapshot, second_snapshot)
+        self.assertEqual(updated_dar.dbgap_phs, 421)
+        self.assertEqual(updated_dar.dbgap_consent_code, 2)
+        self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
+        self.assertEqual(updated_dar.dbgap_current_status, "approved")
+        self.assertEqual(updated_dar.dbgap_dac, "FOO")
+        # These should be pulled from the original dar.
+        self.assertEqual(updated_dar.original_version, original_dar.original_version)
+        self.assertEqual(
+            updated_dar.original_participant_set, original_dar.original_participant_set
+        )
+
+    @responses.activate
+    def test_dbgap_create_dars_version_change_between_new_and_approved(self):
+        """Sets version and participant set to the current version for an DAR that went from new to approved."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        valid_json = {
+            "Project_id": dbgap_application.dbgap_project_id,
+            "PI_name": "Test Investigator",
+            "Project_closed": "no",
+            # Two studies.
+            "studies": [
+                {
+                    "study_name": "A test study",
+                    "study_accession": "phs000421",
+                    # N requests per study.
+                    "requests": [
+                        {
+                            "DAC_abbrev": "FOO",
+                            "consent_abbrev": "GRU",
+                            "consent_code": 2,
+                            "DAR": 23497,
+                            "current_version": 12,
                             "current_DAR_status": "new",
                             "was_approved": "no",
                         },
@@ -988,6 +1061,15 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             dbgap_dar_data=valid_json,
             created=timezone.now(),
         )
+        # Add responses with a new study version and participant_set.
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v33.p19"
+            },
+        )
         updated_dars = second_snapshot.create_dars_from_json()
         self.assertEqual(len(updated_dars), 1)
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
@@ -1002,10 +1084,8 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(updated_dar.dbgap_current_status, "approved")
         self.assertEqual(updated_dar.dbgap_dac, "FOO")
         # These should be pulled from the original dar.
-        self.assertEqual(updated_dar.original_version, original_dar.original_version)
-        self.assertEqual(
-            updated_dar.original_participant_set, original_dar.original_participant_set
-        )
+        self.assertEqual(updated_dar.original_version, 33)
+        self.assertEqual(updated_dar.original_participant_set, 19)
 
     @responses.activate
     def test_create_dars_from_json_one_update_one_new(self):
