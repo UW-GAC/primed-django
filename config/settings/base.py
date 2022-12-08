@@ -362,6 +362,7 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
+    "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
