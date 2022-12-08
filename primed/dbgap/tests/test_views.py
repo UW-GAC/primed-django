@@ -1758,7 +1758,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_consent_abbreviation=self.valid_json[0]["studies"][0]["requests"][0][
                 "consent_abbrev"
             ],
-            dbgap_current_status="new",
+            dbgap_current_status="approved",
             original_version=3,
             original_participant_set=2,
         )
@@ -1800,7 +1800,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_consent_abbreviation=self.valid_json[0]["studies"][0]["requests"][0][
                 "consent_abbrev"
             ],
-            dbgap_current_status="new",
+            dbgap_current_status="approved",
             original_version=3,
             original_participant_set=2,
         )
