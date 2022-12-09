@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -158,3 +159,16 @@ class StudySite(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         """Return the absolute url for this object."""
         return reverse("primed_anvil:study_sites:detail", args=[self.pk])
+
+
+class RequesterModel(models.Model):
+    """An abstract model for tracking a `requested_by` field."""
+
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        help_text="The user who requested creation.",
+    )
+
+    class Meta:
+        abstract = True

@@ -512,6 +512,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "dbgap"
 
     def get_url(self, *args):
@@ -572,6 +573,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                     data_use_modifier_1.pk,
                     data_use_modifier_2.pk,
                 ],
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -592,6 +594,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
+        self.assertEqual(new_workspace_data.requested_by, self.requester)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
         self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
         responses.assert_call_count(url, 1)
@@ -618,6 +621,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "dbgap"
 
     def get_url(self, *args):
@@ -703,6 +707,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                     data_use_modifier_1.pk,
                     data_use_modifier_2.pk,
                 ],
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -723,6 +728,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
+        self.assertEqual(new_workspace_data.requested_by, self.requester)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
         self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
         responses.assert_call_count(url, 1)

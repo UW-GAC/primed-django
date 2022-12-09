@@ -7,8 +7,10 @@ from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
+from primed.primed_anvil.models import RequesterModel
 
-class SimulatedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
+
+class SimulatedDataWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track simulated data workspaces."""
 
     history = HistoricalRecords()
@@ -17,7 +19,7 @@ class SimulatedDataWorkspace(TimeStampedModel, BaseWorkspaceData):
         return self.workspace.__str__()
 
 
-class ConsortiumDevelWorkspace(TimeStampedModel, BaseWorkspaceData):
+class ConsortiumDevelWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track shared consortium development workspaces."""
 
     history = HistoricalRecords()
@@ -26,7 +28,7 @@ class ConsortiumDevelWorkspace(TimeStampedModel, BaseWorkspaceData):
         return self.workspace.__str__()
 
 
-class ExampleWorkspace(TimeStampedModel, BaseWorkspaceData):
+class ExampleWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track example workspaces."""
 
     history = HistoricalRecords()

@@ -4,6 +4,8 @@ from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
+from primed.users.tests.factories import UserFactory
+
 from .. import adapters, models
 from . import factories
 
@@ -14,7 +16,8 @@ class SimulatedDataWorkspaceTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        instance = models.SimulatedDataWorkspace(workspace=workspace)
+        user = UserFactory.create()
+        instance = models.SimulatedDataWorkspace(workspace=workspace, requested_by=user)
         instance.save()
         self.assertIsInstance(instance, models.SimulatedDataWorkspace)
 
@@ -33,7 +36,10 @@ class ConsortiumDevelWorkspaceTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        instance = models.ConsortiumDevelWorkspace(workspace=workspace)
+        user = UserFactory.create()
+        instance = models.ConsortiumDevelWorkspace(
+            workspace=workspace, requested_by=user
+        )
         instance.save()
         self.assertIsInstance(instance, models.ConsortiumDevelWorkspace)
 
@@ -52,7 +58,8 @@ class ExampleWorkspaceTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
-        instance = models.ExampleWorkspace(workspace=workspace)
+        user = UserFactory.create()
+        instance = models.ExampleWorkspace(workspace=workspace, requested_by=user)
         instance.save()
         self.assertIsInstance(instance, models.ExampleWorkspace)
 
