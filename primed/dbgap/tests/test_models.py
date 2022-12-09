@@ -123,6 +123,7 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
+        user = UserFactory.create()
         workspace = WorkspaceFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
@@ -136,6 +137,7 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_consent_abbreviation="GRU-NPU",
             acknowledgments="test acknowledgments",
             data_use_permission=data_use_permission,
+            requested_by=user,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPWorkspace)
@@ -157,6 +159,7 @@ class dbGaPWorkspaceTest(TestCase):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         workspace = WorkspaceFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
+        user = UserFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
             dbgap_study_accession=dbgap_workspace.dbgap_study_accession,
             dbgap_version=dbgap_workspace.dbgap_version,
@@ -164,6 +167,7 @@ class dbGaPWorkspaceTest(TestCase):
             # These are here to prevent ValueErrors about unsaved related objects.
             data_use_permission=data_use_permission,
             workspace=workspace,
+            requested_by=user,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()

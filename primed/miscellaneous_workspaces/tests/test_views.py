@@ -9,6 +9,8 @@ from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
 
+from primed.users.tests.factories import UserFactory
+
 from .. import models
 from . import factories
 
@@ -57,6 +59,7 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "simulated_data"
 
     def get_url(self, *args):
@@ -99,6 +102,7 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -132,6 +136,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "simulated_data"
 
     def get_url(self, *args):
@@ -199,6 +204,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -253,6 +259,7 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "devel"
 
     def get_url(self, *args):
@@ -295,6 +302,7 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -328,6 +336,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "devel"
 
     def get_url(self, *args):
@@ -395,6 +404,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -449,6 +459,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "example"
 
     def get_url(self, *args):
@@ -491,6 +502,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -524,6 +536,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
             )
         )
+        self.requester = UserFactory.create()
         self.workspace_type = "example"
 
     def get_url(self, *args):
@@ -591,6 +604,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-requested_by": self.requester.pk,
             },
         )
         self.assertEqual(response.status_code, 302)

@@ -118,6 +118,7 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.workspace = WorkspaceFactory()
         self.dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         self.data_use_permission = DataUsePermissionFactory.create()
+        self.requester = UserFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
@@ -131,6 +132,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -149,6 +151,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_modifiers": DataUseModifier.objects.all(),
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -167,6 +170,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_modifiers": DataUseModifier.objects.all(),
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -182,6 +186,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -189,6 +194,26 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.assertIn("dbgap_study_accession", form.errors)
         self.assertEqual(len(form.errors["dbgap_study_accession"]), 1)
         self.assertIn("required", form.errors["dbgap_study_accession"][0])
+
+    def test_invalid_requester(self):
+        """Form is invalid when missing dbgap_study_accession."""
+        form_data = {
+            "dbgap_study_accession": self.dbgap_study_accession,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
+            "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
+            "data_use_limitations": "test limitations",
+            "data_use_permission": self.data_use_permission,
+            "acknowledgments": "test acknowledgmnts",
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("requested_by", form.errors)
+        self.assertEqual(len(form.errors["requested_by"]), 1)
+        self.assertIn("required", form.errors["requested_by"][0])
 
     def test_invalid_missing_dbgap_version(self):
         """Form is invalid when missing dbgap_version."""
@@ -202,6 +227,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -222,6 +248,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -241,6 +268,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -261,6 +289,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -280,6 +309,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -299,6 +329,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -318,6 +349,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -337,6 +369,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "data_use_limitations": "test limitations",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -357,6 +390,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -376,6 +410,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -396,6 +431,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())

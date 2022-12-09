@@ -4,6 +4,8 @@ from anvil_consortium_manager.adapters.workspace import workspace_adapter_regist
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.test import TestCase
 
+from primed.users.tests.factories import UserFactory
+
 from .. import forms
 
 
@@ -14,24 +16,40 @@ class SimulatedDataWorkspaceFormTest(TestCase):
     def setUp(self):
         """Create a workspace for use in the form."""
         self.workspace = WorkspaceFactory.create()
+        self.requester = UserFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
-        form_data = {}
+        form_data = {
+            "requested_by": self.requester,
+        }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
         self.assertIn("workspace", form.errors)
         self.assertEqual(len(form.errors["workspace"]), 1)
         self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_requester(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("requested_by", form.errors)
+        self.assertEqual(len(form.errors["requested_by"]), 1)
+        self.assertIn("required", form.errors["requested_by"][0])
 
 
 class ConsortiumDevelWorkspaceFormTest(TestCase):
@@ -41,24 +59,40 @@ class ConsortiumDevelWorkspaceFormTest(TestCase):
     def setUp(self):
         """Create a workspace for use in the form."""
         self.workspace = WorkspaceFactory.create()
+        self.requester = UserFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
-        form_data = {}
+        form_data = {
+            "requested_by": self.requester,
+        }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
         self.assertIn("workspace", form.errors)
         self.assertEqual(len(form.errors["workspace"]), 1)
         self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_requester(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("requested_by", form.errors)
+        self.assertEqual(len(form.errors["requested_by"]), 1)
+        self.assertIn("required", form.errors["requested_by"][0])
 
 
 class ExampleWorkspaceFormTest(TestCase):
@@ -68,24 +102,40 @@ class ExampleWorkspaceFormTest(TestCase):
     def setUp(self):
         """Create a workspace for use in the form."""
         self.workspace = WorkspaceFactory.create()
+        self.requester = UserFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
             "workspace": self.workspace,
+            "requested_by": self.requester,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
-        form_data = {}
+        form_data = {
+            "requested_by": self.requester,
+        }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
         self.assertIn("workspace", form.errors)
         self.assertEqual(len(form.errors["workspace"]), 1)
         self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_requester(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("requested_by", form.errors)
+        self.assertEqual(len(form.errors["requested_by"]), 1)
+        self.assertIn("required", form.errors["requested_by"][0])
 
 
 class TemplateWorkspaceFormTest(TestCase):

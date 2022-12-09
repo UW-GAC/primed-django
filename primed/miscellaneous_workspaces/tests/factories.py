@@ -5,6 +5,8 @@ from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from factory import SubFactory, lazy_attribute
 from factory.django import DjangoModelFactory
 
+from primed.users.tests.factories import UserFactory
+
 from .. import adapters, models
 
 
@@ -12,6 +14,7 @@ class SimulatedDataWorkspaceFactory(DjangoModelFactory):
     """A factory for the SimulatedDataWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="simulated_data")
+    requested_by = SubFactory(UserFactory)
 
     class Meta:
         model = models.SimulatedDataWorkspace
@@ -24,6 +27,7 @@ class ConsortiumDevelWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type=adapters.ConsortiumDevelWorkspaceAdapter().get_type(),
     )
+    requested_by = SubFactory(UserFactory)
 
     class Meta:
         model = models.ConsortiumDevelWorkspace
@@ -36,6 +40,7 @@ class ExampleWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type=adapters.ExampleWorkspaceAdapter().get_type(),
     )
+    requested_by = SubFactory(UserFactory)
 
     class Meta:
         model = models.ExampleWorkspace

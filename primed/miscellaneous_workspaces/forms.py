@@ -11,7 +11,10 @@ class SimulatedDataWorkspaceForm(forms.ModelForm):
 
     class Meta:
         model = models.SimulatedDataWorkspace
-        fields = ("workspace",)
+        fields = (
+            "workspace",
+            "requested_by",
+        )
 
 
 class ConsortiumDevelWorkspaceForm(forms.ModelForm):
@@ -19,7 +22,10 @@ class ConsortiumDevelWorkspaceForm(forms.ModelForm):
 
     class Meta:
         model = models.ConsortiumDevelWorkspace
-        fields = ("workspace",)
+        fields = (
+            "workspace",
+            "requested_by",
+        )
 
 
 class ExampleWorkspaceForm(forms.ModelForm):
@@ -27,7 +33,10 @@ class ExampleWorkspaceForm(forms.ModelForm):
 
     class Meta:
         model = models.ExampleWorkspace
-        fields = ("workspace",)
+        fields = (
+            "workspace",
+            "requested_by",
+        )
 
 
 class TemplateWorkspaceForm(forms.ModelForm):
@@ -47,4 +56,7 @@ class TemplateWorkspaceForm(forms.ModelForm):
 
     class Meta:
         model = models.TemplateWorkspace
-        fields = ("workspace", "intended_workspace_type")
+        fields = (
+            "workspace",
+            "intended_workspace_type",
+        )
