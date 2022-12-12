@@ -633,9 +633,8 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
         self.assertEqual(len(form.errors), 1)
         self.assertIn("dbgap_dar_data", form.errors)
         self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
-        self.assertIn("JSON validation error:", form.errors["dbgap_dar_data"][0])
         self.assertIn("JSON array", form.errors["dbgap_dar_data"][0])
-        self.assertIn("too long", form.errors["dbgap_dar_data"][0])
+        self.assertIn("more than one", form.errors["dbgap_dar_data"][0])
 
     def test_json_missing_dbgap_project_id(self):
         """Form is invalid when dbgap_project_idis missing from the JSON."""

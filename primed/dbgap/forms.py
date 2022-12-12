@@ -75,6 +75,9 @@ class dbGaPDataAccessSnapshotForm(forms.ModelForm):
             raise ValidationError(
                 self.ERROR_JSON_VALIDATION, params={"error": error_message}
             )
+        # Verify that there is only one project in the json.
+        if len(data) > 1:
+            raise ValidationError("JSON array includes more than one project ID.")
         # Return the first object in the array, since people will be cutting and pasting
         # from the dbGaP interface. It returns an array with one object, and we want to
         # store only object.
