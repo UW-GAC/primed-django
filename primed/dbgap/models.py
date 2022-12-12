@@ -9,7 +9,6 @@ referencing (e.g., "dbgap_study_accession").
 
 import logging
 import re
-from urllib.parse import urlencode
 
 import jsonschema
 import requests
@@ -24,7 +23,7 @@ from simple_history.models import HistoricalRecords
 
 from primed.primed_anvil.models import DataUseOntologyModel, RequesterModel, Study
 
-from . import constants, managers
+from . import constants, helpers, managers
 
 logger = logging.getLogger(__name__)
 
@@ -191,16 +190,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
 
     def get_dbgap_dar_json_url(self):
         """Return the dbGaP URL that lists DARs for this application."""
-        url_params = {
-            "name": "project_report",
-            "page": "getreport",
-            "mode": "json",
-            "filter": ["mode", "project_list"],
-            "project_list": str(self.dbgap_project_id),
-        }
-        url = "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?%s"
-        # Doseq means to generate the filter key twice, once for "mode" and once for "project_list"
-        return url % urlencode(url_params, doseq=True)
+        return helpers.get_dbgap_dar_json_url([self.dbgap_project_id])
 
 
 class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
