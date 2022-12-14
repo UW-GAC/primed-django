@@ -579,33 +579,20 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_dbgap_create_dars_from_json_one_study_one_dar(self):
         """Can create one DAR for one study."""
-        valid_json = {
-            "Project_id": 6512,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 2,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(studies=[study_json])
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__dbgap_project_id=6512,
-            dbgap_dar_data=valid_json,
+            dbgap_application__dbgap_project_id=project_json["Project_id"],
+            dbgap_dar_data=project_json,
         )
         # Add responses with the study version and participant_set.
         responses.add(
@@ -620,12 +607,12 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(len(dars), 1)
         new_object = dars[0]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_dar_id, 1234)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
         self.assertEqual(new_object.original_version, 32)
         self.assertEqual(new_object.original_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_code, 1)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
         self.assertEqual(new_object.dbgap_dac, "FOO")
@@ -634,42 +621,27 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_dbgap_create_dars_from_json_one_study_two_dars(self):
         """Can create two DARs for one study."""
-        valid_json = {
-            "Project_id": 6512,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 1,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                        {
-                            "DAC_abbrev": "BAR",
-                            "consent_abbrev": "NPU",
-                            "consent_code": 2,
-                            "DAR": 23498,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json_1 = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        dar_json_2 = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="NPU",
+            consent_code=2,
+            DAR=1235,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json_1, dar_json_2]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(studies=[study_json])
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__dbgap_project_id=6512,
-            dbgap_dar_data=valid_json,
+            dbgap_application__dbgap_project_id=project_json["Project_id"],
+            dbgap_dar_data=project_json,
         )
         # Add responses with the study version and participant_set.
         responses.add(
@@ -684,7 +656,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(len(dars), 2)
         new_object = dars[0]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_dar_id, 1234)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
         self.assertEqual(new_object.original_version, 32)
@@ -696,7 +668,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertIn(new_object, dars)
-        self.assertEqual(new_object.dbgap_dar_id, 23498)
+        self.assertEqual(new_object.dbgap_dar_id, 1235)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
         self.assertEqual(new_object.original_version, 32)
@@ -704,55 +676,39 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(new_object.dbgap_consent_code, 2)
         self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
-        self.assertEqual(new_object.dbgap_dac, "BAR")
+        self.assertEqual(new_object.dbgap_dac, "FOO")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
 
     @responses.activate
-    def test_dbgap_create_dars_from_json_two_studies_one_dar(self):
+    def test_dbgap_create_dars_from_json_two_studies_one_dar_each(self):
         """Can create one DAR for two studies."""
-        valid_json = {
-            "Project_id": 6512,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "Test study 1",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 1,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-                {
-                    "study_name": "Test study 2",
-                    "study_accession": "phs000896",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "BAR",
-                            "consent_abbrev": "DS-LD",
-                            "consent_code": 1,
-                            "DAR": 23498,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json_1 = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        dar_json_2 = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="BAR",
+            consent_abbrev="NPU",
+            consent_code=2,
+            DAR=1235,
+            current_DAR_status="approved",
+        )
+        study_json_1 = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json_1]
+        )
+        study_json_2 = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000896", requests=[dar_json_2]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            studies=[study_json_1, study_json_2]
+        )
+
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__dbgap_project_id=6512,
-            dbgap_dar_data=valid_json,
+            dbgap_application__dbgap_project_id=project_json["Project_id"],
+            dbgap_dar_data=project_json,
         )
         # Add responses with the study version and participant_set.
         responses.add(
@@ -777,7 +733,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(len(dars), 2)
         new_object = dars[0]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
+        self.assertEqual(new_object.dbgap_dar_id, 1234)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 421)
         self.assertEqual(new_object.original_version, 32)
@@ -789,13 +745,13 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         new_object = dars[1]
         self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
         self.assertIn(new_object, dars)
-        self.assertEqual(new_object.dbgap_dar_id, 23498)
+        self.assertEqual(new_object.dbgap_dar_id, 1235)
         self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
         self.assertEqual(new_object.dbgap_phs, 896)
         self.assertEqual(new_object.original_version, 2)
         self.assertEqual(new_object.original_participant_set, 1)
-        self.assertEqual(new_object.dbgap_consent_code, 1)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "DS-LD")
+        self.assertEqual(new_object.dbgap_consent_code, 2)
+        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
         self.assertEqual(new_object.dbgap_current_status, "approved")
         self.assertEqual(new_object.dbgap_dac, "BAR")
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 2)
@@ -803,14 +759,11 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_dbgap_create_dars_from_json_invalid_json(self):
         """JSON is validated."""
-        invalid_json = {
-            "Project_id": 6512,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-        }
+        project_json = factories.dbGaPJSONProjectFactory()
+        project_json.pop("studies")
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__dbgap_project_id=6512,
-            dbgap_dar_data=invalid_json,
+            dbgap_application__dbgap_project_id=project_json["Project_id"],
+            dbgap_dar_data=project_json,
         )
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             dbgap_snapshot.create_dars_from_json()
@@ -819,42 +772,10 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_dbgap_create_dars_from_json_mismatched_project_id(self):
         """No dbGaPDataAccessRequests are created if project_id doesn't match."""
-        valid_json = {
-            "Project_id": 1,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 2,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        project_json = factories.dbGaPJSONProjectFactory(Project_id=1)
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__dbgap_project_id=6512,
-            dbgap_dar_data=valid_json,
-        )
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            constants.DBGAP_STUDY_URL,
-            status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            dbgap_application__dbgap_project_id=2,
+            dbgap_dar_data=project_json,
         )
         with self.assertRaises(ValueError) as e:
             dbgap_snapshot.create_dars_from_json()
@@ -864,42 +785,20 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     @responses.activate
     def test_does_include_dars_that_are_not_approved(self):
         """Does creates DARs with a different status than approved."""
-        valid_json = {
-            "Project_id": 6512,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 1,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "rejected",
-                            "was_approved": "yes",
-                        },
-                        {
-                            "DAC_abbrev": "BAR",
-                            "consent_abbrev": "NPU",
-                            "consent_code": 2,
-                            "DAR": 23498,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="rejected",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(studies=[study_json])
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application__dbgap_project_id=6512,
-            dbgap_dar_data=valid_json,
+            dbgap_application__dbgap_project_id=project_json["Project_id"],
+            dbgap_dar_data=project_json,
         )
         # Add responses with the study version and participant_set.
         responses.add(
@@ -911,82 +810,48 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             },
         )
         dars = dbgap_snapshot.create_dars_from_json()
-        self.assertEqual(len(dars), 2)
+        self.assertEqual(len(dars), 1)
         new_object = dars[0]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23497)
-        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
-        self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.original_version, 32)
-        self.assertEqual(new_object.original_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 1)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "GRU")
         self.assertEqual(new_object.dbgap_current_status, "rejected")
-        self.assertEqual(new_object.dbgap_dac, "FOO")
-        new_object = dars[1]
-        self.assertIsInstance(new_object, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_object.dbgap_dar_id, 23498)
-        self.assertEqual(new_object.dbgap_data_access_snapshot, dbgap_snapshot)
-        self.assertEqual(new_object.dbgap_phs, 421)
-        self.assertEqual(new_object.original_version, 32)
-        self.assertEqual(new_object.original_participant_set, 18)
-        self.assertEqual(new_object.dbgap_consent_code, 2)
-        self.assertEqual(new_object.dbgap_consent_abbreviation, "NPU")
-        self.assertEqual(new_object.dbgap_current_status, "approved")
-        self.assertEqual(new_object.dbgap_dac, "BAR")
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
     @responses.activate
     def test_dbgap_create_dars_updated_dars(self):
         """Can create updated DARs and keep original version and participant set."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        valid_json = {
-            "Project_id": dbgap_application.dbgap_project_id,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 2,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
         original_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now() - timedelta(weeks=4),
         )
         # Create the original DAR.
         original_dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot=original_snapshot,
-            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
+            dbgap_dar_id=dar_json["DAR"],
             dbgap_phs=421,
-            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
-            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
-                "consent_abbrev"
-            ],
-            dbgap_current_status=valid_json["studies"][0]["requests"][0][
-                "current_DAR_status"
-            ],  # Make sure the current status is different.
+            dbgap_consent_code=dar_json["consent_code"],
+            dbgap_consent_abbreviation=dar_json["consent_abbrev"],
+            dbgap_current_status="approved",
             original_version=32,
             original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
         second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now(),
         )
         updated_dars = second_snapshot.create_dars_from_json()
@@ -995,13 +860,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         updated_dar = updated_dars[0]
         self.assertIsInstance(updated_dar, models.dbGaPDataAccessRequest)
         self.assertNotEqual(updated_dar.pk, original_dar.pk)
-        self.assertEqual(updated_dar.dbgap_dar_id, 23497)
         self.assertEqual(updated_dar.dbgap_data_access_snapshot, second_snapshot)
-        self.assertEqual(updated_dar.dbgap_phs, 421)
-        self.assertEqual(updated_dar.dbgap_consent_code, 2)
-        self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(updated_dar.dbgap_current_status, "approved")
-        self.assertEqual(updated_dar.dbgap_dac, "FOO")
         # These should be pulled from the original dar.
         self.assertEqual(updated_dar.original_version, original_dar.original_version)
         self.assertEqual(
@@ -1012,57 +871,40 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     def test_dbgap_create_dars_version_change_between_new_and_approved(self):
         """Sets version and participant set to the current version for an DAR that went from new to approved."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        valid_json = {
-            "Project_id": dbgap_application.dbgap_project_id,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 2,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "new",
-                            "was_approved": "no",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
+
         original_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now() - timedelta(weeks=4),
         )
         # Create the original DAR.
         original_dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot=original_snapshot,
-            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
+            dbgap_dar_id=dar_json["DAR"],
             dbgap_phs=421,
-            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
-            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
-                "consent_abbrev"
-            ],
-            dbgap_current_status=valid_json["studies"][0]["requests"][0][
-                "current_DAR_status"
-            ],  # Make sure the current status is different.
+            dbgap_consent_code=dar_json["consent_code"],
+            dbgap_consent_abbreviation=dar_json["consent_abbrev"],
+            dbgap_current_status="new",  # Make sure the current status is not approved.
             original_version=32,
             original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
-        # Update the current status.
-        valid_json["studies"][0]["requests"][0]["current_DAR_status"] = "approved"
-        valid_json["studies"][0]["requests"][0]["was_approved"] = "yes"
         second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now(),
         )
         # Add responses with a new study version and participant_set.
@@ -1080,182 +922,48 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         updated_dar = updated_dars[0]
         self.assertIsInstance(updated_dar, models.dbGaPDataAccessRequest)
         self.assertNotEqual(updated_dar.pk, original_dar.pk)
-        self.assertEqual(updated_dar.dbgap_dar_id, 23497)
         self.assertEqual(updated_dar.dbgap_data_access_snapshot, second_snapshot)
-        self.assertEqual(updated_dar.dbgap_phs, 421)
-        self.assertEqual(updated_dar.dbgap_consent_code, 2)
-        self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(updated_dar.dbgap_current_status, "approved")
-        self.assertEqual(updated_dar.dbgap_dac, "FOO")
         # These should be pulled from the original dar.
         self.assertEqual(updated_dar.original_version, 33)
         self.assertEqual(updated_dar.original_participant_set, 19)
 
     @responses.activate
-    def test_create_dars_from_json_one_update_one_new(self):
-        """Can create updated DARs and keep original version and participant set."""
-        dbgap_application = factories.dbGaPApplicationFactory.create()
-        valid_json = {
-            "Project_id": dbgap_application.dbgap_project_id,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 1,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
-        original_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
-            created=timezone.now() - timedelta(weeks=4),
-        )
-        # Create the original DAR.
-        original_dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=original_snapshot,
-            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
-            dbgap_phs=421,
-            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
-            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
-                "consent_abbrev"
-            ],
-            dbgap_current_status=valid_json["studies"][0]["requests"][0][
-                "current_DAR_status"
-            ],  # Make sure the current status is different.
-            original_version=32,
-            original_participant_set=18,
-        )
-        # Now create a new snapshot and DARs from that.
-        # Add a new request to the JSON.
-        valid_json["studies"][0]["requests"].append(
-            {
-                "DAC_abbrev": "BAR",
-                "consent_abbrev": "NPU",
-                "consent_code": 2,
-                "DAR": 23498,
-                "current_version": 12,
-                "current_DAR_status": "approved",
-                "was_approved": "yes",
-            }
-        )
-        # The study version/participant set has been updated - add a response.
-        # Add responses with the study version and participant_set.
-        responses.add(
-            responses.GET,
-            constants.DBGAP_STUDY_URL,
-            status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v33.p19"
-            },
-        )
-        # Create the new snapshot.
-        second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
-            created=timezone.now(),
-        )
-        new_dars = second_snapshot.create_dars_from_json()
-        self.assertEqual(len(new_dars), 2)
-        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 3)
-        updated_dar = models.dbGaPDataAccessRequest.objects.filter(
-            dbgap_dar_id=23497
-        ).latest("pk")
-        self.assertNotEqual(updated_dar.pk, original_dar.pk)
-        self.assertEqual(updated_dar.dbgap_dar_id, 23497)
-        self.assertEqual(updated_dar.dbgap_data_access_snapshot, second_snapshot)
-        self.assertEqual(updated_dar.dbgap_phs, 421)
-        self.assertEqual(updated_dar.dbgap_consent_code, 1)
-        self.assertEqual(updated_dar.dbgap_consent_abbreviation, "GRU")
-        self.assertEqual(updated_dar.dbgap_current_status, "approved")
-        self.assertEqual(updated_dar.dbgap_dac, "FOO")
-        # These should be pulled from the original dar.
-        self.assertEqual(updated_dar.original_version, original_dar.original_version)
-        self.assertEqual(
-            updated_dar.original_participant_set, original_dar.original_participant_set
-        )
-        new_dar = models.dbGaPDataAccessRequest.objects.filter(
-            dbgap_dar_id=23498
-        ).latest("pk")
-        self.assertIsInstance(new_dar, models.dbGaPDataAccessRequest)
-        self.assertEqual(new_dar.dbgap_dar_id, 23498)
-        self.assertEqual(new_dar.dbgap_data_access_snapshot, second_snapshot)
-        self.assertEqual(new_dar.dbgap_phs, 421)
-        self.assertEqual(new_dar.dbgap_consent_code, 2)
-        self.assertEqual(new_dar.dbgap_consent_abbreviation, "NPU")
-        self.assertEqual(new_dar.dbgap_current_status, "approved")
-        self.assertEqual(new_dar.dbgap_dac, "BAR")
-        # These should be pulled from the original dar.
-        self.assertEqual(new_dar.original_version, 33)
-        self.assertEqual(new_dar.original_participant_set, 19)
-
-    @responses.activate
     def test_created_dars_from_json_assertion_error_phs(self):
         """Test that an AssertionError is raised when phs in updated json is unexpected for DAR ID."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        valid_json = {
-            "Project_id": dbgap_application.dbgap_project_id,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 2,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000892", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
         original_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now() - timedelta(weeks=4),
         )
         # Create the original DAR.
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot=original_snapshot,
-            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
+            dbgap_dar_id=dar_json["DAR"],
             dbgap_phs=421,
-            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
-            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
-                "consent_abbrev"
-            ],
-            dbgap_current_status=valid_json["studies"][0]["requests"][0][
-                "current_DAR_status"
-            ],  # Make sure the current status is different.
+            dbgap_consent_code=dar_json["consent_code"],
+            dbgap_consent_abbreviation=dar_json["consent_abbrev"],
             original_version=32,
             original_participant_set=18,
         )
         # Now create a new snapshot and DARs from that.
-        # Change the phs
-        valid_json["studies"][0]["study_accession"] = "phs000892"
+        # Change the phs.
         second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now(),
         )
         with self.assertRaises(ValueError) as e:
@@ -1267,56 +975,39 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     def test_created_dars_from_json_assertion_error_consent_code(self):
         """Test that an AssertionError is raised when consent_code in updated json is unexpected for DAR ID."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        valid_json = {
-            "Project_id": dbgap_application.dbgap_project_id,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 1,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=2,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
         original_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now() - timedelta(weeks=4),
         )
         # Create the original DAR.
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot=original_snapshot,
-            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
+            dbgap_dar_id=dar_json["DAR"],
             dbgap_phs=421,
-            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
-            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
-                "consent_abbrev"
-            ],
-            dbgap_current_status=valid_json["studies"][0]["requests"][0][
-                "current_DAR_status"
-            ],  # Make sure the current status is different.
+            dbgap_consent_code=1,
+            dbgap_consent_abbreviation=dar_json["consent_abbrev"],
+            dbgap_current_status=dar_json["current_DAR_status"],
             original_version=32,
             original_participant_set=18,
         )
-        # Now create a new snapshot and DARs from that.
-        # Change the phs
-        valid_json["studies"][0]["requests"][0]["consent_code"] = 2
+        # Now create a new snapshot and DARs from that, with a different consent code..
         second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now(),
         )
         with self.assertRaises(ValueError) as e:
@@ -1328,50 +1019,37 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     def test_created_dars_from_json_assertion_error_dbgap_project_id(self):
         """Test that an AssertionError is raised when dbgap_project_id in updated json is unexpected for DAR ID."""
         dbgap_application = factories.dbGaPApplicationFactory.create(dbgap_project_id=2)
-        valid_json = {
-            "Project_id": dbgap_application.dbgap_project_id,
-            "PI_name": "Test Investigator",
-            "Project_closed": "no",
-            # Two studies.
-            "studies": [
-                {
-                    "study_name": "A test study",
-                    "study_accession": "phs000421",
-                    # N requests per study.
-                    "requests": [
-                        {
-                            "DAC_abbrev": "FOO",
-                            "consent_abbrev": "GRU",
-                            "consent_code": 1,
-                            "DAR": 23497,
-                            "current_version": 12,
-                            "current_DAR_status": "approved",
-                            "was_approved": "yes",
-                        },
-                    ],
-                },
-            ],
-        }
+        dar_json = factories.dbGaPJSONRequestFactory(
+            DAC_abbrev="FOO",
+            consent_abbrev="GRU",
+            consent_code=1,
+            DAR=1234,
+            current_DAR_status="approved",
+        )
+        study_json = factories.dbGaPJSONStudyFactory(
+            study_accession="phs000421", requests=[dar_json]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
+        factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=project_json,
+            created=timezone.now() - timedelta(weeks=4),
+        )
         # Create an original DAR with a different project id. This shouldn't happen but...
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot__dbgap_application__dbgap_project_id=1,
-            dbgap_dar_id=valid_json["studies"][0]["requests"][0]["DAR"],
+            dbgap_dar_id=1234,
             dbgap_phs=421,
-            dbgap_consent_code=valid_json["studies"][0]["requests"][0]["consent_code"],
-            dbgap_consent_abbreviation=valid_json["studies"][0]["requests"][0][
-                "consent_abbrev"
-            ],
-            dbgap_current_status=valid_json["studies"][0]["requests"][0][
-                "current_DAR_status"
-            ],  # Make sure the current status is different.
-            original_version=32,
-            original_participant_set=18,
+            dbgap_current_status="approved",
+            dbgap_consent_code=1,
+            dbgap_consent_abbreviation="GRU",
         )
-        # Now create a new snapshot and DARs from that.
-        # Change the phs
+        # Now create a new snapshot and DARs from that, with the mismatched project id.
         second_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
-            dbgap_dar_data=valid_json,
+            dbgap_dar_data=project_json,
             created=timezone.now(),
         )
         with self.assertRaises(ValueError) as e:

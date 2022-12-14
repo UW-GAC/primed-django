@@ -4,13 +4,16 @@ from anvil_consortium_manager.tests.factories import (
 )
 from factory import (
     Dict,
+    DictFactory,
     Faker,
     LazyAttribute,
+    List,
     SelfAttribute,
     SubFactory,
     post_generation,
 )
 from factory.django import DjangoModelFactory
+from factory.fuzzy import FuzzyChoice
 
 from primed.primed_anvil.tests.factories import (
     DataUseOntologyModelFactory,
@@ -148,3 +151,36 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.dbGaPDataAccessRequest
+
+
+# TODO: update tests to use these factories instead of generating their own.
+class dbGaPJSONRequestFactory(DictFactory):
+    """Factory to create JSON for a data access request associated with a study."""
+
+    DAC_abbrev = Faker("company")
+    consent_abbrev = Faker("word")
+    consent_code = Faker("random_int")
+    DAR = Faker("random_int")
+    current_version = Faker("random_int")
+    current_DAR_status = FuzzyChoice(
+        models.dbGaPDataAccessRequest.DBGAP_CURRENT_STATUS_CHOICES,
+        getter=lambda c: c[0],
+    )
+    was_approved = "yes"
+
+
+class dbGaPJSONStudyFactory(DictFactory):
+    """Factory to create JSON for studies associated with a project."""
+
+    study_name = Faker("company")
+    study_accession = Faker("numerify", text="phs######")
+    requests = List([SubFactory(dbGaPJSONRequestFactory)])
+
+
+class dbGaPJSONProjectFactory(DictFactory):
+    """Factory to create JSON a project."""
+
+    Project_id = Faker("random_int")
+    PI_name = Faker("name")
+    Project_closed = "no"
+    studies = List([SubFactory(dbGaPJSONStudyFactory)])
