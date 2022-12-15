@@ -11,9 +11,11 @@
       <li>
         <a class="dropdown-item" href="{% url 'primed_anvil:studies:list' %}">List studies</a>
       </li>
-      <li>
-        <a class="dropdown-item" href="{% url 'primed_anvil:studies:new' %}">Add a new study</a>
-      </li>
+      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+        <li>
+          <a class="dropdown-item" href="{% url 'primed_anvil:studies:new' %}">Add a new study</a>
+        </li>
+      {% endif %}
     </ul>
   </li>
 
@@ -25,21 +27,25 @@
       <li>
         <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:list' %}">List dbGaP study accessions</a>
       </li>
-      <li>
-        <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:new' %}">Add a new dbGaP study accession</a>
-      </li>
+      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+        <li>
+          <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:new' %}">Add a new dbGaP study accession</a>
+        </li>
+      {% endif %}
 
       <li><hr class="dropdown-divider"></li>
 
       <li>
         <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:list' %}">List dbGaP applications</a>
       </li>
-      <li>
-        <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
-      </li>
-      <li>
-        <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:update_dars' %}">Update DARs for all applications</a>
-      </li>
+      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+        <li>
+          <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:update_dars' %}">Update DARs for all applications</a>
+        </li>
+      {% endif %}
 
     </ul>
   </li>
