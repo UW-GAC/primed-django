@@ -27,7 +27,7 @@ class StudySiteFactory(DjangoModelFactory):
 class DataUsePermissionFactory(DjangoModelFactory):
     """A factory for the MainConsent model."""
 
-    code = Faker("word")
+    code = Sequence(lambda n: "code{}".format(n))
     description = Faker("catch_phrase")
     identifier = Sequence(lambda n: "DUO:{0:07d}".format(n))
 
@@ -39,7 +39,7 @@ class DataUsePermissionFactory(DjangoModelFactory):
 class DataUseModifierFactory(DjangoModelFactory):
     """A factory for the ConsentModifier model."""
 
-    code = Faker("word")
+    code = Sequence(lambda n: "code{}".format(n))
     description = Faker("catch_phrase")
     identifier = Sequence(lambda n: "DUO:{0:07d}".format(n))
 
