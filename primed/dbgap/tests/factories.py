@@ -180,7 +180,6 @@ class dbGaPJSONStudyFactory(DictFactory):
 class dbGaPJSONProjectFactory(DictFactory):
     """Factory to create JSON a project."""
 
-    # TODO: Add a param for dbgap_application, to set project id (and PI?) automatically.
     Project_id = Faker("random_int")
     PI_name = Faker("name")
     Project_closed = "no"
