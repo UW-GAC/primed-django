@@ -9,6 +9,7 @@ from factory import (
     LazyAttribute,
     List,
     SelfAttribute,
+    Sequence,
     SubFactory,
     Trait,
     post_generation,
@@ -44,7 +45,7 @@ class TimeStampedModelFactory(DjangoModelFactory):
 class dbGaPStudyAccessionFactory(DjangoModelFactory):
     """A factory for the dbGaPStudy model."""
 
-    dbgap_phs = Faker("random_int")
+    dbgap_phs = Sequence(lambda n: n)
 
     @post_generation
     def studies(self, create, extracted, **kwargs):
@@ -86,7 +87,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
     """A factory for the dbGaPApplication model."""
 
     principal_investigator = SubFactory(UserFactory)
-    dbgap_project_id = Faker("random_int")
+    dbgap_project_id = Sequence(lambda n: n)
     anvil_group = SubFactory(ManagedGroupFactory)
 
     class Meta:
@@ -118,7 +119,7 @@ class dbGaPDataAccessRequestFactory(DjangoModelFactory):
 
     dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
     dbgap_phs = Faker("random_int")
-    dbgap_dar_id = Faker("random_int")
+    dbgap_dar_id = Sequence(lambda n: n)
     original_version = Faker("random_int")
     original_participant_set = Faker("random_int")
     dbgap_consent_code = Faker("random_int")
@@ -137,7 +138,7 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
     dbgap_phs = LazyAttribute(
         lambda o: o.dbgap_workspace.dbgap_study_accession.dbgap_phs
     )
-    dbgap_dar_id = Faker("random_int")
+    dbgap_dar_id = Sequence(lambda n: n)
     original_version = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_version)
     original_participant_set = LazyAttribute(
         lambda o: o.dbgap_workspace.dbgap_participant_set
@@ -160,7 +161,7 @@ class dbGaPJSONRequestFactory(DictFactory):
     DAC_abbrev = Faker("word")
     consent_abbrev = Faker("word")
     consent_code = Faker("random_int")
-    DAR = Faker("random_int")
+    DAR = Sequence(lambda n: n)
     current_version = Faker("random_int")
     current_DAR_status = FuzzyChoice(
         models.dbGaPDataAccessRequest.DBGAP_CURRENT_STATUS_CHOICES,
@@ -180,7 +181,7 @@ class dbGaPJSONStudyFactory(DictFactory):
 class dbGaPJSONProjectFactory(DictFactory):
     """Factory to create JSON a project."""
 
-    Project_id = Faker("random_int")
+    Project_id = Sequence(lambda n: n)
     PI_name = Faker("name")
     Project_closed = "no"
     studies = List([SubFactory(dbGaPJSONStudyFactory)])
