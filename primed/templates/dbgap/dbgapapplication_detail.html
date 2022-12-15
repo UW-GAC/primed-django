@@ -22,7 +22,9 @@
 {% endblock after_panel %}
 
 {% block action_buttons %}
-  <p>
-    <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
-  </p>
+  {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+    <p>
+      <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
+    </p>
+  {% endif %}
 {% endblock action_buttons %}
