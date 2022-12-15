@@ -10,6 +10,7 @@ from factory import (
     List,
     SelfAttribute,
     SubFactory,
+    Trait,
     post_generation,
 )
 from factory.django import DjangoModelFactory
@@ -153,7 +154,6 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
         model = models.dbGaPDataAccessRequest
 
 
-# TODO: update tests to use these factories instead of generating their own.
 class dbGaPJSONRequestFactory(DictFactory):
     """Factory to create JSON for a data access request associated with a study."""
 
@@ -185,3 +185,8 @@ class dbGaPJSONProjectFactory(DictFactory):
     PI_name = Faker("name")
     Project_closed = "no"
     studies = List([SubFactory(dbGaPJSONStudyFactory)])
+
+    class Params:
+        dbgap_application = Trait(
+            Project_id=LazyAttribute(lambda o: o.dbgap_application.dbgap_project_id)
+        )

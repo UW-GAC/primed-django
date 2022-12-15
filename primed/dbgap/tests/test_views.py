@@ -1426,7 +1426,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         phs = "phs{phs:06d}".format(phs=fake.random_int())
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id, studies=[study_json]
+            dbgap_application=self.dbgap_application, studies=[study_json]
         )
         responses.add(
             responses.GET,
@@ -1469,7 +1469,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession="phs000421", requests=[dar_json]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id, studies=[study_json]
+            dbgap_application=self.dbgap_application, studies=[study_json]
         )
         # Add responses with the study version and participant_set.
         responses.add(
@@ -1514,7 +1514,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         phs = "phs{phs:06d}".format(phs=fake.random_int())
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         responses.add(
@@ -1543,7 +1543,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         phs = "phs{phs:06d}".format(phs=fake.random_int())
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         responses.add(
@@ -1624,7 +1624,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -1667,7 +1667,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -1722,7 +1722,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -1851,7 +1851,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         # Add responses with the study version and participant_set.
@@ -1897,7 +1897,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -1949,7 +1949,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json_1, request_json_2]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         # Add responses with the study version and participant_set.
@@ -1997,7 +1997,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             study_accession=phs, requests=[request_json_1, request_json_2]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id,
+            dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
         # Add responses with the study version and participant_set.
@@ -2127,7 +2127,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
     def test_updates_one_application(self):
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         responses.add(
@@ -2153,7 +2153,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         # First application and associated JSON.
         dbgap_application_1 = factories.dbGaPApplicationFactory.create()
         project_json_1 = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application_1.dbgap_project_id
+            dbgap_application=dbgap_application_1
         )
         phs_1 = project_json_1["studies"][0]["study_accession"]
         responses.add(
@@ -2168,7 +2168,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         # Second application and associated JSON.
         dbgap_application_2 = factories.dbGaPApplicationFactory.create()
         project_json_2 = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application_2.dbgap_project_id
+            dbgap_application=dbgap_application_2
         )
         phs_2 = project_json_2["studies"][0]["study_accession"]
         responses.add(
@@ -2201,7 +2201,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """Redirects to successful url."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         responses.add(
@@ -2223,7 +2223,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """Redirects to successful url."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         responses.add(
@@ -2286,7 +2286,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """Shows an error when one dbGaP application does not exist."""
         dbgap_application_1 = factories.dbGaPApplicationFactory.create()
         project_json_1 = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application_1.dbgap_project_id
+            dbgap_application=dbgap_application_1
         )
         project_json_2 = factories.dbGaPJSONProjectFactory()
         self.client.force_login(self.user)
@@ -2311,7 +2311,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """Updates the is_most_recent for older snapshots."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -2349,7 +2349,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """Can add a second snapshot and new DARs."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         factories.dbGaPDataAccessSnapshotFactory.create(
@@ -2402,7 +2402,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a HTTP 404 response."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         # Add responses with the study version and participant_set.
@@ -2439,7 +2439,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         """The dbGaPDataAccessSnapshot is not created if there is an HTTP 404 error."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id
+            dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -2487,7 +2487,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             requests=[request_json_1, request_json_2]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+            dbgap_application=dbgap_application, studies=[study_json]
         )
         phs = project_json["studies"][0]["study_accession"]
         # Add responses with the study version and participant_set.
@@ -2532,7 +2532,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             requests=[request_json_1, request_json_2]
         )
         project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+            dbgap_application=dbgap_application, studies=[study_json]
         )
         phs = project_json["studies"][0]["study_accession"]
 
