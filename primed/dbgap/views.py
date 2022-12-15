@@ -15,10 +15,11 @@ from django.db import transaction
 from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
+from django.urls import reverse
 from django.views.generic import CreateView, DetailView, FormView
 from django_tables2 import SingleTableMixin, SingleTableView
 
-from . import audit, forms, models, tables
+from . import audit, forms, helpers, models, tables
 
 logger = logging.getLogger(__name__)
 
@@ -251,6 +252,117 @@ class dbGaPDataAccessSnapshotCreate(
         if "dbgap_application" not in kwargs:
             kwargs["dbgap_application"] = self.dbgap_application
         return super().get_context_data(*args, **kwargs)
+
+
+class dbGaPDataAccessSnapshotCreateMultiple(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
+):
+
+    form_class = forms.dbGaPDataAccessSnapshotMultipleForm
+    template_name = "dbgap/dbgapdataaccesssnapshot_form_multiple.html"
+    # ERROR_DARS_ALREADY_ADDED = (
+    #     "Data Access Requests have already been added for this application."
+    # )
+    # ERROR_PROJECT_ID_DOES_NOT_MATCH = (
+    #     "Project id in JSON does not match dbGaP application project id."
+    # )
+    # ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
+    ERROR_CREATING_DARS = "Error creating Data Access Requests."
+    success_msg = "Successfully added Data Access Requests."
+
+    def get_context_data(self, **kwargs):
+        """Add to the context data."""
+        context = super().get_context_data(**kwargs)
+        # The URL for updating all applications.
+        project_ids = [
+            x
+            for x in models.dbGaPApplication.objects.values_list(
+                "dbgap_project_id", flat=True
+            )
+        ]
+        context["dbagp_dar_json_url"] = helpers.get_dbgap_dar_json_url(project_ids)
+        return context
+
+    def get_success_url(self):
+        return reverse("dbgap:dbgap_applications:list")
+
+    def form_valid(self, form):
+        """Create dbGaPDataAccessSnapshots and associated dbGaPDataAccessRequests for all projects in the JSON."""
+        dbgap_dar_data = form.cleaned_data["dbgap_dar_data"]
+        try:
+            # Use a transaction because we don't want either the snapshot or the requests
+            # to be saved upon failure.
+            with transaction.atomic():
+                # Loop over projects.
+                for project_json in dbgap_dar_data:
+                    dbgap_project_id = project_json["Project_id"]
+                    dbgap_application = models.dbGaPApplication.objects.get(
+                        dbgap_project_id=dbgap_project_id
+                    )
+                    try:
+                        previous_snapshot = models.dbGaPDataAccessSnapshot.objects.get(
+                            dbgap_application=dbgap_application,
+                            is_most_recent=True,
+                        )
+                        previous_snapshot.is_most_recent = False
+                        previous_snapshot.save()
+                    except models.dbGaPDataAccessSnapshot.DoesNotExist:
+                        pass
+                    # Now save the new object.
+                    snapshot = models.dbGaPDataAccessSnapshot(
+                        dbgap_application=dbgap_application,
+                        dbgap_dar_data=project_json,
+                        is_most_recent=True,
+                    )
+                    snapshot.full_clean()
+                    snapshot.save()
+                    snapshot.create_dars_from_json()
+        except (ValidationError, IntegrityError):
+            # Log the JSON as an error.
+            msg = "JSON: {}".format(form.cleaned_data["dbgap_dar_data"])
+            logger.error(msg)
+            # Add an error message.
+            messages.error(self.request, self.ERROR_CREATING_DARS)
+            return self.render_to_response(self.get_context_data(form=form))
+        except requests.exceptions.HTTPError as e:
+            # log the error.
+            logger.error(str(e))
+            # Add an error message.
+            messages.error(self.request, self.ERROR_CREATING_DARS)
+            return self.render_to_response(self.get_context_data(form=form))
+
+        # try:
+        #     # Use a transaction because we don't want either the snapshot or the requests
+        #     # to be saved upon failure.
+        #     with transaction.atomic():
+        #         # Update the most recent snapshot if it exists.
+        #         try:
+        #             previous_snapshot = models.dbGaPDataAccessSnapshot.objects.get(
+        #                 dbgap_application=self.dbgap_application,
+        #                 is_most_recent=True,
+        #             )
+        #             previous_snapshot.is_most_recent = False
+        #             previous_snapshot.save()
+        #         except models.dbGaPDataAccessSnapshot.DoesNotExist:
+        #             pass
+        #         # Now save the new object.
+        #         form.instance.is_most_recent = True
+        #         self.object = form.save()
+        #         self.object.create_dars_from_json()
+        # except (ValidationError, IntegrityError):
+        #     # Log the JSON as an error.
+        #     msg = "JSON: {}".format(form.cleaned_data["dbgap_dar_data"])
+        #     logger.error(msg)
+        #     # Add an error message.
+        #     messages.error(self.request, self.ERROR_CREATING_DARS)
+        #     return self.render_to_response(self.get_context_data(form=form))
+        # except requests.exceptions.HTTPError as e:
+        #     # log the error.
+        #     logger.error(str(e))
+        #     # Add an error message.
+        #     messages.error(self.request, self.ERROR_CREATING_DARS)
+        #     return self.render_to_response(self.get_context_data(form=form))
+        return super().form_valid(form)
 
 
 class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailView):

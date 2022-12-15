@@ -82,3 +82,36 @@ class dbGaPDataAccessSnapshotForm(forms.ModelForm):
         # from the dbGaP interface. It returns an array with one object, and we want to
         # store only object.
         return data[0]
+
+
+class dbGaPDataAccessSnapshotMultipleForm(forms.Form):
+    """Form to create new dbGaPDataAccessSnapshots for multiple dbGaPApplications at once."""
+
+    ERROR_PROJECT_ID_DOES_NOT_EXIST = (
+        "dbGaP Application(s) for some project id(s) do not exist in app."
+    )
+    ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"
+
+    dbgap_dar_data = forms.JSONField()
+
+    def clean_dbgap_dar_data(self):
+        data = self.cleaned_data["dbgap_dar_data"]
+        try:
+            jsonschema.validate(data, constants.JSON_DAR_SCHEMA)
+        except jsonschema.exceptions.ValidationError as e:
+            # Replace the full json string because it will be very long
+            error_message = e.message.replace(str(e.instance), "JSON array")
+            raise ValidationError(
+                self.ERROR_JSON_VALIDATION, params={"error": error_message}
+            )
+        # Verify that all projects exist.
+        missing_ids = []
+        for project_json in data:
+            project_id = project_json["Project_id"]
+            if not models.dbGaPApplication.objects.filter(
+                dbgap_project_id=project_id
+            ).exists():
+                missing_ids.append(str(project_id))
+        if missing_ids:
+            raise ValidationError(self.ERROR_PROJECT_ID_DOES_NOT_EXIST)
+        return data

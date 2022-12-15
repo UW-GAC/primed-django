@@ -2025,8 +2025,551 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
                 "dbgap_application": self.dbgap_application.pk,
             },
         )
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(response.status_code, 200)
+        # No objects were created.
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 1)
+        existing_snapshot.refresh_from_db()
+        self.assertTrue(existing_snapshot.is_most_recent)
+
+
+class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
+    """Tests for the dbGaPDataAccessRequestCreateFromJson view."""
+
+    def setUp(self):
+        """Set up test class."""
+        # Make sure no actual calls are made, so activate responses for every test.
+        responses.start()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        responses.stop()
+        responses.reset()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "dbgap:dbgap_applications:update_dars",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPDataAccessSnapshotCreateMultiple.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has no permissions."""
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("form" in response.context_data)
+
+    def test_form_class(self):
+        """Form is the expected class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIsInstance(
+            response.context_data["form"], forms.dbGaPDataAccessSnapshotMultipleForm
+        )
+
+    def test_updates_one_application(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
+        )
+        self.assertEqual(response.status_code, 302)
+        dbgap_application.refresh_from_db()
+        self.assertEqual(dbgap_application.dbgapdataaccesssnapshot_set.count(), 1)
+        new_snapshot = dbgap_application.dbgapdataaccesssnapshot_set.latest("pk")
+        self.assertEqual(new_snapshot.dbgapdataaccessrequest_set.count(), 1)
+
+    def test_updates_two_applications(self):
+        # First application and associated JSON.
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        project_json_1 = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application_1.dbgap_project_id
+        )
+        phs_1 = project_json_1["studies"][0]["study_accession"]
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs_1})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs_1 + ".v1.p1"
+            },
+        )
+        # Second application and associated JSON.
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        project_json_2 = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application_2.dbgap_project_id
+        )
+        phs_2 = project_json_2["studies"][0]["study_accession"]
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs_2})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs_2 + ".v2.p2"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"dbgap_dar_data": json.dumps([project_json_1, project_json_2])},
+        )
+        self.assertEqual(response.status_code, 302)
+        # Check first application.
+        dbgap_application_1.refresh_from_db()
+        self.assertEqual(dbgap_application_1.dbgapdataaccesssnapshot_set.count(), 1)
+        new_snapshot_1 = dbgap_application_1.dbgapdataaccesssnapshot_set.latest("pk")
+        self.assertEqual(new_snapshot_1.dbgapdataaccessrequest_set.count(), 1)
+        # Check second
+        dbgap_application_2.refresh_from_db()
+        self.assertEqual(dbgap_application_2.dbgapdataaccesssnapshot_set.count(), 1)
+        new_snapshot_2 = dbgap_application_2.dbgapdataaccesssnapshot_set.latest("pk")
+        self.assertEqual(new_snapshot_2.dbgapdataaccessrequest_set.count(), 1)
+
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
+        )
+        self.assertRedirects(response, reverse("dbgap:dbgap_applications:list"))
+
+    def test_success_message(self):
+        """Redirects to successful url."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}, follow=True
+        )
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessSnapshotCreateMultiple.success_msg, str(messages[0])
+        )
+
+    def test_error_blank_dbgap_dar_data(self):
+        """Form shows an error when study is missing."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": ""})
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("required", form.errors["dbgap_dar_data"][0])
+
+    def test_dbgap_application_does_not_exist(self):
+        """Shows an error when the dbGaP application does not exist."""
+        project_json = factories.dbGaPJSONProjectFactory()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
+        )
+        self.assertEqual(response.status_code, 200)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("not exist", form.errors["dbgap_dar_data"][0])
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 0)
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_second_dbgap_application_does_not_exist(self):
+        """Shows an error when one dbGaP application does not exist."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        project_json_1 = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application_1.dbgap_project_id
+        )
+        project_json_2 = factories.dbGaPJSONProjectFactory()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"dbgap_dar_data": json.dumps([project_json_1, project_json_2])},
+        )
+        self.assertEqual(response.status_code, 200)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("not exist", form.errors["dbgap_dar_data"][0])
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 0)
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_updates_existing_snapshot_is_most_recent(self):
+        """Updates the is_most_recent for older snapshots."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=project_json,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=True,
+        )
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
+            },
+        )
+        # Now add a new snapshot.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
+        )
+        self.client.force_login(self.user)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 2)
+        new_snapshot = models.dbGaPDataAccessSnapshot.objects.latest("pk")
+        self.assertEqual(new_snapshot.dbgap_application, dbgap_application)
+        self.assertEqual(new_snapshot.dbgap_dar_data, project_json)
+        self.assertTrue(new_snapshot.is_most_recent)
+        # Updates the old snapshot.
+        existing_snapshot.refresh_from_db()
+        self.assertFalse(existing_snapshot.is_most_recent)
+
+    def test_can_add_a_second_snapshot_with_dars(self):
+        """Can add a second snapshot and new DARs."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=project_json,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=True,
+        )
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
+            },
+        )
+        # Now add a new snapshot.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 2)
+        new_snapshot = models.dbGaPDataAccessSnapshot.objects.latest("pk")
+        self.assertEqual(new_snapshot.dbgap_application, dbgap_application)
+        self.assertEqual(new_snapshot.dbgap_dar_data, project_json)
+        self.assertEqual(new_snapshot.dbgapdataaccessrequest_set.count(), 1)
+
+    def test_post_invalid_json(self):
+        """JSON is invalid."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"dbgap_dar_data": json.dumps({"foo": "bar"})},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("dbgap_dar_data", form.errors)
+        self.assertEqual(len(form.errors["dbgap_dar_data"]), 1)
+        self.assertIn("JSON validation error", form.errors["dbgap_dar_data"][0])
+
+    def test_snapshot_not_created_if_http404(self):
+        """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a HTTP 404 response."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=404,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "dbgap_dar_data": json.dumps([project_json]),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No form errors but...
+        self.assertIn("form", response.context_data)
+        self.assertTrue(response.context_data["form"].is_valid())
+        # There is an error message.
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessSnapshotCreateMultiple.ERROR_CREATING_DARS,
+            str(messages[0]),
+        )
+        # No objects were created.
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 0)
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_existing_snapshot_not_updated_http404(self):
+        """The dbGaPDataAccessSnapshot is not created if there is an HTTP 404 error."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            dbgap_dar_data=project_json,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=True,
+        )
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=404,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "dbgap_dar_data": json.dumps([project_json]),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No form errors but...
+        self.assertIn("form", response.context_data)
+        self.assertTrue(response.context_data["form"].is_valid())
+        # There is an error message.
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessSnapshotCreateMultiple.ERROR_CREATING_DARS,
+            str(messages[0]),
+        )
+        # No new objects were created.
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 1)
+        existing_snapshot.refresh_from_db()
+        self.assertTrue(existing_snapshot.is_most_recent)
+
+    def test_snapshot_not_created_if_dar_validation_error(self):
+        """The dbGaPDataAccessSnapshot is not created if DARs cannot be created."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        request_json_1 = factories.dbGaPJSONRequestFactory(DAR=12345)
+        request_json_2 = factories.dbGaPJSONRequestFactory(DAR=12345)
+        study_json = factories.dbGaPJSONStudyFactory(
+            requests=[request_json_1, request_json_2]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
+        phs = project_json["studies"][0]["study_accession"]
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v32.p18"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "dbgap_dar_data": json.dumps([project_json]),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No form errors but...
+        self.assertIn("form", response.context_data)
+        self.assertTrue(response.context_data["form"].is_valid())
+        # There is an error message.
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessSnapshotCreateMultiple.ERROR_CREATING_DARS,
+            str(messages[0]),
+        )
+        # No objects were created.
+        self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 0)
+        self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 0)
+
+    def test_existing_snapshot_is_most_recent_with_dar_validation_error(self):
+        """An existing dbGaPDataAccessSnapshot.is_most_recent value is not updated if DARs cannot be created."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        request_json_1 = factories.dbGaPJSONRequestFactory(DAR=12345)
+        request_json_2 = factories.dbGaPJSONRequestFactory(DAR=12345)
+        study_json = factories.dbGaPJSONStudyFactory(
+            requests=[request_json_1, request_json_2]
+        )
+        project_json = factories.dbGaPJSONProjectFactory(
+            Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
+        )
+        phs = project_json["studies"][0]["study_accession"]
+
+        existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=True,
+        )
+        # Add responses with the study version and participant_set.
+        responses.add(
+            responses.GET,
+            constants.DBGAP_STUDY_URL,
+            match=[responses.matchers.query_param_matcher({"study_id": phs})],
+            status=302,
+            headers={
+                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v32.p18"
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "dbgap_dar_data": json.dumps([project_json]),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No form errors but...
+        self.assertIn("form", response.context_data)
+        self.assertTrue(response.context_data["form"].is_valid())
+        # There is an error message.
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.dbGaPDataAccessSnapshotCreateMultiple.ERROR_CREATING_DARS,
+            str(messages[0]),
+        )
         # No objects were created.
         self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 1)
         existing_snapshot.refresh_from_db()

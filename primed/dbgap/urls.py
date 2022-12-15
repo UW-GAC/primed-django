@@ -41,6 +41,11 @@ dbgap_application_patterns = (
         path("", views.dbGaPApplicationList.as_view(), name="list"),
         path("new/", views.dbGaPApplicationCreate.as_view(), name="new"),
         path(
+            "update_dars/",
+            views.dbGaPDataAccessSnapshotCreateMultiple.as_view(),
+            name="update_dars",
+        ),
+        path(
             "<int:dbgap_project_id>/",
             views.dbGaPApplicationDetail.as_view(),
             name="detail",

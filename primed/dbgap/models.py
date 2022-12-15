@@ -318,6 +318,8 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     # If we don't have info about it from a previous DAR, query dbGaP to get the current
                     # version and participant set numbers for this phs.
                     # This url should resolve to url for the current version/participant set.
+                    # This assumes that the study has been released, which should be true for all PRIMED studies.
+                    # It is not necessarily true for all dbGaP applications, eg TOPMed applying to the EA.
                     response = requests.get(
                         constants.DBGAP_STUDY_URL,
                         params={"study_id": "phs{phs:06d}".format(phs=phs)},
