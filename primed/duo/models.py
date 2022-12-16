@@ -70,16 +70,20 @@ class DataUseOntologyModel(models.Model):
 
     data_use_permission = TreeForeignKey(
         DataUsePermission,
+        verbose_name="DUO data use permission",
         null=True,
+        blank=True,
         on_delete=models.PROTECT,
         help_text="""The DataUsePermission associated with this study-consent group.""",
     )
     data_use_modifiers = TreeManyToManyField(
         DataUseModifier,
+        verbose_name="DUO data use modifiers",
         blank=True,
         help_text="""The DataUseModifiers associated with this study-consent group.""",
     )
     disease_restriction = models.CharField(
+        verbose_name="DUO disease restriction",
         max_length=255,
         blank=True,
         null=True,
@@ -92,7 +96,7 @@ class DataUseOntologyModel(models.Model):
     def clean(self):
         """Ensure that the disease_restriction term is set if data_use_permission requires it."""
         # Without hasattr, we get a RelatedObjectDoesNotExist error.
-        if hasattr(self, "data_use_permission"):
+        if hasattr(self, "data_use_permission") and self.data_use_permission:
             if (
                 self.data_use_permission.requires_disease_restriction
                 and not self.disease_restriction
