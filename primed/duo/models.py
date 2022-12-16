@@ -82,6 +82,7 @@ class DataUseOntologyModel(models.Model):
         blank=True,
         help_text="""The DataUseModifiers associated with this study-consent group.""",
     )
+    # TODO: Change to disease_term instead of disease_restriction.
     disease_restriction = models.CharField(
         verbose_name="DUO disease restriction",
         max_length=255,

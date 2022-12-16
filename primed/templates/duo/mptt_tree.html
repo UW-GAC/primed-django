@@ -1,0 +1,33 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load mptt_tags %}
+
+{% block content %}
+
+
+<h2>{{ title}}</h2>
+
+
+<div class="borderless">
+  <ul class="list-group list-group-flush">
+    {% recursetree nodes %}
+      <li class="list-group-item border-0">
+        <i class="bi-arrow-return-right"></i>
+        {{node}}
+
+        {% if not node.is_leaf_node %}
+        <button class="btn btn-light btn-sm rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-tree-{{node.abbreviation}}">
+          <i class="bi-plus"></i> {{ node.get_descendant_count }} descendant{{node.get_descendant_count|pluralize}}
+        </button>
+          <div class="collapse mx-3" id="collapse-tree-{{node.abbreviation}}">
+            <ul class="list-group list-group-flush">
+                {{ children }}
+            </ul>
+          </div>
+        {% endif %}
+
+      </li>
+    {% endrecursetree %}
+  </ul>
+</div>
+
+{% endblock content %}
