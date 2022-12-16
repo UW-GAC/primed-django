@@ -18,7 +18,7 @@ from django.test import TestCase
 from django.utils import timezone
 from faker import Faker
 
-from primed.primed_anvil.tests.factories import DataUsePermissionFactory, StudyFactory
+from primed.primed_anvil.tests.factories import StudyFactory # DataUsePermissionFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import constants, models

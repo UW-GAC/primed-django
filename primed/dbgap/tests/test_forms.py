@@ -6,10 +6,10 @@ from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.test import TestCase
 from faker import Faker
 
-from primed.primed_anvil.models import DataUseModifier
+# from primed.primed_anvil.models import DataUseModifier
 from primed.primed_anvil.tests.factories import (
-    DataUseModifierFactory,
-    DataUsePermissionFactory,
+    # DataUseModifierFactory,
+    # DataUsePermissionFactory,
     StudyFactory,
 )
 from primed.users.tests.factories import UserFactory

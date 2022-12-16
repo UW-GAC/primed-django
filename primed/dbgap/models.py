@@ -21,7 +21,7 @@ from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from primed.primed_anvil.models import DataUseOntologyModel, RequesterModel, Study
+from primed.primed_anvil.models import RequesterModel, Study
 
 from . import constants, helpers, managers
 
@@ -58,7 +58,7 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
 
 
 class dbGaPWorkspace(
-    RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData
+    RequesterModel, TimeStampedModel, BaseWorkspaceData
 ):
     """A model to track additional data about dbGaP data in a workspace."""
 

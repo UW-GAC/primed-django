@@ -18,7 +18,7 @@ from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
 from primed.primed_anvil.tests.factories import (
-    DataUseOntologyModelFactory,
+#    DataUseOntologyModelFactory,
     StudyFactory,
 )
 from primed.users.tests.factories import UserFactory
@@ -66,7 +66,7 @@ class dbGaPStudyAccessionFactory(DjangoModelFactory):
         model = models.dbGaPStudyAccession
 
 
-class dbGaPWorkspaceFactory(TimeStampedModelFactory, DataUseOntologyModelFactory):
+class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):  # DataUseOntologyModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")

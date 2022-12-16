@@ -29,8 +29,8 @@ from django.utils import timezone
 from faker import Faker
 
 from primed.primed_anvil.tests.factories import (
-    DataUseModifierFactory,
-    DataUsePermissionFactory,
+    # DataUseModifierFactory,
+    # DataUsePermissionFactory,
     StudyFactory,
 )
 from primed.users.tests.factories import UserFactory
