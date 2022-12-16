@@ -103,6 +103,7 @@ LOCAL_APPS = [
     "primed.primed_anvil",
     "primed.dbgap",
     "primed.miscellaneous_workspaces",
+    "primed.duo",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
