@@ -1,38 +1,52 @@
-# from django.db import models
+from django.db import models
+from mptt.models import MPTTModel, TreeForeignKey
+
 
 # Create your models here.
-# class DataUsePermission(TimeStampedModel, models.Model):
-#     """A model to track the allowed main consent codes using GA4GH DUO codes."""
-#
-#     code = models.CharField(
-#         max_length=15,
-#         unique=True,
-#         help_text="""The short code for this consent group (e.g., GRU).""",
-#     )
-#     description = models.CharField(
-#         max_length=255,
-#         unique=True,
-#         help_text="""The description for this consent group (e.g., General Research Use).""",
-#     )
-#     identifier = models.CharField(
-#         max_length=31,
-#         unique=True,
-#         help_text="""The identifier of this consent group (e.g., DUO:0000045).""",
-#     )
-#     requires_disease_restriction = models.BooleanField(
-#         default=False,
-#         help_text="Indicator of whether an additional disease restriction is required for this term.",
-#     )
-#     history = HistoricalRecords()
-#
-#     def __str__(self):
-#         """String method.
-#         Returns:
-#             A string showing the short consent code of the object.
-#         """
-#         return self.code
-#
-#
+class DataUsePermission(MPTTModel):
+    """A model to track the allowed main consent codes using GA4GH DUO codes."""
+
+    identifier = models.CharField(
+        max_length=31,
+        unique=True,
+        help_text="""The identifier of this consent group (e.g., DUO:0000045).""",
+    )
+    abbreviation = models.CharField(
+        max_length=15,
+        unique=True,
+        help_text="""The short code for this consent group (e.g., GRU).""",
+    )
+    term = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text="""The term associated this instance (e.g., general research use).""",
+    )
+    definition = models.TextField(help_text="The definition for this term.")
+    comment = models.TextField(
+        help_text="Comments associated with this term.",
+        blank=True,
+    )
+    requires_disease_restriction = models.BooleanField(
+        default=False,
+        help_text="Indicator of whether an additional disease restriction is required for this term.",
+    )
+
+    # Required for MPTT.
+    parent = TreeForeignKey(
+        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
+    )
+
+    class MPTTMeta:
+        order_insertion_by = ["identifier"]
+
+    def __str__(self):
+        """String method.
+        Returns:
+            A string showing the short consent code of the object.
+        """
+        return "{} ({})".format(self.abbreviation, self.identifier)
+
+
 # class DataUseModifier(TimeStampedModel, models.Model):
 #     """A model to track the allowed consent modifiers using GA4GH DUO codes."""
 #
