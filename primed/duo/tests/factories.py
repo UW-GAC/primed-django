@@ -1,15 +1,20 @@
-# class DataUsePermissionFactory(DjangoModelFactory):
-#     """A factory for the MainConsent model."""
-#
-#     code = Sequence(lambda n: "code{}".format(n))
-#     description = Faker("catch_phrase")
-#     identifier = Sequence(lambda n: "DUO:{0:07d}".format(n))
-#
-#     class Meta:
-#         model = models.DataUsePermission
-#         django_get_or_create = ("code",)
-#
-#
+import factory
+
+from .. import models
+
+
+class DataUsePermissionFactory(factory.django.DjangoModelFactory):
+    """A factory for the MainConsent model."""
+
+    class Meta:
+        model = models.DataUsePermission
+
+    identifier = factory.Sequence(lambda n: "DUO:{0:07d}".format(n))
+    abbreviation = factory.Sequence(lambda n: "perm{}".format(n))
+    term = factory.Faker("catch_phrase")
+    definition = factory.Faker("paragraph")
+
+
 # class DataUseModifierFactory(DjangoModelFactory):
 #     """A factory for the ConsentModifier model."""
 #

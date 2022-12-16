@@ -13,12 +13,11 @@ class DataUsePermission(MPTTModel):
     )
     abbreviation = models.CharField(
         max_length=15,
-        unique=True,
         help_text="""The short code for this consent group (e.g., GRU).""",
     )
     term = models.CharField(
         max_length=255,
-        unique=True,
+        # unique=True,
         help_text="""The term associated this instance (e.g., general research use).""",
     )
     definition = models.TextField(help_text="The definition for this term.")
@@ -44,7 +43,7 @@ class DataUsePermission(MPTTModel):
         Returns:
             A string showing the short consent code of the object.
         """
-        return "{} ({})".format(self.abbreviation, self.identifier)
+        return "{} ({})".format(self.term, self.identifier)
 
 
 # class DataUseModifier(TimeStampedModel, models.Model):
