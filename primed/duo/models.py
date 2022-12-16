@@ -1,5 +1,6 @@
+from django.core.exceptions import ValidationError
 from django.db import models
-from mptt.models import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel, TreeForeignKey, TreeManyToManyField
 
 
 class DUOFields(models.Model):
@@ -64,48 +65,49 @@ class DataUseModifier(DUOFields, MPTTModel):
         order_insertion_by = ["identifier"]
 
 
-# class DataUseOntologyModel(models.Model):
-#     """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""
-#
-#     data_use_permission = models.TreeForeignKey(
-#         DataUsePermission,
-#         on_delete=models.PROTECT,
-#         help_text="""The DataUsePermission associated with this study-consent group.""",
-#     )
-#     data_use_modifiers = models.TreeManyToManyField(
-#         DataUseModifier,
-#         blank=True,
-#         help_text="""The DataUseModifiers associated with this study-consent group.""",
-#     )
-#     disease_restriction = models.CharField(
-#         max_length=255,
-#         blank=True,
-#         null=True,
-#         help_text="The disease restriction if required by data_use_permission.",
-#     )
-#
-#     class Meta:
-#         abstract = True
-#
-#     def clean(self):
-#         """Ensure that the disease_restriction term is set if data_use_permission requires it."""
-#         # Without hasattr, we get a RelatedObjectDoesNotExist error.
-#         if hasattr(self, "data_use_permission"):
-#             if (
-#                 self.data_use_permission.requires_disease_restriction
-#                 and not self.disease_restriction
-#             ):
-#                 raise ValidationError(
-#                     "`disease_restriction` must not be None "
-#                     "because data_use_permission requires a disease restriction."
-#                 )
-#             if (
-#                 not self.data_use_permission.requires_disease_restriction
-#                 and self.disease_restriction
-#             ):
-#                 raise ValidationError(
-#                     (
-#                         "`disease_restriction` must be None "
-#                         "because data_use_permission does not require a disease restriction."
-#                     )
-#                 )
+class DataUseOntologyModel(models.Model):
+    """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""
+
+    data_use_permission = TreeForeignKey(
+        DataUsePermission,
+        null=True,
+        on_delete=models.PROTECT,
+        help_text="""The DataUsePermission associated with this study-consent group.""",
+    )
+    data_use_modifiers = TreeManyToManyField(
+        DataUseModifier,
+        blank=True,
+        help_text="""The DataUseModifiers associated with this study-consent group.""",
+    )
+    disease_restriction = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="The disease restriction if required by data_use_permission.",
+    )
+
+    class Meta:
+        abstract = True
+
+    def clean(self):
+        """Ensure that the disease_restriction term is set if data_use_permission requires it."""
+        # Without hasattr, we get a RelatedObjectDoesNotExist error.
+        if hasattr(self, "data_use_permission"):
+            if (
+                self.data_use_permission.requires_disease_restriction
+                and not self.disease_restriction
+            ):
+                raise ValidationError(
+                    "`disease_restriction` must not be None "
+                    "because data_use_permission requires a disease restriction."
+                )
+            if (
+                not self.data_use_permission.requires_disease_restriction
+                and self.disease_restriction
+            ):
+                raise ValidationError(
+                    (
+                        "`disease_restriction` must be None "
+                        "because data_use_permission does not require a disease restriction."
+                    )
+                )
