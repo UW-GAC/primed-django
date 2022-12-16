@@ -78,6 +78,66 @@ class DataUsePermissionTest(TestCase):
             instance2.save()
 
 
+class DataUseModifierTest(TestCase):
+    """Tests for the DataUseModifier model."""
+
+    def test_model_saving(self):
+        """Creation using model constructor and `.save()` works."""
+
+        instance = models.DataUseModifier(
+            term="test group",
+            abbreviation="TEST",
+            identifier="DUO:0000001",
+            definition="The definition of this group",
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.DataUseModifier)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.DataUseModifierFactory.create(
+            term="test group", identifier="foo"
+        )
+        instance.save()
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "test group (foo)")
+
+    def test_can_add_child_node(self):
+        root = factories.DataUseModifierFactory.create()
+        child = factories.DataUseModifierFactory.create(parent=root)
+        self.assertIn(child, root.get_children())
+
+    def test_defaults(self):
+        """Test defaults set by the model."""
+        instance = models.DataUseModifier(
+            identifier="DUO:0000001",
+            abbreviation="TEST",
+            term="test group",
+            definition="foo",
+        )
+        instance.save()
+        self.assertFalse(instance.comment)
+
+    def test_comment(self):
+        """Can set requires_disease_restriction to True."""
+        instance = factories.DataUseModifierFactory.create(comment="test comment")
+        self.assertEqual(instance.comment, "test comment")
+
+    def test_unique_identifier(self):
+        """Saving a model with a duplicate identifier fails."""
+        factories.DataUseModifierFactory.create(identifier="DUO:0000001")
+        instance2 = factories.DataUseModifierFactory.build(identifier="DUO:0000001")
+        with self.assertRaises(ValidationError) as e:
+            instance2.full_clean()
+        self.assertIn("identifier", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["identifier"]), 1)
+        self.assertIn(
+            "already exists", e.exception.error_dict["identifier"][0].messages[0]
+        )
+        with self.assertRaises(IntegrityError):
+            instance2.save()
+
+
 # class DataUseModifierTest(TestCase):
 #     """Tests for the DataUseModifier model."""
 #

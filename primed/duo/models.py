@@ -2,9 +2,8 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 
 
-# Create your models here.
-class DataUsePermission(MPTTModel):
-    """A model to track the allowed main consent codes using GA4GH DUO codes."""
+class DUOFields(models.Model):
+    """Field definitions for DUO models."""
 
     identifier = models.CharField(
         max_length=31,
@@ -17,7 +16,6 @@ class DataUsePermission(MPTTModel):
     )
     term = models.CharField(
         max_length=255,
-        # unique=True,
         help_text="""The term associated this instance (e.g., general research use).""",
     )
     definition = models.TextField(help_text="The definition for this term.")
@@ -25,6 +23,21 @@ class DataUsePermission(MPTTModel):
         help_text="Comments associated with this term.",
         blank=True,
     )
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        """String method.
+        Returns:
+            A string showing the short consent code of the object.
+        """
+        return "{} ({})".format(self.term, self.identifier)
+
+
+class DataUsePermission(DUOFields, MPTTModel):
+    """A model to track the allowed main consent codes using GA4GH DUO codes."""
+
     requires_disease_restriction = models.BooleanField(
         default=False,
         help_text="Indicator of whether an additional disease restriction is required for this term.",
@@ -38,51 +51,28 @@ class DataUsePermission(MPTTModel):
     class MPTTMeta:
         order_insertion_by = ["identifier"]
 
-    def __str__(self):
-        """String method.
-        Returns:
-            A string showing the short consent code of the object.
-        """
-        return "{} ({})".format(self.term, self.identifier)
+
+class DataUseModifier(DUOFields, MPTTModel):
+    """A model to track the allowed consent modifiers using GA4GH DUO codes."""
+
+    # Required for MPTT.
+    parent = TreeForeignKey(
+        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
+    )
+
+    class MPTTMeta:
+        order_insertion_by = ["identifier"]
 
 
-# class DataUseModifier(TimeStampedModel, models.Model):
-#     """A model to track the allowed consent modifiers using GA4GH DUO codes."""
-#
-#     code = models.CharField(
-#         max_length=15,
-#         unique=True,
-#         help_text="""The short code for this modifier (e.g., NPU).""",
-#     )
-#     description = models.CharField(
-#         max_length=255,
-#         unique=True,
-#         help_text="""The description of this modifier (e.g., Non-Profit Use only).""",
-#     )
-#     identifier = models.CharField(
-#         max_length=31,
-#         unique=True,
-#         help_text="""The identifier of this modifier (e.g., DUO:0000045).""",
-#     )
-#     history = HistoricalRecords()
-#
-#     def __str__(self):
-#         """String method.
-#         Returns:
-#             A string showing the short consent code of the object.
-#         """
-#         return self.code
-#
-#
 # class DataUseOntologyModel(models.Model):
 #     """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""
 #
-#     data_use_permission = models.ForeignKey(
+#     data_use_permission = models.TreeForeignKey(
 #         DataUsePermission,
 #         on_delete=models.PROTECT,
 #         help_text="""The DataUsePermission associated with this study-consent group.""",
 #     )
-#     data_use_modifiers = models.ManyToManyField(
+#     data_use_modifiers = models.TreeManyToManyField(
 #         DataUseModifier,
 #         blank=True,
 #         help_text="""The DataUseModifiers associated with this study-consent group.""",

@@ -3,16 +3,34 @@ import factory
 from .. import models
 
 
-class DataUsePermissionFactory(factory.django.DjangoModelFactory):
-    """A factory for the MainConsent model."""
+class DUOFactory(factory.django.DjangoModelFactory):
+    """Abstract factory definition DUO fields."""
 
     class Meta:
-        model = models.DataUsePermission
+        abstract = True
 
     identifier = factory.Sequence(lambda n: "DUO:{0:07d}".format(n))
     abbreviation = factory.Sequence(lambda n: "perm{}".format(n))
     term = factory.Faker("catch_phrase")
     definition = factory.Faker("paragraph")
+
+
+class DataUsePermissionFactory(DUOFactory):
+    """A factory for the MainConsent model."""
+
+    class Meta:
+        model = models.DataUsePermission
+
+    pass
+
+
+class DataUseModifierFactory(DUOFactory):
+    """A factory for the DataUseModifier model."""
+
+    class Meta:
+        model = models.DataUseModifier
+
+    pass
 
 
 # class DataUseModifierFactory(DjangoModelFactory):

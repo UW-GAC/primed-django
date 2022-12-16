@@ -11,6 +11,13 @@ class DataUsePermissionAdmin(DraggableMPTTAdmin):
     pass
 
 
+@admin.register(models.DataUseModifier)
+class DataUseModifierAdmin(DraggableMPTTAdmin):
+    """Admin class for the `DataUseModifier` model."""
+
+    pass
+
+
 # @admin.register(models.DataUseModifier)
 # class DataUseModifierAdmin(SimpleHistoryAdmin):
 #     """Admin class for the `DataUseModifier` model."""
