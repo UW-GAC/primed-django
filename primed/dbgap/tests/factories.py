@@ -4,13 +4,18 @@ from anvil_consortium_manager.tests.factories import (
 )
 from factory import (
     Dict,
+    DictFactory,
     Faker,
     LazyAttribute,
+    List,
     SelfAttribute,
+    Sequence,
     SubFactory,
+    Trait,
     post_generation,
 )
 from factory.django import DjangoModelFactory
+from factory.fuzzy import FuzzyChoice
 
 from primed.primed_anvil.tests.factories import (
     DataUseOntologyModelFactory,
@@ -40,7 +45,7 @@ class TimeStampedModelFactory(DjangoModelFactory):
 class dbGaPStudyAccessionFactory(DjangoModelFactory):
     """A factory for the dbGaPStudy model."""
 
-    dbgap_phs = Faker("random_int")
+    dbgap_phs = Sequence(lambda n: n)
 
     @post_generation
     def studies(self, create, extracted, **kwargs):
@@ -82,7 +87,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
     """A factory for the dbGaPApplication model."""
 
     principal_investigator = SubFactory(UserFactory)
-    dbgap_project_id = Faker("random_int")
+    dbgap_project_id = Sequence(lambda n: n)
     anvil_group = SubFactory(ManagedGroupFactory)
 
     class Meta:
@@ -114,7 +119,7 @@ class dbGaPDataAccessRequestFactory(DjangoModelFactory):
 
     dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
     dbgap_phs = Faker("random_int")
-    dbgap_dar_id = Faker("random_int")
+    dbgap_dar_id = Sequence(lambda n: n)
     original_version = Faker("random_int")
     original_participant_set = Faker("random_int")
     dbgap_consent_code = Faker("random_int")
@@ -133,7 +138,7 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
     dbgap_phs = LazyAttribute(
         lambda o: o.dbgap_workspace.dbgap_study_accession.dbgap_phs
     )
-    dbgap_dar_id = Faker("random_int")
+    dbgap_dar_id = Sequence(lambda n: n)
     original_version = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_version)
     original_participant_set = LazyAttribute(
         lambda o: o.dbgap_workspace.dbgap_participant_set
@@ -148,3 +153,40 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.dbGaPDataAccessRequest
+
+
+class dbGaPJSONRequestFactory(DictFactory):
+    """Factory to create JSON for a data access request associated with a study."""
+
+    DAC_abbrev = Faker("word")
+    consent_abbrev = Faker("word")
+    consent_code = Faker("random_int")
+    DAR = Sequence(lambda n: n)
+    current_version = Faker("random_int")
+    current_DAR_status = FuzzyChoice(
+        models.dbGaPDataAccessRequest.DBGAP_CURRENT_STATUS_CHOICES,
+        getter=lambda c: c[0],
+    )
+    was_approved = "yes"
+
+
+class dbGaPJSONStudyFactory(DictFactory):
+    """Factory to create JSON for studies associated with a project."""
+
+    study_name = Faker("company")
+    study_accession = Faker("numerify", text="phs######")
+    requests = List([SubFactory(dbGaPJSONRequestFactory)])
+
+
+class dbGaPJSONProjectFactory(DictFactory):
+    """Factory to create JSON a project."""
+
+    Project_id = Sequence(lambda n: n)
+    PI_name = Faker("name")
+    Project_closed = "no"
+    studies = List([SubFactory(dbGaPJSONStudyFactory)])
+
+    class Params:
+        dbgap_application = Trait(
+            Project_id=LazyAttribute(lambda o: o.dbgap_application.dbgap_project_id)
+        )

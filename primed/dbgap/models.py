@@ -9,7 +9,6 @@ referencing (e.g., "dbgap_study_accession").
 
 import logging
 import re
-from urllib.parse import urlencode
 
 import jsonschema
 import requests
@@ -24,7 +23,7 @@ from simple_history.models import HistoricalRecords
 
 from primed.primed_anvil.models import DataUseOntologyModel, RequesterModel, Study
 
-from . import constants, managers
+from . import constants, helpers, managers
 
 logger = logging.getLogger(__name__)
 
@@ -191,16 +190,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
 
     def get_dbgap_dar_json_url(self):
         """Return the dbGaP URL that lists DARs for this application."""
-        url_params = {
-            "name": "project_report",
-            "page": "getreport",
-            "mode": "json",
-            "filter": ["mode", "project_list"],
-            "project_list": str(self.dbgap_project_id),
-        }
-        url = "https://dbgap.ncbi.nlm.nih.gov/aa/wga.cgi?%s"
-        # Doseq means to generate the filter key twice, once for "mode" and once for "project_list"
-        return url % urlencode(url_params, doseq=True)
+        return helpers.get_dbgap_dar_json_url([self.dbgap_project_id])
 
 
 class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
@@ -237,7 +227,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         if self.dbgap_dar_data:
             try:
                 jsonschema.validate(
-                    self.dbgap_dar_data, constants.JSON_DAR_SCHEMA_ONE_PROJECT
+                    self.dbgap_dar_data, constants.JSON_PROJECT_DAR_SCHEMA
                 )
             except jsonschema.exceptions.ValidationError as e:
                 # Replace the full json string because it will be very long
@@ -271,7 +261,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         participant set from the previous dbGaPDataAccessRequest.
         """
         # Validate the json. It should already be validated, but it doesn't hurt to check again.
-        jsonschema.validate(self.dbgap_dar_data, constants.JSON_DAR_SCHEMA_ONE_PROJECT)
+        jsonschema.validate(self.dbgap_dar_data, constants.JSON_PROJECT_DAR_SCHEMA)
         # Log the json.
         msg = "Creating DARs using snapshot pk {pk}...\n".format(
             pk=self.pk,
@@ -328,6 +318,8 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     # If we don't have info about it from a previous DAR, query dbGaP to get the current
                     # version and participant set numbers for this phs.
                     # This url should resolve to url for the current version/participant set.
+                    # This assumes that the study has been released, which should be true for all PRIMED studies.
+                    # It is not necessarily true for all dbGaP applications, eg TOPMed applying to the EA.
                     response = requests.get(
                         constants.DBGAP_STUDY_URL,
                         params={"study_id": "phs{phs:06d}".format(phs=phs)},

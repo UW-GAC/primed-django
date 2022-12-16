@@ -56,16 +56,15 @@ JSON_DAR_DEFS = {
 # Validation of dbGaP DAR JSON from their web service (a array of multiple project DARs).
 JSON_DAR_SCHEMA = {
     "title": "dbGaP DAR schema",
-    "description": "json schema for the dbGaP DAR data",
+    "description": "json schema for the dbGaP DAR data, allowing multiple projects.",
     "type": "array",
     "items": {"$ref": "#/$defs/project"},
     "minItems": 1,
-    "maxItems": 1,
     "$defs": JSON_DAR_DEFS,
 }
 
 # Validation fo dbGaP DAR JSON for a single project (one entry in what's returned by their web servce).
-JSON_DAR_SCHEMA_ONE_PROJECT = {
+JSON_PROJECT_DAR_SCHEMA = {
     "title": "dbGaP Project DAR schema",
     "description": "json schema for DARs for a single dbGaP project",
     "$ref": "#/$defs/project",
