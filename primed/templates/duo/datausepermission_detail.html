@@ -1,0 +1,48 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load django_tables2 %}
+{% load mptt_tags %}
+
+{% block title %}DUO permission {{ object }}{% endblock %}
+
+{% block panel %}
+  <ul>
+    <li>Identifier: {{ object.identifier }}</li>
+    <li>Abbreviation: {{ object.abbreviation }}</li>
+    <li>Term: {{ object.term }}</li>
+    <li>Definition: {{ object.definition }}</li>
+    <li>Comment: {{ object.comment }}</li>
+    <li>Requires disease restriction? {{ object.requires_disease_restriction }}</li>
+  </ul>
+{% endblock panel %}
+
+{% block after_panel %}
+
+{% drilldown_tree_for_node object as drilldown %}
+
+<div class="card my-3">
+  <div class="card-header">
+    Tree
+  </div>
+  <div class="card-body">
+    {% for node,structure in drilldown|tree_info %}
+      {% if structure.new_level %}
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item list-group-flush">
+      {% else %}
+          </li>
+          <li class="list-group-item list-group-flush">
+      {% endif %}
+            <i class="bi-arrow-return-right"></i>
+      {% if node == object %}
+            <strong>{{ node }}</strong>
+      {% else %}
+            {{ node }}
+      {% endif %}
+      {% for level in structure.closed_levels %}
+          </li>
+        </ul>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock after_panel %}

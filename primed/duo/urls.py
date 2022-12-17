@@ -7,6 +7,7 @@ app_name = "duo"
 data_use_permission_patterns = (
     [
         path("", views.DataUsePermissionList.as_view(), name="list"),
+        path("<str:id>/", views.DataUsePermissionDetail.as_view(), name="detail"),
     ],
     "data_use_permissions",
 )

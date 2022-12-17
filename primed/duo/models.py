@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.urls import reverse
 from mptt.models import MPTTModel, TreeForeignKey, TreeManyToManyField
 
 
@@ -51,6 +52,9 @@ class DataUsePermission(DUOFields, MPTTModel):
 
     class MPTTMeta:
         order_insertion_by = ["identifier"]
+
+    def get_absolute_url(self):
+        return reverse("duo:data_use_permissions:detail", args=[self.identifier])
 
 
 class DataUseModifier(DUOFields, MPTTModel):
