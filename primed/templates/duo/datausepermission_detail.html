@@ -36,7 +36,7 @@
       {% if node == object %}
             <strong>{{ node }}</strong>
       {% else %}
-            {{ node }}
+            {{ node }} (<a href="{{ node.get_absolute_url }}">Details</a>)
       {% endif %}
       {% for level in structure.closed_levels %}
           </li>
