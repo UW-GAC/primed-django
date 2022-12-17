@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from primed.users.tests.factories import UserFactory
 
-from .. import models, views
+from .. import views
 from . import factories
 
 
@@ -59,18 +59,6 @@ class DataUsePermissionListTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request)
 
-    def test_context_data(self):
-        """Context data is correct."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url())
-        context = response.context_data
-        self.assertIn("nodes", context)
-        self.assertQuerysetEqual(
-            context["nodes"], models.DataUsePermission.objects.all()
-        )
-        self.assertIn("title", context)
-        self.assertIsInstance(context["title"], str)
-
     def test_no_roots(self):
         """Template renders with no root nodes."""
         self.client.force_login(self.user)
@@ -91,9 +79,15 @@ class DataUsePermissionListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
-        self.assertQuerysetEqual(
-            response.context_data["nodes"], models.DataUsePermission.objects.all()
-        )
+
+    def test_one_root_one_grandchild(self):
+        """Template renders with one root node and one child node."""
+        root = factories.DataUsePermissionFactory.create()
+        child = factories.DataUsePermissionFactory.create(parent=root)
+        factories.DataUsePermissionFactory.create(parent=child)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
 
     def test_two_roots(self):
         """Template renders with two root nodes."""
@@ -204,16 +198,6 @@ class DataUseModifierListTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request)
 
-    def test_context_data(self):
-        """Context data is correct."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url())
-        context = response.context_data
-        self.assertIn("nodes", context)
-        self.assertQuerysetEqual(context["nodes"], models.DataUseModifier.objects.all())
-        self.assertIn("title", context)
-        self.assertIsInstance(context["title"], str)
-
     def test_no_roots(self):
         """Template renders with no root nodes."""
         self.client.force_login(self.user)
@@ -234,9 +218,15 @@ class DataUseModifierListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
-        self.assertQuerysetEqual(
-            response.context_data["nodes"], models.DataUseModifier.objects.all()
-        )
+
+    def test_one_root_one_grandchild(self):
+        """Template renders with one root node and one child node."""
+        root = factories.DataUseModifierFactory.create()
+        child = factories.DataUseModifierFactory.create(parent=root)
+        factories.DataUseModifierFactory.create(parent=child)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
 
     def test_two_roots(self):
         """Template renders with two root nodes."""
