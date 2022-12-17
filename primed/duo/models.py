@@ -68,6 +68,9 @@ class DataUseModifier(DUOFields, MPTTModel):
     class MPTTMeta:
         order_insertion_by = ["identifier"]
 
+    def get_absolute_url(self):
+        return reverse("duo:data_use_modifiers:detail", args=[self.identifier])
+
 
 class DataUseOntologyModel(models.Model):
     """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""

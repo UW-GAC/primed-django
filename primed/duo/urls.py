@@ -15,6 +15,7 @@ data_use_permission_patterns = (
 data_use_modifier_patterns = (
     [
         path("", views.DataUseModifierList.as_view(), name="list"),
+        path("<str:id>/", views.DataUseModifierDetail.as_view(), name="detail"),
     ],
     "data_use_modifiers",
 )

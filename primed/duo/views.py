@@ -49,6 +49,11 @@ class DataUseModifierList(
     title = "DUO Data Use Modifier tree"
     model = models.DataUseModifier
 
+
+class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
+
+    model = models.DataUseModifier
+
     def get_object(self):
         try:
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))

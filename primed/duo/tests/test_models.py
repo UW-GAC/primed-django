@@ -107,6 +107,11 @@ class DataUseModifierTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "test group (foo)")
 
+    def test_get_absolute_url(self):
+        """The get_absolute_url method works."""
+        instance = factories.DataUsePermissionFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_can_add_child_node(self):
         root = factories.DataUseModifierFactory.create()
         child = factories.DataUseModifierFactory.create(parent=root)
