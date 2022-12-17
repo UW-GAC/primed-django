@@ -31,7 +31,11 @@
           </li>
           <li class="list-group-item border-0 py-0">
       {% endif %}
+      {% if node.is_root_node %}
+            <i class="bi-arrow-bar-right"></i>
+      {% else %}
             <i class="bi-arrow-return-right"></i>
+      {% endif %}
       {% if node == object %}
             <strong>{{ node }}</strong>
       {% else %}

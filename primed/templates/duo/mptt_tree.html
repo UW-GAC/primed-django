@@ -11,7 +11,11 @@
   <ul class="list-group list-group-flush">
     {% recursetree nodes %}
       <li class="list-group-item border-0">
-        <i class="bi-arrow-return-right"></i>
+        {% if node.is_root_node %}
+          <i class="bi-arrow-bar-right"></i>
+        {% else %}
+          <i class="bi-arrow-return-right"></i>
+        {% endif %}
         {{node}} (<a href="{{ node.get_absolute_url }}">Details</a>)
 
         {% if not node.is_leaf_node %}
