@@ -25,17 +25,17 @@
   <div class="card-body">
     {% for node,structure in drilldown|tree_info %}
       {% if structure.new_level %}
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item list-group-flush">
+        <ul class="list-group list-group-flush py-0">
+          <li class="list-group-item border-0 py-0">
       {% else %}
           </li>
-          <li class="list-group-item list-group-flush">
+          <li class="list-group-item border-0 py-0">
       {% endif %}
             <i class="bi-arrow-return-right"></i>
       {% if node == object %}
             <strong>{{ node }}</strong>
       {% else %}
-            {{ node }}
+            {{ node }} (<a href="{{ node.get_absolute_url }}">Details</a>)
       {% endif %}
       {% for level in structure.closed_levels %}
           </li>
@@ -44,4 +44,5 @@
     {% endfor %}
   </div>
 </div>
+
 {% endblock after_panel %}
