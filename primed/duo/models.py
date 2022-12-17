@@ -34,7 +34,7 @@ class DUOFields(models.Model):
         Returns:
             A string showing the short consent code of the object.
         """
-        return "{} ({})".format(self.term, self.identifier)
+        return "{}".format(self.term)
 
 
 class DataUsePermission(DUOFields, MPTTModel):

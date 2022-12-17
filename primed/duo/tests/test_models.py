@@ -32,7 +32,7 @@ class DataUsePermissionTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "test group (foo)")
+        self.assertEqual(instance.__str__(), "test group")
 
     def test_get_absolute_url(self):
         """The get_absolute_url method works."""
@@ -105,7 +105,7 @@ class DataUseModifierTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "test group (foo)")
+        self.assertEqual(instance.__str__(), "test group")
 
     def test_get_absolute_url(self):
         """The get_absolute_url method works."""
