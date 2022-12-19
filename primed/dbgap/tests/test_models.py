@@ -18,7 +18,8 @@ from django.test import TestCase
 from django.utils import timezone
 from faker import Faker
 
-from primed.primed_anvil.tests.factories import DataUsePermissionFactory, StudyFactory
+from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.primed_anvil.tests.factories import StudyFactory  # DataUsePermissionFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import constants, models
@@ -126,7 +127,6 @@ class dbGaPWorkspaceTest(TestCase):
         user = UserFactory.create()
         workspace = WorkspaceFactory.create()
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        data_use_permission = DataUsePermissionFactory.create()
         instance = models.dbGaPWorkspace(
             workspace=workspace,
             dbgap_study_accession=dbgap_study_accession,
@@ -136,7 +136,6 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_consent_code=1,
             dbgap_consent_abbreviation="GRU-NPU",
             acknowledgments="test acknowledgments",
-            data_use_permission=data_use_permission,
             requested_by=user,
         )
         instance.save()
@@ -154,18 +153,63 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "phs000001.v2.p3 - GRU-NPU")
 
+    def test_can_add_data_use_permission(self):
+        """Saving a model with data_use_permission set is valid."""
+        user = UserFactory.create()
+        workspace = WorkspaceFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        instance = models.dbGaPWorkspace(
+            workspace=workspace,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_version=1,
+            dbgap_participant_set=1,
+            data_use_limitations="test limitations",
+            dbgap_consent_code=1,
+            dbgap_consent_abbreviation="GRU-NPU",
+            data_use_permission=data_use_permission,
+            acknowledgments="test acknowledgments",
+            requested_by=user,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.dbGaPWorkspace)
+        self.assertEqual(instance.data_use_permission, data_use_permission)
+
+    def test_can_add_data_use_modifiers(self):
+        """Saving a model with data_use_permission and data_use_modifiers set is valid."""
+        user = UserFactory.create()
+        workspace = WorkspaceFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifiers = DataUseModifierFactory.create_batch(2)
+        instance = models.dbGaPWorkspace(
+            workspace=workspace,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_version=1,
+            dbgap_participant_set=1,
+            data_use_limitations="test limitations",
+            dbgap_consent_code=1,
+            dbgap_consent_abbreviation="GRU-NPU",
+            data_use_permission=data_use_permission,
+            acknowledgments="test acknowledgments",
+            requested_by=user,
+        )
+        instance.save()
+        instance.data_use_modifiers.add(*data_use_modifiers)
+        self.assertIsInstance(instance, models.dbGaPWorkspace)
+        self.assertIn(data_use_modifiers[0], instance.data_use_modifiers.all())
+        self.assertIn(data_use_modifiers[1], instance.data_use_modifiers.all())
+
     def test_unique_dbgap_workspace(self):
         """Saving a duplicate model fails."""
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         workspace = WorkspaceFactory.create()
-        data_use_permission = DataUsePermissionFactory.create()
         user = UserFactory.create()
         instance = factories.dbGaPWorkspaceFactory.build(
             dbgap_study_accession=dbgap_workspace.dbgap_study_accession,
             dbgap_version=dbgap_workspace.dbgap_version,
             dbgap_consent_abbreviation=dbgap_workspace.dbgap_consent_abbreviation,
             # These are here to prevent ValueErrors about unsaved related objects.
-            data_use_permission=data_use_permission,
             workspace=workspace,
             requested_by=user,
         )

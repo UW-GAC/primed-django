@@ -92,6 +92,7 @@ THIRD_PARTY_APPS = [
     # django-simple-history for model change tracking
     "simple_history",
     "dbbackup",
+    "mptt",
 ]
 
 LOCAL_APPS = [
@@ -102,6 +103,7 @@ LOCAL_APPS = [
     "primed.primed_anvil",
     "primed.dbgap",
     "primed.miscellaneous_workspaces",
+    "primed.duo",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

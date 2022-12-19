@@ -6,12 +6,8 @@ from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.test import TestCase
 from faker import Faker
 
-from primed.primed_anvil.models import DataUseModifier
-from primed.primed_anvil.tests.factories import (
-    DataUseModifierFactory,
-    DataUsePermissionFactory,
-    StudyFactory,
-)
+from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.primed_anvil.tests.factories import StudyFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import forms
@@ -117,7 +113,6 @@ class dbGaPWorkspaceFormTest(TestCase):
         """Create a workspace for use in the form."""
         self.workspace = WorkspaceFactory()
         self.dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        self.data_use_permission = DataUsePermissionFactory.create()
         self.requester = UserFactory.create()
 
     def test_valid(self):
@@ -129,7 +124,23 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
+            "acknowledgments": "test acknowledgmnts",
+            "workspace": self.workspace,
+            "requested_by": self.requester,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_with_data_use_permission(self):
+        data_use_permission = DataUsePermissionFactory.create()
+        form_data = {
+            "dbgap_study_accession": self.dbgap_study_accession,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
+            "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
+            "data_use_limitations": "test limitations",
+            "data_use_permission": data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -139,7 +150,8 @@ class dbGaPWorkspaceFormTest(TestCase):
 
     def test_valid_one_data_use_modifier(self):
         """Form is valid with necessary input."""
-        DataUseModifierFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifier = DataUseModifierFactory.create()
         form_data = {
             "dbgap_study_accession": self.dbgap_study_accession,
             "dbgap_version": 1,
@@ -147,8 +159,8 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
-            "data_use_modifiers": DataUseModifier.objects.all(),
+            "data_use_permission": data_use_permission,
+            "data_use_modifiers": [data_use_modifier],
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -158,7 +170,8 @@ class dbGaPWorkspaceFormTest(TestCase):
 
     def test_valid_two_data_use_modifiers(self):
         """Form is valid with necessary input."""
-        DataUseModifierFactory.create_batch(2)
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifiers = DataUseModifierFactory.create_batch(2)
         form_data = {
             "dbgap_study_accession": self.dbgap_study_accession,
             "dbgap_version": 1,
@@ -166,8 +179,8 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
-            "data_use_modifiers": DataUseModifier.objects.all(),
+            "data_use_permission": data_use_permission,
+            "data_use_modifiers": data_use_modifiers,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -183,7 +196,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -204,7 +216,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
         }
@@ -224,7 +235,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -245,7 +255,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -265,7 +274,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -286,7 +294,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -306,7 +313,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_participant_set": 1,
             "data_use_limitations": "test limitations",
             "dbgap_consent_code": 1,
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -326,7 +332,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_participant_set": 1,
             "data_use_limitations": "test limitations",
             "dbgap_consent_abbreviation": "GRU",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -346,7 +351,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -366,7 +370,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_participant_set": 1,
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
-            "data_use_permission": self.data_use_permission,
             "data_use_limitations": "test limitations",
             "workspace": self.workspace,
             "requested_by": self.requester,
@@ -378,27 +381,6 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["acknowledgments"]), 1)
         self.assertIn("required", form.errors["acknowledgments"][0])
 
-    def test_invalid_missing_data_use_permissions(self):
-        """Form is invalid when missing dbgap_participant_set."""
-        form_data = {
-            "dbgap_study_accession": self.dbgap_study_accession,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-            "dbgap_consent_abbreviation": "GRU",
-            "dbgap_consent_code": 1,
-            "data_use_permission": "",
-            "data_use_limitations": "test limitations",
-            "acknowledgments": "test acknowledgmnts",
-            "workspace": self.workspace,
-            "requested_by": self.requester,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("data_use_permission", form.errors)
-        self.assertEqual(len(form.errors["data_use_permission"]), 1)
-        self.assertIn("required", form.errors["data_use_permission"][0])
-
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing phs."""
         form_data = {
@@ -408,7 +390,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_consent_abbreviation": "GRU",
             "dbgap_consent_code": 1,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "requested_by": self.requester,
         }
@@ -428,7 +409,6 @@ class dbGaPWorkspaceFormTest(TestCase):
             "dbgap_participant_set": dbgap_workspace.dbgap_participant_set + 1,
             "dbgap_consent_abbreviation": dbgap_workspace.dbgap_consent_abbreviation,
             "data_use_limitations": "test limitations",
-            "data_use_permission": self.data_use_permission,
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,

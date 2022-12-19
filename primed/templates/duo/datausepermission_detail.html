@@ -1,0 +1,29 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load django_tables2 %}
+{% load mptt_tags %}
+
+{% block title %}DUO permission {{ object }}{% endblock title %}
+
+{% block after_title %}
+  <a class="btn btn-light" href="{{ object.get_ols_url }}" role="button" target="_blank">
+    <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
+    View on OLS
+  </a>
+{% endblock after_title %}
+
+{% block panel %}
+  <ul>
+    <li>Identifier: {{ object.identifier }}</li>
+    <li>Abbreviation: {{ object.abbreviation }}</li>
+    <li>Term: {{ object.term }}</li>
+    <li>Definition: {{ object.definition }}</li>
+    <li>Comment: {{ object.comment }}</li>
+    <li>Requires disease restriction? {{ object.requires_disease_restriction }}</li>
+  </ul>
+{% endblock panel %}
+
+{% block after_panel %}
+
+{% include "duo/mptt_detail_tree.html" with nodes=object_list %}
+
+{% endblock after_panel %}

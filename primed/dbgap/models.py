@@ -21,7 +21,8 @@ from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from primed.primed_anvil.models import DataUseOntologyModel, RequesterModel, Study
+from primed.duo.models import DataUseOntologyModel
+from primed.primed_anvil.models import RequesterModel, Study
 
 from . import constants, helpers, managers
 
