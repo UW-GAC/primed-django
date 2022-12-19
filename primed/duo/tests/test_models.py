@@ -47,7 +47,7 @@ class DataUsePermissionTest(TestCase):
     def test_can_add_child_node(self):
         root = factories.DataUsePermissionFactory.create()
         child = factories.DataUsePermissionFactory.create(parent=root)
-        self.assertIn(child, root.get_children())
+        self.assertIn(child, root.children.all())
 
     def test_defaults(self):
         """Test defaults set by the model."""
@@ -125,7 +125,7 @@ class DataUseModifierTest(TestCase):
     def test_can_add_child_node(self):
         root = factories.DataUseModifierFactory.create()
         child = factories.DataUseModifierFactory.create(parent=root)
-        self.assertIn(child, root.get_children())
+        self.assertIn(child, root.children.all())
 
     def test_defaults(self):
         """Test defaults set by the model."""
