@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from . import models
 
+# TODO: use a tree admin somehow
 admin.site.register(models.DataUsePermission)
 admin.site.register(models.DataUseModifier)
 
