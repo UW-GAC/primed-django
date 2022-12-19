@@ -1,4 +1,4 @@
-from factory import Faker, Sequence, SubFactory, post_generation
+from factory import Faker, Sequence
 from factory.django import DjangoModelFactory
 
 from .. import models

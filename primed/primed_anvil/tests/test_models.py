@@ -4,8 +4,6 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from primed.dbgap.tests.factories import dbGaPWorkspaceFactory
-
 from .. import models
 from . import factories
 
