@@ -9,6 +9,14 @@ class DataUsePermissionList(AnVILConsortiumManagerViewRequired, ListView):
 
     model = models.DataUsePermission
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["roots"] = self.model.objects.with_tree_fields().extra(
+            where=["__tree.tree_depth <= %s"],
+            params=[0],
+        )
+        return context
+
 
 class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
 
@@ -28,6 +36,14 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
 class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
 
     model = models.DataUseModifier
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["roots"] = self.model.objects.with_tree_fields().extra(
+            where=["__tree.tree_depth <= %s"],
+            params=[0],
+        )
+        return context
 
 
 class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):

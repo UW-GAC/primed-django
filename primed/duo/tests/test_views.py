@@ -64,38 +64,56 @@ class DataUsePermissionListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 0)
 
     def test_one_root(self):
         """Template renders with one root node."""
-        factories.DataUsePermissionFactory.create()
+        root = factories.DataUsePermissionFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 1)
+        self.assertIn(root, response.context_data["roots"])
 
     def test_one_root_one_child(self):
         """Template renders with one root node and one child node."""
         root = factories.DataUsePermissionFactory.create()
-        factories.DataUsePermissionFactory.create(parent=root)
+        child = factories.DataUsePermissionFactory.create(parent=root)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 1)
+        self.assertIn(root, response.context_data["roots"])
+        self.assertNotIn(child, response.context_data["roots"])
 
     def test_one_root_one_grandchild(self):
         """Template renders with one root node and one child node."""
         root = factories.DataUsePermissionFactory.create()
         child = factories.DataUsePermissionFactory.create(parent=root)
-        factories.DataUsePermissionFactory.create(parent=child)
+        grandchild = factories.DataUsePermissionFactory.create(parent=child)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 1)
+        self.assertIn(root, response.context_data["roots"])
+        self.assertNotIn(child, response.context_data["roots"])
+        self.assertNotIn(grandchild, response.context_data["roots"])
 
     def test_two_roots(self):
         """Template renders with two root nodes."""
-        factories.DataUsePermissionFactory.create()
-        factories.DataUsePermissionFactory.create()
+        root_1 = factories.DataUsePermissionFactory.create()
+        root_2 = factories.DataUsePermissionFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 2)
+        self.assertIn(root_1, response.context_data["roots"])
+        self.assertIn(root_2, response.context_data["roots"])
 
 
 class DataUsePermissionDetailTest(TestCase):
@@ -203,38 +221,55 @@ class DataUseModifierListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 0)
 
     def test_one_root(self):
         """Template renders with one root node."""
-        factories.DataUseModifierFactory.create()
+        root = factories.DataUseModifierFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 1)
+        self.assertIn(root, response.context_data["roots"])
 
     def test_one_root_one_child(self):
         """Template renders with one root node and one child node."""
         root = factories.DataUseModifierFactory.create()
-        factories.DataUseModifierFactory.create(parent=root)
+        child = factories.DataUseModifierFactory.create(parent=root)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 1)
+        self.assertIn(root, response.context_data["roots"])
+        self.assertNotIn(child, response.context_data["roots"])
 
     def test_one_root_one_grandchild(self):
         """Template renders with one root node and one child node."""
         root = factories.DataUseModifierFactory.create()
         child = factories.DataUseModifierFactory.create(parent=root)
-        factories.DataUseModifierFactory.create(parent=child)
+        grandchild = factories.DataUseModifierFactory.create(parent=child)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 1)
+        self.assertIn(root, response.context_data["roots"])
+        self.assertNotIn(grandchild, response.context_data["roots"])
 
     def test_two_roots(self):
         """Template renders with two root nodes."""
-        factories.DataUseModifierFactory.create()
-        factories.DataUseModifierFactory.create()
+        root_1 = factories.DataUseModifierFactory.create()
+        root_2 = factories.DataUseModifierFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+        self.assertIn("roots", response.context_data)
+        self.assertEqual(len(response.context_data["roots"]), 2)
+        self.assertIn(root_1, response.context_data["roots"])
+        self.assertIn(root_2, response.context_data["roots"])
 
 
 class DataUseModifierDetailTest(TestCase):
