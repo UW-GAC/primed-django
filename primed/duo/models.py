@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from mptt.models import MPTTModel, TreeForeignKey, TreeManyToManyField
+from tree_queries.models import TreeNode, TreeNodeForeignKey
 
 
 class DUOFields(models.Model):
@@ -42,7 +42,7 @@ class DUOFields(models.Model):
         )
 
 
-class DataUsePermission(DUOFields, MPTTModel):
+class DataUsePermission(DUOFields, TreeNode):
     """A model to track the allowed main consent codes using GA4GH DUO codes."""
 
     requires_disease_restriction = models.BooleanField(
@@ -50,28 +50,12 @@ class DataUsePermission(DUOFields, MPTTModel):
         help_text="Indicator of whether an additional disease restriction is required for this term.",
     )
 
-    # Required for MPTT.
-    parent = TreeForeignKey(
-        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
-    )
-
-    class MPTTMeta:
-        order_insertion_by = ["identifier"]
-
     def get_absolute_url(self):
         return reverse("duo:data_use_permissions:detail", args=[self.identifier])
 
 
-class DataUseModifier(DUOFields, MPTTModel):
+class DataUseModifier(DUOFields, TreeNode):
     """A model to track the allowed consent modifiers using GA4GH DUO codes."""
-
-    # Required for MPTT.
-    parent = TreeForeignKey(
-        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
-    )
-
-    class MPTTMeta:
-        order_insertion_by = ["identifier"]
 
     def get_absolute_url(self):
         return reverse("duo:data_use_modifiers:detail", args=[self.identifier])
@@ -80,7 +64,7 @@ class DataUseModifier(DUOFields, MPTTModel):
 class DataUseOntologyModel(models.Model):
     """An abstract model to track a group using Data Use Ontology terms to describe allowed data use."""
 
-    data_use_permission = TreeForeignKey(
+    data_use_permission = TreeNodeForeignKey(
         DataUsePermission,
         verbose_name="DUO data use permission",
         null=True,
@@ -88,7 +72,7 @@ class DataUseOntologyModel(models.Model):
         on_delete=models.PROTECT,
         help_text="""The DataUsePermission associated with this study-consent group.""",
     )
-    data_use_modifiers = TreeManyToManyField(
+    data_use_modifiers = models.ManyToManyField(
         DataUseModifier,
         verbose_name="DUO data use modifiers",
         blank=True,
