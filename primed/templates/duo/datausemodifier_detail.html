@@ -2,7 +2,9 @@
 {% load django_tables2 %}
 {% load mptt_tags %}
 
-{% block title %}DUO modifier {{ object }}
+{% block title %}DUO modifier {{ object }}{% endblock title %}
+
+{% block after_title %}
   <a class="btn btn-light" href="{{ object.get_ols_url }}" role="button">
     <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
     View on OLS

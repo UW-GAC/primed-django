@@ -2,12 +2,14 @@
 {% load django_tables2 %}
 {% load mptt_tags %}
 
-{% block title %}DUO permission {{ object }}
+{% block title %}DUO permission {{ object }}{% endblock title %}
+
+{% block after_title %}
   <a class="btn btn-light" href="{{ object.get_ols_url }}" role="button" target="_blank">
     <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
     View on OLS
   </a>
-{% endblock title %}
+{% endblock after_title %}
 
 {% block panel %}
   <ul>
