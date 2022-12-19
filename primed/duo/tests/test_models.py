@@ -39,6 +39,11 @@ class DataUsePermissionTest(TestCase):
         instance = factories.DataUsePermissionFactory.create()
         self.assertIsInstance(instance.get_absolute_url(), str)
 
+    def test_get_ols_url(self):
+        """The get_absolute_url method works."""
+        instance = factories.DataUsePermissionFactory.create()
+        self.assertIsInstance(instance.get_ols_url(), str)
+
     def test_can_add_child_node(self):
         root = factories.DataUsePermissionFactory.create()
         child = factories.DataUsePermissionFactory.create(parent=root)
@@ -109,8 +114,13 @@ class DataUseModifierTest(TestCase):
 
     def test_get_absolute_url(self):
         """The get_absolute_url method works."""
-        instance = factories.DataUsePermissionFactory.create()
+        instance = factories.DataUseModifierFactory.create()
         self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_get_ols_url(self):
+        """The get_absolute_url method works."""
+        instance = factories.DataUseModifierFactory.create()
+        self.assertIsInstance(instance.get_ols_url(), str)
 
     def test_can_add_child_node(self):
         root = factories.DataUseModifierFactory.create()

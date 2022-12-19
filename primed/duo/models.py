@@ -36,6 +36,11 @@ class DUOFields(models.Model):
         """
         return "{}".format(self.term)
 
+    def get_ols_url(self):
+        return "http://purl.obolibrary.org/obo/{}".format(
+            self.identifier.replace("DUO:", "DUO_")
+        )
+
 
 class DataUsePermission(DUOFields, MPTTModel):
     """A model to track the allowed main consent codes using GA4GH DUO codes."""
