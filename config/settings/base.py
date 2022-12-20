@@ -92,7 +92,6 @@ THIRD_PARTY_APPS = [
     # django-simple-history for model change tracking
     "simple_history",
     "dbbackup",
-    "mptt",
 ]
 
 LOCAL_APPS = [
