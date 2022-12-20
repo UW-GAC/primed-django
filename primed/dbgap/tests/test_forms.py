@@ -1,12 +1,12 @@
 """Test forms for the `dbgap` app."""
 
 import json
+from unittest import skip
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.test import TestCase
 from faker import Faker
 
-from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import StudyFactory
 from primed.users.tests.factories import UserFactory
 
@@ -24,7 +24,6 @@ class dbGaPStudyAccessionFormTest(TestCase):
     def setUp(self):
         """Create a workspace for use in the form."""
         self.study = StudyFactory.create()
-        self.data_use_permission = DataUsePermissionFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
@@ -131,62 +130,68 @@ class dbGaPWorkspaceFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
+    @skip("duo - not implemented")
     def test_valid_with_data_use_permission(self):
-        data_use_permission = DataUsePermissionFactory.create()
-        form_data = {
-            "dbgap_study_accession": self.dbgap_study_accession,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-            "dbgap_consent_abbreviation": "GRU",
-            "dbgap_consent_code": 1,
-            "data_use_limitations": "test limitations",
-            "data_use_permission": data_use_permission,
-            "acknowledgments": "test acknowledgmnts",
-            "workspace": self.workspace,
-            "requested_by": self.requester,
-        }
-        form = self.form_class(data=form_data)
-        self.assertTrue(form.is_valid())
+        self.fail("uncomment")
+        # data_use_permission = DataUsePermissionFactory.create()
+        # form_data = {
+        #     "dbgap_study_accession": self.dbgap_study_accession,
+        #     "dbgap_version": 1,
+        #     "dbgap_participant_set": 1,
+        #     "dbgap_consent_abbreviation": "GRU",
+        #     "dbgap_consent_code": 1,
+        #     "data_use_limitations": "test limitations",
+        #     "data_use_permission": data_use_permission,
+        #     "acknowledgments": "test acknowledgmnts",
+        #     "workspace": self.workspace,
+        #     "requested_by": self.requester,
+        # }
+        # form = self.form_class(data=form_data)
+        # self.assertTrue(form.is_valid())
 
+    @skip("duo - not implemented")
     def test_valid_one_data_use_modifier(self):
         """Form is valid with necessary input."""
-        data_use_permission = DataUsePermissionFactory.create()
-        data_use_modifier = DataUseModifierFactory.create()
-        form_data = {
-            "dbgap_study_accession": self.dbgap_study_accession,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-            "dbgap_consent_abbreviation": "GRU",
-            "dbgap_consent_code": 1,
-            "data_use_limitations": "test limitations",
-            "data_use_permission": data_use_permission,
-            "data_use_modifiers": [data_use_modifier],
-            "acknowledgments": "test acknowledgmnts",
-            "workspace": self.workspace,
-            "requested_by": self.requester,
-        }
-        form = self.form_class(data=form_data)
-        self.assertTrue(form.is_valid())
+        self.fail("uncomment")
+        # data_use_permission = DataUsePermissionFactory.create()
+        # data_use_modifier = DataUseModifierFactory.create()
+        # form_data = {
+        #     "dbgap_study_accession": self.dbgap_study_accession,
+        #     "dbgap_version": 1,
+        #     "dbgap_participant_set": 1,
+        #     "dbgap_consent_abbreviation": "GRU",
+        #     "dbgap_consent_code": 1,
+        #     "data_use_limitations": "test limitations",
+        #     "data_use_permission": data_use_permission,
+        #     "data_use_modifiers": [data_use_modifier],
+        #     "acknowledgments": "test acknowledgmnts",
+        #     "workspace": self.workspace,
+        #     "requested_by": self.requester,
+        # }
+        # form = self.form_class(data=form_data)
+        # self.assertTrue(form.is_valid())
 
+    @skip("duo - not implemented")
     def test_valid_two_data_use_modifiers(self):
         """Form is valid with necessary input."""
-        data_use_permission = DataUsePermissionFactory.create()
-        data_use_modifiers = DataUseModifierFactory.create_batch(2)
-        form_data = {
-            "dbgap_study_accession": self.dbgap_study_accession,
-            "dbgap_version": 1,
-            "dbgap_participant_set": 1,
-            "dbgap_consent_abbreviation": "GRU",
-            "dbgap_consent_code": 1,
-            "data_use_limitations": "test limitations",
-            "data_use_permission": data_use_permission,
-            "data_use_modifiers": data_use_modifiers,
-            "acknowledgments": "test acknowledgmnts",
-            "workspace": self.workspace,
-            "requested_by": self.requester,
-        }
-        form = self.form_class(data=form_data)
-        self.assertTrue(form.is_valid())
+        self.fail("uncomment")
+        # data_use_permission = DataUsePermissionFactory.create()
+        # data_use_modifiers = DataUseModifierFactory.create_batch(2)
+        # form_data = {
+        #     "dbgap_study_accession": self.dbgap_study_accession,
+        #     "dbgap_version": 1,
+        #     "dbgap_participant_set": 1,
+        #     "dbgap_consent_abbreviation": "GRU",
+        #     "dbgap_consent_code": 1,
+        #     "data_use_limitations": "test limitations",
+        #     "data_use_permission": data_use_permission,
+        #     "data_use_modifiers": data_use_modifiers,
+        #     "acknowledgments": "test acknowledgmnts",
+        #     "workspace": self.workspace,
+        #     "requested_by": self.requester,
+        # }
+        # form = self.form_class(data=form_data)
+        # self.assertTrue(form.is_valid())
 
     def test_invalid_missing_study(self):
         """Form is invalid when missing dbgap_study_accession."""

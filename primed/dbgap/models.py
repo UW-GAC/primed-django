@@ -21,7 +21,6 @@ from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from primed.duo.models import DataUseOntologyModel
 from primed.primed_anvil.models import RequesterModel, Study
 
 from . import constants, helpers, managers
@@ -58,9 +57,7 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         )
 
 
-class dbGaPWorkspace(
-    RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData
-):
+class dbGaPWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.

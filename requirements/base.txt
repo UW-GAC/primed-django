@@ -32,6 +32,3 @@ requests==2.28.1
 
 # For json schema validation.
 jsonschema==4.16.0
-
-# For tree structures
-django-mptt==0.14.0
