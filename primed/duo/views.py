@@ -32,6 +32,11 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
             )
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ancestors"] = self.object.ancestors()
+        return context
+
 
 class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
 
@@ -59,3 +64,8 @@ class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
                 % {"verbose_name": self.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ancestors"] = self.object.ancestors()
+        return context

@@ -1,0 +1,41 @@
+<div class="card my-3">
+  <div class="card-header">
+    Tree
+  </div>
+  <div class="card-body">
+
+    <ul class="list-group list-group-flush py-0">
+
+      <!-- first list item. This can be the node itself or the root ancestor. -->
+      <li class="list-group-item border-0 py-0">
+        <i class="bi-arrow-bar-right"></i>
+
+  <!-- Loop over ancestors. -->
+  {% for node in ancestors %}
+          {{ node }} (<a href="{{ node.get_absolute_url }}">Details</a>)
+          <ul class="list-group list-group-flush py-0">
+            <li class="list-group-item border-0 py-0">
+              <i class="bi-arrow-return-right"></i>
+
+  {% endfor %}
+
+              <!-- This object. -->
+              <strong> {{ object }} </strong>
+
+              <!-- Children -->
+              <ul class="list-group list-group-flush py-0">
+  {% for child in object.children.all %}
+    {% include "duo/treequeries_detailitem.html" with node=child %}
+  {% endfor %}
+              </ul>
+            </li>
+
+        <!-- Close out the ancestor loop. -->
+        </ul>
+  {% for node in ancestors %}
+      </li>
+    </ul>
+  {% endfor %}
+
+  </div>
+</div>
