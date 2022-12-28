@@ -10,7 +10,7 @@
 
   {% if node.children.count != 0 %}
   <button class="btn btn-light btn-sm rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-tree-{{node.abbreviation}}">
-    <i class="bi-plus"></i> {{ node.children.count }} descendant{{node.children.count|pluralize}}
+    <i class="bi-plus"></i> {{ node.children.count }} child{{node.children.count|pluralize:"ren"}}
   </button>
 
   <div class="collapse mx-3" id="collapse-tree-{{node.abbreviation}}">
