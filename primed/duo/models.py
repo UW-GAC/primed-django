@@ -45,9 +45,9 @@ class DUOFields(models.Model):
 class DataUsePermission(DUOFields, TreeNode):
     """A model to track the allowed main consent codes using GA4GH DUO codes."""
 
-    requires_disease_restriction = models.BooleanField(
+    requires_disease_term = models.BooleanField(
         default=False,
-        help_text="Indicator of whether an additional disease restriction is required for this term.",
+        help_text="Indicator of whether an additional disease term is required for this term.",
     )
 
     def get_absolute_url(self):
@@ -78,37 +78,30 @@ class DataUseOntologyModel(models.Model):
         blank=True,
         help_text="""The DataUseModifiers associated with this study-consent group.""",
     )
-    # TODO: Change to disease_term instead of disease_restriction.
-    disease_restriction = models.CharField(
-        verbose_name="DUO disease restriction",
+    disease_term = models.CharField(
+        verbose_name="DUO disease term",
         max_length=255,
         blank=True,
         null=True,
-        help_text="The disease restriction if required by data_use_permission.",
+        help_text="The disease term if required by data_use_permission.",
     )
 
     class Meta:
         abstract = True
 
     def clean(self):
-        """Ensure that the disease_restriction term is set if data_use_permission requires it."""
+        """Ensure that disease_term is set if data_use_permission requires it."""
         # Without hasattr, we get a RelatedObjectDoesNotExist error.
         if hasattr(self, "data_use_permission") and self.data_use_permission:
-            if (
-                self.data_use_permission.requires_disease_restriction
-                and not self.disease_restriction
-            ):
+            if self.data_use_permission.requires_disease_term and not self.disease_term:
                 raise ValidationError(
-                    "`disease_restriction` must not be None "
+                    "`disease_term` must not be None "
                     "because data_use_permission requires a disease restriction."
                 )
-            if (
-                not self.data_use_permission.requires_disease_restriction
-                and self.disease_restriction
-            ):
+            if not self.data_use_permission.requires_disease_term and self.disease_term:
                 raise ValidationError(
                     (
-                        "`disease_restriction` must be None "
+                        "`disease_term` must be None "
                         "because data_use_permission does not require a disease restriction."
                     )
                 )

@@ -58,18 +58,18 @@ class DataUsePermissionTest(TestCase):
             definition="foo",
         )
         instance.save()
-        self.assertFalse(instance.requires_disease_restriction)
+        self.assertFalse(instance.requires_disease_term)
         self.assertFalse(instance.comment)
 
-    def test_requires_disease_restriction(self):
-        """Can set requires_disease_restriction to True."""
+    def test_requires_disease_term(self):
+        """Can set requires_disease_term to True."""
         instance = factories.DataUsePermissionFactory.create(
-            requires_disease_restriction=True,
+            requires_disease_term=True,
         )
-        self.assertEqual(instance.requires_disease_restriction, True)
+        self.assertEqual(instance.requires_disease_term, True)
 
     def test_comment(self):
-        """Can set requires_disease_restriction to True."""
+        """Can set requires_disease_term to True."""
         instance = factories.DataUsePermissionFactory.create(comment="test comment")
         self.assertEqual(instance.comment, "test comment")
 
@@ -139,7 +139,7 @@ class DataUseModifierTest(TestCase):
         self.assertFalse(instance.comment)
 
     def test_comment(self):
-        """Can set requires_disease_restriction to True."""
+        """Can set requires_disease_term to True."""
         instance = factories.DataUseModifierFactory.create(comment="test comment")
         self.assertEqual(instance.comment, "test comment")
 
@@ -163,10 +163,10 @@ class DataUseOntologyTestCase(TestCase):
 
     # Use the dbGaPWorkspace model to test this -- not ideal because it's defined in a different app but...
 
-    def test_clean_requires_disease_restriction_false_with_no_disease_restriction(self):
-        """Clean succeeds if disease_restriction is not set and requires_disease_restriction is False."""
+    def test_clean_requires_disease_term_false_with_no_disease_term(self):
+        """Clean succeeds if disease_term is not set and requires_disease_term is False."""
         data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_restriction=False
+            requires_disease_term=False
         )
         workspace = dbGaPWorkspaceFactory.create(
             data_use_permission=data_use_permission
@@ -174,32 +174,32 @@ class DataUseOntologyTestCase(TestCase):
         # No errors should be raised.
         workspace.clean()
 
-    def test_clean_requires_disease_restriction_true_with_disease_restriction(self):
-        """Clean succeeds if disease_restriction is set and requires_disease_restriction is True."""
+    def test_clean_requires_disease_term_true_with_disease_term(self):
+        """Clean succeeds if disease_term is set and requires_disease_term is True."""
         data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_restriction=True
+            requires_disease_term=True
         )
         workspace = dbGaPWorkspaceFactory.create(
-            data_use_permission=data_use_permission, disease_restriction="foo"
+            data_use_permission=data_use_permission, disease_term="foo"
         )
         workspace.clean()
 
-    def test_clean_requires_disease_restriction_false_with_disease_restriction(self):
-        """Clean fails if disease_restriction is set when requires_disease_restriction is False."""
+    def test_clean_requires_disease_term_false_with_disease_term(self):
+        """Clean fails if disease_term is set when requires_disease_term is False."""
         data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_restriction=False
+            requires_disease_term=False
         )
         workspace = dbGaPWorkspaceFactory.create(
-            data_use_permission=data_use_permission, disease_restriction="foo"
+            data_use_permission=data_use_permission, disease_term="foo"
         )
         with self.assertRaises(ValidationError) as e:
             workspace.clean()
         self.assertIn("does not require a disease restriction", str(e.exception))
 
-    def test_clean_requires_disease_restriction_true_with_no_disease_restriction(self):
-        """Clean fails if disease_restriction is not set when requires_disease_restriction is True."""
+    def test_clean_requires_disease_term_true_with_no_disease_term(self):
+        """Clean fails if disease_term is not set when requires_disease_term is True."""
         data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_restriction=True
+            requires_disease_term=True
         )
         workspace = dbGaPWorkspaceFactory.create(
             data_use_permission=data_use_permission,
