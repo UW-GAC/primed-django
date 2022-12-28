@@ -3,39 +3,23 @@ from django.contrib import admin
 from . import models
 
 # TODO: use a tree admin somehow
-admin.site.register(models.DataUsePermission)
-admin.site.register(models.DataUseModifier)
-
-# @admin.register(models.DataUsePermission)
-# class DataUsePermissionAdmin(DraggableMPTTAdmin):
-#     """Admin class for the `DataUsePermission` model."""
-#
-#     pass
-#
-#
-# @admin.register(models.DataUseModifier)
-# class DataUseModifierAdmin(DraggableMPTTAdmin):
-#     """Admin class for the `DataUseModifier` model."""
-#
-#     pass
 
 
-# @admin.register(models.DataUseModifier)
-# class DataUseModifierAdmin(SimpleHistoryAdmin):
-#     """Admin class for the `DataUseModifier` model."""
-#
-#     list_display = (
-#         "code",
-#         "identifier",
-#         "description",
-#     )
-#     search_fields = (
-#         "code",
-#         "identifier",
-#         "description",
-#     )
-#     sortable_by = (
-#         "code",
-#         "identifier",
-#         "description",
-#     )
+class DUOAdmin(admin.ModelAdmin):
+    """Admin class for DUO models."""
+
+    list_display = (
+        "term",
+        "abbreviation",
+        "identifier",
+        "parent",
+    )
+    search_fields = (
+        "term",
+        "abbreviation",
+        "definition",
+    )
+
+
+admin.site.register(models.DataUsePermission, DUOAdmin)
+admin.site.register(models.DataUseModifier, DUOAdmin)
