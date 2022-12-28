@@ -351,7 +351,7 @@ SOCIALACCOUNT_PROVIDERS = {
 LIVE_SITE = False
 
 # Help contact email
-DCC_CONTACT_EMAIL = "primedconsortium@uw.org"
+DCC_CONTACT_EMAIL = "primedconsortium@uw.edu"
 
 # django-tables2
 # ------------------------------------------------------------------------------
@@ -374,3 +374,4 @@ ANVIL_WORKSPACE_ADAPTERS = [
 ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
+ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
