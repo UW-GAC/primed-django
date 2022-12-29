@@ -2,7 +2,6 @@
 
 import json
 from datetime import timedelta
-from unittest import skip
 
 import responses
 from anvil_consortium_manager import views as acm_views
@@ -29,6 +28,7 @@ from django.urls import reverse
 from django.utils import timezone
 from faker import Faker
 
+from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; DataUsePermissionFactory,
     StudyFactory,
 )
@@ -531,6 +531,8 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_upload_workspace_without_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        # Create an extra that won't be specified.
+        DataUseModifierFactory.create()
         billing_project = BillingProjectFactory.create(name="test-billing-project")
         url = self.entry_point + "/api/workspaces"
         json_data = {
@@ -584,62 +586,60 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.requested_by, self.requester)
         responses.assert_call_count(url, 1)
 
-    @skip("duo - not implemented")
     def test_creates_upload_workspace_with_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
-        self.fail("uncomment")
-        # dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        # data_use_permission = DataUsePermissionFactory.create()
-        # data_use_modifier_1 = DataUseModifierFactory.create()
-        # data_use_modifier_2 = DataUseModifierFactory.create()
-        # # Create an extra that won't be specified.
-        # DataUseModifierFactory.create()
-        # billing_project = BillingProjectFactory.create(name="test-billing-project")
-        # url = self.entry_point + "/api/workspaces"
-        # json_data = {
-        #     "namespace": "test-billing-project",
-        #     "name": "test-workspace",
-        #     "attributes": {},
-        # }
-        # responses.add(
-        #     responses.POST,
-        #     url,
-        #     status=self.api_success_code,
-        #     match=[responses.matchers.json_params_matcher(json_data)],
-        # )
-        # self.client.force_login(self.user)
-        # response = self.client.post(
-        #     self.get_url(self.workspace_type),
-        #     {
-        #         "billing_project": billing_project.pk,
-        #         "name": "test-workspace",
-        #         # Workspace data form.
-        #         "workspacedata-TOTAL_FORMS": 1,
-        #         "workspacedata-INITIAL_FORMS": 0,
-        #         "workspacedata-MIN_NUM_FORMS": 1,
-        #         "workspacedata-MAX_NUM_FORMS": 1,
-        #         "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
-        #         "workspacedata-0-dbgap_version": 2,
-        #         "workspacedata-0-dbgap_participant_set": 3,
-        #         "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
-        #         "workspacedata-0-dbgap_consent_code": 4,
-        #         "workspacedata-0-data_use_limitations": "test limitations",
-        #         "workspacedata-0-acknowledgments": "test acknowledgments",
-        #         "workspacedata-0-data_use_permission": data_use_permission.pk,
-        #         "workspacedata-0-data_use_modifiers": [
-        #             data_use_modifier_1.pk,
-        #             data_use_modifier_2.pk,
-        #         ],
-        #         "workspacedata-0-requested_by": self.requester.pk,
-        #     },
-        # )
-        # self.assertEqual(response.status_code, 302)
-        # new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
-        # self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
-        # self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
-        # self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
-        # self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
-        # responses.assert_call_count(url, 1)
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifier_1 = DataUseModifierFactory.create()
+        data_use_modifier_2 = DataUseModifierFactory.create()
+        # Create an extra that won't be specified.
+        DataUseModifierFactory.create()
+        billing_project = BillingProjectFactory.create(name="test-billing-project")
+        url = self.entry_point + "/api/workspaces"
+        json_data = {
+            "namespace": "test-billing-project",
+            "name": "test-workspace",
+            "attributes": {},
+        }
+        responses.add(
+            responses.POST,
+            url,
+            status=self.api_success_code,
+            match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "billing_project": billing_project.pk,
+                "name": "test-workspace",
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
+                "workspacedata-0-dbgap_version": 2,
+                "workspacedata-0-dbgap_participant_set": 3,
+                "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
+                "workspacedata-0-dbgap_consent_code": 4,
+                "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
+                "workspacedata-0-data_use_permission": data_use_permission.pk,
+                "workspacedata-0-data_use_modifiers": [
+                    data_use_modifier_1.pk,
+                    data_use_modifier_2.pk,
+                ],
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
+        self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
+        self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
+        self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
+        responses.assert_call_count(url, 1)
 
 
 class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -700,6 +700,8 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_dbgap_workspace_without_duos(self):
         """Posting valid data to the form creates an UploadWorkspace object."""
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        # Create an extra that won't be specified.
+        DataUseModifierFactory.create()
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
@@ -761,70 +763,68 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.requested_by, self.requester)
         responses.assert_call_count(url, 1)
 
-    @skip("duo - not implemented")
     def test_creates_dbgap_workspace_with_duos(self):
         """Posting valid data to the form creates an UploadWorkspace object."""
-        self.fail("uncomment")
-        # dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        # data_use_permission = DataUsePermissionFactory.create()
-        # data_use_modifier_1 = DataUseModifierFactory.create()
-        # data_use_modifier_2 = DataUseModifierFactory.create()
-        # # Create an extra that won't be specified.
-        # DataUseModifierFactory.create()
-        # billing_project = BillingProjectFactory.create(name="billing-project")
-        # workspace_name = "workspace"
-        # # Available workspaces API call.
-        # workspace_list_url = self.entry_point + "/api/workspaces"
-        # responses.add(
-        #     responses.GET,
-        #     workspace_list_url,
-        #     match=[
-        #         responses.matchers.query_param_matcher(
-        #             {"fields": "workspace.namespace,workspace.name,accessLevel"}
-        #         )
-        #     ],
-        #     status=200,
-        #     json=[self.get_api_json_response(billing_project.name, workspace_name)],
-        # )
-        # url = self.get_api_url(billing_project.name, workspace_name)
-        # responses.add(
-        #     responses.GET,
-        #     url,
-        #     status=self.api_success_code,
-        #     json=self.get_api_json_response(billing_project.name, workspace_name),
-        # )
-        # self.client.force_login(self.user)
-        # response = self.client.post(
-        #     self.get_url(self.workspace_type),
-        #     {
-        #         "workspace": billing_project.name + "/" + workspace_name,
-        #         # Workspace data form.
-        #         "workspacedata-TOTAL_FORMS": 1,
-        #         "workspacedata-INITIAL_FORMS": 0,
-        #         "workspacedata-MIN_NUM_FORMS": 1,
-        #         "workspacedata-MAX_NUM_FORMS": 1,
-        #         "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
-        #         "workspacedata-0-dbgap_version": 2,
-        #         "workspacedata-0-dbgap_participant_set": 3,
-        #         "workspacedata-0-dbgap_consent_code": 4,
-        #         "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
-        #         "workspacedata-0-data_use_limitations": "test limitations",
-        #         "workspacedata-0-acknowledgments": "test acknowledgments",
-        #         "workspacedata-0-data_use_permission": data_use_permission.pk,
-        #         "workspacedata-0-data_use_modifiers": [
-        #             data_use_modifier_1.pk,
-        #             data_use_modifier_2.pk,
-        #         ],
-        #         "workspacedata-0-requested_by": self.requester.pk,
-        #     },
-        # )
-        # self.assertEqual(response.status_code, 302)
-        # new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
-        # self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
-        # self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
-        # self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
-        # self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
-        # responses.assert_call_count(url, 1)
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifier_1 = DataUseModifierFactory.create()
+        data_use_modifier_2 = DataUseModifierFactory.create()
+        # Create an extra that won't be specified.
+        DataUseModifierFactory.create()
+        billing_project = BillingProjectFactory.create(name="billing-project")
+        workspace_name = "workspace"
+        # Available workspaces API call.
+        workspace_list_url = self.entry_point + "/api/workspaces"
+        responses.add(
+            responses.GET,
+            workspace_list_url,
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
+                )
+            ],
+            status=200,
+            json=[self.get_api_json_response(billing_project.name, workspace_name)],
+        )
+        url = self.get_api_url(billing_project.name, workspace_name)
+        responses.add(
+            responses.GET,
+            url,
+            status=self.api_success_code,
+            json=self.get_api_json_response(billing_project.name, workspace_name),
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "workspace": billing_project.name + "/" + workspace_name,
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-dbgap_study_accession": dbgap_study_accession.pk,
+                "workspacedata-0-dbgap_version": 2,
+                "workspacedata-0-dbgap_participant_set": 3,
+                "workspacedata-0-dbgap_consent_code": 4,
+                "workspacedata-0-dbgap_consent_abbreviation": "GRU-TEST",
+                "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
+                "workspacedata-0-data_use_permission": data_use_permission.pk,
+                "workspacedata-0-data_use_modifiers": [
+                    data_use_modifier_1.pk,
+                    data_use_modifier_2.pk,
+                ],
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.data_use_permission, data_use_permission)
+        self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
+        self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
+        self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
+        responses.assert_call_count(url, 1)
 
 
 class dbGaPApplicationListTest(TestCase):

@@ -31,9 +31,9 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "dbgap_consent_code",
             "data_use_limitations",
             "acknowledgments",
-            # "data_use_permission",
-            # "disease_restriction",
-            # "data_use_modifiers",
+            "data_use_permission",
+            "disease_term",
+            "data_use_modifiers",
             "workspace",
             "requested_by",
         )

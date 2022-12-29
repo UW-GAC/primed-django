@@ -26,6 +26,20 @@
 
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      DUO
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+      <li>
+        <a class="dropdown-item" href="{% url 'duo:data_use_permissions:list' %}">List data use permissions</a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'duo:data_use_modifiers:list' %}">List data use modifiers</a>
+      </li>
+    </ul>
+  </li>
+
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
       dbGaP
     </a>
     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">

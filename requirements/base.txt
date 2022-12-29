@@ -32,3 +32,9 @@ requests==2.28.1
 
 # For json schema validation.
 jsonschema==4.16.0
+
+# For tree structures
+django-tree-queries==0.13.0
+
+# For parsing DUO OWL files
+pronto==2.5.2

@@ -1,0 +1,27 @@
+<li class="list-group-item border-0">
+
+  {% if node.ancestors %}
+    <i class="bi-arrow-return-right"></i>
+  {% else %}
+    <i class="bi-arrow-bar-right"></i>
+  {% endif %}
+
+  {{node}} (<a href="{{ node.get_absolute_url }}">Details</a>)
+
+  {% if node.children.count != 0 %}
+  <button class="btn btn-light btn-sm rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-tree-{{node.abbreviation}}">
+    <i class="bi-plus"></i> {{ node.children.count }} child{{node.children.count|pluralize:"ren"}}
+  </button>
+
+  <div class="collapse mx-3" id="collapse-tree-{{node.abbreviation}}">
+    <ul class="list-group list-group-flush">
+     {% for child in node.children.all %}
+          {% with node=child template_name="duo/treequeries_listitem.html" %}
+               {% include template_name%}
+          {% endwith %}
+     {% endfor %}
+     </ul>
+   </div>
+
+  {% endif %}
+</li>

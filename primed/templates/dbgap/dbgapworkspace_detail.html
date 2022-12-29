@@ -12,6 +12,22 @@
     <li>dbGaP accession: {{ object.dbgapworkspace.get_dbgap_accession }}</li>
     <li>dbGaP consent abbreviation: {{ object.dbgapworkspace.dbgap_consent_abbreviation }}</li>
     <li>dbGaP consent code: {{ object.dbgapworkspace.dbgap_consent_code }}</li>
+    <hr>
+    <li>
+      DUO permission:
+      <a href="{{ object.dbgapworkspace.data_use_permission.get_absolute_url}}">
+        {{ object.dbgapworkspace.data_use_permission.abbreviation }}
+      </a>
+    </li>
+    <li>
+      DUO modifiers:
+      {% for modifier in object.dbgapworkspace.data_use_modifiers.all %}
+      <a href="{{ modifier.get_absolute_url }}">
+        {{ modifier.abbreviation }}
+      </a>
+        {% if not forloop.last %} , {% endif %}
+      {% endfor %}
+    </li>
   </ul>
 {% endblock workspace_data %}
 

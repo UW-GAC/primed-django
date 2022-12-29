@@ -1,0 +1,10 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block content %}
+
+<h2>DUO Data Use Permissions List</h2>
+
+{% include "duo/treequeries_list.html" with roots=roots %}
+
+{% endblock content %}

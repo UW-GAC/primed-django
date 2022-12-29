@@ -1,0 +1,27 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load django_tables2 %}
+
+{% block title %}DUO modifier {{ object }}{% endblock title %}
+
+{% block after_title %}
+  <a class="btn btn-light" href="{{ object.get_ols_url }}" role="button">
+    <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
+    View on OLS
+  </a>
+{% endblock after_title %}
+
+{% block panel %}
+  <ul>
+    <li>Identifier: {{ object.identifier }}</li>
+    <li>Abbreviation: {{ object.abbreviation }}</li>
+    <li>Term: {{ object.term }}</li>
+    <li>Definition: {{ object.definition }}</li>
+    <li>Comment: {{ object.comment }}</li>
+  </ul>
+{% endblock panel %}
+
+{% block after_panel %}
+
+{% include "duo/treequeries_detail.html" %}
+
+{% endblock after_panel %}
