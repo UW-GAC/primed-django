@@ -7,7 +7,7 @@ from django.test import TestCase
 from faker import Faker
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.primed_anvil.tests.factories import StudyFactory
+from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import forms
@@ -418,6 +418,42 @@ class dbGaPWorkspaceFormTest(TestCase):
         non_field_errors = form.non_field_errors()
         self.assertEqual(len(non_field_errors), 1)
         self.assertIn("already exists", non_field_errors[0])
+
+    def test_valid_one_available_data(self):
+        """Form is valid with necessary input and one available data record."""
+        available_data = AvailableDataFactory.create()
+        form_data = {
+            "dbgap_study_accession": self.dbgap_study_accession,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
+            "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+            "workspace": self.workspace,
+            "requested_by": self.requester,
+            "available_data": [available_data],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_available_data(self):
+        """Form is valid with necessary input and two available data records."""
+        available_data = AvailableDataFactory.create_batch(2)
+        form_data = {
+            "dbgap_study_accession": self.dbgap_study_accession,
+            "dbgap_version": 1,
+            "dbgap_participant_set": 1,
+            "dbgap_consent_abbreviation": "GRU",
+            "dbgap_consent_code": 1,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+            "workspace": self.workspace,
+            "requested_by": self.requester,
+            "available_data": available_data,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
 
 
 class dbGaPApplicationFormTest(TestCase):

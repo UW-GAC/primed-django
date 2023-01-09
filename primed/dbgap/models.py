@@ -22,7 +22,7 @@ from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 from primed.duo.models import DataUseOntologyModel
-from primed.primed_anvil.models import RequesterModel, Study
+from primed.primed_anvil.models import AvailableData, RequesterModel, Study
 
 from . import constants, helpers, managers
 
@@ -105,6 +105,11 @@ class dbGaPWorkspace(
 
     acknowledgments = models.TextField(
         help_text="Acknowledgments associated with data in this workspace."
+    )
+    available_data = models.ManyToManyField(
+        AvailableData,
+        help_text="Data available in this accession.",
+        blank=True,
     )
 
     history = HistoricalRecords()
