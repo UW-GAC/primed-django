@@ -1,6 +1,8 @@
 import json
 
 from anvil_consortium_manager import models as acm_models
+from anvil_consortium_manager.tests.factories import AccountFactory
+from anvil_consortium_manager.views import AccountList
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -608,6 +610,48 @@ class StudySiteListTest(TestCase):
 
     def test_view_with_two_objects(self):
         """The table has two rows when there are two StudySite objects."""
+        self.model_factory.create_batch(2)
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+
+class AccountListTest(TestCase):
+    """Tests for the AccountList view using the custom table."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = AccountFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:accounts:list")
+
+    def get_view(self):
+        """Return the view being tested."""
+        return AccountList.as_view()
+
+    def test_view_has_correct_table_class(self):
+        """View has the correct table class in the context."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], tables.AccountTable)
+
+    def test_view_with_two_objects(self):
+        """The table has two rows when there are two Account objects."""
         self.model_factory.create_batch(2)
         request = self.factory.get(self.get_url())
         request.user = self.user
