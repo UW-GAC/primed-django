@@ -1,4 +1,5 @@
 import django_tables2 as tables
+from anvil_consortium_manager.models import Account
 
 from . import models
 
@@ -21,3 +22,17 @@ class StudySiteTable(tables.Table):
     class Meta:
         model = models.StudySite
         fields = ("short_name", "full_name")
+
+
+class AccountTable(tables.Table):
+    """A custom table for `Accounts`."""
+
+    """Class to display a BillingProject table."""
+
+    email = tables.Column(linkify=True)
+    user = tables.Column(linkify=True)
+    user__name = tables.Column(linkify=lambda record: record.user.get_absolute_url())
+
+    class Meta:
+        model = Account
+        fields = ("email", "user__name", "user__study_sites")
