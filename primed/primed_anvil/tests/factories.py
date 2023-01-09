@@ -22,3 +22,13 @@ class StudySiteFactory(DjangoModelFactory):
 
     class Meta:
         model = models.StudySite
+
+
+class AvailableDataFactory(DjangoModelFactory):
+    """A factory for the AvailableData model."""
+
+    class Meta:
+        model = models.AvailableData
+
+    name = Faker("catch_phrase")
+    description = Faker("paragraph")

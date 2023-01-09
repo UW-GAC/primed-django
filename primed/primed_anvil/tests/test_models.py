@@ -75,3 +75,36 @@ class StudySiteTest(TestCase):
             instance2.full_clean()
         with self.assertRaises(IntegrityError):
             instance2.save()
+
+
+class AvailableDataTest(TestCase):
+    """Tests for the AvailableData model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        instance = models.AvailableData(name="Test name", description="A description")
+        instance.save()
+        self.assertIsInstance(instance, models.AvailableData)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.AvailableDataFactory.create(name="Test name")
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "Test name")
+
+    # def test_get_absolute_url(self):
+    #     """The get_absolute_url() method works."""
+    #     instance = factories.AvailableDataFactory()
+    #     self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_unique_name(self):
+        """Saving a model with a duplicate name fails."""
+        factories.AvailableDataFactory.create(name="FOO")
+        instance2 = factories.AvailableDataFactory.build(name="FOO")
+        with self.assertRaises(ValidationError) as e:
+            instance2.full_clean()
+        self.assertIn("name", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["name"]), 1)
+        self.assertIn("already exists", e.exception.error_dict["name"][0].messages[0])
+        with self.assertRaises(IntegrityError):
+            instance2.save()

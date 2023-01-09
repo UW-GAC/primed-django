@@ -53,6 +53,21 @@ class StudySite(TimeStampedModel, models.Model):
         return reverse("primed_anvil:study_sites:detail", args=[self.pk])
 
 
+class AvailableData(models.Model):
+    """A model tracking different types of available data."""
+
+    name = models.CharField(max_length=63, unique=True)
+    description = models.TextField()
+
+    def __str__(self):
+        """String method.
+
+        Returns:
+            A string showing the name of the object.
+        """
+        return self.name
+
+
 class RequesterModel(models.Model):
     """An abstract model for tracking a `requested_by` field."""
 
