@@ -22,7 +22,15 @@ study_patterns = (
     "studies",
 )
 
+available_data_patterns = (
+    [
+        path("", views.AvailableDataList.as_view(), name="list"),
+    ],
+    "available_data",
+)
+
 urlpatterns = [
     path("studies/", include(study_patterns)),
     path("study_sites/", include(study_site_patterns)),
+    path("available_data/", include(available_data_patterns)),
 ]

@@ -73,3 +73,10 @@ class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.StudySite
     table_class = tables.StudySiteTable
+
+
+class AvailableDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show a list of `AvailableData`."""
+
+    model = models.AvailableData
+    table_class = tables.AvailableDataTable

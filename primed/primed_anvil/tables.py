@@ -36,3 +36,11 @@ class AccountTable(tables.Table):
     class Meta:
         model = Account
         fields = ("email", "user__name", "user__study_sites")
+
+
+class AvailableDataTable(tables.Table):
+    """A table for the AvailableData model."""
+
+    class Meta:
+        model = models.AvailableData
+        fields = ("name", "description")
