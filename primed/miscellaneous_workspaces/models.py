@@ -78,7 +78,9 @@ class OpenAccessWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     )
     data_source = models.TextField()
     available_data = models.ManyToManyField(
-        AvailableData, help_text="The types of data available in this accession."
+        AvailableData,
+        help_text="The types of data available in this accession.",
+        blank=True,
     )
     history = HistoricalRecords()
 
