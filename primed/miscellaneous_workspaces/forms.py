@@ -60,3 +60,16 @@ class TemplateWorkspaceForm(forms.ModelForm):
             "workspace",
             "intended_workspace_type",
         )
+
+
+class OpenAccessWorkspaceForm(forms.ModelForm):
+    """Form for a OpenAccessWorkspace object."""
+
+    class Meta:
+        model = models.OpenAccessWorkspace
+        fields = (
+            "workspace",
+            "requested_by",
+            "studies",
+            "available_data",
+        )
