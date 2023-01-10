@@ -2,7 +2,7 @@ import random
 
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import SubFactory, lazy_attribute
+from factory import Faker, SubFactory, lazy_attribute
 from factory.django import DjangoModelFactory
 
 from primed.users.tests.factories import UserFactory
@@ -72,6 +72,7 @@ class OpenAccessWorkspaceFactory(DjangoModelFactory):
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="open_access")
     requested_by = SubFactory(UserFactory)
+    data_source = Faker("paragraph")
 
     class Meta:
         model = models.OpenAccessWorkspace
