@@ -65,3 +65,13 @@ class TemplateWorkspaceFactory(DjangoModelFactory):
         )
         registered_types.remove(adapters.TemplateWorkspaceAdapter().get_type())
         return random.choice(registered_types)
+
+
+class OpenAccessWorkspaceFactory(DjangoModelFactory):
+    """A factory for the OpenAccessWorkspace model."""
+
+    workspace = SubFactory(WorkspaceFactory, workspace_type="open_access")
+    requested_by = SubFactory(UserFactory)
+
+    class Meta:
+        model = models.OpenAccessWorkspace

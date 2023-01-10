@@ -7,7 +7,7 @@ from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from primed.primed_anvil.models import RequesterModel
+from primed.primed_anvil.models import AvailableData, RequesterModel, Study
 
 
 class SimulatedDataWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
@@ -67,3 +67,20 @@ class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
                         "intended_workspace_type": "intended_workspace_type may not be 'template'."
                     }
                 )
+
+
+class OpenAccessWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
+    """A model to track workspaces containing open access data (e.g., UKBB GSR, 1000 Genomes)."""
+
+    studies = models.ManyToManyField(
+        Study,
+        help_text="The studies associated with this workspace.",
+    )
+    data_source = models.TextField()
+    available_data = models.ManyToManyField(
+        AvailableData, help_text="The types of data available in this accession."
+    )
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.workspace.__str__()
