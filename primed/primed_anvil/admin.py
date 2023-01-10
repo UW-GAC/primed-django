@@ -38,3 +38,12 @@ class StudySiteAdmin(admin.ModelAdmin):
         "short_name",
         "full_name",
     )
+
+
+@admin.register(models.AvailableData)
+class AvailableDataAdmin(admin.ModelAdmin):
+    """Admin class for the `AvailableData` model."""
+
+    list_display = ("name",)
+    search_fields = ("name", "description")
+    sortable_by = ("name",)

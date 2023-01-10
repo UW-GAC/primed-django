@@ -19,7 +19,7 @@ from django.utils import timezone
 from faker import Faker
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.primed_anvil.tests.factories import StudyFactory  # DataUsePermissionFactory
+from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import constants, models
@@ -463,6 +463,29 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertIn(dar_rejected, results)
         self.assertIn(dar_expired, results)
         self.assertIn(dar_new, results)
+
+    def test_available_data(self):
+        """Can add available data to a workspace."""
+        user = UserFactory.create()
+        workspace = WorkspaceFactory.create()
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        available_data = AvailableDataFactory.create_batch(2)
+        instance = models.dbGaPWorkspace(
+            workspace=workspace,
+            dbgap_study_accession=dbgap_study_accession,
+            dbgap_version=1,
+            dbgap_participant_set=1,
+            data_use_limitations="test limitations",
+            dbgap_consent_code=1,
+            dbgap_consent_abbreviation="GRU-NPU",
+            acknowledgments="test acknowledgments",
+            requested_by=user,
+        )
+        instance.save()
+        instance.available_data.add(*available_data)
+        self.assertIsInstance(instance, models.dbGaPWorkspace)
+        self.assertIn(available_data[0], instance.available_data.all())
+        self.assertIn(available_data[1], instance.available_data.all())
 
 
 class dbGaPApplicationTest(TestCase):

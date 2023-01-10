@@ -659,3 +659,76 @@ class AccountListTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
+
+
+class AvailableDataTest(TestCase):
+    """Tests for the StudyDetail view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.AvailableDataFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:available_data:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AvailableDataDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.pk))
+        request.user = self.user
+        response = self.get_view()(request, pk=obj.pk)
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_view_status_code_with_invalid_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        obj = self.model_factory.create()
+        request = self.factory.get(self.get_url(obj.pk + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, pk=obj.pk + 1)
+
+    def test_dbgap_workspace_table(self):
+        """Contains a table of dbGaPWorkspaces with the correct studies."""
+        obj = self.model_factory.create()
+        dbgap_workspace = dbGaPWorkspaceFactory.create()
+        dbgap_workspace.available_data.add(obj)
+        other_workspace = dbGaPWorkspaceFactory.create()
+        # import ipdb; ipdb.set_trace()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("dbgap_workspace_table", response.context_data)
+        table = response.context_data["dbgap_workspace_table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(dbgap_workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)

@@ -12,6 +12,12 @@
     <dt class="col-sm-3">Consent abbreviation</dt> <dd class="col-sm-9">{{ object.dbgapworkspace.dbgap_consent_abbreviation }}</dd>
     <dt class="col-sm-3">Consent code</dt> <dd class="col-sm-9">{{ object.dbgapworkspace.dbgap_consent_code }}</dd>
     <hr>
+    <dt class="col-sm-3">Available data</dt> <dd class="col-sm-9">
+      {% for data_type in object.dbgapworkspace.available_data.all %}
+      {{ data_type.name}}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </dd>
+    <hr>
     <dt class="col-sm-3">DUO permission</dt> <dd class="col-sm-9">
       <a href="{{ object.dbgapworkspace.data_use_permission.get_absolute_url}}">
         {{ object.dbgapworkspace.data_use_permission.abbreviation }}
@@ -22,7 +28,7 @@
       <a href="{{ modifier.get_absolute_url }}">
         {{ modifier.abbreviation }}
       </a>
-        {% if not forloop.last %} , {% endif %}
+        {% if not forloop.last %}, {% endif %}
       {% endfor %}
     </dd>
   </dl>

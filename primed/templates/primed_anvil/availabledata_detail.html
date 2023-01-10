@@ -1,0 +1,17 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load render_table from django_tables2 %}
+
+{% block title %}Available data: {{ object.name }}{% endblock %}
+
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-2">Name</dt> <dd class="col-sm-10">{{ object.name }}</dd>
+  <dt class="col-sm-2">Description</dt> <dd class="col-sm-10">{{ object.description }}</dd>
+</dl>
+{% endblock panel %}
+
+{% block after_panel %}
+  <h3>dbGaP workspaces</h3>
+  {% render_table dbgap_workspace_table %}
+{% endblock after_panel %}

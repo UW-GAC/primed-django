@@ -34,6 +34,7 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "data_use_permission",
             "disease_term",
             "data_use_modifiers",
+            "available_data",
             "workspace",
             "requested_by",
         )
