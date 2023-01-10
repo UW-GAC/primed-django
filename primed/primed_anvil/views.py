@@ -80,3 +80,17 @@ class AvailableDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.AvailableData
     table_class = tables.AvailableDataTable
+
+
+class AvailableDataDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
+    """View to show details about a `AvailableData`."""
+
+    model = models.AvailableData
+    context_table_name = "dbgap_workspace_table"
+    table_class = dbGaPWorkspaceTable
+    context_table_name = "dbgap_workspace_table"
+
+    def get_table_data(self):
+        return Workspace.objects.filter(dbgapworkspace__available_data=self.object)
