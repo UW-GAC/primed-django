@@ -251,6 +251,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "requested_by": self.requester,
             "studies": [self.study],
+            "data_source": "test source",
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -260,6 +261,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
         form_data = {
             "requested_by": self.requester,
             "studies": [self.study],
+            "data_source": "test source",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -273,6 +275,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
         form_data = {
             "workspace": self.workspace,
             "studies": [self.study],
+            "data_source": "test source",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -286,6 +289,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
         form_data = {
             "workspace": self.workspace,
             "requested_by": self.requester,
+            "data_source": "test source",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -294,6 +298,20 @@ class OpenAccessWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["studies"]), 1)
         self.assertIn("required", form.errors["studies"][0])
 
+    def test_invalid_missing_data_source(self):
+        """Form is invalid when missing data_source."""
+        form_data = {
+            "workspace": self.workspace,
+            "studies": [self.study],
+            "requested_by": self.requester,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("data_source", form.errors)
+        self.assertEqual(len(form.errors["data_source"]), 1)
+        self.assertIn("required", form.errors["data_source"][0])
+
     def test_valid_two_studies(self):
         """Form is invalid when missing studies."""
         study = StudyFactory.create()
@@ -301,6 +319,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "requested_by": self.requester,
             "studies": [self.study, study],
+            "data_source": "test source",
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -312,6 +331,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "requested_by": self.requester,
             "studies": [self.study],
+            "data_source": "test source",
             "available_data": [available_data],
         }
         form = self.form_class(data=form_data)
@@ -325,6 +345,7 @@ class OpenAccessWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "requested_by": self.requester,
             "studies": [self.study],
+            "data_source": "test source",
             "available_data": [available_data_1, available_data_2],
         }
         form = self.form_class(data=form_data)

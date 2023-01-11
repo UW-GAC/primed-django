@@ -71,5 +71,6 @@ class OpenAccessWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
             "studies",
+            "data_source",
             "available_data",
         )
