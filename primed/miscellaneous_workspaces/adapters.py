@@ -3,7 +3,7 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.tables import WorkspaceTable
 
-from . import forms, models
+from . import forms, models, tables
 
 
 class SimulatedDataWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -49,4 +49,15 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = WorkspaceTable
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
+    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+
+
+class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for TemplateWorkspaces."""
+
+    type = "open_access"
+    name = "Open access workspace"
+    list_table_class = tables.OpenAccessWorkspaceTable
+    workspace_data_model = models.OpenAccessWorkspace
+    workspace_data_form_class = forms.OpenAccessWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"

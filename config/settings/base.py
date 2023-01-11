@@ -368,6 +368,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.OpenAccessWorkspaceAdapter",
 ]
 ANVIL_ACCOUNT_ADAPTER = "primed.primed_anvil.adapters.AccountAdapter"
 
