@@ -3,6 +3,7 @@ from django.test import TestCase
 from .. import models, tables
 from . import factories
 
+
 class UserTableTest(TestCase):
     model = models.User
     model_factory = factories.UserFactory
