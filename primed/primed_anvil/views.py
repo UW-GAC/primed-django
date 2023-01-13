@@ -5,13 +5,17 @@ from anvil_consortium_manager.auth import (
 from anvil_consortium_manager.models import Workspace
 from anvil_consortium_manager.views import SuccessMessageMixin
 from dal import autocomplete
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView
 from django_tables2 import SingleTableMixin, SingleTableView
 
 from primed.dbgap.tables import dbGaPWorkspaceTable
+from primed.users.tables import UserTable
 
 from . import models, tables
+
+User = get_user_model()
 
 
 class StudyDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
@@ -62,10 +66,14 @@ class StudyAutocomplete(
         return qs
 
 
-class StudySiteDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class StudySiteDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
+    context_table_name = "site_user_table"
+
+    def get_table(self):
+        return UserTable(User.objects.filter(study_sites=self.object))
 
 
 class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):
