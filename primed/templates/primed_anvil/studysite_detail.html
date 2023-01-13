@@ -1,5 +1,5 @@
 {% extends "anvil_consortium_manager/__object_detail.html" %}
-
+{% load render_table from django_tables2 %}
 {% block title %}Study Site: {{ object.short_name }}{% endblock %}
 
 {% block panel %}
@@ -8,3 +8,10 @@
     <li>Short name: {{ object.short_name }}</li>
   </ul>
 {% endblock panel %}
+
+
+{% block after_panel %}
+  <h3>Study Site Users</h3>
+  {% render_table site_user_table %}
+  <p class='alert alert-warning'>Study site user list only contains those site users who have created an account on this website.</p>
+{% endblock after_panel %}
