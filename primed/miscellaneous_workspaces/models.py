@@ -12,31 +12,19 @@ from primed.primed_anvil.models import AvailableData, RequesterModel, Study
 class SimulatedDataWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track simulated data workspaces."""
 
-    def __str__(self):
-        return self.workspace.__str__()
-
 
 class ConsortiumDevelWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track shared consortium development workspaces."""
 
-    def __str__(self):
-        return self.workspace.__str__()
-
 
 class ExampleWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track example workspaces."""
-
-    def __str__(self):
-        return self.workspace.__str__()
 
 
 class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track template workspaces."""
 
     intended_workspace_type = models.CharField(max_length=63)
-
-    def __str__(self):
-        return self.workspace.__str__()
 
     def clean(self):
         """Custom cleaning checks.
@@ -73,6 +61,3 @@ class OpenAccessWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
         help_text="The types of data available in this workspace.",
         blank=True,
     )
-
-    def __str__(self):
-        return self.workspace.__str__()
