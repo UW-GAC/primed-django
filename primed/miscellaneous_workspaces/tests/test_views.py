@@ -70,7 +70,7 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -80,13 +80,13 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -113,7 +113,6 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.SimulatedDataWorkspace.objects.count(), 1)
         new_workspace_data = models.SimulatedDataWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        responses.assert_call_count(url, 1)
 
 
 class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -147,7 +146,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -176,8 +175,8 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -189,7 +188,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -215,7 +214,6 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.SimulatedDataWorkspace.objects.count(), 1)
         new_workspace_data = models.SimulatedDataWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        responses.assert_call_count(url, 1)
 
 
 class ConsortiumDevelWorkspaceDetailTest(TestCase):
@@ -270,7 +268,7 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -280,13 +278,13 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -313,7 +311,6 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ConsortiumDevelWorkspace.objects.count(), 1)
         new_workspace_data = models.ConsortiumDevelWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        responses.assert_call_count(url, 1)
 
 
 class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -347,7 +344,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -376,8 +373,8 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -389,7 +386,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -415,7 +412,6 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ConsortiumDevelWorkspace.objects.count(), 1)
         new_workspace_data = models.ConsortiumDevelWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        responses.assert_call_count(url, 1)
 
 
 class ExampleWorkspaceDetailTest(TestCase):
@@ -470,7 +466,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -480,13 +476,13 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -513,7 +509,6 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
         new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        responses.assert_call_count(url, 1)
 
 
 class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -547,7 +542,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -576,8 +571,8 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -589,7 +584,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -615,7 +610,6 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
         new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        responses.assert_call_count(url, 1)
 
 
 class TemplateWorkspaceDetailTest(TestCase):
@@ -669,7 +663,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -679,13 +673,13 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -713,7 +707,6 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.intended_workspace_type, "example")
-        responses.assert_call_count(url, 1)
 
 
 class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -746,7 +739,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -775,8 +768,8 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -788,7 +781,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -815,7 +808,6 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.intended_workspace_type, "example")
-        responses.assert_call_count(url, 1)
 
 
 class OpenAccessWorkspaceDetailTest(TestCase):
@@ -875,7 +867,7 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -885,13 +877,13 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -924,7 +916,6 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.studies.count(), 1)
         self.assertIn(self.study, new_workspace_data.studies.all())
         self.assertEqual(new_workspace_data.data_source, "test source")
-        responses.assert_call_count(url, 1)
 
 
 class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -959,7 +950,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -988,8 +979,8 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -1001,7 +992,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -1033,4 +1024,3 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.studies.count(), 1)
         self.assertIn(self.study, new_workspace_data.studies.all())
         self.assertEqual(new_workspace_data.data_source, "test source")
-        responses.assert_call_count(url, 1)
