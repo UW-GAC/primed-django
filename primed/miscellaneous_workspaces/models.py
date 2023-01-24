@@ -5,7 +5,6 @@ from anvil_consortium_manager.models import BaseWorkspaceData
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
-from simple_history.models import HistoricalRecords
 
 from primed.primed_anvil.models import AvailableData, RequesterModel, Study
 
@@ -13,39 +12,19 @@ from primed.primed_anvil.models import AvailableData, RequesterModel, Study
 class SimulatedDataWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track simulated data workspaces."""
 
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.workspace.__str__()
-
 
 class ConsortiumDevelWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track shared consortium development workspaces."""
 
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.workspace.__str__()
-
 
 class ExampleWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track example workspaces."""
-
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.workspace.__str__()
 
 
 class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):
     """A model to track template workspaces."""
 
     intended_workspace_type = models.CharField(max_length=63)
-
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.workspace.__str__()
 
     def clean(self):
         """Custom cleaning checks.
@@ -82,7 +61,3 @@ class OpenAccessWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
         help_text="The types of data available in this workspace.",
         blank=True,
     )
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.workspace.__str__()

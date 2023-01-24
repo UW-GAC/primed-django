@@ -42,6 +42,22 @@ fake = Faker()
 User = get_user_model()
 
 
+class dbGaPResponseTestMixin:
+    """Test mixin to help mock responses from dbGaP urls."""
+
+    def setUp(self):
+        super().setUp()
+        self.dbgap_response_mock = responses.RequestsMock(
+            assert_all_requests_are_fired=True
+        )
+        self.dbgap_response_mock.start()
+
+    def tearDown(self):
+        super().tearDown()
+        self.dbgap_response_mock.stop()
+        self.dbgap_response_mock.reset()
+
+
 class dbGaPStudyAccessionListTest(TestCase):
     """Tests for the dbGaPStudyAccessionList view."""
 
@@ -521,7 +537,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -534,13 +550,13 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create an extra that won't be specified.
         DataUseModifierFactory.create()
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -584,7 +600,6 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.requested_by, self.requester)
-        responses.assert_call_count(url, 1)
 
     def test_creates_upload_workspace_with_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -595,13 +610,13 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create an extra that won't be specified.
         DataUseModifierFactory.create()
         billing_project = BillingProjectFactory.create(name="test-billing-project")
-        url = self.entry_point + "/api/workspaces"
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
         }
-        responses.add(
+        self.anvil_response_mock.add(
             responses.POST,
             url,
             status=self.api_success_code,
@@ -639,7 +654,6 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
         self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
-        responses.assert_call_count(url, 1)
 
 
 class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -673,7 +687,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
         return (
-            self.entry_point
+            self.api_client.rawls_entry_point
             + "/api/workspaces/"
             + billing_project_name
             + "/"
@@ -705,8 +719,8 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -718,7 +732,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -761,7 +775,6 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.requested_by, self.requester)
-        responses.assert_call_count(url, 1)
 
     def test_creates_dbgap_workspace_with_duos(self):
         """Posting valid data to the form creates an UploadWorkspace object."""
@@ -774,8 +787,8 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         billing_project = BillingProjectFactory.create(name="billing-project")
         workspace_name = "workspace"
         # Available workspaces API call.
-        workspace_list_url = self.entry_point + "/api/workspaces"
-        responses.add(
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
             responses.GET,
             workspace_list_url,
             match=[
@@ -787,7 +800,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
         )
         url = self.get_api_url(billing_project.name, workspace_name)
-        responses.add(
+        self.anvil_response_mock.add(
             responses.GET,
             url,
             status=self.api_success_code,
@@ -824,7 +837,6 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
         self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
-        responses.assert_call_count(url, 1)
 
 
 class dbGaPApplicationListTest(TestCase):
@@ -1163,8 +1175,11 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
-        responses.add(
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        )
+        self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
@@ -1182,8 +1197,11 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
-        responses.add(
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        )
+        self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
@@ -1197,8 +1215,11 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
-        responses.add(
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        )
+        self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
@@ -1309,8 +1330,11 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_12498"
-        responses.add(
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
+        )
+        self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
@@ -1331,8 +1355,8 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/foo_12498"
-        responses.add(
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_12498"
+        self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
         response = self.client.post(
@@ -1352,8 +1376,11 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_group.
-        api_url = self.entry_point + "/api/groups/TEST_PRIMED_DBGAP_ACCESS_1"
-        responses.add(
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        )
+        self.anvil_response_mock.add(
             responses.POST, api_url, status=500, json={"message": "other error"}
         )
         response = self.client.post(
@@ -1394,11 +1421,12 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
 
 
-class dbGaPDataAccessSnapshotCreateTest(TestCase):
+class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
     """Tests for the dbGaPDataAccessRequestCreateFromJson view."""
 
     def setUp(self):
         """Set up test class."""
+        super().setUp()
         self.factory = RequestFactory()
         self.model_factory = factories.StudyFactory
         # Create a user with both view and edit permission.
@@ -1415,12 +1443,6 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         )
         self.dbgap_application = factories.dbGaPApplicationFactory.create()
         self.pi_name = fake.name()
-        responses.start()
-
-    def tearDown(self):
-        super().tearDown()
-        responses.stop()
-        responses.reset()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1521,7 +1543,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application, studies=[study_json]
         )
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -1565,7 +1587,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_application=self.dbgap_application, studies=[study_json]
         )
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
@@ -1610,7 +1632,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -1639,7 +1661,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             dbgap_application=self.dbgap_application,
             studies=[study_json],
         )
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -1948,7 +1970,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             studies=[study_json],
         )
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2000,7 +2022,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             is_most_recent=True,
         )
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2046,7 +2068,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             studies=[study_json],
         )
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2094,7 +2116,7 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
             studies=[study_json],
         )
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2125,13 +2147,13 @@ class dbGaPDataAccessSnapshotCreateTest(TestCase):
         self.assertTrue(existing_snapshot.is_most_recent)
 
 
-class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
+class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase):
     """Tests for the dbGaPDataAccessRequestCreateFromJson view."""
 
     def setUp(self):
         """Set up test class."""
         # Make sure no actual calls are made, so activate responses for every test.
-        responses.start()
+        super().setUp()
         self.factory = RequestFactory()
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
@@ -2148,8 +2170,6 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
 
     def tearDown(self):
         super().tearDown()
-        responses.stop()
-        responses.reset()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -2223,7 +2243,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2249,7 +2269,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             dbgap_application=dbgap_application_1
         )
         phs_1 = project_json_1["studies"][0]["study_accession"]
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs_1})],
@@ -2264,7 +2284,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             dbgap_application=dbgap_application_2
         )
         phs_2 = project_json_2["studies"][0]["study_accession"]
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs_2})],
@@ -2297,7 +2317,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2319,7 +2339,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             dbgap_application=dbgap_application
         )
         phs = project_json["studies"][0]["study_accession"]
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2413,7 +2433,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             created=timezone.now() - timedelta(weeks=4),
             is_most_recent=True,
         )
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2451,7 +2471,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             created=timezone.now() - timedelta(weeks=4),
             is_most_recent=True,
         )
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2499,7 +2519,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         )
         phs = project_json["studies"][0]["study_accession"]
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2541,7 +2561,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             created=timezone.now() - timedelta(weeks=4),
             is_most_recent=True,
         )
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2584,7 +2604,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
         )
         phs = project_json["studies"][0]["study_accession"]
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
@@ -2635,7 +2655,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(TestCase):
             is_most_recent=True,
         )
         # Add responses with the study version and participant_set.
-        responses.add(
+        self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],

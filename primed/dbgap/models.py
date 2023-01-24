@@ -112,8 +112,6 @@ class dbGaPWorkspace(
         blank=True,
     )
 
-    history = HistoricalRecords()
-
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
         verbose_name = " dbGaP workspace"
