@@ -30,12 +30,12 @@ class AccountTable(tables.Table):
     """Class to display a BillingProject table."""
 
     email = tables.Column(linkify=True)
-    user = tables.Column(linkify=True)
     user__name = tables.Column(linkify=lambda record: record.user.get_absolute_url())
+    is_service_account = tables.BooleanColumn(verbose_name="Service account?")
 
     class Meta:
         model = Account
-        fields = ("email", "user__name", "user__study_sites")
+        fields = ("email", "user__name", "user__study_sites", "is_service_account")
 
 
 class AvailableDataTable(tables.Table):

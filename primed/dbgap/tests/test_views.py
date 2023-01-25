@@ -738,6 +738,30 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             json=self.get_api_json_response(billing_project.name, workspace_name),
         )
+        # ACL API call.
+        api_url_acl = (
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/"
+            + billing_project.name
+            + "/"
+            + workspace_name
+            + "/acl"
+        )
+        self.anvil_response_mock.add(
+            responses.GET,
+            api_url_acl,
+            status=200,
+            json={
+                "acl": {
+                    self.service_account_email: {
+                        "accessLevel": "OWNER",
+                        "canCompute": True,
+                        "canShare": True,
+                        "pending": False,
+                    }
+                }
+            },
+        )
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -805,6 +829,30 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             url,
             status=self.api_success_code,
             json=self.get_api_json_response(billing_project.name, workspace_name),
+        )
+        # ACL API call.
+        api_url_acl = (
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/"
+            + billing_project.name
+            + "/"
+            + workspace_name
+            + "/acl"
+        )
+        self.anvil_response_mock.add(
+            responses.GET,
+            api_url_acl,
+            status=200,
+            json={
+                "acl": {
+                    self.service_account_email: {
+                        "accessLevel": "OWNER",
+                        "canCompute": True,
+                        "canShare": True,
+                        "pending": False,
+                    }
+                }
+            },
         )
         self.client.force_login(self.user)
         response = self.client.post(
