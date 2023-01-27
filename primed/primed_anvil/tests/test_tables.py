@@ -1,5 +1,8 @@
 from anvil_consortium_manager.models import Account
-from anvil_consortium_manager.tests.factories import AccountFactory
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    GroupAccountMembershipFactory,
+)
 from django.test import TestCase
 
 from primed.users.tests.factories import UserFactory
@@ -81,6 +84,17 @@ class AccountTableTest(TestCase):
         self.model_factory.create(user=None)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 1)
+
+    def test_number_groups(self):
+        self.model_factory.create()
+        account_1 = self.model_factory.create()
+        account_2 = self.model_factory.create()
+        GroupAccountMembershipFactory.create_batch(1, account=account_1)
+        GroupAccountMembershipFactory.create_batch(2, account=account_2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.rows[0].get_cell("number_groups"), 0)
+        self.assertEqual(table.rows[1].get_cell("number_groups"), 1)
+        self.assertEqual(table.rows[2].get_cell("number_groups"), 2)
 
 
 class AvailableDataTableTest(TestCase):
