@@ -90,6 +90,15 @@ class dbGaPApplicationTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_principal_investigator(self):
+        """The principal investigator field appears correctly with the correct link to the user detail page."""
+        app = self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        name = app.principal_investigator.name
+        url = app.principal_investigator.get_absolute_url()
+        self.assertIn(name, table.rows[0].get_cell("principal_investigator"))
+        self.assertIn(url, table.rows[0].get_cell("principal_investigator"))
+
     def test_number_approved_dars_zero(self):
         """Table shows correct count for number of approved DARs when an application has a snapshot but no DARs."""
         dbgap_application = self.model_factory.create()

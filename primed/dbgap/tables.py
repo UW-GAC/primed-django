@@ -56,7 +56,11 @@ class dbGaPApplicationTable(tables.Table):
     """Class to render a table of dbGaPApplication objects."""
 
     dbgap_project_id = tables.columns.Column(linkify=True)
-    principal_investigator = tables.columns.Column(linkify=True)
+    principal_investigator = tables.columns.Column(
+        verbose_name="Application PI",
+        linkify=lambda record: record.principal_investigator.get_absolute_url(),
+        accessor="principal_investigator__name",
+    )
     number_approved_dars = tables.columns.Column(
         verbose_name="Number of approved DARs",
         orderable=False,
