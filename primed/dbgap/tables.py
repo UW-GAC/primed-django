@@ -76,37 +76,23 @@ class dbGaPApplicationTable(tables.Table):
     principal_investigator__study_sites = tables.columns.ManyToManyColumn(
         verbose_name="Study site(s)",
     )
-    number_approved_dars = tables.columns.Column(
+    number_approved_dars = tables.columns.ManyToManyColumn(
+        accessor="dbgapdataaccesssnapshot_set",
+        filter=lambda qs: qs.filter(is_most_recent=True),
         verbose_name="Number of approved DARs",
-        orderable=False,
-        empty_values=(False,),
-        accessor="dbgapdataaccesssnapshot_set__exists",
+        transform=lambda obj: obj.dbgapdataaccessrequest_set.approved().count(),
     )
-    number_requested_dars = tables.columns.Column(
+    number_requested_dars = tables.columns.ManyToManyColumn(
+        accessor="dbgapdataaccesssnapshot_set",
+        filter=lambda qs: qs.filter(is_most_recent=True),
         verbose_name="Number of requested DARs",
-        orderable=False,
-        empty_values=(False,),
-        accessor="dbgapdataaccesssnapshot_set__exists",
+        transform=lambda obj: obj.dbgapdataaccessrequest_set.count(),
     )
     last_update = ManyToManyDateTimeColumn(
         accessor="dbgapdataaccesssnapshot_set",
         filter=lambda qs: qs.filter(is_most_recent=True),
         linkify_item=True,
     )
-
-    def render_number_approved_dars(self, value, record):
-        n_dars = (
-            record.dbgapdataaccesssnapshot_set.latest("created")
-            .dbgapdataaccessrequest_set.approved()
-            .count()
-        )
-        return n_dars
-
-    def render_number_requested_dars(self, value, record):
-        n_dars = record.dbgapdataaccesssnapshot_set.latest(
-            "created"
-        ).dbgapdataaccessrequest_set.count()
-        return n_dars
 
     class Meta:
         model = models.dbGaPApplication

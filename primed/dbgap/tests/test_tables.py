@@ -106,7 +106,7 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_application=dbgap_application
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 0)
+        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), "0")
 
     def test_number_approved_dars_zero_no_snapshot(self):
         """Table shows correct count for number of approved DARs when no snapshots have been added."""
@@ -125,7 +125,7 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 1)
+        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), "1")
 
     def test_number_approved_dars_two(self):
         """Table shows correct count for number of approved DARs when there are two."""
@@ -139,7 +139,7 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 2)
+        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), "2")
 
     def test_number_approved_dars_other(self):
         """Number of approved DARs does not include DARs with status that is not "approved"."""
@@ -172,7 +172,7 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 1)
+        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), "1")
 
     def test_number_approved_dars_two_applications(self):
         """Number of approved DARs is correct for two applications."""
@@ -194,8 +194,8 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 2)
-        self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), 1)
+        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), "2")
+        self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), "1")
 
     def test_number_requested_dars_zero(self):
         """Table shows correct count for number of requested DARs when an application has a snapshot but no DARs."""
@@ -204,7 +204,7 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_application=dbgap_application
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), 0)
+        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), "0")
 
     def test_number_requested_dars_zero_no_snapshot(self):
         """Table shows correct count for number of requested DARs when no snapshots have been added."""
@@ -239,7 +239,7 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), 5)
+        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), "5")
 
     def test_number_requested_dars_two_applications(self):
         """Number of requested DARs is correct for two applications."""
@@ -259,8 +259,8 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_data_access_snapshot=dbgap_snapshot_2,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), 2)
-        self.assertEqual(table.rows[1].get_cell_value("number_requested_dars"), 1)
+        self.assertEqual(table.rows[0].get_cell_value("number_requested_dars"), "2")
+        self.assertEqual(table.rows[1].get_cell_value("number_requested_dars"), "1")
 
     def test_last_update_no_snapshot(self):
         """Last update is --- with no snapshot."""
