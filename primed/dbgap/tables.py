@@ -2,6 +2,7 @@
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import Workspace
+from django.template import Context, Template
 from django.utils.html import format_html
 
 from . import models
@@ -52,6 +53,17 @@ class dbGaPWorkspaceTable(tables.Table):
         return "v{}".format(value)
 
 
+class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
+    """A django-tables2 column to render a many-to-many date time column using human-readable date time formatting."""
+
+    def transform(self, obj):
+        context = Context()
+        context.update({"value": obj.created, "default": self.default})
+        return Template(
+            """{{ value|date:"DATETIME_FORMAT"|default:default }}"""
+        ).render(context)
+
+
 class dbGaPApplicationTable(tables.Table):
     """Class to render a table of dbGaPApplication objects."""
 
@@ -76,10 +88,10 @@ class dbGaPApplicationTable(tables.Table):
         empty_values=(False,),
         accessor="dbgapdataaccesssnapshot_set__exists",
     )
-    last_update = tables.columns.DateTimeColumn(
-        accessor="dbgapdataaccesssnapshot_set__exists",
-        orderable=False,
-        empty_values=(False,),
+    last_update = ManyToManyDateTimeColumn(
+        accessor="dbgapdataaccesssnapshot_set",
+        filter=lambda qs: qs.filter(is_most_recent=True),
+        linkify_item=True,
     )
 
     def render_number_approved_dars(self, value, record):
@@ -95,9 +107,6 @@ class dbGaPApplicationTable(tables.Table):
             "created"
         ).dbgapdataaccessrequest_set.count()
         return n_dars
-
-    def render_last_update(self, value, record):
-        return record.dbgapdataaccesssnapshot_set.latest("created").created
 
     class Meta:
         model = models.dbGaPApplication

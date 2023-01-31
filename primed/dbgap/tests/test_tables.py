@@ -271,11 +271,14 @@ class dbGaPApplicationTableTest(TestCase):
     def test_last_update_one_snapshot(self):
         """Last update shows correct date with one snapshot."""
         dbgap_application = self.model_factory.create()
-        factories.dbGaPDataAccessSnapshotFactory.create(
+        snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application
         )
         table = self.table_class(self.model.objects.all())
         self.assertIsNotNone(table.rows[0].get_cell_value("last_update"))
+        self.assertIn(
+            snapshot.get_absolute_url(), table.rows[0].get_cell("last_update")
+        )
 
     def test_last_update_two_snapshots(self):
         """Last update shows correct date with two snapshots."""
@@ -288,8 +291,8 @@ class dbGaPApplicationTableTest(TestCase):
             dbgap_application=dbgap_application, created=timezone.now()
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(
-            table.rows[0].get_cell_value("last_update"), latest_snapshot.created
+        self.assertIn(
+            latest_snapshot.get_absolute_url(), table.rows[0].get_cell("last_update")
         )
 
 
