@@ -123,7 +123,7 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
         verbose_name="Number of requested DARs",
         orderable=False,
         empty_values=(False,),
-        accessor="dbgapdataaccesssnapshot_set__exists",
+        accessor="dbgapdataaccessrequest_set__exists",
     )
 
     def render_pk(self, record):
