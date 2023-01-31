@@ -61,6 +61,9 @@ class dbGaPApplicationTable(tables.Table):
         linkify=lambda record: record.principal_investigator.get_absolute_url(),
         accessor="principal_investigator__name",
     )
+    principal_investigator__study_sites = tables.columns.ManyToManyColumn(
+        verbose_name="Study site(s)",
+    )
     number_approved_dars = tables.columns.Column(
         verbose_name="Number of approved DARs",
         orderable=False,
