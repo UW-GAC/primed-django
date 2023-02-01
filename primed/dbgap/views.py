@@ -151,11 +151,9 @@ class dbGaPApplicationDetail(
         """
         context = super().get_context_data(*args, **kwargs)
         if self.latest_snapshot:
-            context["has_snapshot"] = True
-            context["last_update"] = self.latest_snapshot.created
+            context["latest_snapshot"] = self.latest_snapshot
         else:
-            context["has_snapshot"] = False
-            context["last_update"] = None
+            context["latest_snapshot"] = None
         return context
 
 
