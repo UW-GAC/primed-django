@@ -6,7 +6,11 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import ManagedGroup, Workspace
+from anvil_consortium_manager.models import (
+    AnVILProjectManagerAccess,
+    ManagedGroup,
+    Workspace,
+)
 from anvil_consortium_manager.views import SuccessMessageMixin
 from django.conf import settings
 from django.contrib import messages
@@ -16,7 +20,7 @@ from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
-from django.views.generic import CreateView, DetailView, FormView
+from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
 
 from . import audit, forms, helpers, models, tables
@@ -52,6 +56,15 @@ class dbGaPStudyAccessionDetail(
             ),
         )
 
+    def get_context_data(self, **kwargs):
+        """Add show_edit_links to context data."""
+        context = super().get_context_data(**kwargs)
+        edit_permission_codename = AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        context["show_edit_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + edit_permission_codename
+        )
+        return context
+
 
 class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of dbGaPStudyAccession objects."""
@@ -67,7 +80,30 @@ class dbGaPStudyAccessionCreate(
 
     model = models.dbGaPStudyAccession
     form_class = forms.dbGaPStudyAccessionForm
-    success_msg = "dbGaP study accession successfully created."
+    success_msg = "dbGaP study accession created successfully."
+    template_name = "dbgap/dbgapstudyaccession_create.html"
+
+
+class dbGaPStudyAccessionUpdate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+    """View to update a dbGaPStudyAccession."""
+
+    model = models.dbGaPStudyAccession
+    fields = ("studies",)
+    success_msg = "dbGaP study accession updated successfully."
+    template_name = "dbgap/dbgapstudyaccession_update.html"
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class dbGaPApplicationDetail(

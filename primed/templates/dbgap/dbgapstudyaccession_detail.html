@@ -21,3 +21,10 @@
   <h3>Workspaces associated with this dbGaP study accession</h3>
   {% render_table workspace_table %}
 {% endblock after_panel %}
+
+{% block action_buttons %}
+  {% if show_edit_links %}
+  <a href="{% url 'dbgap:dbgap_study_accessions:update' dbgap_phs=object.dbgap_phs %}" class="btn btn-secondary" role="button">Update</a>
+  </p>
+  {% endif %}
+{% endblock action_buttons %}

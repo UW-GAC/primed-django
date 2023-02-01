@@ -255,6 +255,49 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
 
+    def test_context_show_edit_links_with_edit_permission(self):
+        edit_user = User.objects.create_user(username="edit", password="test")
+        edit_user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            ),
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            ),
+        )
+        self.client.force_login(edit_user)
+        account = factories.dbGaPStudyAccessionFactory.create()
+        response = self.client.get(self.get_url(account.dbgap_phs))
+        self.assertIn("show_edit_links", response.context_data)
+        self.assertTrue(response.context_data["show_edit_links"])
+        self.assertContains(
+            response,
+            reverse(
+                "dbgap:dbgap_study_accessions:update",
+                kwargs={"dbgap_phs": account.dbgap_phs},
+            ),
+        )
+
+    def test_context_show_edit_links_with_view_permission(self):
+        view_user = User.objects.create_user(username="edit", password="test")
+        view_user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            ),
+        )
+        self.client.force_login(view_user)
+        account = factories.dbGaPStudyAccessionFactory.create()
+        response = self.client.get(self.get_url(account.dbgap_phs))
+        self.assertIn("show_edit_links", response.context_data)
+        self.assertFalse(response.context_data["show_edit_links"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:dbgap_study_accessions:update",
+                kwargs={"dbgap_phs": account.dbgap_phs},
+            ),
+        )
+
 
 class dbGaPStudyAccessionCreateTest(TestCase):
     """Tests for the dbGaPStudyAccessionCreate view."""
@@ -449,6 +492,146 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.assertEqual(len(form.errors["dbgap_phs"]), 1)
         self.assertIn("required", form.errors["dbgap_phs"][0])
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 0)
+
+
+class dbGaPStudyAccessionUpdateTest(TestCase):
+    """Tests for the dbGaPStudyAccessionUpdate view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("dbgap:dbgap_study_accessions:update", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPStudyAccessionUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.dbGaPStudyAccessionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.dbgap_phs))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        instance = factories.dbGaPStudyAccessionFactory.create()
+        user_with_view_perm = User.objects.create_user(
+            username="test-other", password="test-other"
+        )
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(instance.dbgap_phs))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_phs=instance.dbgap_phs)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        instance = factories.dbGaPStudyAccessionFactory.create()
+        user_no_perms = User.objects.create_user(
+            username="test-other", password="test-other"
+        )
+        request = self.factory.get(self.get_url(instance.dbgap_phs))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_phs=instance.dbgap_phs)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, dbgap_phs=1)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.dbGaPStudyAccessionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.dbgap_phs))
+        self.assertTrue("form" in response.context_data)
+
+    def test_can_modify_studies(self):
+        """Can modify studies when updating a dbGaPStudyAccession."""
+        study_1 = StudyFactory.create()
+        study_2 = StudyFactory.create()
+        instance = factories.dbGaPStudyAccessionFactory.create(studies=[study_1])
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.dbgap_phs), {"studies": [study_1.pk, study_2.pk]}
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.studies.count(), 2)
+        self.assertIn(study_1, instance.studies.all())
+        self.assertIn(study_2, instance.studies.all())
+
+    def test_does_not_modify_phs(self):
+        """Does not modify phs when updating a dbGaPStudyAccession."""
+        study = StudyFactory.create()
+        instance = factories.dbGaPStudyAccessionFactory.create(
+            dbgap_phs=1234, studies=[study]
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.dbgap_phs), {"dbgap_phs": 2345, "studies": [study.pk]}
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.dbgap_phs, 1234)
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        study = StudyFactory.create()
+        instance = factories.dbGaPStudyAccessionFactory.create(
+            dbgap_phs=1234, studies=[study]
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.dbgap_phs), {"studies": [study.pk]}, follow=True
+        )
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.dbGaPStudyAccessionUpdate.success_msg, str(messages[0]))
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        study = StudyFactory.create()
+        instance = factories.dbGaPStudyAccessionFactory.create(
+            dbgap_phs=1234, studies=[study]
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.dbgap_phs), {"studies": [study.pk]}
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
 
 
 class dbGaPWorkspaceListTest(TestCase):
