@@ -6,7 +6,11 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import ManagedGroup, Workspace
+from anvil_consortium_manager.models import (
+    AnVILProjectManagerAccess,
+    ManagedGroup,
+    Workspace,
+)
 from anvil_consortium_manager.views import SuccessMessageMixin
 from django.conf import settings
 from django.contrib import messages
@@ -51,6 +55,15 @@ class dbGaPStudyAccessionDetail(
                 "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             ),
         )
+
+    def get_context_data(self, **kwargs):
+        """Add show_edit_links to context data."""
+        context = super().get_context_data(**kwargs)
+        edit_permission_codename = AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        context["show_edit_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + edit_permission_codename
+        )
+        return context
 
 
 class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableView):

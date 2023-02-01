@@ -255,6 +255,49 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         self.assertIn("workspace_table", response.context_data)
         self.assertEqual(len(response.context_data["workspace_table"].rows), 0)
 
+    def test_context_show_edit_links_with_edit_permission(self):
+        edit_user = User.objects.create_user(username="edit", password="test")
+        edit_user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            ),
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            ),
+        )
+        self.client.force_login(edit_user)
+        account = factories.dbGaPStudyAccessionFactory.create()
+        response = self.client.get(self.get_url(account.dbgap_phs))
+        self.assertIn("show_edit_links", response.context_data)
+        self.assertTrue(response.context_data["show_edit_links"])
+        self.assertContains(
+            response,
+            reverse(
+                "dbgap:dbgap_study_accessions:update",
+                kwargs={"dbgap_phs": account.dbgap_phs},
+            ),
+        )
+
+    def test_context_show_edit_links_with_view_permission(self):
+        view_user = User.objects.create_user(username="edit", password="test")
+        view_user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            ),
+        )
+        self.client.force_login(view_user)
+        account = factories.dbGaPStudyAccessionFactory.create()
+        response = self.client.get(self.get_url(account.dbgap_phs))
+        self.assertIn("show_edit_links", response.context_data)
+        self.assertFalse(response.context_data["show_edit_links"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:dbgap_study_accessions:update",
+                kwargs={"dbgap_phs": account.dbgap_phs},
+            ),
+        )
+
 
 class dbGaPStudyAccessionCreateTest(TestCase):
     """Tests for the dbGaPStudyAccessionCreate view."""
