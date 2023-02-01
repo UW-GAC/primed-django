@@ -1252,44 +1252,27 @@ class dbGaPApplicationDetailTest(TestCase):
             len(response.context_data["data_access_snapshot_table"].rows), 0
         )
 
-    def test_context_has_snapshot_no_snapshot(self):
-        """has_snapshot is False in context when there no dbGaPDataAccessSnapshot for this application."""
+    def test_context_latest_snapshot_no_snapshot(self):
+        """latest_snapshot is None in context when there are no dbGaPDataAccessSnapshots for this application."""
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("has_snapshot", response.context_data)
-        self.assertFalse(response.context_data["has_snapshot"])
+        self.assertIn("latest_snapshot", response.context_data)
+        self.assertIsNone(response.context_data["latest_snapshot"])
 
-    def test_context_has_snapshot_one_snapshot(self):
-        """has_snapshot is True in context when there is a dbGaPDataAccessSnapshot for this application."""
-        factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("has_snapshot", response.context_data)
-        self.assertTrue(response.context_data["has_snapshot"])
-
-    def test_context_last_update_no_snapshot(self):
-        """last_update is None in context when there are no dbGaPDataAccessSnapshots for this application."""
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("last_update", response.context_data)
-        self.assertIsNone(response.context_data["last_update"])
-
-    def test_context_last_update_one_snapshot(self):
-        """last_update is correct in context when there is one dbGaPDataAccessSnapshot for this application."""
+    def test_context_latest_snapshot_one_snapshot(self):
+        """latest_snapshot is correct in context when there is one dbGaPDataAccessSnapshot for this application."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.obj
         )
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("last_update", response.context_data)
-        self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
+        self.assertIn("latest_snapshot", response.context_data)
+        self.assertEqual(response.context_data["latest_snapshot"], dbgap_snapshot)
 
-    def test_context_last_update_two_snapshots(self):
-        """last_update is correct in context when there are two dbGaPDataAccessSnapshots for this application."""
+    def test_context_latest_snapshot_two_snapshots(self):
+        """latest_snapshot is correct in context when there are two dbGaPDataAccessSnapshots for this application."""
         factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.obj, created=timezone.now() - timedelta(weeks=4)
         )
@@ -1299,8 +1282,8 @@ class dbGaPApplicationDetailTest(TestCase):
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("last_update", response.context_data)
-        self.assertEqual(response.context_data["last_update"], dbgap_snapshot.created)
+        self.assertIn("latest_snapshot", response.context_data)
+        self.assertEqual(response.context_data["latest_snapshot"], dbgap_snapshot)
 
     def test_table_default_ordering(self):
         """Most recent dbGaPDataAccessSnapshots appear first."""

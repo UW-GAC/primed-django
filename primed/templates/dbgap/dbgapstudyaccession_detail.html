@@ -4,17 +4,17 @@
 {% block title %}dbGaP study accession: {{ object }}{% endblock title %}
 
 {% block panel %}
-  <ul>
-    <li>
-      Studies:
-      {% for study in object.studies.all %}
-      <a href="{{ study.get_absolute_url }}">{{ study }}</a>{% if not forloop.last %} , {% endif %}
-      {% endfor %}
-    </li>
-    <li>dbGaP accession: {{ object }}</li>
-    <li>Date created: {{ object.created }}</li>
-    <li>Date modified: {{ object.modified }}</li>
-  </ul>
+<dl class="row">
+  <dt class="col-sm-2">Studies</dt> <dd class="col-sm-10">
+    {% for study in object.studies.all %}
+    <a href="{{ study.get_absolute_url }}">{{ study }}</a>{% if not forloop.last %} , {% endif %}
+    {% endfor %}
+  </dd>
+  <dt class="col-sm-2">dbGaP accession</dt> <dd class="col-sm-10">{{ object }}</dd>
+  <dt class="col-sm-2">Date created</dt> <dd class="col-sm-10">{{ object.created }}</dd>
+  <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-10">{{ object.modified }}</dd>
+</dl>
+
 {% endblock panel %}
 
 {% block after_panel %}

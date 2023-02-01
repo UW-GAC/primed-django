@@ -12,11 +12,13 @@
 {% endblock pills %}
 
 {% block panel %}
-  <ul>
-    <li>dbGaP application: <a href="{{ object.dbgap_application.get_absolute_url }}">{{ object.dbgap_application }}</a></li>
-    <li>Date created: {{ object.created }}</li>
-    <li>Date modified: {{ object.modified }}</li>
-  </ul>
+  <dl class="row">
+    <dt class="col-sm-2">dbGaP application</dt> <dd class="col-sm-10">
+      <a href="{{ object.dbgap_application.get_absolute_url }}">{{ object.dbgap_application }}</a>
+    </dd>
+    <dt class="col-sm-2">Date created</dt> <dd class="col-sm-10">{{ object.created }}</dd>
+    <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-10">{{ object.modified }}</dd>
+  </dl>
 {% endblock panel %}
 
 {% block after_panel %}

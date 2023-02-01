@@ -11,13 +11,13 @@
 {% endblock after_title %}
 
 {% block panel %}
-  <ul>
-    <li>Identifier: {{ object.identifier }}</li>
-    <li>Abbreviation: {{ object.abbreviation }}</li>
-    <li>Term: {{ object.term }}</li>
-    <li>Definition: {{ object.definition }}</li>
-    <li>Comment: {{ object.comment }}</li>
-  </ul>
+  <dl class="row">
+    <dt class="col-sm-2">Identifier</dt> <dd class="col-sm-10">{{ object.identifier }}</dd>
+    <dt class="col-sm-2">Term</dt> <dd class="col-sm-10">{{ object.term }}</dd>
+    <dt class="col-sm-2">Abbreviation</dt> <dd class="col-sm-10">{{ object.abbreviation }}</dd>
+    <dt class="col-sm-2">Definition</dt> <dd class="col-sm-10">{{ object.definition }}</dd>
+    <dt class="col-sm-2">Comment</dt> <dd class="col-sm-10">{{ object.comment }}</dd>
+  </dl>
 {% endblock panel %}
 
 {% block after_panel %}
