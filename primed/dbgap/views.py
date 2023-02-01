@@ -68,6 +68,7 @@ class dbGaPStudyAccessionCreate(
     model = models.dbGaPStudyAccession
     form_class = forms.dbGaPStudyAccessionForm
     success_msg = "dbGaP study accession created successfully."
+    template_name = "dbgap/dbgapstudyaccession_create.html"
 
 
 class dbGaPStudyAccessionUpdate(
@@ -78,6 +79,7 @@ class dbGaPStudyAccessionUpdate(
     model = models.dbGaPStudyAccession
     fields = ("studies",)
     success_msg = "dbGaP study accession updated successfully."
+    template_name = "dbgap/dbgapstudyaccession_update.html"
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
