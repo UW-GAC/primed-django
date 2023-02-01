@@ -11,6 +11,11 @@ dbgap_study_accession_patterns = (
         path(
             "<int:dbgap_phs>", views.dbGaPStudyAccessionDetail.as_view(), name="detail"
         ),
+        path(
+            "<int:dbgap_phs>/update/",
+            views.dbGaPStudyAccessionUpdate.as_view(),
+            name="update",
+        ),
     ],
     "dbgap_study_accessions",
 )

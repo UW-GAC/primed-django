@@ -16,7 +16,7 @@ from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
-from django.views.generic import CreateView, DetailView, FormView
+from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
 
 from . import audit, forms, helpers, models, tables
@@ -67,7 +67,28 @@ class dbGaPStudyAccessionCreate(
 
     model = models.dbGaPStudyAccession
     form_class = forms.dbGaPStudyAccessionForm
-    success_msg = "dbGaP study accession successfully created."
+    success_msg = "dbGaP study accession created successfully."
+
+
+class dbGaPStudyAccessionUpdate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+    """View to update a dbGaPStudyAccession."""
+
+    model = models.dbGaPStudyAccession
+    fields = ("studies",)
+    success_msg = "dbGaP study accession updated successfully."
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class dbGaPApplicationDetail(
