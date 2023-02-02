@@ -17,6 +17,12 @@ class dbGaPStudyAccessionForm(forms.ModelForm):
             "dbgap_phs",
             "studies",
         )
+        widgets = {
+            "studies": autocomplete.ModelSelect2Multiple(
+                url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class dbGaPWorkspaceForm(forms.ModelForm):

@@ -1,6 +1,7 @@
 """Forms for the `workspaces` app."""
 
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
+from dal import autocomplete
 from django import forms
 
 from . import models
@@ -74,3 +75,9 @@ class OpenAccessWorkspaceForm(forms.ModelForm):
             "data_source",
             "available_data",
         )
+        widgets = {
+            "studies": autocomplete.ModelSelect2Multiple(
+                url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
