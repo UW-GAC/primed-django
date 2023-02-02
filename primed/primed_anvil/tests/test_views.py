@@ -281,6 +281,26 @@ class StudyAutocompleteTest(TestCase):
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
+    def test_get_result_label(self):
+        instance = factories.StudyFactory.create(
+            full_name="Test Name", short_name="TEST"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        view = views.StudyAutocomplete()
+        view.setup(request)
+        self.assertEqual(view.get_result_label(instance), "Test Name (TEST)")
+
+    def test_get_selected_result_label(self):
+        instance = factories.StudyFactory.create(
+            full_name="Test Name", short_name="TEST"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        view = views.StudyAutocomplete()
+        view.setup(request)
+        self.assertEqual(view.get_selected_result_label(instance), "TEST")
+
 
 class StudyCreateTest(TestCase):
     """Tests for the StudyCreate view."""
