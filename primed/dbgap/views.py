@@ -12,6 +12,7 @@ from anvil_consortium_manager.models import (
     Workspace,
 )
 from anvil_consortium_manager.views import SuccessMessageMixin
+from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -104,6 +105,25 @@ class dbGaPStudyAccessionUpdate(
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+
+class dbGaPStudyAccessionAutocomplete(
+    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+):
+    """View to provide autocompletion for dbGaPStudyAccessions."""
+
+    def get_queryset(self):
+        """Filter to dbGaPStudyAccessions matching the query."""
+
+        qs = models.dbGaPStudyAccession.objects.order_by("dbgap_phs")
+
+        if self.q:
+            # If the string contains phs, remove it.
+            # Remove leading zeros.
+            phs_digits = self.q.replace("phs", "").lstrip("0")
+            qs = qs.filter(dbgap_phs__icontains=phs_digits)
+
+        return qs
 
 
 class dbGaPApplicationDetail(

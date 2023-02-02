@@ -9,6 +9,11 @@ dbgap_study_accession_patterns = (
         path("", views.dbGaPStudyAccessionList.as_view(), name="list"),
         path("new/", views.dbGaPStudyAccessionCreate.as_view(), name="new"),
         path(
+            "autocomplete/",
+            views.dbGaPStudyAccessionAutocomplete.as_view(),
+            name="autocomplete",
+        ),
+        path(
             "<int:dbgap_phs>", views.dbGaPStudyAccessionDetail.as_view(), name="detail"
         ),
         path(
