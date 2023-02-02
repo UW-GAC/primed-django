@@ -4,6 +4,8 @@ from anvil_consortium_manager.adapters.workspace import workspace_adapter_regist
 from dal import autocomplete
 from django import forms
 
+from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
+
 from . import models
 
 
@@ -63,7 +65,7 @@ class TemplateWorkspaceForm(forms.ModelForm):
         )
 
 
-class OpenAccessWorkspaceForm(forms.ModelForm):
+class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a OpenAccessWorkspace object."""
 
     class Meta:

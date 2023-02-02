@@ -6,10 +6,12 @@ from django import forms
 from django.core.exceptions import ValidationError
 from tree_queries.forms import TreeNodeMultipleChoiceField
 
+from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
+
 from . import constants, models
 
 
-class dbGaPStudyAccessionForm(forms.ModelForm):
+class dbGaPStudyAccessionForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPStudyAccession object."""
 
     class Meta:
@@ -26,7 +28,7 @@ class dbGaPStudyAccessionForm(forms.ModelForm):
         }
 
 
-class dbGaPWorkspaceForm(forms.ModelForm):
+class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPWorkspace object."""
 
     class Meta:
