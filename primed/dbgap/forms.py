@@ -4,6 +4,7 @@ import jsonschema
 from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
+from tree_queries.forms import TreeNodeMultipleChoiceField
 
 from . import constants, models
 
@@ -50,6 +51,14 @@ class dbGaPWorkspaceForm(forms.ModelForm):
                 url="dbgap:dbgap_study_accessions:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
+            "data_use_modifiers": forms.CheckboxSelectMultiple,
+        }
+        help_texts = {
+            "data_use_modifiers": """The DataUseModifiers associated with this study-consent group.
+            --- represents a child modifier."""
+        }
+        field_classes = {
+            "data_use_modifiers": TreeNodeMultipleChoiceField,
         }
 
 
