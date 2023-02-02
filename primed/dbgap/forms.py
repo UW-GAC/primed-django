@@ -1,6 +1,7 @@
 """Forms classes for the `dbgap` app."""
 
 import jsonschema
+from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -38,6 +39,12 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "dbgap_study_accession": autocomplete.ModelSelect2(
+                url="dbgap:dbgap_study_accessions:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class dbGaPApplicationForm(forms.ModelForm):
