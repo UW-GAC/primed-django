@@ -54,6 +54,10 @@ class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 attrs={"data-theme": "bootstrap-5"},
             ),
             "data_use_modifiers": forms.CheckboxSelectMultiple,
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
         }
         help_texts = {
             "data_use_modifiers": """The DataUseModifiers associated with this study-consent group.

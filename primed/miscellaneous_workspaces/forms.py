@@ -9,7 +9,7 @@ from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
 from . import models
 
 
-class SimulatedDataWorkspaceForm(forms.ModelForm):
+class SimulatedDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SimulatedDataWorkspace object."""
 
     class Meta:
@@ -18,9 +18,15 @@ class SimulatedDataWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
-class ConsortiumDevelWorkspaceForm(forms.ModelForm):
+class ConsortiumDevelWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ConsortiumDevelWorkspace object."""
 
     class Meta:
@@ -29,9 +35,15 @@ class ConsortiumDevelWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
-class ExampleWorkspaceForm(forms.ModelForm):
+class ExampleWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ExampleWorkspace object."""
 
     class Meta:
@@ -40,6 +52,12 @@ class ExampleWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class TemplateWorkspaceForm(forms.ModelForm):
@@ -80,6 +98,10 @@ class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         widgets = {
             "studies": autocomplete.ModelSelect2Multiple(
                 url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }
