@@ -64,7 +64,7 @@ class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         }
 
 
-class dbGaPApplicationForm(forms.ModelForm):
+class dbGaPApplicationForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPApplication."""
 
     class Meta:
@@ -73,6 +73,12 @@ class dbGaPApplicationForm(forms.ModelForm):
             "principal_investigator",
             "dbgap_project_id",
         )
+        widgets = {
+            "principal_investigator": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class dbGaPDataAccessSnapshotForm(forms.ModelForm):
