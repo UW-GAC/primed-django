@@ -104,4 +104,5 @@ class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
+            "available_data": forms.CheckboxSelectMultiple,
         }
