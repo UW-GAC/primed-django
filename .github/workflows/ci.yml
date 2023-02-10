@@ -59,11 +59,12 @@ jobs:
           - 3306:3306
         env:
           MYSQL_PASSWORD: mysql
+          MYSQL_ROOT_PASSWORD: root
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-        
+
     env:
       # mysql://user:password@host:port/database
-      DATABASE_URL: "mysql://mysql:mysql@localhost:3306/mysql"
+      DATABASE_URL: "mysql://root:root@localhost:3306/mysql"
 
     steps:
 
