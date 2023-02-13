@@ -3288,6 +3288,9 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         )
         self.assertIn("summary_table", response.context_data)
         table = response.context_data["summary_table"]
+
+        # verify rows are all in table in ordered queryset order
+        # alphabetical dac, status
         self.assertEqual(len(table.rows), 4)
         self.assertEqual(table.rows[0].get_cell_value("dbgap_dac"), "BAR")
         self.assertEqual(
