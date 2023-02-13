@@ -456,6 +456,7 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
         )
         context["summary_table"] = tables.dbGaPDataAccessRequestSummaryTable(
             self.object.dbgapdataaccessrequest_set.all()
+            .order_by("dbgap_dac", "dbgap_current_status")
             .values("dbgap_dac", "dbgap_current_status")
             .annotate(total=Count("pk"))
         )

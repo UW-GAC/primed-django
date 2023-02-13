@@ -38,3 +38,6 @@ django-tree-queries==0.13.0
 
 # For parsing DUO OWL files
 pronto==2.5.2
+
+# mysql
+mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient
