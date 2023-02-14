@@ -93,6 +93,7 @@ class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "requested_by",
             "studies",
             "data_source",
+            "data_url",
             "available_data",
         )
         widgets = {
