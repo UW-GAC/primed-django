@@ -1632,3 +1632,8 @@ class dbGaPDataAccessRequestTest(TestCase):
             dbgap_phs=1, original_version=2, original_participant_set=3
         )
         self.assertEqual(instance.get_dbgap_accession(), "phs000001.v2.p3")
+
+    def test_get_dbgap_link(self):
+        """`get_dbgab_link` returns a link."""
+        instance = factories.dbGaPDataAccessRequestFactory.create()
+        self.assertIsInstance(instance.get_dbgap_link(), str)
