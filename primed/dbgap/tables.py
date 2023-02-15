@@ -150,6 +150,10 @@ class dbGaPDataAccessRequestTable(tables.Table):
         orderable=False,
         verbose_name="In auth domain?",
     )
+    dbgap_accession = tables.columns.Column(
+        verbose_name=" dbGaP accession",
+        accessor="get_dbgap_accession",
+    )
 
     def render_in_authorization_domain(self, value, record):
         if value:
@@ -166,14 +170,20 @@ class dbGaPDataAccessRequestTable(tables.Table):
     def render_dbgap_phs(self, value):
         return "phs{0:06d}".format(value)
 
+    def render_dbgap_accession(self, value, record):
+        link = """<a href="{}" target="_blank">{}</a>""".format(
+            record.get_dbgap_link(), value
+        )
+        return format_html(
+            """{} <i class="bi bi-box-arrow-up-right"></i>""".format(link)
+        )
+
     class Meta:
         model = models.dbGaPDataAccessRequest
         fields = (
             "dbgap_dar_id",
             "dbgap_dac",
-            "dbgap_phs",
-            "original_version",
-            "original_participant_set",
+            "dbgap_accession",
             "dbgap_consent_code",
             "dbgap_consent_abbreviation",
             "dbgap_current_status",
