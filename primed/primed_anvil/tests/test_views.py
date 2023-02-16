@@ -281,6 +281,26 @@ class StudyAutocompleteTest(TestCase):
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
+    def test_get_result_label(self):
+        instance = factories.StudyFactory.create(
+            full_name="Test Name", short_name="TEST"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        view = views.StudyAutocomplete()
+        view.setup(request)
+        self.assertEqual(view.get_result_label(instance), "Test Name (TEST)")
+
+    def test_get_selected_result_label(self):
+        instance = factories.StudyFactory.create(
+            full_name="Test Name", short_name="TEST"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        view = views.StudyAutocomplete()
+        view.setup(request)
+        self.assertEqual(view.get_selected_result_label(instance), "TEST")
+
 
 class StudyCreateTest(TestCase):
     """Tests for the StudyCreate view."""
@@ -390,7 +410,7 @@ class StudyCreateTest(TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(views.StudyCreate.success_msg, str(messages[0]))
+        self.assertEqual(views.StudyCreate.success_message, str(messages[0]))
 
     def test_error_missing_short_name(self):
         """Form shows an error when short name is missing."""

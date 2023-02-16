@@ -215,3 +215,11 @@ class OpenAccessWorkspaceTest(TestCase):
         self.assertEqual(instance.available_data.count(), 2)
         self.assertIn(available_data[0], instance.available_data.all())
         self.assertIn(available_data[1], instance.available_data.all())
+
+    def test_data_url(self):
+        workspace = WorkspaceFactory.create()
+        user = UserFactory.create()
+        instance = models.OpenAccessWorkspace(
+            workspace=workspace, requested_by=user, data_url="http://www.example.com"
+        )
+        self.assertEqual(instance.data_url, "http://www.example.com")

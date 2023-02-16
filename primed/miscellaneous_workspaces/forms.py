@@ -1,12 +1,15 @@
 """Forms for the `workspaces` app."""
 
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
+from dal import autocomplete
 from django import forms
+
+from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
 
 from . import models
 
 
-class SimulatedDataWorkspaceForm(forms.ModelForm):
+class SimulatedDataWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SimulatedDataWorkspace object."""
 
     class Meta:
@@ -15,9 +18,15 @@ class SimulatedDataWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
-class ConsortiumDevelWorkspaceForm(forms.ModelForm):
+class ConsortiumDevelWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ConsortiumDevelWorkspace object."""
 
     class Meta:
@@ -26,9 +35,15 @@ class ConsortiumDevelWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
-class ExampleWorkspaceForm(forms.ModelForm):
+class ExampleWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a ExampleWorkspace object."""
 
     class Meta:
@@ -37,6 +52,12 @@ class ExampleWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class TemplateWorkspaceForm(forms.ModelForm):
@@ -62,7 +83,7 @@ class TemplateWorkspaceForm(forms.ModelForm):
         )
 
 
-class OpenAccessWorkspaceForm(forms.ModelForm):
+class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a OpenAccessWorkspace object."""
 
     class Meta:
@@ -72,5 +93,17 @@ class OpenAccessWorkspaceForm(forms.ModelForm):
             "requested_by",
             "studies",
             "data_source",
+            "data_url",
             "available_data",
         )
+        widgets = {
+            "studies": autocomplete.ModelSelect2Multiple(
+                url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "available_data": forms.CheckboxSelectMultiple,
+        }

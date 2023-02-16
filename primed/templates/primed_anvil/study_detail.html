@@ -5,12 +5,12 @@
 
 
 {% block panel %}
-  <ul>
-    <li>Short name: {{ object.short_name }}</li>
-    <li>Full name: {{ object.full_name }}</li>
-    <li>Date created: {{ object.created }}</li>
-    <li>Date modified: {{ object.modified }}</li>
-  </ul>
+  <dl class="row">
+    <dt class="col-sm-2">Short name</dt> <dd class="col-sm-10">{{ object.short_name }}</dd>
+    <dt class="col-sm-2">Full name</dt> <dd class="col-sm-10">{{ object.full_name }}</dd>
+    <dt class="col-sm-2">Date created</dt> <dd class="col-sm-10">{{ object.created }}</dd>
+    <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-10">{{ object.modified }}</dd>
+  </dl>
 {% endblock panel %}
 
 {% block after_panel %}

@@ -56,6 +56,7 @@ class OpenAccessWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
         help_text="The studies associated with this workspace.",
     )
     data_source = models.TextField()
+    data_url = models.URLField(verbose_name="data URL", blank=True, max_length=255)
     available_data = models.ManyToManyField(
         AvailableData,
         help_text="The types of data available in this workspace.",

@@ -1,0 +1,25 @@
+{% extends "dbgap/dbgapstudyaccession_detail.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update dbGaP Study Accession{% endblock title %}
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-2">dbGaP phs</dt> <dd class="col-sm-10">{{ object.dbgap_phs }}</dd>
+  <dt class="col-sm-2">Date created</dt> <dd class="col-sm-10">{{ object.created }}</dd>
+  <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-10">{{ object.modified }}</dd>
+</dl>
+{% endblock panel %}
+
+{% block after_panel %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="{{ object.get_absolute_url }}" class="btn btn-secondary" role="button">Cancel</a>
+  </form>
+{% endblock after_panel %}
+
+
+{% block action_buttons %}
+{% endblock action_buttons %}

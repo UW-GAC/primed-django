@@ -6,17 +6,22 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import ManagedGroup, Workspace
-from anvil_consortium_manager.views import SuccessMessageMixin
+from anvil_consortium_manager.models import (
+    AnVILProjectManagerAccess,
+    ManagedGroup,
+    Workspace,
+)
+from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
-from django.views.generic import CreateView, DetailView, FormView
+from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
 
 from . import audit, forms, helpers, models, tables
@@ -52,6 +57,15 @@ class dbGaPStudyAccessionDetail(
             ),
         )
 
+    def get_context_data(self, **kwargs):
+        """Add show_edit_links to context data."""
+        context = super().get_context_data(**kwargs)
+        edit_permission_codename = AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        context["show_edit_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + edit_permission_codename
+        )
+        return context
+
 
 class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of dbGaPStudyAccession objects."""
@@ -67,7 +81,49 @@ class dbGaPStudyAccessionCreate(
 
     model = models.dbGaPStudyAccession
     form_class = forms.dbGaPStudyAccessionForm
-    success_msg = "dbGaP study accession successfully created."
+    success_message = "dbGaP study accession created successfully."
+    template_name = "dbgap/dbgapstudyaccession_create.html"
+
+
+class dbGaPStudyAccessionUpdate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+    """View to update a dbGaPStudyAccession."""
+
+    model = models.dbGaPStudyAccession
+    fields = ("studies",)
+    success_message = "dbGaP study accession updated successfully."
+    template_name = "dbgap/dbgapstudyaccession_update.html"
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+
+class dbGaPStudyAccessionAutocomplete(
+    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+):
+    """View to provide autocompletion for dbGaPStudyAccessions."""
+
+    def get_queryset(self):
+        """Filter to dbGaPStudyAccessions matching the query."""
+
+        qs = models.dbGaPStudyAccession.objects.order_by("dbgap_phs")
+
+        if self.q:
+            # If the string contains phs, remove it.
+            # Remove leading zeros.
+            phs_digits = self.q.replace("phs", "").lstrip("0")
+            qs = qs.filter(dbgap_phs__icontains=phs_digits)
+
+        return qs
 
 
 class dbGaPApplicationDetail(
@@ -115,11 +171,9 @@ class dbGaPApplicationDetail(
         """
         context = super().get_context_data(*args, **kwargs)
         if self.latest_snapshot:
-            context["has_snapshot"] = True
-            context["last_update"] = self.latest_snapshot.created
+            context["latest_snapshot"] = self.latest_snapshot
         else:
-            context["has_snapshot"] = False
-            context["last_update"] = None
+            context["latest_snapshot"] = None
         return context
 
 
@@ -137,7 +191,7 @@ class dbGaPApplicationCreate(
 
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationForm
-    success_msg = "dbGaP application successfully created."
+    success_message = "dbGaP application successfully created."
     anvil_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
     ERROR_CREATING_GROUP = "Error creating Managed Group in app."
 
@@ -182,7 +236,9 @@ class dbGaPDataAccessSnapshotCreate(
     )
     ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
     ERROR_CREATING_DARS = "Error creating Data Access Requests."
-    success_msg = "Successfully added Data Access Requests for this dbGaP application."
+    success_message = (
+        "Successfully added Data Access Requests for this dbGaP application."
+    )
 
     def get_dbgap_application(self):
         try:
@@ -268,7 +324,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
     # )
     # ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
     ERROR_CREATING_DARS = "Error creating Data Access Requests."
-    success_msg = "Successfully added Data Access Requests."
+    success_message = "Successfully added Data Access Requests."
 
     def get_context_data(self, **kwargs):
         """Add to the context data."""
@@ -402,6 +458,7 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
         )
         context["summary_table"] = tables.dbGaPDataAccessRequestSummaryTable(
             self.object.dbgapdataaccessrequest_set.all()
+            .order_by("dbgap_dac", "dbgap_current_status")
             .values("dbgap_dac", "dbgap_current_status")
             .annotate(total=Count("pk"))
         )

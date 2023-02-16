@@ -4,18 +4,27 @@
 {% block title %}dbGaP application {{ object }}{% endblock %}
 
 {% block panel %}
-  <ul>
-    <li>Principal Investigator: {{ object.principal_investigator }}</li>
-    <li>dbGaP Project ID: {{ object.dbgap_project_id }}</li>
-    <li>AnVIL Group: <a href="{{ object.anvil_group.get_absolute_url }}">{{ object.anvil_group }}</a></li>
-    <li>Date created: {{ object.created }}</li>
-    <li>Date modified: {{ object.modified }}</li>
-    <li>Last DAR update: {{ last_update|default:"Never" }}</li>
-  </ul>
+<dl class="row">
+  <hr>
+  <dt class="col-sm-2">dbGaP PI</dt> <dd class="col-sm-9">{{ object.principal_investigator }}</dd>
+  <dt class="col-sm-2">dbGaP Project ID</dt> <dd class="col-sm-9">{{ object.dbgap_project_id }}</dd>
+  <dt class="col-sm-2">AnVIL access Group</dt> <dd class="col-sm-9">
+    <a href="{{ object.anvil_group.get_absolute_url }}">{{ object.anvil_group }}</a>
+  </dd>
+  <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
+  <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+  <dt class="col-sm-2">Last DAR update</dt> <dd class="col-sm-9">
+    {% if latest_snapshot %}
+      <a href="{{ latest_snapshot.get_absolute_url }}">{{ last_snapshot.created }}</a>
+    {% else %}
+      	—
+    {% endif %}
+  </dd>
+</dl>
 {% endblock panel %}
 
 {% block after_panel %}
-  {% if has_snapshot %}
+  {% if latest_snapshot %}
     <h3>Data access snapshots</h3>
     {% render_table data_access_snapshot_table %}
   {% endif %}
