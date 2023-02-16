@@ -410,7 +410,7 @@ class StudyCreateTest(TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(views.StudyCreate.success_msg, str(messages[0]))
+        self.assertEqual(views.StudyCreate.success_message, str(messages[0]))
 
     def test_error_missing_short_name(self):
         """Form shows an error when short name is missing."""
