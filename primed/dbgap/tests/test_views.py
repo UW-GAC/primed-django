@@ -420,7 +420,9 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(views.dbGaPStudyAccessionCreate.success_msg, str(messages[0]))
+        self.assertEqual(
+            views.dbGaPStudyAccessionCreate.success_message, str(messages[0])
+        )
 
     def test_error_missing_studies(self):
         """Form shows an error when studies is missing."""
@@ -619,7 +621,9 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(views.dbGaPStudyAccessionUpdate.success_msg, str(messages[0]))
+        self.assertEqual(
+            views.dbGaPStudyAccessionUpdate.success_message, str(messages[0])
+        )
 
     def test_redirects_to_object_detail(self):
         """After successfully creating an object, view redirects to the object's detail page."""
@@ -1579,7 +1583,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(views.dbGaPApplicationCreate.success_msg, str(messages[0]))
+        self.assertEqual(views.dbGaPApplicationCreate.success_message, str(messages[0]))
 
     def test_error_missing_pi(self):
         """Form shows an error when principal_investigator is missing."""
@@ -2034,7 +2038,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
         self.assertEqual(
-            views.dbGaPDataAccessSnapshotCreate.success_msg, str(messages[0])
+            views.dbGaPDataAccessSnapshotCreate.success_message, str(messages[0])
         )
 
     def test_error_missing_json(self):
@@ -2705,7 +2709,8 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
         self.assertEqual(
-            views.dbGaPDataAccessSnapshotCreateMultiple.success_msg, str(messages[0])
+            views.dbGaPDataAccessSnapshotCreateMultiple.success_message,
+            str(messages[0]),
         )
 
     def test_error_blank_dbgap_dar_data(self):

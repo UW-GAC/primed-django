@@ -11,10 +11,10 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
     Workspace,
 )
-from anvil_consortium_manager.views import SuccessMessageMixin
 from dal import autocomplete
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
@@ -81,7 +81,7 @@ class dbGaPStudyAccessionCreate(
 
     model = models.dbGaPStudyAccession
     form_class = forms.dbGaPStudyAccessionForm
-    success_msg = "dbGaP study accession created successfully."
+    success_message = "dbGaP study accession created successfully."
     template_name = "dbgap/dbgapstudyaccession_create.html"
 
 
@@ -92,7 +92,7 @@ class dbGaPStudyAccessionUpdate(
 
     model = models.dbGaPStudyAccession
     fields = ("studies",)
-    success_msg = "dbGaP study accession updated successfully."
+    success_message = "dbGaP study accession updated successfully."
     template_name = "dbgap/dbgapstudyaccession_update.html"
 
     def get_object(self, queryset=None):
@@ -191,7 +191,7 @@ class dbGaPApplicationCreate(
 
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationForm
-    success_msg = "dbGaP application successfully created."
+    success_message = "dbGaP application successfully created."
     anvil_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
     ERROR_CREATING_GROUP = "Error creating Managed Group in app."
 
@@ -236,7 +236,9 @@ class dbGaPDataAccessSnapshotCreate(
     )
     ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
     ERROR_CREATING_DARS = "Error creating Data Access Requests."
-    success_msg = "Successfully added Data Access Requests for this dbGaP application."
+    success_message = (
+        "Successfully added Data Access Requests for this dbGaP application."
+    )
 
     def get_dbgap_application(self):
         try:
@@ -322,7 +324,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
     # )
     # ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
     ERROR_CREATING_DARS = "Error creating Data Access Requests."
-    success_msg = "Successfully added Data Access Requests."
+    success_message = "Successfully added Data Access Requests."
 
     def get_context_data(self, **kwargs):
         """Add to the context data."""
