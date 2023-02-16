@@ -1,12 +1,11 @@
 """Forms classes for the `dbgap` app."""
 
 import jsonschema
+from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
 from tree_queries.forms import TreeNodeMultipleChoiceField
-
-from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
 
 from . import constants, models
 

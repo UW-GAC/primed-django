@@ -1,10 +1,9 @@
 """Forms for the `workspaces` app."""
 
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
+from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
-
-from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
 
 from . import models
 
