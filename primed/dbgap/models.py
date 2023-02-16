@@ -468,6 +468,12 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         """Return an boolean indicating whether this data access request is approved to access data."""
         return self.dbgap_current_status == self.APPROVED
 
+    def get_dbgap_link(self):
+        """Returns a link to the study page on dbGaP."""
+        return "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={}".format(
+            self.get_dbgap_accession()
+        )
+
     def get_dbgap_accession(self):
         """Return the dbGaP accession for this DAR."""
         return "phs{phs:06d}.v{version}.p{participant_set}".format(

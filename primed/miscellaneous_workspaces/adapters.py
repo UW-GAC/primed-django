@@ -60,4 +60,6 @@ class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
     list_table_class = tables.OpenAccessWorkspaceTable
     workspace_data_model = models.OpenAccessWorkspace
     workspace_data_form_class = forms.OpenAccessWorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = (
+        "miscellaneous_workspaces/openaccessworkspace_detail.html"
+    )

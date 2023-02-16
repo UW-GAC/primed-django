@@ -350,3 +350,32 @@ class OpenAccessWorkspaceFormTest(TestCase):
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
+
+    def test_valid_data_url(self):
+        """Form is valid with data_url."""
+        form_data = {
+            "workspace": self.workspace,
+            "requested_by": self.requester,
+            "studies": [self.study],
+            "data_source": "test source",
+            "data_url": "http://www.example.com",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_data_url_is_not_url(self):
+        """Form is invalid if data_url is not a valid url."""
+        """Form is invalid when missing data_source."""
+        form_data = {
+            "workspace": self.workspace,
+            "requested_by": self.requester,
+            "studies": [self.study],
+            "data_source": "test source",
+            "data_url": "foo_bar",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("data_url", form.errors)
+        self.assertEqual(len(form.errors["data_url"]), 1)
+        self.assertIn("valid URL", form.errors["data_url"][0])

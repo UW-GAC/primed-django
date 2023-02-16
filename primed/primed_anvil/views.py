@@ -3,9 +3,9 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import Workspace
-from anvil_consortium_manager.views import SuccessMessageMixin
 from dal import autocomplete
 from django.contrib.auth import get_user_model
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView
 from django_tables2 import SingleTableMixin, SingleTableView
@@ -43,7 +43,7 @@ class StudyCreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Creat
 
     model = models.Study
     fields = ("short_name", "full_name")
-    success_msg = "Study successfully created."
+    success_message = "Study successfully created."
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -53,6 +53,14 @@ class StudyAutocomplete(
     AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
 ):
     """View to provide autocompletion for `Study`s. Match either the `short_name` or `full_name`."""
+
+    def get_result_label(self, result):
+        s = "{} ({})".format(result.full_name, result.short_name)
+        print(s)
+        return s
+
+    def get_selected_result_label(self, result):
+        return str(result)
 
     def get_queryset(self):
         # Only active accounts.

@@ -22,7 +22,7 @@ django-dbbackup==4.0.1 # https://github.com/jazzband/django-dbbackup
 django-extensions==3.2.1  # https://github.com/django-extensions/django-extensions
 
 # anvil_consortium_manager
-git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.11
+git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.12
 
 # Simple history - model history tracking
 django-simple-history==3.1.1
@@ -38,3 +38,6 @@ django-tree-queries==0.13.0
 
 # For parsing DUO OWL files
 pronto==2.5.2
+
+# mysql
+mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient

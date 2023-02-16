@@ -1,13 +1,17 @@
 """Forms classes for the `dbgap` app."""
 
 import jsonschema
+from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
+from tree_queries.forms import TreeNodeMultipleChoiceField
+
+from primed.primed_anvil.forms import Bootstrap5MediaFormMixin
 
 from . import constants, models
 
 
-class dbGaPStudyAccessionForm(forms.ModelForm):
+class dbGaPStudyAccessionForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPStudyAccession object."""
 
     class Meta:
@@ -16,9 +20,15 @@ class dbGaPStudyAccessionForm(forms.ModelForm):
             "dbgap_phs",
             "studies",
         )
+        widgets = {
+            "studies": autocomplete.ModelSelect2Multiple(
+                url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
-class dbGaPWorkspaceForm(forms.ModelForm):
+class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPWorkspace object."""
 
     class Meta:
@@ -38,9 +48,28 @@ class dbGaPWorkspaceForm(forms.ModelForm):
             "workspace",
             "requested_by",
         )
+        widgets = {
+            "dbgap_study_accession": autocomplete.ModelSelect2(
+                url="dbgap:dbgap_study_accessions:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "data_use_modifiers": forms.CheckboxSelectMultiple,
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "available_data": forms.CheckboxSelectMultiple,
+        }
+        help_texts = {
+            "data_use_modifiers": """The DataUseModifiers associated with this study-consent group.
+            --- represents a child modifier."""
+        }
+        field_classes = {
+            "data_use_modifiers": TreeNodeMultipleChoiceField,
+        }
 
 
-class dbGaPApplicationForm(forms.ModelForm):
+class dbGaPApplicationForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPApplication."""
 
     class Meta:
@@ -49,6 +78,12 @@ class dbGaPApplicationForm(forms.ModelForm):
             "principal_investigator",
             "dbgap_project_id",
         )
+        widgets = {
+            "principal_investigator": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class dbGaPDataAccessSnapshotForm(forms.ModelForm):

@@ -1,6 +1,8 @@
+from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView
@@ -43,3 +45,20 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
+
+
+class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """View to provide autocompletion for users. Matches either email or name."""
+
+    def get_result_label(self, result):
+        return "{} ({})".format(result.name, result.email)
+
+    def get_queryset(self):
+        """Filter to users matching the query."""
+        qs = User.objects.all()
+
+        if self.q:
+            # Filter to users whose name or email matches the query.
+            qs = qs.filter(Q(email__icontains=self.q) | Q(name__icontains=self.q))
+
+        return qs
