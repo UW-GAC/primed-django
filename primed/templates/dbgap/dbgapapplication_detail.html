@@ -15,7 +15,7 @@
   <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
   <dt class="col-sm-2">Last DAR update</dt> <dd class="col-sm-9">
     {% if latest_snapshot %}
-      <a href="{{ latest_snapshot.get_absolute_url }}">{{ last_snapshot.created }}</a>
+      <a href="{{ latest_snapshot.get_absolute_url }}">{{ latest_snapshot.created }}</a>
     {% else %}
       	—
     {% endif %}
@@ -25,15 +25,37 @@
 
 {% block after_panel %}
   {% if latest_snapshot %}
-    <h3>Data access snapshots</h3>
-    {% render_table data_access_snapshot_table %}
+
+  <div class="my-3">
+    <div class="accordion" id="accordionDataAccessSnapshots">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDataAccessSnapshotsOne">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataAccessSnapshotsOne" aria-expanded="falase" aria-controls="collapseDataAccessSnapshotsOne">
+            <span class="fa-solid fa-list mx-2"></span>
+            Data Access Snapshots
+            <span class="badge mx-2 {% if needs_action_table.rows|length %}bg-warning{% else %}bg-secondary{% endif %} pill"> {{ data_access_snapshot_table.rows|length }}</span>
+          </button>
+        </h2>
+        <div id="collapseDataAccessSnapshotsOne" class="accordion-collapse collapse" aria-labelledby="headingDataAccessSnapshotsOne" data-bs-parent="#accordionDataAccessSnapshots">
+          <div class="accordion-body">
+
+            {% render_table data_access_snapshot_table %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {% endif %}
 {% endblock after_panel %}
 
 {% block action_buttons %}
-  {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
     <p>
+      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
       <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
+      {% endif %}
+      <a href="{% url 'dbgap:dbgap_applications:audit' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-secondary" role="button">Audit workspace access</a>
+
     </p>
-  {% endif %}
 {% endblock action_buttons %}

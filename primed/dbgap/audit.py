@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 # from . import models
-from .models import dbGaPDataAccessRequest, dbGaPWorkspace
+from .models import dbGaPDataAccessRequest, dbGaPDataAccessSnapshot, dbGaPWorkspace
 
 
 # Dataclasses for storing audit results?
@@ -125,6 +125,7 @@ class dbGaPAccessAudit(ABC):
     APPROVED_DAR = "Approved DAR."
 
     # Allowed reasons for no access.
+    NO_SNAPSHOTS = "No snapshots for this application."
     NO_DAR = "No matching DAR."
     DAR_NOT_APPROVED = "DAR is not approved."
 
@@ -145,20 +146,42 @@ class dbGaPAccessAudit(ABC):
         self.needs_action = None
         self.errors = None
 
-    def audit_snapshot_and_workspace(self, dar_snapshot, dbgap_workspace):
-        """Audit access for a specific snapshot and a specific workspace."""
+    def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
+        """Audit access for a specific dbGaP application and a specific workspace."""
+        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
+            dbgap_application.anvil_group
+        )
+
+        # Get the most recent snapshot.
+        try:
+            dar_snapshot = dbgap_application.dbgapdataaccesssnapshot_set.get(
+                is_most_recent=True
+            )
+        except dbGaPDataAccessSnapshot.DoesNotExist:
+            if in_auth_domain:
+                # Error!
+                self.errors.append(
+                    RemoveAccess(
+                        workspace=dbgap_workspace,
+                        data_access_request=None,
+                        note=self.ERROR_HAS_ACCESS,
+                    )
+                )
+            else:
+                # As expected, no access and no DAR
+                self.verified.append(
+                    VerifiedNoAccess(workspace=dbgap_workspace, note=self.NO_SNAPSHOTS)
+                )
+            return  # Go to the next workspace.
+
         try:
             # There should only be one DAR from this snapshot associated with a given workspace.
             dar = dbgap_workspace.get_data_access_requests().get(
                 dbgap_data_access_snapshot=dar_snapshot
             )
         except dbGaPDataAccessRequest.DoesNotExist:
-            # No matching DAR exists for this snapshot.
-            # Check if the group is in the auth domain.
-            has_access = dbgap_workspace.workspace.is_in_authorization_domain(
-                dar_snapshot.dbgap_application.anvil_group
-            )
-            if has_access:
+            # No matching DAR exists for this application.
+            if in_auth_domain:
                 # Error!
                 self.errors.append(
                     RemoveAccess(
@@ -176,9 +199,6 @@ class dbGaPAccessAudit(ABC):
 
         # Is the dbGaP access group associated with the DAR in the auth domain of the workspace?
         # We'll need to know this for future checks.
-        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_group
-        )
         if dar.is_approved and in_auth_domain:
             # Verified access!
             self.verified.append(
@@ -265,13 +285,13 @@ class dbGaPAccessAudit(ABC):
         return self.results_table_class([x.get_table_dictionary() for x in self.errors])
 
 
-class dbGaPDataAccessSnapshotAudit(dbGaPAccessAudit):
-    def __init__(self, dbgap_data_access_snapshot):
+class dbGaPApplicationAccessAudit(dbGaPAccessAudit):
+    def __init__(self, dbgap_application):
         super().__init__()
-        self.snapshot = dbgap_data_access_snapshot
+        self.dbgap_application = dbgap_application
 
     def run_audit(self):
-        """Audit all workspaces against access provided by this dbGaPDataAccessSnasphot."""
+        """Audit all workspaces against access provided by this dbGaPApplication."""
         self.verified = []
         self.needs_action = []
         self.errors = []
@@ -280,5 +300,7 @@ class dbGaPDataAccessSnapshotAudit(dbGaPAccessAudit):
         dbgap_workspaces = dbGaPWorkspace.objects.all()
         # Loop through workspaces and verify access.
         for dbgap_workspace in dbgap_workspaces:
-            self.audit_snapshot_and_workspace(self.snapshot, dbgap_workspace)
+            self.audit_application_and_workspace(
+                self.dbgap_application, dbgap_workspace
+            )
         self.completed = True

@@ -6,21 +6,16 @@
 
 {% block content %}
 
-<h1>DAR snapshot audit</h1>
-
-{% if not object.is_most_recent %}
-<div class="alert alert-danger" role="alert">
-  This is not the most recent snapshot for this dbGaP application!
-</div>
-{% endif %}
+<h1>dbGaP application audit</h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
-    <li>dbGaP application: <a href="{{ object.dbgap_application.get_absolute_url }}">{{ object.dbgap_application }}</a></li>
-    <li>Date created: {{ object.created }}</li>
+    <li>dbGaP application: <a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+    <li>Latest snapshot: <a href="{{ latest_snapshot.get_absolute_url }}">{{ latest_snapshot.created }}</a></li>
   </ul>
 </div>
 
+{% if latest_snapshot %}
 <h2>Audit results</h2>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
@@ -120,5 +115,11 @@
     </div>
   </div>
 </div>
+
+{% else %}
+<div class="alert alert-danger" role="alert">
+  No data access snapshots have been added for this dbGaP Application.
+</div>
+{% endif %}
 
 {% endblock content %}
