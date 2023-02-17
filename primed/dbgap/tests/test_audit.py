@@ -379,13 +379,13 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         )
 
 
-class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
-    """Tests for the `dbGaPDataAccessSnapshotAuditTableTest` table."""
+class dbGaPAccessAuditTableTest(TestCase):
+    """Tests for the `dbGaPAccessAuditTableTest` table."""
 
     def test_no_rows(self):
         """Table works with no rows."""
-        table = audit.dbGaPDataAccessSnapshotAuditTable([])
-        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        table = audit.dbGaPAccessAuditTable([])
+        self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 0)
 
     def test_one_row(self):
@@ -402,8 +402,8 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
                 "action_url": "",
             }
         ]
-        table = audit.dbGaPDataAccessSnapshotAuditTable(data)
-        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        table = audit.dbGaPAccessAuditTable(data)
+        self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 1)
 
     def test_two_rows(self):
@@ -430,8 +430,8 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
                 "action_url": "",
             },
         ]
-        table = audit.dbGaPDataAccessSnapshotAuditTable(data)
-        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        table = audit.dbGaPAccessAuditTable(data)
+        self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 2)
 
     def test_render_action(self):
@@ -448,8 +448,8 @@ class dbGaPDataAccessSnapshotAuditTableTest(TestCase):
                 "action_url": "foo",
             }
         ]
-        table = audit.dbGaPDataAccessSnapshotAuditTable(data)
-        self.assertIsInstance(table, audit.dbGaPDataAccessSnapshotAuditTable)
+        table = audit.dbGaPAccessAuditTable(data)
+        self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 1)
         self.assertIn("foo", table.rows[0].get_cell("action"))
         self.assertIn("Grant", table.rows[0].get_cell("action"))

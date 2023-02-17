@@ -3519,7 +3519,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPDataAccessSnapshotAuditTable,
+            audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
@@ -3543,7 +3543,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPDataAccessSnapshotAuditTable,
+            audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
@@ -3572,7 +3572,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPDataAccessSnapshotAuditTable,
+            audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
@@ -3616,7 +3616,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPDataAccessSnapshotAuditTable,
+            audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
@@ -3651,7 +3651,7 @@ class dbGaPDataAccessSnapshotAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPDataAccessSnapshotAuditTable,
+            audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
