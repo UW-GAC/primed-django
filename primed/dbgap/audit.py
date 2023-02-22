@@ -6,7 +6,12 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 # from . import models
-from .models import dbGaPDataAccessRequest, dbGaPDataAccessSnapshot, dbGaPWorkspace
+from .models import (
+    dbGaPApplication,
+    dbGaPDataAccessRequest,
+    dbGaPDataAccessSnapshot,
+    dbGaPWorkspace,
+)
 
 
 # Dataclasses for storing audit results?
@@ -16,7 +21,17 @@ class AuditResult:
 
     workspace: dbGaPWorkspace
     note: str
+    dbgap_application: dbGaPApplication
     data_access_request: dbGaPDataAccessRequest = None
+
+    def __post_init__(self):
+        if self.data_access_request and (
+            self.data_access_request.dbgap_data_access_snapshot.dbgap_application
+            != self.dbgap_application
+        ):
+            raise ValueError(
+                "data_access_request application and dbgap_application do not match."
+            )
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -89,7 +104,7 @@ class RemoveAccess(AuditResult):
             "anvil_consortium_manager:managed_groups:member_groups:delete",
             args=[
                 self.workspace.workspace.authorization_domains.first(),
-                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+                self.dbgap_application.anvil_group,
             ],
         )
 
@@ -163,6 +178,7 @@ class dbGaPAccessAudit(ABC):
                 self.errors.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=None,
                         note=self.ERROR_HAS_ACCESS,
                     )
@@ -170,7 +186,11 @@ class dbGaPAccessAudit(ABC):
             else:
                 # As expected, no access and no DAR
                 self.verified.append(
-                    VerifiedNoAccess(workspace=dbgap_workspace, note=self.NO_SNAPSHOTS)
+                    VerifiedNoAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        note=self.NO_SNAPSHOTS,
+                    )
                 )
             return  # Go to the next workspace.
 
@@ -186,6 +206,7 @@ class dbGaPAccessAudit(ABC):
                 self.errors.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=None,
                         note=self.ERROR_HAS_ACCESS,
                     )
@@ -193,7 +214,11 @@ class dbGaPAccessAudit(ABC):
             else:
                 # As expected, no access and no DAR
                 self.verified.append(
-                    VerifiedNoAccess(workspace=dbgap_workspace, note=self.NO_DAR)
+                    VerifiedNoAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        note=self.NO_DAR,
+                    )
                 )
             return  # Go to the next workspace.
 
@@ -204,6 +229,7 @@ class dbGaPAccessAudit(ABC):
             self.verified.append(
                 VerifiedAccess(
                     workspace=dbgap_workspace,
+                    dbgap_application=dbgap_application,
                     data_access_request=dar,
                     note=self.APPROVED_DAR,
                 )
@@ -215,6 +241,7 @@ class dbGaPAccessAudit(ABC):
                 self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.NEW_WORKSPACE,
                     )
@@ -223,6 +250,7 @@ class dbGaPAccessAudit(ABC):
                 self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.NEW_APPROVED_DAR,
                     )
@@ -244,6 +272,7 @@ class dbGaPAccessAudit(ABC):
                 self.needs_action.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.PREVIOUS_APPROVAL,
                     )
@@ -253,6 +282,7 @@ class dbGaPAccessAudit(ABC):
                 self.errors.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.ERROR_HAS_ACCESS,
                     )
@@ -263,6 +293,7 @@ class dbGaPAccessAudit(ABC):
             self.verified.append(
                 VerifiedNoAccess(
                     workspace=dbgap_workspace,
+                    dbgap_application=dbgap_application,
                     data_access_request=dar,
                     note=self.DAR_NOT_APPROVED,
                 )
