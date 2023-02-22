@@ -335,3 +335,24 @@ class dbGaPApplicationAccessAudit(dbGaPAccessAudit):
                 self.dbgap_application, dbgap_workspace
             )
         self.completed = True
+
+
+class dbGaPWorkspaceAccessAudit(dbGaPAccessAudit):
+    def __init__(self, dbgap_workspace):
+        super().__init__()
+        self.dbgap_workspace = dbgap_workspace
+
+    def run_audit(self):
+        """Audit this workspace against access provided by all dbGaPApplications."""
+        self.verified = []
+        self.needs_action = []
+        self.errors = []
+
+        # Get a list of all dbGaP applications.
+        dbgap_applications = dbGaPApplication.objects.all()
+        # Loop through workspaces and verify access.
+        for dbgap_application in dbgap_applications:
+            self.audit_application_and_workspace(
+                dbgap_application, self.dbgap_workspace
+            )
+        self.completed = True

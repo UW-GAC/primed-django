@@ -21,6 +21,7 @@ from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
 
@@ -506,4 +507,46 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerViewRequired, DetailView):
             context["errors_table"] = data_access_audit.get_errors_table()
             context["needs_action_table"] = data_access_audit.get_needs_action_table()
             context["data_access_audit"] = data_access_audit
+        return context
+
+
+class dbGaPWorkspaceAudit(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show audit results for a `dbGaPWorkspace`."""
+
+    model = models.dbGaPWorkspace
+    template_name = "dbgap/dbgapworkspace_audit.html"
+
+    def get_object(self, queryset=None):
+        """Return the object the view is displaying."""
+
+        # Use a custom queryset if provided; this is required for subclasses
+        # like DateDetailView
+        if queryset is None:
+            queryset = self.get_queryset()
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = queryset.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        data_access_audit = audit.dbGaPWorkspaceAccessAudit(self.object)
+        data_access_audit.run_audit()
+        context["verified_table"] = data_access_audit.get_verified_table()
+        context["errors_table"] = data_access_audit.get_errors_table()
+        context["needs_action_table"] = data_access_audit.get_needs_action_table()
+        context["data_access_audit"] = data_access_audit
         return context

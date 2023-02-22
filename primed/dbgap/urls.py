@@ -65,8 +65,18 @@ dbgap_application_patterns = (
     "dbgap_applications",
 )
 
-
+dbgap_workspace_patterns = (
+    [
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/audit/",
+            views.dbGaPWorkspaceAudit.as_view(),
+            name="audit",
+        ),
+    ],
+    "workspaces",
+)
 urlpatterns = [
     path("studies/", include(dbgap_study_accession_patterns)),
     path("applications/", include(dbgap_application_patterns)),
+    path("workspaces/", include(dbgap_workspace_patterns)),
 ]
