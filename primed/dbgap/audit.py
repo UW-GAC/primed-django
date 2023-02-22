@@ -133,7 +133,7 @@ class dbGaPAccessAuditTable(tables.Table):
 
     def render_action(self, record, value):
         return mark_safe(
-            """<a href="{}" class="btn btn-primary">{}</a>""".format(
+            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
                 record["action_url"], value
             )
         )
