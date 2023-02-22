@@ -51,6 +51,7 @@ class AuditResult:
             dar_consent = None
         row = {
             "workspace": self.workspace,
+            "application": self.dbgap_application,
             "data_access_request": self.data_access_request,
             "dar_accession": dar_accession,
             "dar_consent": dar_consent,
@@ -120,6 +121,7 @@ class dbGaPAccessAuditTable(tables.Table):
     """A table to show results from a dbGaPAccessAudit subclass."""
 
     workspace = tables.Column(linkify=True)
+    application = tables.Column(linkify=True)
     data_access_request = tables.Column()
     dar_accession = tables.Column(verbose_name="DAR accession")
     dar_consent = tables.Column(verbose_name="DAR consent")
