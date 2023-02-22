@@ -128,6 +128,9 @@ class dbGaPAccessAuditTable(tables.Table):
     note = tables.Column()
     action = tables.Column()
 
+    class Meta:
+        attrs = {"class": "table align-middle"}
+
     def render_action(self, record, value):
         return mark_safe(
             """<a href="{}" class="btn btn-primary">{}</a>""".format(
