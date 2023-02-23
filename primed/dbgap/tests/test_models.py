@@ -394,15 +394,21 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertEqual(len(results), 1)
         self.assertIn(dar, results)
 
-    def test_get_data_access_requests_one_application_two_snapshots_one_match(self):
+    def test_get_data_access_requests_one_application_two_snapshots_most_recent_false(
+        self,
+    ):
         """Returns 2 results when there are two matchign DARs from different snapshots of the same application."""
         workspace = factories.dbGaPWorkspaceFactory.create()
         dbgap_application = factories.dbGaPApplicationFactory.create()
         snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=dbgap_application
+            dbgap_application=dbgap_application,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=False,
         )
         snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=dbgap_application
+            dbgap_application=dbgap_application,
+            created=timezone.now(),
+            is_most_recent=True,
         )
         dar_1 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
             dbgap_workspace=workspace, dbgap_data_access_snapshot=snapshot_1
@@ -413,6 +419,33 @@ class dbGaPWorkspaceTest(TestCase):
         results = workspace.get_data_access_requests()
         self.assertEqual(len(results), 2)
         self.assertIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
+    def test_get_data_access_requests_one_application_two_snapshots_most_recent_true(
+        self,
+    ):
+        """Returns 1 results when there are two matchign DARs from different snapshots of the same application."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=False,
+        )
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dar_1 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace, dbgap_data_access_snapshot=snapshot_1
+        )
+        dar_2 = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace, dbgap_data_access_snapshot=snapshot_2
+        )
+        results = workspace.get_data_access_requests(most_recent=True)
+        self.assertEqual(len(results), 1)
+        self.assertNotIn(dar_1, results)
         self.assertIn(dar_2, results)
 
     def test_get_data_access_requests_two_applications_with_match(self):
