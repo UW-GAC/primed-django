@@ -48,6 +48,11 @@ class dbGaPWorkspaceTable(tables.Table):
     dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
         verbose_name="Consent"
     )
+    number_approved_dars = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Approved DARs",
+        orderable=False,
+    )
 
     class Meta:
         model = Workspace
@@ -58,6 +63,14 @@ class dbGaPWorkspaceTable(tables.Table):
 
     def render_dbgap_accession(self, record):
         return record.dbgapworkspace.get_dbgap_accession()
+
+    def render_number_approved_dars(self, record):
+        n = (
+            record.dbgapworkspace.get_data_access_requests(most_recent=True)
+            .filter(dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED)
+            .count()
+        )
+        return n
 
 
 class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):

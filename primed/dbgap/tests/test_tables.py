@@ -94,6 +94,47 @@ class dbGaPWorkspaceTableTest(TestCase):
             table.rows[0].get_cell_value("dbgap_accession"), "phs000001.v2.p3"
         )
 
+    def test_render_number_approved_dars_no_dars(self):
+        instance = self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_number_approved_dars_one_dar(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=instance)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 1)
+
+    def test_render_number_approved_dars_one_dar_does_not_match(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_number_approved_dars_two_dars(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=instance)
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=instance)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 2)
+
+    def test_render_number_approved_dars_not_approved(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=instance,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_number_approved_dars_only_most_recent(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=instance, dbgap_data_access_snapshot__is_most_recent=False
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
 
 class dbGaPApplicationTableTest(TestCase):
     model = models.dbGaPApplication
