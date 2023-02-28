@@ -135,6 +135,34 @@ class dbGaPWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
 
+    def test_render_is_shared_not_shared(self):
+        """render_is_shared works correctly when the workspace is not shared with anyone."""
+        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        factories.dbGaPWorkspaceFactory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+
+    def test_render_is_shared_true(self):
+        """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
+        group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            group=group, workspace=dbgap_workspace.workspace
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
+
+    def test_render_is_shared_shared_with_different_group(self):
+        """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
+        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        group = factories.ManagedGroupFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            group=group, workspace=dbgap_workspace.workspace
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+
 
 class dbGaPApplicationTableTest(TestCase):
     model = models.dbGaPApplication

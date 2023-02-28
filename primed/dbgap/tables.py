@@ -53,6 +53,11 @@ class dbGaPWorkspaceTable(tables.Table):
         verbose_name="Approved DARs",
         orderable=False,
     )
+    is_shared = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Shared with PRIMED?",
+        orderable=False,
+    )
 
     class Meta:
         model = Workspace
@@ -71,6 +76,20 @@ class dbGaPWorkspaceTable(tables.Table):
             .count()
         )
         return n
+
+    def render_is_shared(self, record):
+        is_shared = record.workspacegroupsharing_set.filter(
+            group__name="PRIMED_ALL"
+        ).exists()
+        if is_shared:
+            icon = "check-circle-fill"
+            color = "green"
+            value = format_html(
+                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
+            )
+        else:
+            value = ""
+        return value
 
 
 class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
