@@ -337,7 +337,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
                 "dbgap_project_id", flat=True
             )
         ]
-        context["dbagp_dar_json_url"] = helpers.get_dbgap_dar_json_url(project_ids)
+        context["dbgap_dar_json_url"] = helpers.get_dbgap_dar_json_url(project_ids)
         return context
 
     def get_success_url(self):
