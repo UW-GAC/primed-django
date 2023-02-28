@@ -70,6 +70,30 @@ class dbGaPWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_render_workspace(self):
+        """render_workspace returns the correct value."""
+        instance = self.model_factory.create(
+            workspace__billing_project__name="bp", workspace__name="ws"
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_workspace(instance.workspace), "bp/ws")
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), "bp/ws")
+
+    def test_render_dbgap_accession(self):
+        """render_workspace returns the correct value."""
+        instance = self.model_factory.create(
+            dbgap_study_accession__dbgap_phs=1,
+            dbgap_version=2,
+            dbgap_participant_set=3,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(
+            table.render_dbgap_accession(instance.workspace), "phs000001.v2.p3"
+        )
+        self.assertEqual(
+            table.rows[0].get_cell_value("dbgap_accession"), "phs000001.v2.p3"
+        )
+
 
 class dbGaPApplicationTableTest(TestCase):
     model = models.dbGaPApplication

@@ -33,24 +33,31 @@ class dbGaPStudyAccessionTable(tables.Table):
 class dbGaPWorkspaceTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
-    name = tables.columns.Column(linkify=True)
-
-    class Meta:
-        model = Workspace
-        fields = (
-            "name",
-            "dbgapworkspace__dbgap_study_accession__studies",
+    workspace = tables.columns.Column(
+        linkify=True, accessor="pk", order_by=("billing_project__name", "name")
+    )
+    dbgap_accession = tables.columns.Column(
+        verbose_name="dbGaP accession",
+        accessor="pk",
+        order_by=(
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
             "dbgapworkspace__dbgap_participant_set",
-            "dbgapworkspace__dbgap_consent_abbreviation",
-        )
+        ),
+    )
+    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
+        verbose_name="Consent"
+    )
 
-    def render_dbgapworkspace__dbgap_phs(self, value):
-        return "phs{0:06d}".format(value)
+    class Meta:
+        model = Workspace
+        fields = ()
 
-    def render_dbgapworkspace__version(self, value):
-        return "v{}".format(value)
+    def render_workspace(self, record):
+        return str(record)
+
+    def render_dbgap_accession(self, record):
+        return record.dbgapworkspace.get_dbgap_accession()
 
 
 class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
