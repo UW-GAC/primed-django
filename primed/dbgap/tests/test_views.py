@@ -2595,6 +2595,12 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
             response.context_data["form"], forms.dbGaPDataAccessSnapshotMultipleForm
         )
 
+    def test_context_dbgap_dar_json_url(self):
+        """Response context includes dbgap_dar_json_url."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("dbgap_dar_json_url" in response.context_data)
+
     def test_updates_one_application(self):
         dbgap_application = factories.dbGaPApplicationFactory.create()
         project_json = factories.dbGaPJSONProjectFactory(
