@@ -70,6 +70,99 @@ class dbGaPWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_render_workspace(self):
+        """render_workspace returns the correct value."""
+        instance = self.model_factory.create(
+            workspace__billing_project__name="bp", workspace__name="ws"
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_workspace(instance.workspace), "bp/ws")
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), "bp/ws")
+
+    def test_render_dbgap_accession(self):
+        """render_workspace returns the correct value."""
+        instance = self.model_factory.create(
+            dbgap_study_accession__dbgap_phs=1,
+            dbgap_version=2,
+            dbgap_participant_set=3,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(
+            table.render_dbgap_accession(instance.workspace), "phs000001.v2.p3"
+        )
+        self.assertEqual(
+            table.rows[0].get_cell_value("dbgap_accession"), "phs000001.v2.p3"
+        )
+
+    def test_render_number_approved_dars_no_dars(self):
+        instance = self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_number_approved_dars_one_dar(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=instance)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 1)
+
+    def test_render_number_approved_dars_one_dar_does_not_match(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_number_approved_dars_two_dars(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=instance)
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=instance)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 2)
+
+    def test_render_number_approved_dars_not_approved(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=instance,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_number_approved_dars_only_most_recent(self):
+        instance = self.model_factory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=instance, dbgap_data_access_snapshot__is_most_recent=False
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
+
+    def test_render_is_shared_not_shared(self):
+        """render_is_shared works correctly when the workspace is not shared with anyone."""
+        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        factories.dbGaPWorkspaceFactory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+
+    def test_render_is_shared_true(self):
+        """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
+        group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            group=group, workspace=dbgap_workspace.workspace
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
+
+    def test_render_is_shared_shared_with_different_group(self):
+        """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
+        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        group = factories.ManagedGroupFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            group=group, workspace=dbgap_workspace.workspace
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+
 
 class dbGaPApplicationTableTest(TestCase):
     model = models.dbGaPApplication
