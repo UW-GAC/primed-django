@@ -1,0 +1,59 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}DAR snapshot audit{% endblock %}
+
+
+{% block content %}
+
+<h1>dbGaP application audit</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>dbGaP application: <a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+    <li>Latest snapshot: <a href="{{ latest_snapshot.get_absolute_url }}">{{ latest_snapshot.created }}</a></li>
+  </ul>
+</div>
+
+{% if latest_snapshot %}
+<h2>Audit results</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    For each dbGaP workspace in the app, the audit checks that access for this application is correct.
+    To have access to a workspace, the group associated with the dbGaP application must be a member of the authorization domain of that workspace. It does not check that the workspace is shared with the group.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>No DAR is associated with this workspace and the group does not have access.</li>
+          <li>There is a DAR associated with this workspace, but it is not approved, and the group does nto have access.</li>
+          <li>There is an approved DAR associated with this workspace and the group has access.</li>
+        </ul>
+
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>There is an approved DAR for this workspace, but the group does not have access.</li>
+        <li>A DAR that used to be approved for this workspace is no longer approved, and the group has access.</li>
+      </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>The group has access to a workspace for an unknown reason.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+{% include "dbgap/__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% else %}
+<div class="alert alert-danger" role="alert">
+  No data access snapshots have been added for this dbGaP Application.
+</div>
+{% endif %}
+
+{% endblock content %}

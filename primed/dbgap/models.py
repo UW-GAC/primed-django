@@ -146,14 +146,17 @@ class dbGaPWorkspace(
             ps=self.dbgap_participant_set,
         )
 
-    def get_data_access_requests(self):
+    def get_data_access_requests(self, most_recent=False):
         """Get a list of data access requests associated with this dbGaPWorkspace."""
-        return dbGaPDataAccessRequest.objects.filter(
+        qs = dbGaPDataAccessRequest.objects.filter(
             dbgap_phs=self.dbgap_study_accession.dbgap_phs,
             original_version=self.dbgap_version,
             original_participant_set=self.dbgap_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
         )
+        if most_recent:
+            qs = qs.filter(dbgap_data_access_snapshot__is_most_recent=True)
+        return qs
 
 
 class dbGaPApplication(TimeStampedModel, models.Model):
