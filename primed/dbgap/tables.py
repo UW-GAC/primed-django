@@ -33,24 +33,63 @@ class dbGaPStudyAccessionTable(tables.Table):
 class dbGaPWorkspaceTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
-    name = tables.columns.Column(linkify=True)
-
-    class Meta:
-        model = Workspace
-        fields = (
-            "name",
-            "dbgapworkspace__dbgap_study_accession__studies",
+    workspace = tables.columns.Column(
+        linkify=True, accessor="pk", order_by=("billing_project__name", "name")
+    )
+    dbgap_accession = tables.columns.Column(
+        verbose_name="dbGaP accession",
+        accessor="pk",
+        order_by=(
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
             "dbgapworkspace__dbgap_participant_set",
-            "dbgapworkspace__dbgap_consent_abbreviation",
+        ),
+    )
+    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
+        verbose_name="Consent"
+    )
+    number_approved_dars = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Approved DARs",
+        orderable=False,
+    )
+    is_shared = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Shared with PRIMED?",
+        orderable=False,
+    )
+
+    class Meta:
+        model = Workspace
+        fields = ()
+
+    def render_workspace(self, record):
+        return str(record)
+
+    def render_dbgap_accession(self, record):
+        return record.dbgapworkspace.get_dbgap_accession()
+
+    def render_number_approved_dars(self, record):
+        n = (
+            record.dbgapworkspace.get_data_access_requests(most_recent=True)
+            .filter(dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED)
+            .count()
         )
+        return n
 
-    def render_dbgapworkspace__dbgap_phs(self, value):
-        return "phs{0:06d}".format(value)
-
-    def render_dbgapworkspace__version(self, value):
-        return "v{}".format(value)
+    def render_is_shared(self, record):
+        is_shared = record.workspacegroupsharing_set.filter(
+            group__name="PRIMED_ALL"
+        ).exists()
+        if is_shared:
+            icon = "check-circle-fill"
+            color = "green"
+            value = format_html(
+                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
+            )
+        else:
+            value = ""
+        return value
 
 
 class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):

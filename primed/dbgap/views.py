@@ -21,6 +21,7 @@ from django.db.models import Count
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
 
@@ -154,7 +155,7 @@ class dbGaPApplicationDetail(
 
     def get_latest_snapshot(self):
         try:
-            return self.object.dbgapdataaccesssnapshot_set.latest("created")
+            return self.object.dbgapdataaccesssnapshot_set.get(is_most_recent=True)
         except models.dbGaPDataAccessSnapshot.DoesNotExist:
             return None
 
@@ -336,7 +337,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
                 "dbgap_project_id", flat=True
             )
         ]
-        context["dbagp_dar_json_url"] = helpers.get_dbgap_dar_json_url(project_ids)
+        context["dbgap_dar_json_url"] = helpers.get_dbgap_dar_json_url(project_ids)
         return context
 
     def get_success_url(self):
@@ -465,41 +466,84 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
         return context
 
 
-class dbGaPDataAccessSnapshotAudit(AnVILConsortiumManagerViewRequired, DetailView):
-    """View to show audit results for `dbGaPDataAccessSnapshot`."""
+class dbGaPApplicationAudit(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show audit results for a `dbGaPApplication`."""
 
-    model = models.dbGaPDataAccessSnapshot
-    pk_url_kwarg = "dbgap_data_access_snapshot_pk"
-    template_name = "dbgap/dbgapdataaccesssnapshot_audit.html"
-
-    def get_dbgap_application(self):
-        model = models.dbGaPApplication
-        try:
-            application = model.objects.get(
-                dbgap_project_id=self.kwargs.get("dbgap_project_id")
-            )
-        except model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
-            )
-        return application
+    model = models.dbGaPApplication
+    template_name = "dbgap/dbgapapplication_audit.html"
 
     def get_object(self, queryset=None):
-        # Get the dbGaP application using the URL parameter.
-        # self.dbgap_application = self.get_dbgap_application()
-        # return super().get_object(queryset=queryset)
-        self.dbgap_application = self.get_dbgap_application()
-        if not queryset:
-            queryset = self.model.objects
-        return super().get_object(
-            queryset=queryset.filter(dbgap_application=self.dbgap_application)
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.latest_snapshot = self.get_latest_snapshot()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+    def get_latest_snapshot(self):
+        try:
+            return self.object.dbgapdataaccesssnapshot_set.latest("created")
+        except models.dbGaPDataAccessSnapshot.DoesNotExist:
+            return None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        latest_snapshot = self.get_latest_snapshot()
+        context["latest_snapshot"] = latest_snapshot
+        if latest_snapshot:
+            # Run the audit.
+            data_access_audit = audit.dbGaPApplicationAccessAudit(self.object)
+            data_access_audit.run_audit()
+            context["verified_table"] = data_access_audit.get_verified_table()
+            context["errors_table"] = data_access_audit.get_errors_table()
+            context["needs_action_table"] = data_access_audit.get_needs_action_table()
+            context["data_access_audit"] = data_access_audit
+        return context
+
+
+class dbGaPWorkspaceAudit(AnVILConsortiumManagerViewRequired, DetailView):
+    """View to show audit results for a `dbGaPWorkspace`."""
+
+    model = models.dbGaPWorkspace
+    template_name = "dbgap/dbgapworkspace_audit.html"
+
+    def get_object(self, queryset=None):
+        """Return the object the view is displaying."""
+
+        # Use a custom queryset if provided; this is required for subclasses
+        # like DateDetailView
+        if queryset is None:
+            queryset = self.get_queryset()
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = queryset.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
         )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPDataAccessSnapshotAudit(self.object)
+        data_access_audit = audit.dbGaPWorkspaceAccessAudit(self.object)
         data_access_audit.run_audit()
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()

@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass
 
 import django_tables2 as tables
@@ -5,7 +6,12 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 # from . import models
-from .models import dbGaPDataAccessRequest, dbGaPWorkspace
+from .models import (
+    dbGaPApplication,
+    dbGaPDataAccessRequest,
+    dbGaPDataAccessSnapshot,
+    dbGaPWorkspace,
+)
 
 
 # Dataclasses for storing audit results?
@@ -15,7 +21,17 @@ class AuditResult:
 
     workspace: dbGaPWorkspace
     note: str
+    dbgap_application: dbGaPApplication
     data_access_request: dbGaPDataAccessRequest = None
+
+    def __post_init__(self):
+        if self.data_access_request and (
+            self.data_access_request.dbgap_data_access_snapshot.dbgap_application
+            != self.dbgap_application
+        ):
+            raise ValueError(
+                "data_access_request application and dbgap_application do not match."
+            )
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -35,6 +51,7 @@ class AuditResult:
             dar_consent = None
         row = {
             "workspace": self.workspace,
+            "application": self.dbgap_application,
             "data_access_request": self.data_access_request,
             "dar_accession": dar_accession,
             "dar_consent": dar_consent,
@@ -88,7 +105,7 @@ class RemoveAccess(AuditResult):
             "anvil_consortium_manager:managed_groups:member_groups:delete",
             args=[
                 self.workspace.workspace.authorization_domains.first(),
-                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+                self.dbgap_application.anvil_group,
             ],
         )
 
@@ -100,12 +117,35 @@ class Error(AuditResult):
     pass
 
 
-class dbGaPDataAccessSnapshotAudit:
+class dbGaPAccessAuditTable(tables.Table):
+    """A table to show results from a dbGaPAccessAudit subclass."""
+
+    workspace = tables.Column(linkify=True)
+    application = tables.Column(linkify=True)
+    data_access_request = tables.Column()
+    dar_accession = tables.Column(verbose_name="DAR accession")
+    dar_consent = tables.Column(verbose_name="DAR consent")
+    note = tables.Column()
+    action = tables.Column()
+
+    class Meta:
+        attrs = {"class": "table align-middle"}
+
+    def render_action(self, record, value):
+        return mark_safe(
+            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
+                record["action_url"], value
+            )
+        )
+
+
+class dbGaPAccessAudit(ABC):
 
     # Access verified.
     APPROVED_DAR = "Approved DAR."
 
     # Allowed reasons for no access.
+    NO_SNAPSHOTS = "No snapshots for this application."
     NO_DAR = "No matching DAR."
     DAR_NOT_APPROVED = "DAR is not approved."
 
@@ -117,45 +157,33 @@ class dbGaPDataAccessSnapshotAudit:
     # Unexpected.
     ERROR_HAS_ACCESS = "Has access for an unknown reason."
 
-    def __init__(self, dbgap_data_access_snapshot):
-        self.snapshot = dbgap_data_access_snapshot
+    results_table_class = dbGaPAccessAuditTable
+
+    def __init__(self):
         self.completed = False
         # Set up lists to hold audit results.
         self.verified = None
         self.needs_action = None
         self.errors = None
 
-    def run_audit(self):
-        """Audit all workspaces against access provided by this dbGaPDataAccessSnasphot."""
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
+    def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
+        """Audit access for a specific dbGaP application and a specific workspace."""
+        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
+            dbgap_application.anvil_group
+        )
 
-        # Get a list of all dbGaP workspaces.
-        dbgap_workspaces = dbGaPWorkspace.objects.all()
-        # Loop through workspaces and verify access.
-        for dbgap_workspace in dbgap_workspaces:
-            self._audit_workspace(dbgap_workspace)
-        self.completed = True
-
-    def _audit_workspace(self, dbgap_workspace):
-        """Audit access for a specific dbGaPWorkspace."""
+        # Get the most recent snapshot.
         try:
-            # There should only be one DAR from this snapshot associated with a given workspace.
-            dar = dbgap_workspace.get_data_access_requests().get(
-                dbgap_data_access_snapshot=self.snapshot
+            dar_snapshot = dbgap_application.dbgapdataaccesssnapshot_set.get(
+                is_most_recent=True
             )
-        except dbGaPDataAccessRequest.DoesNotExist:
-            # No matching DAR exists for this snapshot.
-            # Check if the group is in the auth domain.
-            has_access = dbgap_workspace.workspace.is_in_authorization_domain(
-                self.snapshot.dbgap_application.anvil_group
-            )
-            if has_access:
+        except dbGaPDataAccessSnapshot.DoesNotExist:
+            if in_auth_domain:
                 # Error!
                 self.errors.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=None,
                         note=self.ERROR_HAS_ACCESS,
                     )
@@ -163,18 +191,50 @@ class dbGaPDataAccessSnapshotAudit:
             else:
                 # As expected, no access and no DAR
                 self.verified.append(
-                    VerifiedNoAccess(workspace=dbgap_workspace, note=self.NO_DAR)
+                    VerifiedNoAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        note=self.NO_SNAPSHOTS,
+                    )
                 )
             return  # Go to the next workspace.
-        # If we found a matching DAR, proceed with additional checks.
-        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
-            self.snapshot.dbgap_application.anvil_group
-        )
+
+        try:
+            # There should only be one DAR from this snapshot associated with a given workspace.
+            dar = dbgap_workspace.get_data_access_requests().get(
+                dbgap_data_access_snapshot=dar_snapshot
+            )
+        except dbGaPDataAccessRequest.DoesNotExist:
+            # No matching DAR exists for this application.
+            if in_auth_domain:
+                # Error!
+                self.errors.append(
+                    RemoveAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        data_access_request=None,
+                        note=self.ERROR_HAS_ACCESS,
+                    )
+                )
+            else:
+                # As expected, no access and no DAR
+                self.verified.append(
+                    VerifiedNoAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        note=self.NO_DAR,
+                    )
+                )
+            return  # Go to the next workspace.
+
+        # Is the dbGaP access group associated with the DAR in the auth domain of the workspace?
+        # We'll need to know this for future checks.
         if dar.is_approved and in_auth_domain:
             # Verified access!
             self.verified.append(
                 VerifiedAccess(
                     workspace=dbgap_workspace,
+                    dbgap_application=dbgap_application,
                     data_access_request=dar,
                     note=self.APPROVED_DAR,
                 )
@@ -186,6 +246,7 @@ class dbGaPDataAccessSnapshotAudit:
                 self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.NEW_WORKSPACE,
                     )
@@ -194,6 +255,7 @@ class dbGaPDataAccessSnapshotAudit:
                 self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.NEW_APPROVED_DAR,
                     )
@@ -215,6 +277,7 @@ class dbGaPDataAccessSnapshotAudit:
                 self.needs_action.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.PREVIOUS_APPROVAL,
                     )
@@ -224,6 +287,7 @@ class dbGaPDataAccessSnapshotAudit:
                 self.errors.append(
                     RemoveAccess(
                         workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
                         data_access_request=dar,
                         note=self.ERROR_HAS_ACCESS,
                     )
@@ -234,6 +298,7 @@ class dbGaPDataAccessSnapshotAudit:
             self.verified.append(
                 VerifiedNoAccess(
                     workspace=dbgap_workspace,
+                    dbgap_application=dbgap_application,
                     data_access_request=dar,
                     note=self.DAR_NOT_APPROVED,
                 )
@@ -241,36 +306,58 @@ class dbGaPDataAccessSnapshotAudit:
 
     def get_verified_table(self):
         """Return a table of verified results."""
-        return dbGaPDataAccessSnapshotAuditTable(
+        return self.results_table_class(
             [x.get_table_dictionary() for x in self.verified]
         )
 
     def get_needs_action_table(self):
         """Return a table of results where action is needed."""
-        return dbGaPDataAccessSnapshotAuditTable(
+        return self.results_table_class(
             [x.get_table_dictionary() for x in self.needs_action]
         )
 
     def get_errors_table(self):
         """Return a table of audit errors."""
-        return dbGaPDataAccessSnapshotAuditTable(
-            [x.get_table_dictionary() for x in self.errors]
-        )
+        return self.results_table_class([x.get_table_dictionary() for x in self.errors])
 
 
-class dbGaPDataAccessSnapshotAuditTable(tables.Table):
-    """A table to show results from a dbGaPDataAccessSnapshotAudit."""
+class dbGaPApplicationAccessAudit(dbGaPAccessAudit):
+    def __init__(self, dbgap_application):
+        super().__init__()
+        self.dbgap_application = dbgap_application
 
-    workspace = tables.Column(linkify=True)
-    data_access_request = tables.Column()
-    dar_accession = tables.Column(verbose_name="DAR accession")
-    dar_consent = tables.Column(verbose_name="DAR consent")
-    note = tables.Column()
-    action = tables.Column()
+    def run_audit(self):
+        """Audit all workspaces against access provided by this dbGaPApplication."""
+        self.verified = []
+        self.needs_action = []
+        self.errors = []
 
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary">{}</a>""".format(
-                record["action_url"], value
+        # Get a list of all dbGaP workspaces.
+        dbgap_workspaces = dbGaPWorkspace.objects.all()
+        # Loop through workspaces and verify access.
+        for dbgap_workspace in dbgap_workspaces:
+            self.audit_application_and_workspace(
+                self.dbgap_application, dbgap_workspace
             )
-        )
+        self.completed = True
+
+
+class dbGaPWorkspaceAccessAudit(dbGaPAccessAudit):
+    def __init__(self, dbgap_workspace):
+        super().__init__()
+        self.dbgap_workspace = dbgap_workspace
+
+    def run_audit(self):
+        """Audit this workspace against access provided by all dbGaPApplications."""
+        self.verified = []
+        self.needs_action = []
+        self.errors = []
+
+        # Get a list of all dbGaP applications.
+        dbgap_applications = dbGaPApplication.objects.all()
+        # Loop through workspaces and verify access.
+        for dbgap_application in dbgap_applications:
+            self.audit_application_and_workspace(
+                dbgap_application, self.dbgap_workspace
+            )
+        self.completed = True

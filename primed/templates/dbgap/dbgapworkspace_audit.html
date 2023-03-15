@@ -1,0 +1,50 @@
+{% extends "anvil_consortium_manager/base.html" %}
+
+{% block title %}dbGaP workspace audit{% endblock %}
+
+
+{% block content %}
+
+<h1>dbGaP workspace audit</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <ul>
+    <li>dbGaP workspace: <a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+  </ul>
+</div>
+
+<h2>Audit results</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    For each dbGaP application in the app, the audit checks that access to this workspace is correct.
+    To have access to a workspace, the group associated with the dbGaP application must be a member of the authorization domain of that workspace. It does not check that the workspace is shared with the group.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>No DAR is associated with this workspace and the group does not have access.</li>
+          <li>There is a DAR associated with this workspace, but it is not approved, and the group does nto have access.</li>
+          <li>There is an approved DAR associated with this workspace and the group has access.</li>
+        </ul>
+
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>There is an approved DAR for this workspace, but the group does not have access.</li>
+        <li>A DAR that used to be approved for this workspace is no longer approved, and the group has access.</li>
+      </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>The group has access to a workspace for an unknown reason.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+{% include "dbgap/__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}
