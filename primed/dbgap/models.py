@@ -150,8 +150,8 @@ class dbGaPWorkspace(
         """Get a list of data access requests associated with this dbGaPWorkspace."""
         qs = dbGaPDataAccessRequest.objects.filter(
             dbgap_phs=self.dbgap_study_accession.dbgap_phs,
-            original_version=self.dbgap_version,
-            original_participant_set=self.dbgap_participant_set,
+            original_version__lte=self.dbgap_version,
+            original_participant_set__lte=self.dbgap_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
         )
         if most_recent:
@@ -493,8 +493,8 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
         study_accession = dbGaPStudyAccession.objects.get(dbgap_phs=self.dbgap_phs)
         dbgap_workspace = study_accession.dbgapworkspace_set.get(
-            dbgap_version=self.original_version,
-            dbgap_participant_set=self.original_participant_set,
+            dbgap_version__gte=self.original_version,
+            dbgap_participant_set__gte=self.original_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
         )
         return dbgap_workspace
