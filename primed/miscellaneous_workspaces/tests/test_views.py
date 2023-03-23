@@ -166,6 +166,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 ],
                 "name": workspace,
                 "namespace": billing_project,
+                "isLocked": False,
             },
         }
         return json_data
@@ -388,6 +389,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 ],
                 "name": workspace,
                 "namespace": billing_project,
+                "isLocked": False,
             },
         }
         return json_data
@@ -610,6 +612,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 ],
                 "name": workspace,
                 "namespace": billing_project,
+                "isLocked": False,
             },
         }
         return json_data
@@ -831,6 +834,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 ],
                 "name": workspace,
                 "namespace": billing_project,
+                "isLocked": False,
             },
         }
         return json_data
@@ -1066,6 +1070,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 ],
                 "name": workspace,
                 "namespace": billing_project,
+                "isLocked": False,
             },
         }
         return json_data
