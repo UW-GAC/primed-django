@@ -1029,6 +1029,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 ],
                 "name": workspace,
                 "namespace": billing_project,
+                "isLocked": False,
             },
         }
         return json_data
