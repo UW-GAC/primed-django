@@ -203,7 +203,6 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "primed.utils.context_processors.settings_context",
-                "anvil_consortium_manager.context_processors.workspace_adapter",
             ],
         },
     }

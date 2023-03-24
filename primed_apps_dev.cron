@@ -1,0 +1,7 @@
+# PRIMED_APPS_DEV crontab - disabled by default
+# can be enabled for testing.
+# nightly except sunday at 01:00
+# 0 1 * * MON-SAT . /var/www/django/primed_apps_dev/primed-apps-dev-activate.sh; python manage.py run_anvil_audit --email primedconsortium@uw.edu --errors-only >> cron.log 2>&1
+
+# sunday night at 01:00
+# 0 1 * * SUN . /var/www/django/primed_apps_dev/primed-apps-dev-activate.sh; python manage.py run_anvil_audit --email primedconsortium@uw.edu >> cron.log 2>&1
