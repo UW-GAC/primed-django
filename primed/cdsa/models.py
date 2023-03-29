@@ -30,7 +30,7 @@ class CDSA(TimeStampedModel, models.Model):
         help_text="The investigator who signed this CDSA.",
     )
     # We don't have an institution model so this has to be free text.
-    instutition = models.CharField(
+    institution = models.CharField(
         max_length=255, help_text="Signing institution for the CDSA."
     )
     # TODO: This is ambiguously named.

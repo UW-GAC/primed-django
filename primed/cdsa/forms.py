@@ -13,7 +13,7 @@ class CDSAForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         fields = (
             "cc_id",
             "representative",
-            "instutition",
+            "institution",
             "type",
             "is_component",
             "group",
