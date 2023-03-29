@@ -5,13 +5,13 @@ from django_extensions.db.models import TimeStampedModel
 
 
 # Consider splitting this into separate models for different CDSA types.
-class SignedAgreement(TimeStampedModel, models.Model):
+class CDSA(TimeStampedModel, models.Model):
     """A model to track verified CDSAs."""
 
     MEMBER = "member"
     DATA_AFFILIATE = "data_affiliate"
     NON_DATA_AFFILIATE = "non_data_affiliate"
-    CATEGORY_CHOICES = (
+    TYPE_CHOICES = (
         (MEMBER, "Member"),
         (DATA_AFFILIATE, "Data affiliate"),
         (NON_DATA_AFFILIATE, "Non-data affiliate"),
@@ -28,10 +28,10 @@ class SignedAgreement(TimeStampedModel, models.Model):
     )
     # We don't have an institution model so this has to be free text.
     instutition = models.CharField(max_length=255)
-    category = models.CharField(
-        verbose_name="CDSA category",
+    type = models.CharField(
+        verbose_name="CDSA type",
         max_length=31,
-        choices=CATEGORY_CHOICES,
+        choices=TYPE_CHOICES,
     )
     is_component = models.BooleanField()
     # TODO: This is ambiguously named.
