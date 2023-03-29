@@ -96,6 +96,7 @@ LOCAL_APPS = [
     "primed.dbgap",
     "primed.miscellaneous_workspaces",
     "primed.duo",
+    "primed.cdsa",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

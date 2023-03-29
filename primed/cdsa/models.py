@@ -30,17 +30,21 @@ class CDSA(TimeStampedModel, models.Model):
         help_text="The investigator who signed this CDSA.",
     )
     # We don't have an institution model so this has to be free text.
-    instutition = models.CharField(max_length=255)
+    instutition = models.CharField(
+        max_length=255, help_text="Signing institution for the CDSA."
+    )
+    # TODO: This is ambiguously named.
+    group = models.CharField(
+        max_length=255,
+        help_text="Study site, study, or center that the CDSA is associated with.",
+    )
     type = models.CharField(
         verbose_name="CDSA type",
         max_length=31,
         choices=TYPE_CHOICES,
     )
-    is_component = models.BooleanField()
-    # TODO: This is ambiguously named.
-    group = models.CharField(
-        max_length=255,
-        help_text="Study site, study, or center that the CDSA is associated with.",
+    is_component = models.BooleanField(
+        help_text="Indicator of whether the CDSA is a component of another group."
     )
     representatitive_role = models.CharField(
         max_length=255, help_text="Representative's role in the group."

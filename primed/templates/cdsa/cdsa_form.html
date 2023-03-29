@@ -1,0 +1,35 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}New CDSA{% endblock %}
+
+
+{% block content %}
+
+<h1>New CDSA</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>Before creating a new CDSA using this form, check the following requirements:</p>
+  <ol>
+    <li>The PI is on the <a href="https://primedconsortium.org/eligibility">PRIMED eligibility list</a>.</li>
+    <li>XXX</li>
+    <li>XXX</li>
+  </ol>
+
+  <p>Please manually verify that these requirements are met before saving a record of the application with this form.</p>
+</div>
+
+  <form method="post">
+
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button type="submit" class="btn btn-success">Save</button>
+  </form>
+
+{% endblock content %}
+
+
+{% block inline_javascript %}
+  {{ form.media }}
+{% endblock inline_javascript %}
