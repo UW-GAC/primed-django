@@ -175,7 +175,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
     )
     anvil_access_group = models.OneToOneField(
         ManagedGroup,
-        verbose_name=" AnVIL group",
+        verbose_name=" AnVIL access group",
         on_delete=models.PROTECT,
         help_text="The AnVIL managed group that can will access to workspaces under this dbGaP application.",
     )
