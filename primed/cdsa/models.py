@@ -55,6 +55,9 @@ class CDSA(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
     )
 
+    def __str__(self):
+        return "{}".format(self.cc_id)
+
     def clean(self):
         """Custom validation checks."""
         # TODO:

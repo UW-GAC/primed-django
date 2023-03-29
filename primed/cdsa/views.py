@@ -14,7 +14,7 @@ class CDSACreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Create
 
     model = models.CDSA
     form_class = forms.CDSAForm
-    success_message = "dbGaP application successfully created."
+    success_message = "CDSA successfully created."
     ERROR_CREATING_GROUP = "Error creating Managed Group in app."
 
     # @transaction.atomic
