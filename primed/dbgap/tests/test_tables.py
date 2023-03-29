@@ -491,7 +491,7 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         WorkspaceGroupSharingFactory.create(
             workspace=workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)

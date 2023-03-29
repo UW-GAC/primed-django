@@ -87,7 +87,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
 
     principal_investigator = SubFactory(UserFactory)
     dbgap_project_id = Sequence(lambda n: n + 1)
-    anvil_group = SubFactory(ManagedGroupFactory)
+    anvil_access_group = SubFactory(ManagedGroupFactory)
 
     class Meta:
         model = models.dbGaPApplication
