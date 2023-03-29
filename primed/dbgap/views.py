@@ -193,7 +193,7 @@ class dbGaPApplicationCreate(
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationForm
     success_message = "dbGaP application successfully created."
-    anvil_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
+    anvil_access_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
     ERROR_CREATING_GROUP = "Error creating Managed Group in app."
 
     # @transaction.atomic
@@ -219,7 +219,7 @@ class dbGaPApplicationCreate(
             )
             return self.render_to_response(self.get_context_data(form=form))
         managed_group.save()
-        form.instance.anvil_group = managed_group
+        form.instance.anvil_access_group = managed_group
         return super().form_valid(form)
 
 

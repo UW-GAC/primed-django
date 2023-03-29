@@ -555,11 +555,11 @@ class dbGaPApplicationTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         pi = UserFactory.create()
-        anvil_group = ManagedGroupFactory.create()
+        anvil_access_group = ManagedGroupFactory.create()
         instance = models.dbGaPApplication(
             principal_investigator=pi,
             dbgap_project_id=1,
-            anvil_group=anvil_group,
+            anvil_access_group=anvil_access_group,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPApplication)
@@ -582,11 +582,11 @@ class dbGaPApplicationTest(TestCase):
         """Saving a duplicate model fails."""
         obj = factories.dbGaPApplicationFactory.create()
         pi = UserFactory.create()
-        anvil_group = ManagedGroupFactory.create()
+        anvil_access_group = ManagedGroupFactory.create()
         instance = factories.dbGaPApplicationFactory.build(
             principal_investigator=pi,
             dbgap_project_id=obj.dbgap_project_id,
-            anvil_group=anvil_group,
+            anvil_access_group=anvil_access_group,
         )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
@@ -1645,7 +1645,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         # Add the AnVIL group to the workspace authorization domain
         GroupGroupMembershipFactory.create(
             parent_group=auth_domain.group,
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertTrue(data_access_request.has_access())
 
@@ -1665,11 +1665,11 @@ class dbGaPDataAccessRequestTest(TestCase):
         # Add the AnVIL group to the workspace authorization domains
         GroupGroupMembershipFactory.create(
             parent_group=auth_domains[0].group,
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         GroupGroupMembershipFactory.create(
             parent_group=auth_domains[1].group,
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertTrue(data_access_request.has_access())
 
@@ -1689,7 +1689,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         # Add the AnVIL group to the workspace authorization domains
         GroupGroupMembershipFactory.create(
             parent_group=auth_domains[0].group,
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertFalse(data_access_request.has_access())
 
@@ -1707,7 +1707,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         # Share the workspace with the group but do not add to the auth domain.
         WorkspaceGroupSharingFactory.create(
             workspace=workspace.workspace,
-            group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertFalse(data_access_request.has_access())
 
