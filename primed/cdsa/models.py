@@ -1,4 +1,4 @@
-from anvil_consortium_manager import BaseWorkspaceData, ManagedGroup
+from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.conf import settings
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
@@ -39,13 +39,16 @@ class CDSA(TimeStampedModel, models.Model):
     is_component = models.BooleanField()
     # TODO: This is ambiguously named.
     group = models.CharField(
-        help_text="Study site, study, or center that the CDSA is associated with."
+        max_length=255,
+        help_text="Study site, study, or center that the CDSA is associated with.",
     )
     representatitive_role = models.CharField(
-        help_text="Representative's role in the group."
+        max_length=255, help_text="Representative's role in the group."
     )
     anvil_access_group = models.OneToOneField(
-        ManagedGroup, verbose_name=" AnVIL access group"
+        ManagedGroup,
+        verbose_name=" AnVIL access group",
+        on_delete=models.PROTECT,
     )
 
     def clean(self):
