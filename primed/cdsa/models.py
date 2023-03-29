@@ -1,7 +1,10 @@
-from anvil_consortium_manager import ManagedGroup
+from anvil_consortium_manager import BaseWorkspaceData, ManagedGroup
 from django.conf import settings
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
+
+from primed.duo.models import DataUseOntologyModel
+from primed.primed_anvil.models import AvailableData, RequesterModel, Study
 
 
 # Consider splitting this into separate models for different CDSA types.
@@ -47,5 +50,27 @@ class CDSA(TimeStampedModel, models.Model):
 
     def clean(self):
         """Custom validation checks."""
-        # To add?
+        # TODO:
         # - Dealing with component? Is this worth it? Or have a foreign key to self to the non-component?
+
+
+class CDSAWorkspace(
+    RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData
+):
+    """Custom workspace data model to hold information about CDSA workspaces."""
+
+    cdsa = models.ForeignKey(CDSA, on_delete=models.PROTECT)
+    study = models.ForeignKey(Study, on_delete=models.PROTECT)
+
+    data_use_limitations = models.TextField()
+    acknowledgments = models.TextField()
+    available_data = models.ManyToManyField(
+        AvailableData,
+        help_text="Data available in this accession.",
+        blank=True,
+    )
+
+    def clean(self):
+        """Custom validation checks."""
+        # TODO:
+        # - verify that cdsa is a data affiliate or data affiliate component.
