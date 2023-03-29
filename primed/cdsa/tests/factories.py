@@ -41,3 +41,6 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
 
     data_use_limitations = Faker("paragraph")
     acknowledgments = Faker("paragraph")
+
+    class Meta:
+        model = models.CDSAWorkspace

@@ -46,7 +46,7 @@ class CDSA(TimeStampedModel, models.Model):
     is_component = models.BooleanField(
         help_text="Indicator of whether the CDSA is a component of another group."
     )
-    representatitive_role = models.CharField(
+    representative_role = models.CharField(
         max_length=255, help_text="Representative's role in the group."
     )
     anvil_access_group = models.OneToOneField(
