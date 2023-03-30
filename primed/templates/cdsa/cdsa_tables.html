@@ -29,6 +29,21 @@ Notes:
 
 {% render_table pi_table %}
 
+<h2>List of studies</h2>
+
+<p>
+Notes:
+  <ul>
+    <li>Is this the list of studies that have already contributed data, or those that have signed but not necessarily uploaded any data (or have workspaces)?</li>
+    <li>Does this include DATA AFFILIATE COMPONENT, or just DATA AFFILIATE? Right now showing only data affiliate.</li>
+    <li>I think this means having three additional models for the different type of CDSA (member, data affiliate, non-data affiliate). Then we can link a data affiliate CDSA to a study.</li>
+  </ul>
+</p>
+
+{% render_table study_table %}
+
+
+
 <h2>Full list of authorized accounts</h2>
 
 <p>
@@ -40,7 +55,6 @@ Notes:
 </p>
 
 {% render_table accounts_table %}
-
 
 
 {% endblock content %}

@@ -82,6 +82,19 @@ class AccessTable(tables.Table):
         )
 
 
+class StudyTable(tables.Table):
+
+    group = tables.Column(verbose_name="Signing group (study?)")
+    representative__name = tables.Column(verbose_name="Signing representatitve")
+
+    class Meta:
+        model = models.CDSA
+        fields = (
+            "group",
+            "representative__name",
+        )
+
+
 class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
 
     template_name = "cdsa/cdsa_tables.html"
@@ -92,5 +105,8 @@ class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
         # All accounts in CDSA groups.
         context["accounts_table"] = AccessTable(
             GroupAccountMembership.objects.filter(group__cdsa__isnull=False)
+        )
+        context["study_table"] = StudyTable(
+            models.CDSA.objects.filter(type=models.CDSA.DATA_AFFILIATE)
         )
         return context
