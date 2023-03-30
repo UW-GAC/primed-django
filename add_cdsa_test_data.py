@@ -23,7 +23,7 @@ cdsa_auth_group = ManagedGroupFactory.create(name="AUTH_PRIMED_CDSA")
 
 
 # Member CDSAs
-cdsa_member_1 = factories.CDSAFactory.create(type=models.CDSA.MEMBER)
+cdsa_member_1 = factories.CDSAFactory.create(type=models.CDSA.MEMBER, group="CC")
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_member_1.anvil_access_group
 )
@@ -34,17 +34,17 @@ GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group,
     child_group=cdsa_member_1_component_1.anvil_access_group,
 )
-cdsa_member_2 = factories.CDSAFactory.create(type=models.CDSA.MEMBER)
+cdsa_member_2 = factories.CDSAFactory.create(type=models.CDSA.MEMBER, group="CARDINAL")
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_member_2.anvil_access_group
 )
 
 # Data affiliate CDSAs
-cdsa_da_1 = factories.CDSAFactory.create(type=models.CDSA.DATA_AFFILIATE)
+cdsa_da_1 = factories.CDSAFactory.create(type=models.CDSA.DATA_AFFILIATE, group="MESA")
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_da_1.anvil_access_group
 )
-cdsa_da_2 = factories.CDSAFactory.create(type=models.CDSA.DATA_AFFILIATE)
+cdsa_da_2 = factories.CDSAFactory.create(type=models.CDSA.DATA_AFFILIATE, group="JHS")
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_da_2.anvil_access_group
 )
