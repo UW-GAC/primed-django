@@ -8,10 +8,37 @@
 
 <h1>CDSA tables</h1>
 
+<p>Notes:
+  <ul>
+    <li>We would probably have these on separate pages but this prototype shows them on a single page for now.</li>
+  </ul>
+</p>
+
+
 <h2>PI table</h2>
 
-One row per signed/verified CDSA.
+<p>
+Notes:
+  <ul>
+    <li>One row per signed/verified CDSA.</li>
+  </ul>
+</p>
+
 
 {% render_table pi_table %}
+
+<h2>Full list of authorized accounts</h2>
+
+<p>
+Notes:
+  <ul>
+    <li>"name of user" will be actual names, test data does not have that but real data will.</li>
+    <li>"insititution" is the signing insitutition for the CDSA, not the institution of the user.</li>
+  </ul>
+</p>
+
+{% render_table accounts_table %}
+
+
 
 {% endblock content %}

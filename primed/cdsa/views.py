@@ -4,7 +4,7 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import ManagedGroup
+from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
@@ -48,8 +48,6 @@ class CDSACreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Create
 
 # Just define the tables here for now.
 class PITable(tables.Table):
-    """Class to render a table of CDSA PI and info."""
-
     class Meta:
         model = models.CDSA
         fields = (
@@ -63,6 +61,17 @@ class PITable(tables.Table):
         )
 
 
+class AccessTable(tables.Table):
+    class Meta:
+        model = GroupAccountMembership
+        fields = (
+            "account__user",
+            "group__cdsa__institution",
+            "group__cdsa__group",
+            "group__cdsa__representative__name",
+        )
+
+
 class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
 
     template_name = "cdsa/cdsa_tables.html"
@@ -70,4 +79,8 @@ class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
         context["pi_table"] = PITable(models.CDSA.objects.all())
+        # All accounts in CDSA groups.
+        context["accounts_table"] = AccessTable(
+            GroupAccountMembership.objects.filter(group__cdsa__isnull=False)
+        )
         return context
