@@ -1,3 +1,4 @@
+import django_tables2 as tables
 from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
@@ -45,11 +46,28 @@ class CDSACreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Create
         return super().form_valid(form)
 
 
+# Just define the tables here for now.
+class PITable(tables.Table):
+    """Class to render a table of CDSA PI and info."""
+
+    class Meta:
+        model = models.CDSA
+        fields = (
+            "cc_id",
+            "representative__name",
+            "representative_role",
+            "institution",
+            "group",
+            "type",
+            "is_component",
+        )
+
+
 class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
 
     template_name = "cdsa/cdsa_tables.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        # context[""]
+        context["pi_table"] = PITable(models.CDSA.objects.all())
         return context
