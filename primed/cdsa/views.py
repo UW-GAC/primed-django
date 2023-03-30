@@ -1,10 +1,13 @@
 from anvil_consortium_manager.anvil_api import AnVILAPIError
-from anvil_consortium_manager.auth import AnVILConsortiumManagerEditRequired
+from anvil_consortium_manager.auth import (
+    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerViewRequired,
+)
 from anvil_consortium_manager.models import ManagedGroup
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.views.generic import CreateView
+from django.views.generic import CreateView, TemplateView
 
 from . import forms, models
 
@@ -40,3 +43,13 @@ class CDSACreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Create
         managed_group.save()
         form.instance.anvil_access_group = managed_group
         return super().form_valid(form)
+
+
+class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
+
+    template_name = "cdsa/cdsa_tables.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        # context[""]
+        return context

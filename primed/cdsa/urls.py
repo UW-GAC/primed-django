@@ -31,4 +31,5 @@ agreement_patterns = (
 
 urlpatterns = [
     path("agreements/", include(agreement_patterns)),
+    path("tables/", views.CDSATables.as_view(), name="tables"),
 ]
