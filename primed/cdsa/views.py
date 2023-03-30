@@ -48,6 +48,9 @@ class CDSACreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Create
 
 # Just define the tables here for now.
 class PITable(tables.Table):
+    representative__name = tables.Column(verbose_name="Representative")
+    representative_role = tables.Column(verbose_name="Role")
+
     class Meta:
         model = models.CDSA
         fields = (
@@ -62,6 +65,13 @@ class PITable(tables.Table):
 
 
 class AccessTable(tables.Table):
+
+    group__cdsa__institution = tables.Column(verbose_name="Signing institution")
+    group__cdsa__group = tables.Column(verbose_name="Signing group")
+    group__cdsa__representative__name = tables.Column(
+        verbose_name="Signing representatitve"
+    )
+
     class Meta:
         model = GroupAccountMembership
         fields = (
