@@ -52,7 +52,10 @@ class CDSACreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Create
 
 # Just define the tables here for now.
 class PITable(tables.Table):
-    representative__name = tables.Column(verbose_name="Representative")
+    representative__name = tables.Column(
+        verbose_name="Representative",
+        linkify=lambda record: record.representative.get_absolute_url(),
+    )
     representative_role = tables.Column(verbose_name="Role")
 
     class Meta:
@@ -73,7 +76,8 @@ class AccessTable(tables.Table):
     group__cdsa__institution = tables.Column(verbose_name="Signing institution")
     group__cdsa__group = tables.Column(verbose_name="Signing group")
     group__cdsa__representative__name = tables.Column(
-        verbose_name="Signing representatitve"
+        verbose_name="Signing representatitve",
+        linkify=lambda record: record.group.cdsa.representative.get_absolute_url(),
     )
 
     class Meta:
@@ -89,7 +93,10 @@ class AccessTable(tables.Table):
 class StudyTable(tables.Table):
 
     group = tables.Column(verbose_name="Signing group (study?)")
-    representative__name = tables.Column(verbose_name="Signing representatitve")
+    representative__name = tables.Column(
+        verbose_name="Signing representatitve",
+        linkify=lambda record: record.representative.get_absolute_url(),
+    )
 
     class Meta:
         model = models.CDSA
@@ -118,6 +125,7 @@ class WorkspaceTable(tables.Table):
         fields = (
             "workspace",
             "study",
+            "cdsa",
             "data_use_permission__abbreviation",
             "data_use_modifiers",
             "data_use_limitations",
