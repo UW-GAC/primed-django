@@ -4,7 +4,7 @@ from django.db import models
 from django_extensions.db.models import TimeStampedModel
 
 from primed.duo.models import DataUseOntologyModel
-from primed.primed_anvil.models import AvailableData, RequesterModel, Study
+from primed.primed_anvil.models import AvailableData, RequesterModel, Study, StudySite
 
 
 # Consider splitting this into separate models for different CDSA types.
@@ -33,11 +33,6 @@ class CDSA(TimeStampedModel, models.Model):
     institution = models.CharField(
         max_length=255, help_text="Signing institution for the CDSA."
     )
-    # TODO: This is ambiguously named.
-    group = models.CharField(
-        max_length=255,
-        help_text="Study site, study, or center that the CDSA is associated with.",
-    )
     type = models.CharField(
         verbose_name="CDSA type",
         max_length=31,
@@ -64,13 +59,37 @@ class CDSA(TimeStampedModel, models.Model):
         # - Dealing with component? Is this worth it? Or have a foreign key to self to the non-component?
 
 
+class Member(models.Model):
+    cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
+    study_site = models.ForeignKey(StudySite, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return str(self.cdsa)
+
+
+class DataAffiliate(models.Model):
+
+    cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
+    study = models.ForeignKey(Study, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return str(self.cdsa)
+
+
+class NonDataAffiliate(models.Model):
+    cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
+    study_or_center = models.CharField(max_length=255)
+
+    def __str__(self):
+        return str(self.cdsa)
+
+
 class CDSAWorkspace(
     RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData
 ):
     """Custom workspace data model to hold information about CDSA workspaces."""
 
-    cdsa = models.ForeignKey(CDSA, on_delete=models.PROTECT)
-    study = models.ForeignKey(Study, on_delete=models.PROTECT)
+    cdsa = models.ForeignKey(DataAffiliate, on_delete=models.PROTECT)
 
     data_use_limitations = models.TextField()
     acknowledgments = models.TextField()

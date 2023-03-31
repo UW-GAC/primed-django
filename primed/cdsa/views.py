@@ -65,9 +65,28 @@ class PITable(tables.Table):
             "representative__name",
             "representative_role",
             "institution",
-            "group",
+            # "group",
+            "member__study_site",
+            "dataaffiliate__study",
+            "nondataaffiliate__study_or_center",
             "type",
             "is_component",
+        )
+
+
+class StudyTable(tables.Table):
+
+    study = tables.Column(verbose_name="Signing group (study?)", linkify=True)
+    cdsa__representative__name = tables.Column(
+        verbose_name="Signing representatitve",
+        linkify=lambda record: record.cdsa.representative.get_absolute_url(),
+    )
+
+    class Meta:
+        model = models.CDSA
+        fields = (
+            "study",
+            "cdsa__representative__name",
         )
 
 
@@ -85,24 +104,10 @@ class AccessTable(tables.Table):
         fields = (
             "account__user",
             "group__cdsa__institution",
-            "group__cdsa__group",
+            "group__cdsa__member__study_site",
+            "group__cdsa__dataaffiliate__study",
+            "group__cdsa__nondataaffiliate__study_or_center",
             "group__cdsa__representative__name",
-        )
-
-
-class StudyTable(tables.Table):
-
-    group = tables.Column(verbose_name="Signing group (study?)")
-    representative__name = tables.Column(
-        verbose_name="Signing representatitve",
-        linkify=lambda record: record.representative.get_absolute_url(),
-    )
-
-    class Meta:
-        model = models.CDSA
-        fields = (
-            "group",
-            "representative__name",
         )
 
 
@@ -111,7 +116,7 @@ class WorkspaceTable(tables.Table):
     # group = tables.Column(verbose_name="Signing group (study?)")
     # representative__name = tables.Column(verbose_name="Signing representatitve")
 
-    study = tables.Column(linkify=True)
+    cdsa__study = tables.Column(linkify=True)
     workspace = tables.Column(linkify=True)
     data_use_permission__abbreviation = tables.Column(verbose_name="DUO permission")
     data_use_modifiers = tables.ManyToManyColumn(
@@ -124,7 +129,7 @@ class WorkspaceTable(tables.Table):
         model = models.CDSAWorkspace
         fields = (
             "workspace",
-            "study",
+            "cdsa__study",
             "cdsa",
             "data_use_permission__abbreviation",
             "data_use_modifiers",
@@ -155,9 +160,7 @@ class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
             GroupAccountMembership.objects.filter(group__cdsa__isnull=False)
         )
         context["study_table"] = StudyTable(
-            models.CDSA.objects.filter(
-                type=models.CDSA.DATA_AFFILIATE, is_component=False
-            )
+            models.DataAffiliate.objects.filter(cdsa__is_component=False)
         )
         context["workspace_table"] = WorkspaceTable(models.CDSAWorkspace.objects.all())
         return context

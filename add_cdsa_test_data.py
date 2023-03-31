@@ -13,6 +13,7 @@ from anvil_consortium_manager.tests.factories import (
 from primed.cdsa import models
 from primed.cdsa.tests import factories
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.primed_anvil.models import StudySite
 from primed.users.tests.factories import UserFactory
 
 # Create a couple signed CDSAs.
@@ -24,161 +25,153 @@ cdsa_auth_group = ManagedGroupFactory.create(name="AUTH_PRIMED_CDSA")
 
 
 # Create some CDSAs
-cdsa_1001 = factories.CDSAFactory.create(
-    cc_id=1001,
-    representative=UserFactory.create(name="Ken Rice"),
-    institution="UW",
-    group="CC",
-    representative_role="Contact PI",
-    type=models.CDSA.MEMBER,
-    is_component=False,
+cdsa_1001 = factories.MemberFactory.create(
+    cdsa__cc_id=1001,
+    cdsa__representative=UserFactory.create(name="Ken Rice"),
+    cdsa__institution="UW",
+    cdsa__representative_role="Contact PI",
+    cdsa__is_component=False,
+    study_site=StudySite.objects.get(short_name="CC"),
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1001.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1001.cdsa.anvil_access_group
 )
 
-cdsa_1002 = factories.CDSAFactory.create(
-    cc_id=1002,
-    representative=UserFactory.create(name="Sally Adebamowo"),
-    institution="UM",
-    group="CARDINAL",
-    representative_role="Contact PI",
-    type=models.CDSA.MEMBER,
-    is_component=False,
+cdsa_1002 = factories.MemberFactory.create(
+    cdsa__cc_id=1002,
+    cdsa__representative=UserFactory.create(name="Sally Adebamowo"),
+    cdsa__institution="UM",
+    study_site__short_name="CARDINAL",
+    cdsa__representative_role="Contact PI",
+    cdsa__is_component=False,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1002.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1002.cdsa.anvil_access_group
 )
 
-cdsa_1003 = factories.CDSAFactory.create(
-    cc_id=1003,
-    representative=UserFactory.create(name="Bamidele Adebamowo"),
-    institution="Loyola",
-    group="CARDINAL",
-    representative_role="Co-PI",
-    type=models.CDSA.MEMBER,
-    is_component=True,
+cdsa_1003 = factories.MemberFactory.create(
+    cdsa__cc_id=1003,
+    cdsa__representative=UserFactory.create(name="Bamidele Tayo"),
+    cdsa__institution="Loyola",
+    study_site=cdsa_1002.study_site,
+    cdsa__representative_role="Co-PI",
+    cdsa__type=models.CDSA.MEMBER,
+    cdsa__is_component=True,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1003.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1003.cdsa.anvil_access_group
 )
 
-cdsa_1004 = factories.CDSAFactory.create(
-    cc_id=1004,
-    representative=UserFactory.create(name="Brackie Mitchell"),
-    institution="UM",
-    group="CARDINAL",
-    representative_role="Co-I",
-    type=models.CDSA.MEMBER,
-    is_component=True,
+cdsa_1004 = factories.MemberFactory.create(
+    cdsa__cc_id=1004,
+    cdsa__representative=UserFactory.create(name="Brackie Mitchell"),
+    cdsa__institution="UM",
+    study_site=cdsa_1002.study_site,
+    cdsa__representative_role="Co-I",
+    cdsa__is_component=True,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1004.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1004.cdsa.anvil_access_group
 )
 
-cdsa_1005 = factories.CDSAFactory.create(
-    cc_id=1005,
-    representative=UserFactory.create(name="Brackie Mitchell"),
-    institution="UMaryland",
-    group="Amish",
-    representative_role="Study PI",
-    type=models.CDSA.DATA_AFFILIATE,
-    is_component=False,
+cdsa_1005 = factories.DataAffiliateFactory.create(
+    cdsa__cc_id=1005,
+    cdsa__representative=UserFactory.create(name="Brackie Mitchell"),
+    cdsa__institution="UMaryland",
+    study__short_name="Amish",
+    cdsa__representative_role="Study PI",
+    cdsa__is_component=False,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1005.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1005.cdsa.anvil_access_group
 )
 
-cdsa_1006 = factories.CDSAFactory.create(
-    cc_id=1006,
-    representative=UserFactory.create(name="Robyn"),
-    institution="UW",
-    group="MESA",
-    representative_role="DCC PI",
-    type=models.CDSA.DATA_AFFILIATE,
-    is_component=False,
+cdsa_1006 = factories.DataAffiliateFactory.create(
+    cdsa__cc_id=1006,
+    cdsa__representative=UserFactory.create(name="Robyn"),
+    cdsa__institution="UW",
+    study__short_name="MESA",
+    cdsa__representative_role="DCC PI",
+    cdsa__is_component=False,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1006.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1006.cdsa.anvil_access_group
 )
 
 cdsa_1007 = factories.CDSAFactory.create(
-    cc_id=1007,
-    representative=UserFactory.create(name="Wendy"),
-    institution="JHU",
-    group="MESA",
-    representative_role="Field Center PI",
-    type=models.CDSA.DATA_AFFILIATE,
-    is_component=True,
+    cdsa__cc_id=1007,
+    cdsa__representative=UserFactory.create(name="Wendy"),
+    cdsa__institution="JHU",
+    study=cdsa_1006.study,
+    cdsa__representative_role="Field Center PI",
+    cdsa__is_component=True,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1007.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1007.cdsa.anvil_access_group
 )
 
 cdsa_1008 = factories.CDSAFactory.create(
-    cc_id=1008,
-    representative=UserFactory.create(name="Jerry"),
-    institution="Lundquist",
-    group="MESA",
-    representative_role="Analysis Center PI",
-    type=models.CDSA.DATA_AFFILIATE,
-    is_component=True,
+    cdsa__cc_id=1008,
+    cdsa__representative=UserFactory.create(name="Jerry"),
+    cdsa__institution="Lundquist",
+    study=cdsa_1006.study,
+    cdsa__representative_role="Analysis Center PI",
+    cdsa__type=models.CDSA.DATA_AFFILIATE,
+    cdsa__is_component=True,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1008.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1008.cdsa.anvil_access_group
 )
 
-cdsa_1009 = factories.CDSAFactory.create(
-    cc_id=1009,
-    representative=UserFactory.create(name="ExpertA"),
-    institution="UABC",
-    group="CenterXYZ",
-    representative_role="Contact PI",
-    type=models.CDSA.NON_DATA_AFFILIATE,
-    is_component=False,
+cdsa_1009 = factories.NonDataAffiliateFactory.create(
+    cdsa__cc_id=1009,
+    cdsa__representative=UserFactory.create(name="ExpertA"),
+    cdsa__institution="UABC",
+    study_or_center="CenterXYZ",
+    cdsa__representative_role="Contact PI",
+    cdsa__type=models.CDSA.NON_DATA_AFFILIATE,
+    cdsa__is_component=False,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_auth_group, child_group=cdsa_1009.anvil_access_group
+    parent_group=cdsa_auth_group, child_group=cdsa_1009.cdsa.anvil_access_group
 )
 
 
 # Add some users to the CDSA groups.
 accounts = AccountFactory.create_batch(10, verified=True)
 GroupAccountMembershipFactory.create(
-    group=cdsa_1001.anvil_access_group, account=accounts[0]
+    group=cdsa_1001.cdsa.anvil_access_group, account=accounts[0]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1001.anvil_access_group, account=accounts[1]
+    group=cdsa_1001.cdsa.anvil_access_group, account=accounts[1]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1001.anvil_access_group, account=accounts[2]
+    group=cdsa_1001.cdsa.anvil_access_group, account=accounts[2]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1002.anvil_access_group, account=accounts[3]
+    group=cdsa_1002.cdsa.anvil_access_group, account=accounts[3]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1002.anvil_access_group, account=accounts[4]
+    group=cdsa_1002.cdsa.anvil_access_group, account=accounts[4]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1003.anvil_access_group, account=accounts[5]
+    group=cdsa_1003.cdsa.anvil_access_group, account=accounts[5]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1005.anvil_access_group, account=accounts[6]
+    group=cdsa_1005.cdsa.anvil_access_group, account=accounts[6]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1005.anvil_access_group, account=accounts[7]
+    group=cdsa_1005.cdsa.anvil_access_group, account=accounts[7]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1006.anvil_access_group, account=accounts[8]
+    group=cdsa_1006.cdsa.anvil_access_group, account=accounts[8]
 )
 GroupAccountMembershipFactory.create(
-    group=cdsa_1006.anvil_access_group, account=accounts[9]
+    group=cdsa_1006.cdsa.anvil_access_group, account=accounts[9]
 )
 
 cdsa_workspace_1 = factories.CDSAWorkspaceFactory.create(
     cdsa=cdsa_1006,
-    study__full_name=cdsa_1006.group,
-    study__short_name=cdsa_1006.group,
     data_use_permission=dup,
 )
 cdsa_workspace_1.workspace.authorization_domains.add(cdsa_auth_group)
@@ -192,7 +185,6 @@ WorkspaceGroupSharingFactory.create(
 # Create a second workspace that is not shared.
 cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     cdsa=cdsa_1006,
-    study=cdsa_workspace_1.study,
     data_use_permission=dup,
 )
 cdsa_workspace_2.workspace.authorization_domains.add(cdsa_auth_group)

@@ -5,6 +5,7 @@ from tree_queries.forms import TreeNodeMultipleChoiceField
 from . import models
 
 
+# NOTE Will need to change to handle different types of CDSAs.
 class CDSAForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a CDSA object."""
 
@@ -16,7 +17,6 @@ class CDSAForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "institution",
             "type",
             "is_component",
-            "group",
             "representative_role",
         )
         widgets = {"type": forms.RadioSelect}
@@ -29,7 +29,6 @@ class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         model = models.CDSAWorkspace
         fields = (
             "cdsa",
-            "study",
             "data_use_limitations",
             "acknowledgments",
             "data_use_permission",

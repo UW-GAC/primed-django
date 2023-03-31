@@ -11,7 +11,7 @@ from factory import (  # Dict,; DictFactory,; LazyAttribute,; List,; SelfAttribu
 from factory.django import DjangoModelFactory
 
 from primed.duo.tests.factories import DataUsePermissionFactory
-from primed.primed_anvil.tests.factories import StudyFactory
+from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import models
@@ -23,7 +23,6 @@ class CDSAFactory(DjangoModelFactory):
     cc_id = Sequence(lambda n: n + 1001)
     representative = SubFactory(UserFactory)
     institution = Faker("company")
-    group = Faker("company")
     type = models.CDSA.MEMBER
     is_component = False
     representative_role = Faker("job")
@@ -38,13 +37,39 @@ class CDSAFactory(DjangoModelFactory):
         model = models.CDSA
 
 
+class MemberFactory(DjangoModelFactory):
+
+    cdsa = SubFactory(CDSAFactory, type=models.CDSA.MEMBER)
+    study_site = SubFactory(StudySiteFactory)
+
+    class Meta:
+        model = models.Member
+
+
+class DataAffiliateFactory(DjangoModelFactory):
+
+    cdsa = SubFactory(CDSAFactory, type=models.CDSA.DATA_AFFILIATE)
+    study = SubFactory(StudyFactory)
+
+    class Meta:
+        model = models.DataAffiliate
+
+
+class NonDataAffiliateFactory(DjangoModelFactory):
+
+    cdsa = SubFactory(CDSAFactory, type=models.CDSA.NON_DATA_AFFILIATE)
+    study_or_center = Faker("company")
+
+    class Meta:
+        model = models.NonDataAffiliate
+
+
 class CDSAWorkspaceFactory(DjangoModelFactory):
     """A factory for the CDSAWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="cdsa")
     requested_by = SubFactory(UserFactory)
-    cdsa = SubFactory(CDSAFactory)
-    study = SubFactory(StudyFactory)
+    cdsa = SubFactory(DataAffiliateFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)
     data_use_limitations = Faker("paragraph", nb_sentences=5)
     acknowledgments = Faker("paragraph")
