@@ -4,7 +4,11 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
+from anvil_consortium_manager.models import (
+    GroupAccountMembership,
+    ManagedGroup,
+    WorkspaceGroupSharing,
+)
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
@@ -95,6 +99,42 @@ class StudyTable(tables.Table):
         )
 
 
+class WorkspaceTable(tables.Table):
+
+    # group = tables.Column(verbose_name="Signing group (study?)")
+    # representative__name = tables.Column(verbose_name="Signing representatitve")
+
+    study = tables.Column(linkify=True)
+    workspace = tables.Column(linkify=True)
+    data_use_permission__abbreviation = tables.Column(verbose_name="DUO permission")
+    data_use_modifiers = tables.ManyToManyColumn(
+        verbose_name="DUO modifiers", transform=lambda obj: obj.abbreviation
+    )
+    # This is hacky but it shows what we want in the table, so ok for the prototype.
+    shared = tables.DateTimeColumn(accessor="created", verbose_name="Shared")
+
+    class Meta:
+        model = models.CDSAWorkspace
+        fields = (
+            "workspace",
+            "study",
+            "data_use_permission__abbreviation",
+            "data_use_modifiers",
+            "data_use_limitations",
+            "created",
+            "shared",
+        )
+
+    def render_shared(self, record):
+        try:
+            wgs = record.workspace.workspacegroupsharing_set.get(
+                group__name="PRIMED_ALL"
+            )
+            return wgs.created
+        except WorkspaceGroupSharing.DoesNotExist:
+            return "—"
+
+
 class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
 
     template_name = "cdsa/cdsa_tables.html"
@@ -107,6 +147,9 @@ class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
             GroupAccountMembership.objects.filter(group__cdsa__isnull=False)
         )
         context["study_table"] = StudyTable(
-            models.CDSA.objects.filter(type=models.CDSA.DATA_AFFILIATE)
+            models.CDSA.objects.filter(
+                type=models.CDSA.DATA_AFFILIATE, is_component=False
+            )
         )
+        context["workspace_table"] = WorkspaceTable(models.CDSAWorkspace.objects.all())
         return context

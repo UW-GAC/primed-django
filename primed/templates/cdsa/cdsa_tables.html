@@ -12,9 +12,11 @@
   <ul>
     <li>We would probably have these on separate pages but this prototype shows them on a single page for now.</li>
     <li>"Group" is ambiguous - can we rename?</li>
+    <li>I think we will end up wanting different fields tracked for different types of CDSA? eg linking to a study for a data affiliate component.</li>
   </ul>
 </p>
 
+<hr>
 
 <h2>PI table</h2>
 
@@ -29,6 +31,9 @@ Notes:
 
 {% render_table pi_table %}
 
+
+<hr>
+
 <h2>List of studies</h2>
 
 <p>
@@ -42,7 +47,7 @@ Notes:
 
 {% render_table study_table %}
 
-
+<hr>
 
 <h2>Full list of authorized accounts</h2>
 
@@ -56,5 +61,20 @@ Notes:
 
 {% render_table accounts_table %}
 
+
+<hr>
+<h2>List of CDSA workspaces</h2>
+
+<p>
+Notes:
+  <ul>
+    <li>This is only the workspaces that have been created under the CDSA.</li>
+    <li>Include workspaces that are shared as well as those that are <b>not yet</b> shared.</li>
+    <li>DUL can be long...</li>
+    <li>Should a workspace be linked to its data affiliate (non-component), or all data affiliate+components for that study?</li>
+  </ul>
+</p>
+
+{% render_table workspace_table %}
 
 {% endblock content %}
