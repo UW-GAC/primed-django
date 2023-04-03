@@ -70,16 +70,22 @@ class PITable(tables.Table):
             "institution",
             "study_or_center",
             "type",
-            "is_component",
+            # "is_component",
         )
 
     def render_study_or_center(self, record):
         if hasattr(record, "member"):
             value = record.member.study_site
+        if hasattr(record, "membercomponent"):
+            value = record.membercomponent.component_of.study_site
         elif hasattr(record, "dataaffiliate"):
             value = record.dataaffiliate.study
+        elif hasattr(record, "dataaffiliatecomponent"):
+            value = record.dataaffiliatecomponent.component_of.study
         elif hasattr(record, "nondataaffiliate"):
             value = record.nondataaffiliate.study_or_center
+        elif hasattr(record, "nondataaffiliatecomponent"):
+            value = record.nondataaffiliatecomponent.component_of.study_or_center
         return value
 
 
@@ -107,7 +113,7 @@ class AccessTable(tables.Table):
         linkify=lambda record: record.group.cdsa.representative.get_absolute_url(),
     )
     study_or_center = tables.Column(
-        verbose_name="Signing study or center", accessor="pk", orderable=False
+        verbose_name="Signing study or center", accessor="group__cdsa", orderable=False
     )
 
     class Meta:
@@ -122,12 +128,18 @@ class AccessTable(tables.Table):
     def render_study_or_center(self, record):
         if hasattr(record.group.cdsa, "member"):
             value = record.group.cdsa.member.study_site
+        if hasattr(record.group.cdsa, "membercomponent"):
+            value = record.group.cdsa.membercomponent.component_of.study_site
         elif hasattr(record.group.cdsa, "dataaffiliate"):
             value = record.group.cdsa.dataaffiliate.study
+        elif hasattr(record.group.cdsa, "dataaffiliatecomponent"):
+            value = record.group.cdsa.dataaffiliatecomponent.component_of.study
         elif hasattr(record.group.cdsa, "nondataaffiliate"):
             value = record.group.cdsa.nondataaffiliate.study_or_center
-        else:
-            return "none"
+        elif hasattr(record.group.cdsa, "nondataaffiliatecomponent"):
+            value = (
+                record.group.cdsa.nondataaffiliatecomponent.component_of.study_or_center
+            )
         return value
 
 
@@ -176,12 +188,10 @@ class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
         context = super().get_context_data()
         qs = models.CDSA.objects.all()
         context["pi_table"] = PITable(qs)
-        # All accounts in CDSA groups.
+        print(qs)
         context["accounts_table"] = AccessTable(
             GroupAccountMembership.objects.filter(group__cdsa__isnull=False)
         )
-        context["study_table"] = StudyTable(
-            models.DataAffiliate.objects.filter(cdsa__is_component=False)
-        )
+        context["study_table"] = StudyTable(models.DataAffiliate.objects.all())
         context["workspace_table"] = WorkspaceTable(models.CDSAWorkspace.objects.all())
         return context

@@ -24,7 +24,6 @@ class CDSAFactory(DjangoModelFactory):
     representative = SubFactory(UserFactory)
     institution = Faker("company")
     type = models.CDSA.MEMBER
-    is_component = False
     representative_role = Faker("job")
     anvil_access_group = SubFactory(
         ManagedGroupFactory,
@@ -46,6 +45,15 @@ class MemberFactory(DjangoModelFactory):
         model = models.Member
 
 
+class MemberComponentFactory(DjangoModelFactory):
+
+    cdsa = SubFactory(CDSAFactory, type=models.CDSA.MEMBER_COMPONENT)
+    component_of = SubFactory(MemberFactory)
+
+    class Meta:
+        model = models.MemberComponent
+
+
 class DataAffiliateFactory(DjangoModelFactory):
 
     cdsa = SubFactory(CDSAFactory, type=models.CDSA.DATA_AFFILIATE)
@@ -55,6 +63,15 @@ class DataAffiliateFactory(DjangoModelFactory):
         model = models.DataAffiliate
 
 
+class DataAffiliateComponentFactory(DjangoModelFactory):
+
+    cdsa = SubFactory(CDSAFactory, type=models.CDSA.DATA_AFFILIATE_COMPONENT)
+    component_of = SubFactory(DataAffiliateFactory)
+
+    class Meta:
+        model = models.DataAffiliateComponent
+
+
 class NonDataAffiliateFactory(DjangoModelFactory):
 
     cdsa = SubFactory(CDSAFactory, type=models.CDSA.NON_DATA_AFFILIATE)
@@ -62,6 +79,15 @@ class NonDataAffiliateFactory(DjangoModelFactory):
 
     class Meta:
         model = models.NonDataAffiliate
+
+
+class NonDataAffiliateComponentFactory(DjangoModelFactory):
+
+    cdsa = SubFactory(CDSAFactory, type=models.CDSA.NON_DATA_AFFILIATE_COMPONENT)
+    component_of = SubFactory(NonDataAffiliateFactory)
+
+    class Meta:
+        model = models.NonDataAffiliateComponent
 
 
 class CDSAWorkspaceFactory(DjangoModelFactory):

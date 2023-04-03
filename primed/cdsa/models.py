@@ -12,12 +12,18 @@ class CDSA(TimeStampedModel, models.Model):
     """A model to track verified CDSAs."""
 
     MEMBER = "member"
+    MEMBER_COMPONENT = "member_component"
     DATA_AFFILIATE = "data_affiliate"
+    DATA_AFFILIATE_COMPONENT = "data_affiliate_component"
     NON_DATA_AFFILIATE = "non_data_affiliate"
+    NON_DATA_AFFILIATE_COMPONENT = "non_data_affiliate_component"
     TYPE_CHOICES = (
         (MEMBER, "Member"),
+        (MEMBER_COMPONENT, "Member component"),
         (DATA_AFFILIATE, "Data affiliate"),
+        (DATA_AFFILIATE_COMPONENT, "Data affiliate component"),
         (NON_DATA_AFFILIATE, "Non-data affiliate"),
+        (NON_DATA_AFFILIATE_COMPONENT, "Non-data affiliate component"),
     )
 
     cc_id = models.IntegerField(
@@ -37,9 +43,6 @@ class CDSA(TimeStampedModel, models.Model):
         verbose_name="CDSA type",
         max_length=31,
         choices=TYPE_CHOICES,
-    )
-    is_component = models.BooleanField(
-        help_text="Indicator of whether the CDSA is a component of another group."
     )
     representative_role = models.CharField(
         max_length=255, help_text="Representative's role in the group."
@@ -67,6 +70,14 @@ class Member(models.Model):
         return str(self.cdsa)
 
 
+class MemberComponent(models.Model):
+    cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
+    component_of = models.ForeignKey(Member, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return str(self.cdsa)
+
+
 class DataAffiliate(models.Model):
 
     cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
@@ -76,9 +87,25 @@ class DataAffiliate(models.Model):
         return str(self.cdsa)
 
 
+class DataAffiliateComponent(models.Model):
+    cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
+    component_of = models.ForeignKey(DataAffiliate, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return str(self.cdsa)
+
+
 class NonDataAffiliate(models.Model):
     cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
     study_or_center = models.CharField(max_length=255)
+
+    def __str__(self):
+        return str(self.cdsa)
+
+
+class NonDataAffiliateComponent(models.Model):
+    cdsa = models.OneToOneField(CDSA, on_delete=models.PROTECT, primary_key=True)
+    component_of = models.ForeignKey(NonDataAffiliate, on_delete=models.PROTECT)
 
     def __str__(self):
         return str(self.cdsa)

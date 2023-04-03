@@ -16,7 +16,6 @@ class CDSAForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "representative",
             "institution",
             "type",
-            "is_component",
             "representative_role",
         )
         widgets = {"type": forms.RadioSelect}

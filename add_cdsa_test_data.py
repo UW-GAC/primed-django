@@ -30,7 +30,6 @@ cdsa_1001 = factories.MemberFactory.create(
     cdsa__representative=UserFactory.create(name="Ken Rice"),
     cdsa__institution="UW",
     cdsa__representative_role="Contact PI",
-    cdsa__is_component=False,
     study_site=StudySite.objects.get(short_name="CC"),
 )
 GroupGroupMembershipFactory.create(
@@ -43,32 +42,30 @@ cdsa_1002 = factories.MemberFactory.create(
     cdsa__institution="UM",
     study_site__short_name="CARDINAL",
     cdsa__representative_role="Contact PI",
-    cdsa__is_component=False,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1002.cdsa.anvil_access_group
 )
 
-cdsa_1003 = factories.MemberFactory.create(
+cdsa_1003 = factories.MemberComponentFactory.create(
     cdsa__cc_id=1003,
     cdsa__representative=UserFactory.create(name="Bamidele Tayo"),
     cdsa__institution="Loyola",
-    study_site=cdsa_1002.study_site,
+    component_of=cdsa_1002,
     cdsa__representative_role="Co-PI",
-    cdsa__type=models.CDSA.MEMBER,
-    cdsa__is_component=True,
+    cdsa__type=models.CDSA.MEMBER_COMPONENT,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1003.cdsa.anvil_access_group
 )
 
-cdsa_1004 = factories.MemberFactory.create(
+cdsa_1004 = factories.MemberComponentFactory.create(
     cdsa__cc_id=1004,
     cdsa__representative=UserFactory.create(name="Brackie Mitchell"),
     cdsa__institution="UM",
-    study_site=cdsa_1002.study_site,
     cdsa__representative_role="Co-I",
-    cdsa__is_component=True,
+    component_of=cdsa_1002,
+    cdsa__type=models.CDSA.MEMBER_COMPONENT,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1004.cdsa.anvil_access_group
@@ -80,7 +77,7 @@ cdsa_1005 = factories.DataAffiliateFactory.create(
     cdsa__institution="UMaryland",
     study__short_name="Amish",
     cdsa__representative_role="Study PI",
-    cdsa__is_component=False,
+    cdsa__type=models.CDSA.DATA_AFFILIATE,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1005.cdsa.anvil_access_group
@@ -92,32 +89,31 @@ cdsa_1006 = factories.DataAffiliateFactory.create(
     cdsa__institution="UW",
     study__short_name="MESA",
     cdsa__representative_role="DCC PI",
-    cdsa__is_component=False,
+    cdsa__type=models.CDSA.DATA_AFFILIATE,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1006.cdsa.anvil_access_group
 )
 
-cdsa_1007 = factories.CDSAFactory.create(
+cdsa_1007 = factories.DataAffiliateComponentFactory.create(
     cdsa__cc_id=1007,
     cdsa__representative=UserFactory.create(name="Wendy"),
     cdsa__institution="JHU",
-    study=cdsa_1006.study,
     cdsa__representative_role="Field Center PI",
-    cdsa__is_component=True,
+    component_of=cdsa_1006,
+    cdsa__type=models.CDSA.DATA_AFFILIATE_COMPONENT,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1007.cdsa.anvil_access_group
 )
 
-cdsa_1008 = factories.CDSAFactory.create(
+cdsa_1008 = factories.DataAffiliateComponentFactory.create(
     cdsa__cc_id=1008,
     cdsa__representative=UserFactory.create(name="Jerry"),
     cdsa__institution="Lundquist",
-    study=cdsa_1006.study,
     cdsa__representative_role="Analysis Center PI",
-    cdsa__type=models.CDSA.DATA_AFFILIATE,
-    cdsa__is_component=True,
+    cdsa__type=models.CDSA.DATA_AFFILIATE_COMPONENT,
+    component_of=cdsa_1006,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1008.cdsa.anvil_access_group
@@ -130,7 +126,6 @@ cdsa_1009 = factories.NonDataAffiliateFactory.create(
     study_or_center="CenterXYZ",
     cdsa__representative_role="Contact PI",
     cdsa__type=models.CDSA.NON_DATA_AFFILIATE,
-    cdsa__is_component=False,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_auth_group, child_group=cdsa_1009.cdsa.anvil_access_group
