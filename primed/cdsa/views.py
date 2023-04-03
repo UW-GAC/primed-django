@@ -57,6 +57,9 @@ class PITable(tables.Table):
         linkify=lambda record: record.representative.get_absolute_url(),
     )
     representative_role = tables.Column(verbose_name="Role")
+    study_or_center = tables.Column(
+        verbose_name="Study or center", orderable=False, accessor="pk"
+    )
 
     class Meta:
         model = models.CDSA
@@ -65,13 +68,19 @@ class PITable(tables.Table):
             "representative__name",
             "representative_role",
             "institution",
-            # "group",
-            "member__study_site",
-            "dataaffiliate__study",
-            "nondataaffiliate__study_or_center",
+            "study_or_center",
             "type",
             "is_component",
         )
+
+    def render_study_or_center(self, record):
+        if hasattr(record, "member"):
+            value = record.member.study_site
+        elif hasattr(record, "dataaffiliate"):
+            value = record.dataaffiliate.study
+        elif hasattr(record, "nondataaffiliate"):
+            value = record.nondataaffiliate.study_or_center
+        return value
 
 
 class StudyTable(tables.Table):
@@ -83,7 +92,7 @@ class StudyTable(tables.Table):
     )
 
     class Meta:
-        model = models.CDSA
+        model = models.DataAffiliate
         fields = (
             "study",
             "cdsa__representative__name",
@@ -93,10 +102,12 @@ class StudyTable(tables.Table):
 class AccessTable(tables.Table):
 
     group__cdsa__institution = tables.Column(verbose_name="Signing institution")
-    group__cdsa__group = tables.Column(verbose_name="Signing group")
     group__cdsa__representative__name = tables.Column(
         verbose_name="Signing representatitve",
         linkify=lambda record: record.group.cdsa.representative.get_absolute_url(),
+    )
+    study_or_center = tables.Column(
+        verbose_name="Signing study or center", accessor="pk", orderable=False
     )
 
     class Meta:
@@ -104,11 +115,20 @@ class AccessTable(tables.Table):
         fields = (
             "account__user",
             "group__cdsa__institution",
-            "group__cdsa__member__study_site",
-            "group__cdsa__dataaffiliate__study",
-            "group__cdsa__nondataaffiliate__study_or_center",
+            "study_or_center",
             "group__cdsa__representative__name",
         )
+
+    def render_study_or_center(self, record):
+        if hasattr(record.group.cdsa, "member"):
+            value = record.group.cdsa.member.study_site
+        elif hasattr(record.group.cdsa, "dataaffiliate"):
+            value = record.group.cdsa.dataaffiliate.study
+        elif hasattr(record.group.cdsa, "nondataaffiliate"):
+            value = record.group.cdsa.nondataaffiliate.study_or_center
+        else:
+            return "none"
+        return value
 
 
 class WorkspaceTable(tables.Table):
@@ -154,7 +174,8 @@ class CDSATables(AnVILConsortiumManagerViewRequired, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context["pi_table"] = PITable(models.CDSA.objects.all())
+        qs = models.CDSA.objects.all()
+        context["pi_table"] = PITable(qs)
         # All accounts in CDSA groups.
         context["accounts_table"] = AccessTable(
             GroupAccountMembership.objects.filter(group__cdsa__isnull=False)
