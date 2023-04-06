@@ -1,9 +1,14 @@
 import json
 
 import pytest
+from anvil_consortium_manager.models import AnVILProjectManagerAccess
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    UserEmailEntryFactory,
+)
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest
@@ -11,6 +16,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.forms import UserChangeForm
 from primed.users.models import User
 from primed.users.tests.factories import UserFactory
@@ -86,11 +92,61 @@ class TestUserRedirectView:
 
 
 class TestUserDetailView:
-    def test_authenticated(self, user: User, rf: RequestFactory):
-        request = rf.get("/fake-url/")
-        request.user = UserFactory()
+    def test_authenticated(self, client, user: User, rf: RequestFactory):
+        client.force_login(user)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
 
-        response = user_detail_view(request, username=user.username)
+        assert response.status_code == 200
+
+    def test_authenticated_with_verified_account(
+        self, client, user: User, rf: RequestFactory
+    ):
+        client.force_login(user)
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        AccountFactory.create(email="foo@bar.com", user=user, verified=True)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
+
+        assert response.status_code == 200
+
+    def test_authenticated_with_user_email_entry(
+        self, client, user: User, rf: RequestFactory
+    ):
+        client.force_login(user)
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        UserEmailEntryFactory.create(email="foo@bar.com", user=user)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
+
+        assert response.status_code == 200
+
+    def test_authenticated_with_unverified_account(
+        self, client, user: User, rf: RequestFactory
+    ):
+        client.force_login(user)
+        AccountFactory.create(email="foo@bar.com", user=user, verified=False)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
+
+        assert response.status_code == 200
+
+    def test_authenticated_with_study_sites(
+        self, client, user: User, rf: RequestFactory
+    ):
+        client.force_login(user)
+        study_site = StudySiteFactory.create()
+        user.study_sites.add(study_site)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
 
         assert response.status_code == 200
 
