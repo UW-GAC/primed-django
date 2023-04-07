@@ -60,6 +60,19 @@ class TestUserUpdateView:
 
         assert view.get_object() == user
 
+    def test_authenticated(self, client, user: User, rf: RequestFactory):
+        client.force_login(user)
+        user_update_url = reverse("users:update")
+        response = client.get(user_update_url)
+
+        assert response.status_code == 200
+
+    def test_not_authenticated(self, client):
+        user_update_url = reverse("users:update")
+        response = client.get(user_update_url)
+
+        assert response.status_code == 302
+
     def test_form_valid(self, user: User, rf: RequestFactory):
         view = UserUpdateView()
         request = rf.get("/fake-url/")
