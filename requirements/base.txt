@@ -41,3 +41,6 @@ pronto==2.5.2
 
 # mysql
 mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient
+
+# pandas for data summaries
+pandas==1.5.2
