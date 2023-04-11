@@ -549,6 +549,207 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertIn(available_data[1], instance.available_data.all())
 
 
+class dbGaPWorkspaceGetSummaryTableDataTest(TestCase):
+    """Tests for the dbGaPWorkspace.get_summary_table_data class method."""
+
+    def test_no_workspaces_no_available_data_instnaces(self):
+        """get_summary_table_data with no workspaces."""
+        with self.assertRaises(RuntimeError):
+            models.dbGaPWorkspace.get_summary_table_data()
+
+    def test_no_workspaces_one_available_data_instance(self):
+        """get_summary_table_data with no workspaces."""
+        AvailableDataFactory.create()
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(res, [])
+
+    def test_one_workspace_one_study_not_shared_no_available_data(self):
+        AvailableDataFactory.create(name="Foo")
+        study = factories.StudyFactory.create(short_name="TEST")
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "dbGaP")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_one_workspace_one_study_not_shared_with_one_available_data(self):
+        available_data = AvailableDataFactory.create(name="Foo")
+        study = factories.StudyFactory.create(short_name="TEST")
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study]
+        )
+        dbgap_workspace.available_data.add(available_data)
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "dbGaP")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], True)
+
+    def test_one_workspace_one_study_not_shared_with_two_available_data(self):
+        available_data_1 = AvailableDataFactory.create(name="Foo")
+        available_data_2 = AvailableDataFactory.create(name="Bar")
+        study = factories.StudyFactory.create(short_name="TEST")
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study]
+        )
+        dbgap_workspace.available_data.add(available_data_1)
+        dbgap_workspace.available_data.add(available_data_2)
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 5)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "dbGaP")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], True)
+
+    def test_one_workspace_two_studies_not_shared_no_available_data(self):
+        AvailableDataFactory.create(name="Foo")
+        study_1 = factories.StudyFactory.create(short_name="TEST")
+        study_2 = factories.StudyFactory.create(short_name="Other")
+        factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study_1, study_2]
+        )
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "Other, TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "dbGaP")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_one_workspace_one_study_shared_no_available_data(self):
+        AvailableDataFactory.create(name="Foo")
+        study = factories.StudyFactory.create(short_name="TEST")
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study]
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=dbgap_workspace.workspace, group__name="PRIMED_ALL"
+        )
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "dbGaP")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], True)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_two_workspaces_one_study(self):
+        AvailableDataFactory.create(name="Foo")
+        study = factories.StudyFactory.create(short_name="TEST")
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "dbGaP")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_two_workspaces_one_study_one_shared(self):
+        available_data_1 = AvailableDataFactory.create(name="Foo")
+        available_data_2 = AvailableDataFactory.create(name="Bar")
+        study = factories.StudyFactory.create(short_name="TEST")
+        dbgap_workspace_1 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study]
+        )
+        dbgap_workspace_1.available_data.add(available_data_1)
+        WorkspaceGroupSharingFactory.create(
+            workspace=dbgap_workspace_1.workspace, group__name="PRIMED_ALL"
+        )
+        dbgap_workspace_2 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study]
+        )
+        dbgap_workspace_2.available_data.add(available_data_2)
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": True,
+                "access_mechanism": "dbGaP",
+                "Foo": True,
+                "Bar": False,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "dbGaP",
+                "Foo": False,
+                "Bar": True,
+            },
+            res,
+        )
+
+    def test_two_workspaces_multiple_studies(self):
+        AvailableDataFactory.create(name="Foo")
+        study_1 = factories.StudyFactory.create(short_name="TEST")
+        study_2 = factories.StudyFactory.create(short_name="Other")
+        factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__studies=[study_1, study_2]
+        )
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study_1])
+        res = models.dbGaPWorkspace.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "Other, TEST",
+                "is_shared": False,
+                "access_mechanism": "dbGaP",
+                "Foo": False,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "dbGaP",
+                "Foo": False,
+            },
+            res,
+        )
+
+
 class dbGaPApplicationTest(TestCase):
     """Tests for the dbGaPApplication model."""
 

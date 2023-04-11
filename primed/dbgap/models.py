@@ -11,8 +11,13 @@ import logging
 import re
 
 import jsonschema
+import pandas as pd
 import requests
-from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
+from anvil_consortium_manager.models import (
+    BaseWorkspaceData,
+    ManagedGroup,
+    WorkspaceGroupSharing,
+)
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -157,6 +162,82 @@ class dbGaPWorkspace(
         if most_recent:
             qs = qs.filter(dbgap_data_access_snapshot__is_most_recent=True)
         return qs
+
+    @classmethod
+    def get_summary_table_data(cls):
+        """Return data for the summary table."""
+
+        # If no available data objects exist, raise ???.
+        available_data_types = AvailableData.objects.values_list("name", flat=True)
+        if not len(available_data_types):
+            raise RuntimeError(
+                "get_summary_table_data requires at least one AvailableData object to exist."
+            )
+
+        # If no workspace objects exist, return an empty list.
+        if not cls.objects.exists():
+            return []
+
+        # This query will be used to annotate the
+        shared = WorkspaceGroupSharing.objects.filter(
+            group__name="PRIMED_ALL",
+            workspace=models.OuterRef("pk"),
+        )
+        # Grab the data as a dictionary in long format (multiple records per workspace due to many-to-many tables).
+        tmp = (
+            cls.objects.annotate(
+                access_mechanism=models.Value("dbGaP"),
+                # This query will change from workspace model to workspace model.
+                is_shared=models.Exists(shared),
+            )
+            .values(
+                "is_shared",
+                "access_mechanism",
+                # Rename columns to have similar names.
+                workspace_name=models.F("workspace__name"),
+                study=models.F("dbgap_study_accession__studies__short_name"),
+                data=models.F("available_data__name"),
+            )
+            .order_by("study", "is_shared")
+        )
+        df = pd.DataFrame.from_dict(tmp)
+        # This code should be the same across all workspace types. Consider separating into its own function.
+        # Convert to a series of records that we can pass to a django-tables2 table.
+        df = (
+            df.groupby(
+                ["workspace_name", "data", "is_shared", "access_mechanism"],
+                dropna=False,
+            )["study"]
+            .apply(lambda x: ", ".join(x))
+            .reset_index()
+            .drop("workspace_name", axis=1)
+        )
+        # Replace NaNs with a dummy column for pivoting.
+        df["data"] = df["data"].fillna("no_data")
+        data = (
+            pd.pivot_table(
+                df,
+                index=["study", "is_shared", "access_mechanism"],
+                columns=["data"],
+                # set this to len to count the number of workspaces instead of returning a boolean value.
+                aggfunc=lambda x: len(x) > 0,
+                fill_value=False,
+                # aggfunc=len,
+                # fill_value=0,
+                dropna=False,
+            )
+            .rename_axis(columns=None)
+            .reset_index()
+        )
+        # Remove the dummy "no_data" column if it exists.
+        if "no_data" in data:
+            data = data.drop("no_data", axis=1)
+        # Add columns for data types that have no workspaces in this list.
+        for available_data in available_data_types:
+            if available_data not in data:
+                data[available_data] = False
+        data = data.to_dict(orient="records")
+        return data
 
 
 class dbGaPApplication(TimeStampedModel, models.Model):
