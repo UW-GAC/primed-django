@@ -8,7 +8,7 @@ from . import models
 class BooleanCheckColumn(tables.BooleanColumn):
 
     #    attrs = {"td": {"align": "center"}}
-    attrs = {"th": {"align": "center"}}
+    # attrs = {"th": {"class": "center"}}
 
     def render(self, value, record, bound_column):
         value = self._get_bool_value(record, value, bound_column)
@@ -16,7 +16,7 @@ class BooleanCheckColumn(tables.BooleanColumn):
             icon = "check-circle-fill"
             color = "green"
             value = format_html(
-                """<i class="bi bi-{} bi-align-center" style="color: {};"></i>""".format(
+                """<i class="bi bi-{} bi-align-center px-2" style="color: {};"></i>""".format(
                     icon, color
                 )
             )
