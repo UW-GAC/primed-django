@@ -24,7 +24,7 @@ def get_summary_table_data():
         workspace=OuterRef("pk"),
     )
 
-    # dbGaP workspaces.
+    # Query for dbGaPWorkspaces.
     dbgap = dbGaPWorkspace.objects.annotate(
         access_mechanism=Value("dbGaP"),
         # This query will change from workspace model to workspace model.
@@ -38,7 +38,7 @@ def get_summary_table_data():
         data=F("available_data__name"),
     )
 
-    # Open access workspaces.
+    # Query for OpenAccessWorkspaces.
     open = OpenAccessWorkspace.objects.annotate(
         access_mechanism=Value("Open access"),
         is_shared=Exists(shared),
@@ -53,12 +53,13 @@ def get_summary_table_data():
 
     qs = dbgap.union(open)
 
+    # If there are no workspaces, return an empty list.
     if not qs.exists():
         return []
 
+    # Otherwise, start making the summary table.
     df = pd.DataFrame.from_dict(dbgap.union(qs))
-    # This code should be the same across all workspace types. Consider separating into its own function.
-    # Convert to a series of records that we can pass to a django-tables2 table.
+    # Concatenate multiple studies into a single comma-delimited string.
     df = (
         df.groupby(
             ["workspace_name", "data", "is_shared", "access_mechanism"],
@@ -70,6 +71,7 @@ def get_summary_table_data():
     )
     # Replace NaNs with a dummy column for pivoting.
     df["data"] = df["data"].fillna("no_data")
+    # Pivot so that the available data types are their own columns.
     data = (
         pd.pivot_table(
             df,
@@ -92,5 +94,6 @@ def get_summary_table_data():
     for available_data in available_data_types:
         if available_data not in data:
             data[available_data] = False
+    # Convert to a list of dictionaries for passing to the django-tables2 table.
     data = data.to_dict(orient="records")
     return data
