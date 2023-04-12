@@ -18,7 +18,8 @@ def get_summary_table_data():
             "get_summary_table_data requires at least one AvailableData object to exist."
         )
 
-    # This query will be used to annotate the
+    # This query will be used to add information about whether a study has workspaces
+    # that are shared with the consortium.
     shared = WorkspaceGroupSharing.objects.filter(
         group__name="PRIMED_ALL",
         workspace=OuterRef("workspace__pk"),
@@ -27,12 +28,11 @@ def get_summary_table_data():
     # Query for dbGaPWorkspaces.
     dbgap = dbGaPWorkspace.objects.annotate(
         access_mechanism=Value("dbGaP"),
-        # This query will change from workspace model to workspace model.
         is_shared=Exists(shared),
     ).values(
         "is_shared",
         "access_mechanism",
-        # Rename columns to have similar names.
+        # Rename columns to have the same names.
         workspace_name=F("workspace__name"),
         study=F("dbgap_study_accession__studies__short_name"),
         data=F("available_data__name"),
@@ -46,7 +46,7 @@ def get_summary_table_data():
     ).values(
         "is_shared",
         "access_mechanism",
-        # Rename columns to have similar names.
+        # Rename columns to have the same names.
         workspace_name=F("workspace__name"),
         study=F("studies__short_name"),
         data=F("available_data__name"),
@@ -83,7 +83,8 @@ def get_summary_table_data():
         .reset_index()
         .drop("workspace_name", axis=1)
     )
-    # Replace NaNs with a dummy column for pivoting.
+    # Replace None/NaNs with a dummy column for pivoting.
+    # If we don't do this, data can sometimes get dropped.
     df["data"] = df["data"].fillna("no_data")
     # Pivot so that the available data types are their own columns.
     data = (
@@ -96,7 +97,6 @@ def get_summary_table_data():
             fill_value=False,
             # aggfunc=len,
             # fill_value=0,
-            #            dropna=False,
         )
         .rename_axis(columns=None)
         .reset_index()
