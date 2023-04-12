@@ -71,6 +71,8 @@ def get_summary_table_data():
     if df.empty:
         return []
 
+    # Sort by specific columns
+    df = df.sort_values(by=["study", "access_mechanism"])
     # Concatenate multiple studies into a single comma-delimited string.
     df = (
         df.groupby(
