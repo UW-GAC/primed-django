@@ -21,7 +21,7 @@ def get_summary_table_data():
     # This query will be used to annotate the
     shared = WorkspaceGroupSharing.objects.filter(
         group__name="PRIMED_ALL",
-        workspace=OuterRef("pk"),
+        workspace=OuterRef("workspace__pk"),
     )
 
     # Query for dbGaPWorkspaces.
@@ -37,6 +37,7 @@ def get_summary_table_data():
         study=F("dbgap_study_accession__studies__short_name"),
         data=F("available_data__name"),
     )
+    print(dbgap)
     df_dbgap = pd.DataFrame.from_dict(dbgap)
     print(df_dbgap)
 
