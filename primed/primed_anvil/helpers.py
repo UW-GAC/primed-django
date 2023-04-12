@@ -67,6 +67,7 @@ def get_summary_table_data():
     # Instead combine in pandas.
     df = pd.concat([df_dbgap, df_open])
 
+    print(df)
     # If there are no workspaces, return an empty list.
     if df.empty:
         return []
