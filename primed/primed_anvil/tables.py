@@ -48,8 +48,6 @@ class StudySiteTable(tables.Table):
 class AccountTable(tables.Table):
     """A custom table for `Accounts`."""
 
-    """Class to display a BillingProject table."""
-
     email = tables.Column(linkify=True)
     user__name = tables.Column(linkify=lambda record: record.user.get_absolute_url())
     is_service_account = tables.BooleanColumn(verbose_name="Service account?")

@@ -782,7 +782,7 @@ class DataSummaryTableTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         # Need at least one AvailableData for the view to work.
-        AvailableDataFactory.create()
+        self.available_data = AvailableDataFactory.create()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -818,11 +818,12 @@ class DataSummaryTableTest(TestCase):
 
     def test_table_rows(self):
         """A summary table exists."""
-        # One open access workspace with one study.
+        # One open access workspace with one study, with one available data type.
         # One dbGaP workspae with two studies.
         study_1 = StudyFactory.create()
         open_workspace = OpenAccessWorkspaceFactory.create()
         open_workspace.studies.add(study_1)
+        open_workspace.available_data.add(self.available_data)
         study_2 = StudyFactory.create()
         study_3 = StudyFactory.create()
         dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study_2, study_3])
