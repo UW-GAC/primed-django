@@ -37,9 +37,7 @@ def get_summary_table_data():
         study=F("dbgap_study_accession__studies__short_name"),
         data=F("available_data__name"),
     )
-    print(dbgap)
     df_dbgap = pd.DataFrame.from_dict(dbgap)
-    print(df_dbgap)
 
     # Query for OpenAccessWorkspaces.
     open = OpenAccessWorkspace.objects.annotate(
@@ -69,7 +67,6 @@ def get_summary_table_data():
     # Instead combine in pandas.
     df = pd.concat([df_dbgap, df_open])
 
-    print(df)
     # If there are no workspaces, return an empty list.
     if df.empty:
         return []
