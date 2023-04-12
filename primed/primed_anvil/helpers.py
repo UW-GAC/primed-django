@@ -37,6 +37,7 @@ def get_summary_table_data():
         study=F("dbgap_study_accession__studies__short_name"),
         data=F("available_data__name"),
     )
+    df_dbgap = pd.DataFrame.from_dict(dbgap)
 
     # Query for OpenAccessWorkspaces.
     open = OpenAccessWorkspace.objects.annotate(
@@ -50,17 +51,26 @@ def get_summary_table_data():
         study=F("studies__short_name"),
         data=F("available_data__name"),
     )
+    df_open = pd.DataFrame.from_dict(open)
 
     # This union may not work with MySQL < 10.3:
     # https://code.djangoproject.com/ticket/31445
-    qs = dbgap.union(open)
+    # qs = dbgap.union(open)
+    #
+    # # If there are no workspaces, return an empty list.
+    # if not qs.exists():
+    #     return []
+    #
+    # # Otherwise, start making the summary table.
+    # df = pd.DataFrame.from_dict(qs)
+
+    # Instead combine in pandas.
+    df = pd.concat([df_dbgap, df_open])
 
     # If there are no workspaces, return an empty list.
-    if not qs.exists():
+    if df.empty:
         return []
 
-    # Otherwise, start making the summary table.
-    df = pd.DataFrame.from_dict(qs)
     # Concatenate multiple studies into a single comma-delimited string.
     df = (
         df.groupby(
