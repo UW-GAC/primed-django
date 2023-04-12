@@ -38,6 +38,7 @@ def get_summary_table_data():
         data=F("available_data__name"),
     )
     df_dbgap = pd.DataFrame.from_dict(dbgap)
+    print(df_dbgap)
 
     # Query for OpenAccessWorkspaces.
     open = OpenAccessWorkspace.objects.annotate(
