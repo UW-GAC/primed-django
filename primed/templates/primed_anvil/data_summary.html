@@ -7,6 +7,42 @@
 
 {% block content %}
 
+<h2>Data availability summary by study</h2>
+
+<p>This table shows the current data availability on AnVIL for PRIMED.</p>
+
+<div class="accordion py-3" id="accordionInfo" >
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingTwo">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+        More information about the table
+      </button>
+    </h2>
+    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionInfo">
+      <div class="accordion-body">
+
+
+        <dl>
+          <dt>Study</dt>
+          <dd>The set of studies that have been linked to the workspaces on AnVIL.</dd>
+          <dt>Access mechanism</dt>
+          <dd>The access mechanism required to access this data.</dd>
+          <dt>Status</dt>
+          <dd>Whether the data are being prepared or if they have been shared with the consortium.</dd>
+        </dl>
+
+        <p>
+          The remaining columns indicate which data are available or are in preparation in workspaces on AnVIL.
+          A given study or set of studies may appear multiple times in this table if they have workspaces with different access mechanisms (e.g., dbGaP vs. CDSA) or if the workspaces have different statuses.
+          In some cases, workspaces on AnVIL are linked to multiple studies (e.g., "JHS, TOPMed" for TOPMed WGS data from JHS).
+
+          Data may be split into multiple workspaces based on access mechanism or consent group.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% render_table summary_table %}
 
 {% endblock content %}
