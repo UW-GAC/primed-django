@@ -5,6 +5,8 @@ from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
 
+from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumTable
+
 from . import models
 
 
@@ -30,12 +32,11 @@ class dbGaPStudyAccessionTable(tables.Table):
         return "phs{0:06d}".format(value)
 
 
-class dbGaPWorkspaceTable(tables.Table):
+class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
-    workspace = tables.columns.Column(
-        linkify=True, accessor="pk", order_by=("billing_project__name", "name")
-    )
+    name = tables.columns.Column(linkify=True)
+    billing_project = tables.Column(linkify=True)
     dbgap_accession = tables.columns.Column(
         verbose_name="dbGaP accession",
         accessor="pk",
@@ -61,10 +62,15 @@ class dbGaPWorkspaceTable(tables.Table):
 
     class Meta:
         model = Workspace
-        fields = ()
-
-    def render_workspace(self, record):
-        return str(record)
+        fields = (
+            "name",
+            "billing_project",
+            "dbgap_accession",
+            "dbgapworkspace__dbgap_consent_abbreviation",
+            "number_approved_dars",
+            "is_shared",
+        )
+        order_by = ("name",)
 
     def render_dbgap_accession(self, record):
         return record.dbgapworkspace.get_dbgap_accession()
@@ -76,20 +82,6 @@ class dbGaPWorkspaceTable(tables.Table):
             .count()
         )
         return n
-
-    def render_is_shared(self, record):
-        is_shared = record.workspacegroupsharing_set.filter(
-            group__name="PRIMED_ALL"
-        ).exists()
-        if is_shared:
-            icon = "check-circle-fill"
-            color = "green"
-            value = format_html(
-                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
-            )
-        else:
-            value = ""
-        return value
 
 
 class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
