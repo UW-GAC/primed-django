@@ -49,6 +49,7 @@ class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
             "number_groups",
             "is_shared",
         )
+        order_by = ("name",)
 
 
 class StudyTable(tables.Table):

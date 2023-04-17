@@ -20,3 +20,4 @@ class OpenAccessWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table)
             "openaccessworkspace__studies",
             "is_shared",
         )
+        order_by = ("name",)

@@ -70,6 +70,7 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
             "number_approved_dars",
             "is_shared",
         )
+        order_by = ("name",)
 
     def render_dbgap_accession(self, record):
         return record.dbgapworkspace.get_dbgap_accession()
