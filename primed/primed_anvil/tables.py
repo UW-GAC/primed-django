@@ -1,5 +1,5 @@
 import django_tables2 as tables
-from anvil_consortium_manager.models import Account
+from anvil_consortium_manager.models import Account, Workspace
 from django.utils.html import format_html
 
 from . import models
@@ -27,6 +27,28 @@ class WorkspaceSharedWithConsortiumTable(tables.Table):
         else:
             value = ""
         return value
+
+
+class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+    """Class to use for default workspace tables in PRIMED."""
+
+    name = tables.Column(linkify=True, verbose_name="Workspace")
+    billing_project = tables.Column(linkify=True)
+    number_groups = tables.Column(
+        verbose_name="Number of groups shared with",
+        empty_values=(),
+        orderable=False,
+        accessor="workspacegroupsharing_set__count",
+    )
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "number_groups",
+            "is_shared",
+        )
 
 
 class StudyTable(tables.Table):
