@@ -33,9 +33,8 @@ class dbGaPStudyAccessionTable(tables.Table):
 class dbGaPWorkspaceTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
-    workspace = tables.columns.Column(
-        linkify=True, accessor="pk", order_by=("billing_project__name", "name")
-    )
+    name = tables.columns.Column(linkify=True)
+    billing_project = tables.Column(linkify=True)
     dbgap_accession = tables.columns.Column(
         verbose_name="dbGaP accession",
         accessor="pk",
@@ -62,9 +61,6 @@ class dbGaPWorkspaceTable(tables.Table):
     class Meta:
         model = Workspace
         fields = ()
-
-    def render_workspace(self, record):
-        return str(record)
 
     def render_dbgap_accession(self, record):
         return record.dbgapworkspace.get_dbgap_accession()
