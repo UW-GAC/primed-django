@@ -115,3 +115,24 @@ class AvailableDataTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
+
+
+class DataSummaryTableTest(TestCase):
+
+    table_class = tables.DataSummaryTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class([])
+        self.assertEqual(len(table.rows), 0)
+
+    def test_adds_one_available_data_column(self):
+        factories.AvailableDataFactory.create(name="Foo")
+        table = self.table_class([])
+        self.assertEqual(table.columns[3].name, "Foo")
+
+    def test_adds_two_available_data_column(self):
+        factories.AvailableDataFactory.create(name="Foo")
+        factories.AvailableDataFactory.create(name="Bar")
+        table = self.table_class([])
+        self.assertEqual(table.columns[3].name, "Bar")
+        self.assertEqual(table.columns[4].name, "Foo")
