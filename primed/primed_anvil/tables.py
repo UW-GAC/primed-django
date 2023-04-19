@@ -20,6 +20,9 @@ class BooleanCheckColumn(tables.BooleanColumn):
                     icon, color
                 )
             )
+        else:
+            value = ""
+        return value
 
 
 class WorkspaceSharedWithConsortiumTable(tables.Table):

@@ -136,3 +136,12 @@ class DataSummaryTableTest(TestCase):
         table = self.table_class([])
         self.assertEqual(table.columns[3].name, "Bar")
         self.assertEqual(table.columns[4].name, "Foo")
+
+
+class BooleanCheckColumnTest(TestCase):
+    def test_render_available_data(self):
+        factories.AvailableDataFactory.create(name="Foo")
+        self.assertIn(
+            "bi-check-circle-fill", tables.BooleanCheckColumn().render(True, None, None)
+        )
+        self.assertEqual(tables.BooleanCheckColumn().render(False, None, None), "")
