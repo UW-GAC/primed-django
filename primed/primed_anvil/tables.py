@@ -1,5 +1,4 @@
 import django_tables2 as tables
-from anvil_consortium_manager.models import Account
 from anvil_consortium_manager.models import Account, Workspace
 from django.utils.html import format_html
 
@@ -20,6 +19,7 @@ class BooleanCheckColumn(tables.BooleanColumn):
                 """<i class="bi bi-{} bi-align-center px-2" style="color: {};"></i>""".format(
                     icon, color
                 )
+            )
 
 
 class WorkspaceSharedWithConsortiumTable(tables.Table):
