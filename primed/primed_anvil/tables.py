@@ -1,5 +1,6 @@
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account
+from anvil_consortium_manager.models import Account, Workspace
 from django.utils.html import format_html
 
 from . import models
@@ -19,10 +20,53 @@ class BooleanCheckColumn(tables.BooleanColumn):
                 """<i class="bi bi-{} bi-align-center px-2" style="color: {};"></i>""".format(
                     icon, color
                 )
+
+
+class WorkspaceSharedWithConsortiumTable(tables.Table):
+    """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
+
+    is_shared = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Shared with PRIMED?",
+        orderable=False,
+    )
+
+    def render_is_shared(self, record):
+        is_shared = record.workspacegroupsharing_set.filter(
+            group__name="PRIMED_ALL"
+        ).exists()
+        if is_shared:
+            icon = "check-circle-fill"
+            color = "green"
+            value = format_html(
+                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
             )
         else:
             value = ""
         return value
+
+
+class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+    """Class to use for default workspace tables in PRIMED."""
+
+    name = tables.Column(linkify=True, verbose_name="Workspace")
+    billing_project = tables.Column(linkify=True)
+    number_groups = tables.Column(
+        verbose_name="Number of groups shared with",
+        empty_values=(),
+        orderable=False,
+        accessor="workspacegroupsharing_set__count",
+    )
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "number_groups",
+            "is_shared",
+        )
+        order_by = ("name",)
 
 
 class StudyTable(tables.Table):
