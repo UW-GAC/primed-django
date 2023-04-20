@@ -65,6 +65,17 @@ class AgreementVersionTest(TestCase):
         self.assertEqual(len(e.exception.message_dict["minor_version"]), 1)
         self.assertIn("greater than or equal to", e.exception.message_dict["minor_version"][0])
 
+    def test_full_version(self):
+        """full_version property works as expected."""
+        self.assertEqual(factories.AgreementVersionFactory(major_version=1, minor_version=0).full_version, "1.0")
+        self.assertEqual(factories.AgreementVersionFactory(major_version=1, minor_version=5).full_version, "1.5")
+        self.assertEqual(factories.AgreementVersionFactory(major_version=1, minor_version=10).full_version, "1.10")
+        self.assertEqual(factories.AgreementVersionFactory(major_version=2, minor_version=3).full_version, "2.3")
+
+    def test_str(self):
+        """__str__ method works as expected."""
+        instance = factories.AgreementVersionFactory.build()
+        self.assertIsInstance(str(instance), str)
 
 # # class SignedAgreementTest(TestCase):
 # #     """Tests for the SignedAgreement model."""

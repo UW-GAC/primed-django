@@ -38,6 +38,12 @@ class AgreementVersion(TimeStampedModel, models.Model):
         ]
         ordering = ["major_version", "minor_version"]
 
+    def __str__(self):
+        return self.full_version
+
+    @property
+    def full_version(self):
+        return "{}.{}".format(self.major_version, self.minor_version)
 
 # # class SignedAgreement(TimeStampedModel, models.Model):
 # #     """Model to track verified, signed consortium data sharing agreements."""
