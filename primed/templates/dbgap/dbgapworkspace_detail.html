@@ -32,7 +32,7 @@
         (Term: {{ object.dbgapworkspace.disease_term }})
       {% endif %}
     </dd>
-    <dt class="col-sm-2">DUO modifiers</dt> <dd class="col-sm-10">
+    <dt class="col-sm-3">DUO modifiers</dt> <dd class="col-sm-9">
       {% for modifier in object.dbgapworkspace.data_use_modifiers.all %}
       <a href="{{ modifier.get_absolute_url }}">
         {{ modifier.abbreviation }}
