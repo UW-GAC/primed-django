@@ -1,27 +1,71 @@
-# """Tests of models in the `cdsa` app."""
-#
-# from anvil_consortium_manager.tests.factories import ManagedGroupFactory
-# from django.core.exceptions import ValidationError
-# from django.db.utils import IntegrityError
-# from django.test import TestCase
-#
-# from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
-# from primed.users.tests.factories import UserFactory
-#
-# from .. import models
-# from . import factories
-#
-#
-# class AgreementVersionTest(TestCase):
-#     """Tests for the AgreementVersion model."""
-#
-#     def test(self):
-#         self.fail("write tests")
-#
-#     def test_signed_agreement_protect(self):
-#         self.fail()
-#
-#
+"""Tests of models in the `cdsa` app."""
+
+from datetime import datetime
+
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory
+from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
+from django.test import TestCase
+
+from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.users.tests.factories import UserFactory
+
+from .. import models
+from . import factories
+
+
+class AgreementVersionTest(TestCase):
+    """Tests for the AgreementVersion model."""
+
+    def test_model_saving(self):
+        instance = models.AgreementVersion(major_version=1, minor_version=0, date_approved=datetime.today())
+        instance.save()
+        self.assertIsInstance(instance, models.AgreementVersion)
+
+    def test_unique(self):
+        factories.AgreementVersionFactory.create(major_version=1, minor_version=0)
+        instance = factories.AgreementVersionFactory.build(major_version=1, minor_version=0)
+        with self.assertRaisesMessage(ValidationError, "already exists"):
+            instance.full_clean()
+        with self.assertRaisesMessage(IntegrityError, "UNIQUE"):
+            instance.save()
+
+    def test_major_version_zero(self):
+        """ValidationError raised when major_version is zero."""
+        instance = factories.AgreementVersionFactory.build(major_version=0)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("major_version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["major_version"]), 1)
+        self.assertIn("greater than or equal to", e.exception.message_dict["major_version"][0])
+
+    def test_major_version_negative(self):
+        """ValidationError raised when major_version is negative."""
+        instance = factories.AgreementVersionFactory.build(major_version=-1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("major_version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["major_version"]), 1)
+        self.assertIn("greater than or equal to", e.exception.message_dict["major_version"][0])
+
+    def test_minor_version_zero(self):
+        """full_clean raises no exception when minor_version is zero."""
+        instance = factories.AgreementVersionFactory.build(minor_version=0)
+        instance.full_clean()
+
+    def test_major_version_negative(self):
+        """ValidationError raised when minor_version is negative."""
+        instance = factories.AgreementVersionFactory.build(minor_version=-1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("minor_version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["minor_version"]), 1)
+        self.assertIn("greater than or equal to", e.exception.message_dict["minor_version"][0])
+
+
 # # class SignedAgreementTest(TestCase):
 # #     """Tests for the SignedAgreement model."""
 # #

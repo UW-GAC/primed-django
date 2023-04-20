@@ -1,19 +1,25 @@
-# from anvil_consortium_manager.tests.factories import ManagedGroupFactory
-# from factory import Faker, Sequence, SubFactory
-# from factory.django import DjangoModelFactory
-# from factory.fuzzy import FuzzyChoice
-#
-# from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
-# from primed.users.tests.factories import UserFactory
-#
-# from .. import models
-#
-#
-# # class AgreementVersionFactory(DjangoModelFactory):
-# #     """A factory for the AgreementVersion model."""
-# #
-# #     major_version = Sequence(lambda n: n)
-# #     minor_version = 0
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory
+from factory import Faker, Sequence, SubFactory
+from factory.django import DjangoModelFactory
+from factory.fuzzy import FuzzyChoice
+
+from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.users.tests.factories import UserFactory
+
+from .. import models
+
+
+class AgreementVersionFactory(DjangoModelFactory):
+    """A factory for the AgreementVersion model."""
+
+    class Meta:
+        model = models.AgreementVersion
+
+    major_version = Faker("random_int", min=1)
+    minor_version = Faker("random_int")
+    date_approved = Faker("date")
+
+
 # # class SignedAgreementFactory(DjangoModelFactory):
 # #     """A factory for the SignedAgreement model."""
 # #

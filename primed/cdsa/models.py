@@ -1,46 +1,44 @@
-# """Model defintions for the `cdsa` app."""
-#
-# from datetime import date
-#
-# from anvil_consortium_manager.models import ManagedGroup
-# from django.conf import settings
-# from django.core.exceptions import ValidationError
-# from django.core.validators import MinValueValidator
-# from django.db import models
-# from django_extensions.db.models import TimeStampedModel
-# from simple_history.models import HistoricalRecords
-#
-# from primed.primed_anvil.models import Study, StudySite
-#
-#
-# class AgreementVersion(TimeStampedModel, models.Model):
-#     """Model to track approved CDSA versions."""
-#
-#     major_version = models.IntegerField(
-#         help_text="Major version of the CDSA.", validators=[MinValueValidator(0)]
-#     )
-#     minor_version = models.IntegerField(
-#         help_text="Minor version of the CDSA.", validators=[MinValueValidator(0)]
-#     )
-#     date_approved = models.DateField(
-#         help_text="Date that this AgreementVersion was approved.",
-#         default=date.today,
-#     )
-#     date_last_updated = models.DateField(
-#         help_text="Date that this AgreementVersion was last updated.",
-#         default=date.today,
-#     )
-#
-#     class Meta:
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=["major_version", "minor_version"],
-#                 name="unique_agreement_version",
-#             )
-#         ]
-#         ordering = ["major_version", "minor_version"]
-#
-#
+"""Model defintions for the `cdsa` app."""
+
+from datetime import date
+
+from anvil_consortium_manager.models import ManagedGroup
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.db import models
+from django_extensions.db.models import TimeStampedModel
+from simple_history.models import HistoricalRecords
+
+from primed.primed_anvil.models import Study, StudySite
+
+
+class AgreementVersion(TimeStampedModel, models.Model):
+    """Model to track approved CDSA versions."""
+
+    major_version = models.IntegerField(
+        help_text="Major version of the CDSA. Changes to the major version require resigning.", validators=[MinValueValidator(1)]
+    )
+    minor_version = models.IntegerField(
+        help_text="Minor version of the CDSA. Changes to the minor version do not require resigning.", validators=[MinValueValidator(0)]
+    )
+    date_approved = models.DateField(
+        help_text="Date that this AgreementVersion was approved by the PRIMED Consortium.",
+        default=date.today,
+    )
+
+    history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["major_version", "minor_version"],
+                name="unique_agreement_version",
+            )
+        ]
+        ordering = ["major_version", "minor_version"]
+
+
 # # class SignedAgreement(TimeStampedModel, models.Model):
 # #     """Model to track verified, signed consortium data sharing agreements."""
 # #
