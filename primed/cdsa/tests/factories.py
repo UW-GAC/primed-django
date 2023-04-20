@@ -20,25 +20,27 @@ class AgreementVersionFactory(DjangoModelFactory):
     date_approved = Faker("date")
 
 
-# # class SignedAgreementFactory(DjangoModelFactory):
-# #     """A factory for the SignedAgreement model."""
-# #
-# #     cc_id = Sequence(lambda n: n + 1001)
-# #     representative = SubFactory(UserFactory)
-# #     representative_role = Faker("job")
-# #     institution = Faker("company")
-# #     type = FuzzyChoice(
-# #         models.SignedAgreement.TYPE_CHOICES,
-# #         getter=lambda c: c[0],
-# #     )
-# #     version = Faker("random_int")
-# #     date_last_signed = Faker("date")
-# #     anvil_access_group = SubFactory(ManagedGroupFactory)
-# #
-# #     class Meta:
-# #         model = models.SignedAgreement
-# #
-# #
+class SignedAgreementFactory(DjangoModelFactory):
+    """A factory for the SignedAgreement model."""
+
+    cc_id = Sequence(lambda n: n + 1001)
+    representative = SubFactory(UserFactory)
+    representative_role = Faker("job")
+    signing_institution = Faker("company")
+    type = FuzzyChoice(
+        models.SignedAgreement.TYPE_CHOICES,
+        getter=lambda c: c[0],
+    )
+    # Assume is_primary=True for now.
+    is_primary = True
+    version = SubFactory(AgreementVersionFactory)
+    date_signed = Faker("date")
+    anvil_access_group = SubFactory(ManagedGroupFactory)
+
+    class Meta:
+        model = models.SignedAgreement
+
+
 # # class MemberAgreementFactory(DjangoModelFactory):
 # #
 # #     signed_agreement = SubFactory(

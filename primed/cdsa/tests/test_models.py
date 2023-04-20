@@ -5,6 +5,7 @@ from datetime import datetime
 from anvil_consortium_manager.tests.factories import ManagedGroupFactory
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
+from django.db.models import ProtectedError
 from django.test import TestCase
 
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
@@ -77,87 +78,85 @@ class AgreementVersionTest(TestCase):
         instance = factories.AgreementVersionFactory.build()
         self.assertIsInstance(str(instance), str)
 
-# # class SignedAgreementTest(TestCase):
-# #     """Tests for the SignedAgreement model."""
-# #
-# #     def test_model_saving(self):
-# #         """Creation using the model constructor and .save() works."""
-# #         user = UserFactory.create()
-# #         group = ManagedGroupFactory.create()
-# #         instance = models.SignedAgreement(
-# #             cc_id=1001,
-# #             representative=user,
-# #             representative_role="foo",
-# #             institution="bar",
-# #             type=models.SignedAgreement.MEMBER,
-# #             version=1,
-# #             anvil_access_group=group,
-# #         )
-# #         instance.save()
-# #         self.assertIsInstance(instance, models.SignedAgreement)
-# #
-# #     def test_str_method(self):
-# #         """The custom __str__ method returns the correct string."""
-# #         instance = factories.SignedAgreementFactory.create(
-# #             cc_id=1234,
-# #         )
-# #         self.assertIsInstance(instance.__str__(), str)
-# #         self.assertEqual(instance.__str__(), "1234")
-# #
-# #     # def test_get_absolute_url(self):
-# #     #     """get_absolute_url method works correctly."""
-# #     #     instance = factories.dbGaPStudyAccessionFactory.create()
-# #     #     self.assertIsInstance(instance.get_absolute_url(), str)
-# #
-# #     def test_member_choices(self):
-# #         """Can create instances with all of the member choices."""
-# #         instance = factories.SignedAgreementFactory.create(
-# #             type=models.SignedAgreement.MEMBER
-# #         )
-# #         self.assertEqual(instance.type, models.SignedAgreement.MEMBER)
-# #         instance = factories.SignedAgreementFactory.create(
-# #             type=models.SignedAgreement.MEMBER_COMPONENT
-# #         )
-# #         self.assertEqual(instance.type, models.SignedAgreement.MEMBER_COMPONENT)
-# #         instance = factories.SignedAgreementFactory.create(
-# #             type=models.SignedAgreement.DATA_AFFILIATE
-# #         )
-# #         self.assertEqual(instance.type, models.SignedAgreement.DATA_AFFILIATE)
-# #         instance = factories.SignedAgreementFactory.create(
-# #             type=models.SignedAgreement.DATA_AFFILIATE_COMPONENT
-# #         )
-# #         self.assertEqual(instance.type, models.SignedAgreement.DATA_AFFILIATE_COMPONENT)
-# #         instance = factories.SignedAgreementFactory.create(
-# #             type=models.SignedAgreement.NON_DATA_AFFILIATE
-# #         )
-# #         self.assertEqual(instance.type, models.SignedAgreement.NON_DATA_AFFILIATE)
-# #         instance = factories.SignedAgreementFactory.create(
-# #             type=models.SignedAgreement.NON_DATA_AFFILIATE_COMPONENT
-# #         )
-# #         self.assertEqual(
-# #             instance.type, models.SignedAgreement.NON_DATA_AFFILIATE_COMPONENT
-# #         )
-# #
-# #     def test_unique_cc_id(self):
-# #         """Saving a duplicate model fails."""
-# #         obj = factories.SignedAgreementFactory.create()
-# #         user = UserFactory.create()
-# #         group = ManagedGroupFactory.create()
-# #         instance = factories.SignedAgreementFactory.build(
-# #             #            study=study,
-# #             cc_id=obj.cc_id,
-# #             representative=user,
-# #             anvil_access_group=group,
-# #         )
-# #         with self.assertRaises(ValidationError) as e:
-# #             instance.full_clean()
-# #         self.assertIn("cc_id", e.exception.error_dict)
-# #         self.assertEqual(len(e.exception.error_dict["cc_id"]), 1)
-# #         self.assertIn("already exists", e.exception.error_dict["cc_id"][0].messages[0])
-# #         with self.assertRaises(IntegrityError):
-# #             instance.save()
-#
-#
+
+class SignedAgreementTest(TestCase):
+    """Tests for the SignedAgreement model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        agreement_version = factories.AgreementVersionFactory.create()
+        user = UserFactory.create()
+        group = ManagedGroupFactory.create()
+        instance = models.SignedAgreement(
+            cc_id=1001,
+            representative=user,
+            representative_role="foo",
+            signing_institution="bar",
+            type=models.SignedAgreement.MEMBER,
+            is_primary=True,
+            version=agreement_version,
+            anvil_access_group=group,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.SignedAgreement)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.SignedAgreementFactory.create(
+            cc_id=1234,
+        )
+        self.assertIsInstance(instance.__str__(), str)
+        self.assertEqual(instance.__str__(), "1234")
+
+    # def test_get_absolute_url(self):
+    #     """get_absolute_url method works correctly."""
+    #     instance = factories.dbGaPStudyAccessionFactory.create()
+    #     self.assertIsInstance(instance.get_absolute_url(), str)
+
+    def test_member_choices(self):
+        """Can create instances with all of the member choices."""
+        instance = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.MEMBER
+        )
+        self.assertEqual(instance.type, models.SignedAgreement.MEMBER)
+        instance = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE
+        )
+        self.assertEqual(instance.type, models.SignedAgreement.DATA_AFFILIATE)
+        instance = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.NON_DATA_AFFILIATE
+        )
+        self.assertEqual(instance.type, models.SignedAgreement.NON_DATA_AFFILIATE)
+
+    def test_unique_cc_id(self):
+        """Saving a duplicate model fails."""
+        obj = factories.SignedAgreementFactory.create()
+        user = UserFactory.create()
+        group = ManagedGroupFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        instance = factories.SignedAgreementFactory.build(
+            #            study=study,
+            cc_id=obj.cc_id,
+            representative=user,
+            anvil_access_group=group,
+            version=agreement_version,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertIn("cc_id", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["cc_id"]), 1)
+        self.assertIn("already exists", e.exception.message_dict["cc_id"][0])
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_agreement_version_protect(self):
+        """An AgreementVersion cannot be deleted if there are associated SignedAgreements."""
+        agreement_version = factories.AgreementVersionFactory.create()
+        signed_agreement = factories.SignedAgreementFactory.create(version=agreement_version)
+        with self.assertRaises(ProtectedError):
+            agreement_version.delete()
+
+
 # # class MemberAgreementTest(TestCase):
 # #     """Tests for the MemberAgremeent model."""
 # #
