@@ -1,0 +1,34 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load django_tables2 %}
+
+{% block title %}Data affiliate agreement {{ object }}{% endblock %}
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-3">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
+  <dt class="col-sm-3">Representative</dt> <dd class="col-sm-9">
+    <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative }}</a>
+  </dd>
+  <dt class="col-sm-3">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
+  <dt class="col-sm-3">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
+  <dt class="col-sm-3">Primary?</dt> <dd class="col-sm-9">{{ object.signed_agreement.is_primary }}</dd>
+  <dt class="col-sm-3">Agreement version</dt> <dd class="col-sm-9">{{ object.signed_agreement.version }}</dd>
+  <dt class="col-sm-3">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
+
+  <dt class="col-sm-3">Study</dt> <dd class="col-sm-9">
+    <a href="{{ object.study.get_absolute_url }}">{{ object.study }}</a>
+  </dd>
+  <dt class="col-sm-3">AnVIL access group</dt><dd class="col-sm-9">
+    <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
+  </dd>
+  <dt class="col-sm-3">AnVIL upload group</dt><dd class="col-sm-9">
+    <a href="{{ object.anvil_upload_group.get_absolute_url }}">{{ object.anvil_upload_group }}</a>
+  </dd>
+
+  <hr>
+
+  <dt class="col-sm-3">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
+  <dt class="col-sm-3">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+
+</dl>
+{% endblock panel %}
