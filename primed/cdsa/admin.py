@@ -14,14 +14,13 @@ class AgreementVersion(SimpleHistoryAdmin):
         "minor_version",
         "date_approved",
     )
-    list_filter = (
-        "major_version",
-    )
+    list_filter = ("major_version",)
     sortable_by = (
         "major_version",
         "minor_version",
         "date_approved",
     )
+
 
 @admin.register(models.SignedAgreement)
 class SignedAgreement(SimpleHistoryAdmin):
@@ -51,3 +50,42 @@ class SignedAgreement(SimpleHistoryAdmin):
         "version",
         "date_signed",
     )
+
+
+@admin.register(models.MemberAgreement)
+class MemberAgreementAdmin(SimpleHistoryAdmin):
+    """Admin class for the `MemberAgreement` model."""
+
+    list_display = (
+        "signed_agreement",
+        "study_site",
+    )
+    list_filter = (
+        "study_site",
+        "signed_agreement__is_primary",
+    )
+
+
+@admin.register(models.DataAffiliateAgreement)
+class DataAffiliateAgreementAdmin(SimpleHistoryAdmin):
+    """Admin class for the `DataAffiliateAgreement` model."""
+
+    list_display = (
+        "signed_agreement",
+        "study",
+    )
+    list_filter = (
+        "study",
+        "signed_agreement__is_primary",
+    )
+
+
+@admin.register(models.NonDataAffiliateAgreement)
+class NonDataAffiliateAgreementAdmin(SimpleHistoryAdmin):
+    """Admin class for the `NonDataAffiliateAgreement` model."""
+
+    list_display = (
+        "signed_agreement",
+        "affiliation",
+    )
+    list_filter = ("signed_agreement__is_primary",)
