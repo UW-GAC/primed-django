@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
@@ -109,6 +110,14 @@ class SignedAgreement(TimeStampedModel, models.Model):
     def __str__(self):
         return "{}".format(self.cc_id)
 
+    def get_absolute_url(self):
+        if self.type == self.MEMBER:
+            return self.memberagreement.get_absolute_url()
+        elif self.type == self.DATA_AFFILIATE:
+            return self.dataaffiliateagreement.get_absolute_url()
+        elif self.type == self.NON_DATA_AFFILIATE:
+            return self.nondataaffiliateagreement.get_absolute_url()
+
 
 class AgreementTypeModel(models.Model):
     """An abstract model that can be used to provide required fields for agreement type models."""
@@ -145,6 +154,12 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
         help_text="Study Site that this agreement is associated with.",
     )
 
+    def get_absolute_url(self):
+        return reverse(
+            "cdsa:agreements:members:detail",
+            kwargs={"cc_id": self.signed_agreement.cc_id},
+        )
+
 
 class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
     """A model to hold additional fields for signed data affiliate CDSAs."""
@@ -153,6 +168,12 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     study = models.ForeignKey(Study, on_delete=models.PROTECT)
     anvil_upload_group = models.ForeignKey(ManagedGroup, on_delete=models.PROTECT)
+
+    def get_absolute_url(self):
+        return reverse(
+            "cdsa:agreements:data_affiliates:detail",
+            kwargs={"cc_id": self.signed_agreement.cc_id},
+        )
 
 
 class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
@@ -163,3 +184,9 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
     affiliation = models.CharField(
         max_length=255, help_text="The affiliation of the person signing this CDSA."
     )
+
+    def get_absolute_url(self):
+        return reverse(
+            "cdsa:agreements:non_data_affiliates:detail",
+            kwargs={"cc_id": self.signed_agreement.cc_id},
+        )

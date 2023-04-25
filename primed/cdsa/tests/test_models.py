@@ -138,10 +138,20 @@ class SignedAgreementTest(TestCase):
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "1234")
 
-    # def test_get_absolute_url(self):
-    #     """get_absolute_url method works correctly."""
-    #     instance = factories.dbGaPStudyAccessionFactory.create()
-    #     self.assertIsInstance(instance.get_absolute_url(), str)
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.MemberAgreementFactory.create()
+        self.assertEqual(
+            instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
+        )
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.assertEqual(
+            instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
+        )
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.assertEqual(
+            instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
+        )
 
     def test_member_choices(self):
         """Can create instances with all of the member choices."""
@@ -225,6 +235,11 @@ class MemberAgreementTest(TestCase):
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), str(instance.signed_agreement))
 
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.MemberAgreementFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_error_duplicate_signed_agreement(self):
         """Cannot link two member agreements to one signed_agreement."""
         instance_1 = factories.MemberAgreementFactory.create()
@@ -288,6 +303,11 @@ class DataAffiliateAgreementTest(TestCase):
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), str(instance.signed_agreement))
 
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
     def test_error_duplicate_signed_agreement(self):
         """Cannot link two member agreements to one signed_agreement."""
         instance_1 = factories.DataAffiliateAgreementFactory.create()
@@ -346,6 +366,11 @@ class NonDataAffiliateAgreementTest(TestCase):
         instance = factories.NonDataAffiliateAgreementFactory.create()
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), str(instance.signed_agreement))
+
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
     def test_error_duplicate_signed_agreement(self):
         """Cannot link two member agreements to one signed_agreement."""

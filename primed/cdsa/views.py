@@ -1,8 +1,16 @@
 from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
 from django.http import Http404
 from django.views.generic import DetailView
+from django_tables2 import SingleTableView
 
-from . import models
+from . import models, tables
+
+
+class SignedAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """Display a list of SignedAgreement objects."""
+
+    model = models.SignedAgreement
+    table_class = tables.SignedAgreementTable
 
 
 class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
