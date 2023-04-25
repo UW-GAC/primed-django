@@ -176,6 +176,78 @@ class MemberAgreementDetailTest(TestCase):
         )
 
 
+class MemberAgreementListTest(TestCase):
+    """Tests for the MemberAgreementList view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreements:members:list", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.MemberAgreementList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.MemberAgreementTable
+        )
+
+    def test_workspace_table_none(self):
+        """No rows are shown if there are no MemberAgreement objects."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_workspace_table_three(self):
+        """Two rows are shown if there are three MemberAgreement objects."""
+        factories.MemberAgreementFactory.create_batch(3)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 3)
+
+
 class DataAffiliateAgreementDetailTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
 
@@ -268,6 +340,78 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
 
 
+class DataAffiliateAgreementListTest(TestCase):
+    """Tests for the DataAffiliateAgreement view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreements:data_affiliates:list", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DataAffiliateAgreementList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.DataAffiliateAgreementTable
+        )
+
+    def test_workspace_table_none(self):
+        """No rows are shown if there are no DataAffiliateAgreement objects."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_workspace_table_three(self):
+        """Two rows are shown if there are three DataAffiliateAgreement objects."""
+        factories.DataAffiliateAgreementFactory.create_batch(3)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 3)
+
+
 class NonDataAffiliateAgreementDetailTest(TestCase):
     """Tests for the NonDataAffiliateAgreement view."""
 
@@ -346,3 +490,75 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(
             response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
         )
+
+
+class NonDataAffiliateAgreementListTest(TestCase):
+    """Tests for the NonDataAffiliateAgreement view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreements:non_data_affiliates:list", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.NonDataAffiliateAgreementList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.NonDataAffiliateAgreementTable
+        )
+
+    def test_workspace_table_none(self):
+        """No rows are shown if there are no NonDataAffiliateAgreement objects."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_workspace_table_three(self):
+        """Two rows are shown if there are three NonDataAffiliateAgreement objects."""
+        factories.NonDataAffiliateAgreementFactory.create_batch(3)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 3)

@@ -6,6 +6,7 @@ app_name = "cdsa"
 
 member_agreement_patterns = (
     [
+        path("", views.MemberAgreementList.as_view(), name="list"),
         path("<int:cc_id>/", views.MemberAgreementDetail.as_view(), name="detail"),
     ],
     "members",
@@ -13,6 +14,7 @@ member_agreement_patterns = (
 
 data_affiliate_agreement_patterns = (
     [
+        path("", views.DataAffiliateAgreementList.as_view(), name="list"),
         path(
             "<int:cc_id>/", views.DataAffiliateAgreementDetail.as_view(), name="detail"
         ),
@@ -22,6 +24,7 @@ data_affiliate_agreement_patterns = (
 
 non_data_affiliate_agreement_patterns = (
     [
+        path("", views.NonDataAffiliateAgreementList.as_view(), name="list"),
         path(
             "<int:cc_id>/",
             views.NonDataAffiliateAgreementDetail.as_view(),

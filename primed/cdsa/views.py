@@ -31,6 +31,13 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
         return obj
 
 
+class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """Display a list of MemberAgreement objects."""
+
+    model = models.MemberAgreement
+    table_class = tables.MemberAgreementTable
+
+
 class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
     """View to show details about a `DataAffiliateAgreement`."""
 
@@ -49,6 +56,13 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
         return obj
 
 
+class DataAffiliateAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """Display a list of DataAffiliateAgreement objects."""
+
+    model = models.DataAffiliateAgreement
+    table_class = tables.DataAffiliateAgreementTable
+
+
 class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
     """View to show details about a `NonDataAffiliateAgreement`."""
 
@@ -65,3 +79,12 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+
+class NonDataAffiliateAgreementList(
+    AnVILConsortiumManagerViewRequired, SingleTableView
+):
+    """Display a list of NonDataAffiliateAgreement objects."""
+
+    model = models.NonDataAffiliateAgreement
+    table_class = tables.NonDataAffiliateAgreementTable

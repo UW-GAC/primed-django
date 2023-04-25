@@ -1,7 +1,28 @@
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account
+from django.utils.html import format_html
 
 from . import models
+
+
+class BooleanCheckColumn(tables.BooleanColumn):
+
+    #    attrs = {"td": {"align": "center"}}
+    # attrs = {"th": {"class": "center"}}
+
+    def render(self, value, record, bound_column):
+        value = self._get_bool_value(record, value, bound_column)
+        if value:
+            icon = "check-circle-fill"
+            color = "green"
+            value = format_html(
+                """<i class="bi bi-{} bi-align-center px-2" style="color: {};"></i>""".format(
+                    icon, color
+                )
+            )
+        else:
+            value = ""
+        return value
 
 
 class StudyTable(tables.Table):
