@@ -46,7 +46,7 @@ class MemberAgreementTable(tables.Table):
     )
 
     class Meta:
-        model = models.SignedAgreement
+        model = models.MemberAgreement
         fields = (
             "signed_agreement__cc_id",
             "study_site",
@@ -74,7 +74,7 @@ class DataAffiliateAgreementTable(tables.Table):
     )
 
     class Meta:
-        model = models.SignedAgreement
+        model = models.DataAffiliateAgreement
         fields = (
             "signed_agreement__cc_id",
             "study",
@@ -101,7 +101,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
     )
 
     class Meta:
-        model = models.SignedAgreement
+        model = models.NonDataAffiliateAgreement
         fields = (
             "signed_agreement__cc_id",
             "affiliation",
