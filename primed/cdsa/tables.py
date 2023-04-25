@@ -11,6 +11,10 @@ class SignedAgreementTable(tables.Table):
     representative = tables.Column(linkify=True)
     representative_role = tables.Column(verbose_name="Role")
     combined_type = tables.Column(order_by=("type", "-is_primary"))
+    number_accessors = tables.Column(
+        verbose_name="Number of accessors",
+        accessor="anvil_access_group__groupaccountmembership_set__count",
+    )
 
     class Meta:
         model = models.SignedAgreement
@@ -22,5 +26,5 @@ class SignedAgreementTable(tables.Table):
             "combined_type",
             "version",
             "date_signed",
-            # "number_accessors",
+            "number_accessors",
         )
