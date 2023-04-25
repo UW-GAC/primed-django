@@ -196,6 +196,26 @@ class SignedAgreementTest(TestCase):
         with self.assertRaises(ProtectedError):
             agreement_version.delete()
 
+    def test_get_combined_type(self):
+        obj = factories.MemberAgreementFactory()
+        self.assertEqual(obj.signed_agreement.combined_type, "Member")
+        obj = factories.MemberAgreementFactory(signed_agreement__is_primary=False)
+        self.assertEqual(obj.signed_agreement.combined_type, "Member component")
+        obj = factories.DataAffiliateAgreementFactory()
+        self.assertEqual(obj.signed_agreement.combined_type, "Data affiliate")
+        obj = factories.DataAffiliateAgreementFactory(
+            signed_agreement__is_primary=False
+        )
+        self.assertEqual(obj.signed_agreement.combined_type, "Data affiliate component")
+        obj = factories.NonDataAffiliateAgreementFactory()
+        self.assertEqual(obj.signed_agreement.combined_type, "Non-data affiliate")
+        obj = factories.NonDataAffiliateAgreementFactory(
+            signed_agreement__is_primary=False
+        )
+        self.assertEqual(
+            obj.signed_agreement.combined_type, "Non-data affiliate component"
+        )
+
 
 class MemberAgreementTest(TestCase):
     """Tests for the MemberAgremeent model."""

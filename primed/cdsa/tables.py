@@ -9,6 +9,8 @@ class SignedAgreementTable(tables.Table):
 
     cc_id = tables.Column(linkify=True)
     representative = tables.Column(linkify=True)
+    representative_role = tables.Column(verbose_name="Role")
+    combined_type = tables.Column(order_by=("type", "-is_primary"))
 
     class Meta:
         model = models.SignedAgreement
@@ -17,8 +19,8 @@ class SignedAgreementTable(tables.Table):
             "representative",
             "representative_role",
             "signing_institution",
-            "type",
-            "is_primary",
+            "combined_type",
             "version",
             "date_signed",
+            # "number_accessors",
         )

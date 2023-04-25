@@ -118,6 +118,13 @@ class SignedAgreement(TimeStampedModel, models.Model):
         elif self.type == self.NON_DATA_AFFILIATE:
             return self.nondataaffiliateagreement.get_absolute_url()
 
+    @property
+    def combined_type(self):
+        combined_type = self.get_type_display()
+        if not self.is_primary:
+            combined_type = combined_type + " component"
+        return combined_type
+
 
 class AgreementTypeModel(models.Model):
     """An abstract model that can be used to provide required fields for agreement type models."""
