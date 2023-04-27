@@ -7,6 +7,7 @@ app_name = "cdsa"
 member_agreement_patterns = (
     [
         path("", views.MemberAgreementList.as_view(), name="list"),
+        path("new/", views.MemberAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.MemberAgreementDetail.as_view(), name="detail"),
     ],
     "members",

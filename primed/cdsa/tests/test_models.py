@@ -82,25 +82,25 @@ class AgreementVersionTest(TestCase):
             factories.AgreementVersionFactory(
                 major_version=1, minor_version=0
             ).full_version,
-            "1.0",
+            "v1.0",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
                 major_version=1, minor_version=5
             ).full_version,
-            "1.5",
+            "v1.5",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
                 major_version=1, minor_version=10
             ).full_version,
-            "1.10",
+            "v1.10",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
                 major_version=2, minor_version=3
             ).full_version,
-            "2.3",
+            "v2.3",
         )
 
     def test_str(self):
@@ -188,6 +188,44 @@ class SignedAgreementTest(TestCase):
         self.assertIn("already exists", e.exception.message_dict["cc_id"][0])
         with self.assertRaises(IntegrityError):
             instance.save()
+
+    def test_cc_id_zero(self):
+        """ValidationError raised when cc_id is zero."""
+        user = UserFactory.create()
+        group = ManagedGroupFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(major_version=0)
+        instance = factories.SignedAgreementFactory.build(
+            cc_id=0,
+            representative=user,
+            anvil_access_group=group,
+            version=agreement_version,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("cc_id", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["cc_id"]), 1)
+        self.assertIn("greater than or equal to", e.exception.message_dict["cc_id"][0])
+
+    def test_cc_id_negative(self):
+        """ValidationError raised when cc_id is negative."""
+        user = UserFactory.create()
+        group = ManagedGroupFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(major_version=0)
+        instance = factories.SignedAgreementFactory.build(
+            cc_id=-1,
+            representative=user,
+            anvil_access_group=group,
+            version=agreement_version,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("cc_id", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["cc_id"]), 1)
+        self.assertIn("greater than or equal to", e.exception.message_dict["cc_id"][0])
 
     def test_agreement_version_protect(self):
         """An AgreementVersion cannot be deleted if there are associated SignedAgreements."""

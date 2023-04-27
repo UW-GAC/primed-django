@@ -157,3 +157,4 @@ LOGGING = {
 # Your stuff...
 # ------------------------------------------------------------------------------
 ANVIL_DBGAP_APPLICATION_GROUP_PREFIX = "PRIMED_DBGAP_ACCESS"
+ANVIL_CDSA_GROUP_PREFIX = "PRIMED_CDSA_ACCESS"

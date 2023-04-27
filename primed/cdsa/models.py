@@ -46,7 +46,7 @@ class AgreementVersion(TimeStampedModel, models.Model):
 
     @property
     def full_version(self):
-        return "{}.{}".format(self.major_version, self.minor_version)
+        return "v{}.{}".format(self.major_version, self.minor_version)
 
 
 class SignedAgreement(TimeStampedModel, models.Model):
@@ -64,6 +64,7 @@ class SignedAgreement(TimeStampedModel, models.Model):
     cc_id = models.IntegerField(
         help_text="Identifier assigned by the Coordinating Center.",
         unique=True,
+        validators=[MinValueValidator(1)],
     )
     representative = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -146,7 +147,10 @@ class AgreementTypeModel(models.Model):
 
     def clean(self):
         """Ensure that the SignedAgreement type is correct for the class."""
-        if self.signed_agreement.type != self.AGREEMENT_TYPE:
+        if (
+            hasattr(self, "signed_agreement")
+            and self.signed_agreement.type != self.AGREEMENT_TYPE
+        ):
             raise ValidationError({"signed_agreement": self.ERROR_TYPE_DOES_NOT_MATCH})
 
 
