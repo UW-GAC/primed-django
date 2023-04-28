@@ -80,3 +80,23 @@ DataAffiliateAgreementInlineFormset = forms.inlineformset_factory(
     min_num=1,
     max_num=1,
 )
+
+
+class NonDataAffiliateAgreementForm(forms.ModelForm):
+    class Meta:
+        model = models.NonDataAffiliateAgreement
+        fields = (
+            "signed_agreement",
+            "affiliation",
+        )
+
+
+NonDataAffiliateAgreementInlineFormset = forms.inlineformset_factory(
+    models.SignedAgreement,
+    models.NonDataAffiliateAgreement,
+    form=NonDataAffiliateAgreementForm,
+    can_delete=False,
+    extra=1,
+    min_num=1,
+    max_num=1,
+)

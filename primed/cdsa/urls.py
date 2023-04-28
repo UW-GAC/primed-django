@@ -27,6 +27,7 @@ data_affiliate_agreement_patterns = (
 non_data_affiliate_agreement_patterns = (
     [
         path("", views.NonDataAffiliateAgreementList.as_view(), name="list"),
+        path("new/", views.NonDataAffiliateAgreementCreate.as_view(), name="new"),
         path(
             "<int:cc_id>/",
             views.NonDataAffiliateAgreementDetail.as_view(),

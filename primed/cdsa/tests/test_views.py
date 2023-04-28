@@ -2255,6 +2255,800 @@ class DataAffiliateAgreementListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 3)
 
 
+class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the DataAffiliateAgreementCreate view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreements:non_data_affiliates:new", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.NonDataAffiliateAgreementCreate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has only view permission."""
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_has_forms_in_context(self):
+        """Response includes a form."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertTrue("form" in response.context_data)
+        self.assertTrue("formset" in response.context_data)
+
+    def test_form_classes(self):
+        """Form is the expected class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementForm)
+        self.assertIsInstance(
+            response.context_data["formset"],
+            forms.NonDataAffiliateAgreementInlineFormset,
+        )
+
+    def test_can_create_object(self):
+        """Can create an object."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # New objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)
+        new_agreement = models.SignedAgreement.objects.latest("pk")
+        self.assertEqual(new_agreement.cc_id, 1234)
+        self.assertEqual(new_agreement.representative, representative)
+        self.assertEqual(new_agreement.representative_role, "Test role")
+        self.assertEqual(new_agreement.signing_institution, "Test institution")
+        self.assertEqual(new_agreement.date_signed, date.fromisoformat("2023-01-01"))
+        self.assertEqual(new_agreement.is_primary, True)
+        # Type was set correctly.
+        self.assertEqual(new_agreement.type, new_agreement.NON_DATA_AFFILIATE)
+        # AnVIL group was set correctly.
+        self.assertEqual(ManagedGroup.objects.count(), 1)
+        self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
+        self.assertEqual(
+            new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        # Check the agreement type.
+        self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 1)
+        new_agreement_type = models.NonDataAffiliateAgreement.objects.latest("pk")
+        self.assertEqual(new_agreement.nondataaffiliateagreement, new_agreement_type)
+        self.assertEqual(new_agreement_type.affiliation, "Foo Bar")
+
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        # API response to create the associated anvil_access_group.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        new_object = models.SignedAgreement.objects.latest("pk")
+        self.assertRedirects(response, new_object.get_absolute_url())
+
+    def test_success_message(self):
+        """Redirects to successful url."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        # API response to create the associated anvil_access_group.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.NonDataAffiliateAgreementCreate.success_message, str(messages[0])
+        )
+
+    def test_error_missing_cc_id(self):
+        """Form shows an error when cc_id is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                # "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("cc_id", form.errors)
+        self.assertEqual(len(form.errors["cc_id"]), 1)
+        self.assertIn("required", form.errors["cc_id"][0])
+
+    def test_invalid_cc_id(self):
+        """Form shows an error when cc_id is invalid."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": -1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("cc_id", form.errors)
+        self.assertEqual(len(form.errors["cc_id"]), 1)
+
+    def test_error_missing_representative(self):
+        """Form shows an error when representative is missing."""
+        self.client.force_login(self.user)
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                # "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("representative", form.errors)
+        self.assertEqual(len(form.errors["representative"]), 1)
+        self.assertIn("required", form.errors["representative"][0])
+
+    def test_error_invalid_representative(self):
+        """Form shows an error when representative is invalid."""
+        self.client.force_login(self.user)
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": 9999,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("representative", form.errors)
+        self.assertEqual(len(form.errors["representative"]), 1)
+        self.assertIn("valid", form.errors["representative"][0])
+
+    def test_error_missing_representative_role(self):
+        """Form shows an error when representative_role is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                # "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("representative_role", form.errors)
+        self.assertEqual(len(form.errors["representative_role"]), 1)
+        self.assertIn("required", form.errors["representative_role"][0])
+
+    def test_error_missing_signing_institution(self):
+        """Form shows an error when representative is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                # "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("signing_institution", form.errors)
+        self.assertEqual(len(form.errors["signing_institution"]), 1)
+        self.assertIn("required", form.errors["signing_institution"][0])
+
+    def test_error_missing_version(self):
+        """Form shows an error when representative is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                # "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("version", form.errors)
+        self.assertEqual(len(form.errors["version"]), 1)
+        self.assertIn("required", form.errors["version"][0])
+
+    def test_error_invalid_version(self):
+        """Form shows an error when version is invalid."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": 999,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("version", form.errors)
+        self.assertEqual(len(form.errors["version"]), 1)
+        self.assertIn("valid", form.errors["version"][0])
+
+    def test_error_missing_date_signed(self):
+        """Form shows an error when date_signed is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                # "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("date_signed", form.errors)
+        self.assertEqual(len(form.errors["date_signed"]), 1)
+        self.assertIn("required", form.errors["date_signed"][0])
+
+    def test_error_missing_is_primary(self):
+        """Form shows an error when representative is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                # "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("is_primary", form.errors)
+        self.assertEqual(len(form.errors["is_primary"]), 1)
+        self.assertIn("required", form.errors["is_primary"][0])
+
+    def test_error_missing_nondataaffiliateagreement_affiliation(self):
+        """Form shows an error when study_site is missing."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                # "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        self.assertIn("form", response.context_data)
+        form = response.context_data["form"]
+        self.assertTrue(form.is_valid())
+        formset = response.context_data["formset"]
+        self.assertFalse(formset.is_valid())
+        self.assertFalse(formset.forms[0].is_valid())
+        self.assertEqual(len(formset.forms[0].errors), 1)
+        self.assertIn("affiliation", formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors["affiliation"]), 1)
+        self.assertIn("required", formset.forms[0].errors["affiliation"][0])
+
+    def test_error_duplicate_project_id(self):
+        """Form shows an error when trying to create a duplicate dbgap_phs."""
+        obj = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": obj.signed_agreement.cc_id,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(
+            models.SignedAgreement.objects.count(), 1
+        )  # One already existed.
+        self.assertEqual(
+            models.NonDataAffiliateAgreement.objects.count(), 1
+        )  # One already existed.
+        # Form has errors in the correct field.
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("cc_id", form.errors)
+        self.assertEqual(len(form.errors["cc_id"]), 1)
+        self.assertIn("already exists", form.errors["cc_id"][0])
+
+    def test_post_blank_data(self):
+        """Posting blank data does not create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {})
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+
+    def test_creates_anvil_access_group(self):
+        """View creates a managed group upon when form is valid."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 2345,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.SignedAgreement.objects.latest("pk")
+        self.assertEqual(ManagedGroup.objects.count(), 1)
+        # A new group was created.
+        new_group = ManagedGroup.objects.latest("pk")
+        self.assertEqual(new_object.anvil_access_group, new_group)
+        self.assertEqual(new_group.name, "TEST_PRIMED_CDSA_ACCESS_2345")
+        self.assertTrue(new_group.is_managed_by_app)
+
+    @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
+    def test_creates_anvil_groups_different_setting(self):
+        """View creates a managed group upon when form is valid."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        api_url = (
+            self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 2345,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.SignedAgreement.objects.latest("pk")
+        self.assertEqual(ManagedGroup.objects.count(), 1)
+        # A new group was created.
+        new_group = ManagedGroup.objects.latest("pk")
+        self.assertEqual(new_object.anvil_access_group, new_group)
+        self.assertEqual(new_group.name, "foo_CDSA_ACCESS_2345")
+        self.assertTrue(new_group.is_managed_by_app)
+
+    def test_manage_group_create_api_error(self):
+        """Nothing is created when the form is valid but there is an API error when creating the group."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        # API response to create the associated anvil_access_group.
+        api_url = (
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=500, json={"message": "other error"}
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        formset = response.context["formset"]
+        self.assertTrue(formset.is_valid())
+        # ...but there was some error from the API.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual("AnVIL API Error: other error", str(messages[0]))
+        # No objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 0)
+
+    def test_managed_group_already_exists_in_app(self):
+        """No objects are created if the managed group already exists in the app."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        # Create a group with the same name.
+        ManagedGroupFactory.create(name="TEST_PRIMED_CDSA_ACCESS_1")
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "nondataaffiliateagreement-TOTAL_FORMS": 1,
+                "nondataaffiliateagreement-INITIAL_FORMS": 0,
+                "nondataaffiliateagreement-MIN_NUM_FORMS": 1,
+                "nondataaffiliateagreement-MAX_NUM_FORMS": 1,
+                "nondataaffiliateagreement-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        # ...but there was an error with the group name.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.NonDataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0])
+        )
+        # No dbGaPApplication was created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+
+
 class NonDataAffiliateAgreementDetailTest(TestCase):
     """Tests for the NonDataAffiliateAgreement view."""
 
