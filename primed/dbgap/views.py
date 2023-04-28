@@ -200,8 +200,8 @@ class dbGaPApplicationCreate(
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
         project_id = form.cleaned_data["dbgap_project_id"]
-        group_name = "{}_{}".format(
-            settings.ANVIL_DBGAP_APPLICATION_GROUP_PREFIX, project_id
+        group_name = "{}_DBGAP_ACCESS_{}".format(
+            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX, project_id
         )
         managed_group = ManagedGroup(name=group_name)
         try:

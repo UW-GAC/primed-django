@@ -820,14 +820,16 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_group.name, "TEST_PRIMED_CDSA_ACCESS_2345")
         self.assertTrue(new_group.is_managed_by_app)
 
-    @override_settings(ANVIL_CDSA_GROUP_PREFIX="foo")
-    def test_creates_anvil_access_group_different_setting(self):
+    @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
+    def test_creates_anvil_groups_different_setting(self):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
-        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_2345"
+        api_url = (
+            self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345"
+        )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -854,7 +856,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
-        self.assertEqual(new_group.name, "foo_2345")
+        self.assertEqual(new_group.name, "foo_CDSA_ACCESS_2345")
         self.assertTrue(new_group.is_managed_by_app)
 
     def test_manage_group_create_api_error(self):
@@ -1864,7 +1866,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app
         )
 
-    @override_settings(ANVIL_CDSA_GROUP_PREFIX="foo_ACCESS")
+    @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_access_group_different_setting(self):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
@@ -1873,13 +1875,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         study = StudyFactory.create()
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point + "/api/groups/v1/foo_ACCESS_2345",
+            self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point + "/api/groups/v1/foo_UPLOAD_2345",
+            self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_UPLOAD_2345",
             status=201,
             json={"message": "mock message"},
         )
@@ -1904,11 +1906,12 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_object = models.SignedAgreement.objects.latest("pk")
         self.assertEqual(ManagedGroup.objects.count(), 2)
         # A new group was created.
-        self.assertEqual(new_object.anvil_access_group.name, "foo_ACCESS_2345")
+        self.assertEqual(new_object.anvil_access_group.name, "foo_CDSA_ACCESS_2345")
         self.assertTrue(new_object.anvil_access_group.is_managed_by_app)
         # An upload group was created.
         self.assertEqual(
-            new_object.dataaffiliateagreement.anvil_upload_group.name, "foo_UPLOAD_2345"
+            new_object.dataaffiliateagreement.anvil_upload_group.name,
+            "foo_CDSA_UPLOAD_2345",
         )
         self.assertTrue(
             new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app

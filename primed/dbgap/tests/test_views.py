@@ -1708,13 +1708,15 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_group.name, "TEST_PRIMED_DBGAP_ACCESS_12498")
         self.assertTrue(new_group.is_managed_by_app)
 
-    @override_settings(ANVIL_DBGAP_APPLICATION_GROUP_PREFIX="foo")
+    @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_access_group_different_setting(self):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_12498"
+        api_url = (
+            self.api_client.sam_entry_point + "/api/groups/v1/foo_DBGAP_ACCESS_12498"
+        )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -1727,7 +1729,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
-        self.assertEqual(new_group.name, "foo_12498")
+        self.assertEqual(new_group.name, "foo_DBGAP_ACCESS_12498")
         self.assertTrue(new_group.is_managed_by_app)
 
     def test_manage_group_create_api_error(self):

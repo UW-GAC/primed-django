@@ -80,8 +80,8 @@ class MemberAgreementCreate(
         with transaction.atomic():
             # Create the access group.
             self.object = form.save(commit=False)
-            access_group_name = "{}_{}".format(
-                settings.ANVIL_CDSA_GROUP_PREFIX,
+            access_group_name = "{}_CDSA_ACCESS_{}".format(
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
                 self.object.cc_id,
             )
             access_group = ManagedGroup(name=access_group_name)
@@ -182,8 +182,8 @@ class DataAffiliateAgreementCreate(
         with transaction.atomic():
             # Create the access group.
             self.object = form.save(commit=False)
-            access_group_name = "{}_{}".format(
-                settings.ANVIL_CDSA_GROUP_PREFIX,
+            access_group_name = "{}_CDSA_ACCESS_{}".format(
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
                 self.object.cc_id,
             )
             access_group = ManagedGroup(name=access_group_name)
@@ -199,7 +199,10 @@ class DataAffiliateAgreementCreate(
                 )
             access_group.save()
             # Now create the upload group.
-            upload_group_name = access_group_name.replace("ACCESS", "UPLOAD")
+            upload_group_name = "{}_CDSA_UPLOAD_{}".format(
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
+                self.object.cc_id,
+            )
             upload_group = ManagedGroup(name=upload_group_name)
             try:
                 upload_group.full_clean()
