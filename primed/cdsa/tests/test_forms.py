@@ -2,7 +2,7 @@
 
 from django.test import TestCase
 
-from primed.primed_anvil.tests.factories import StudySiteFactory
+from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import forms, models
@@ -264,6 +264,82 @@ class MemberAgreementFormTest(TestCase):
         form_data = {
             "signed_agreement": obj,
             "study_site": self.study_site,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("signed_agreement", form.errors)
+        self.assertEqual(len(form.errors["signed_agreement"]), 1)
+        self.assertIn("expected type", form.errors["signed_agreement"][0])
+
+
+class DataAffiliateAgreementFormTest(TestCase):
+    """Tests for the DataAffiliateAgreementForm class."""
+
+    form_class = forms.DataAffiliateAgreementForm
+
+    def setUp(self):
+        """Create related objects for use in the form."""
+        self.signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE
+        )
+        self.study = StudyFactory.create()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "signed_agreement": self.signed_agreement,
+            "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_missing_signed_agreement(self):
+        """Form is invalid when missing signed_agreement."""
+        form_data = {
+            # "signed_agreement": self.signed_agreement,
+            "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("signed_agreement", form.errors)
+        self.assertEqual(len(form.errors["signed_agreement"]), 1)
+        self.assertIn("required", form.errors["signed_agreement"][0])
+
+    def test_missing_study(self):
+        """Form is invalid when missing study."""
+        form_data = {
+            "signed_agreement": self.signed_agreement,
+            # "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("study", form.errors)
+        self.assertEqual(len(form.errors["study"]), 1)
+        self.assertIn("required", form.errors["study"][0])
+
+    def test_invalid_signed_agreement_already_has_agreement_type(self):
+        """Form is invalid with a duplicated object."""
+        obj = factories.DataAffiliateAgreementFactory.create()
+        form_data = {
+            "signed_agreement": obj.signed_agreement,
+            "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("signed_agreement", form.errors)
+        self.assertEqual(len(form.errors["signed_agreement"]), 1)
+        self.assertIn("already exists", form.errors["signed_agreement"][0])
+
+    def test_invalid_signed_agreement_wrong_type(self):
+        """Form is invalid when the signed_agreement has the wrong type."""
+        obj = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.MEMBER
+        )
+        form_data = {
+            "signed_agreement": obj,
+            "study": self.study,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())

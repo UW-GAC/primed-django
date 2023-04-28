@@ -16,6 +16,7 @@ member_agreement_patterns = (
 data_affiliate_agreement_patterns = (
     [
         path("", views.DataAffiliateAgreementList.as_view(), name="list"),
+        path("new/", views.DataAffiliateAgreementCreate.as_view(), name="new"),
         path(
             "<int:cc_id>/", views.DataAffiliateAgreementDetail.as_view(), name="detail"
         ),
