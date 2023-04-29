@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.forms import inlineformset_factory
 from django.http import Http404
 from django.views.generic import DetailView, FormView
 from django_tables2 import SingleTableView
@@ -23,16 +24,8 @@ class SignedAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.SignedAgreementTable
 
 
-class MemberAgreementCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
-):
-    """View to create a new MemberAgreement and corresponding SignedAgreement."""
-
-    model = models.SignedAgreement
-    form_class = forms.SignedAgreementForm
-    template_name = "cdsa/memberagreement_form.html"
-    success_message = "Successfully created new Member Agreement."
-    ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
+class AgreementTypeCreateMixin:
+    """Mixin to for views to create specific SignedAgreement types."""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -42,8 +35,16 @@ class MemberAgreementCreate(
 
     def get_formset(self):
         """Return an instance of the MemberAgreement form to be used in this view."""
-        formset_factory = forms.MemberAgreementInlineFormset
-        formset_prefix = "memberagreement"
+        formset_factory = inlineformset_factory(
+            self.model,
+            self.agreement_type_model,
+            form=self.agreement_type_form_class,
+            can_delete=False,
+            extra=1,
+            min_num=1,
+            max_num=1,
+        )
+        formset_prefix = "agreementtype"
         if self.request.method in ("POST"):
             formset = formset_factory(
                 self.request.POST,
@@ -60,29 +61,19 @@ class MemberAgreementCreate(
         form_class = self.get_form_class()
         form = self.get_form(form_class)
         if form.is_valid():
+            self.object = form.save(commit=False)
             return self.form_valid(form)
         else:
             formset = self.get_formset()
             return self.form_invalid(form, formset)
 
-        if form.is_valid() and formset.is_valid():
-            print("valid")
-            return self.form_valid(form, formset)
-        else:
-            print("invalid")
-            return self.form_invalid(form, formset)
-
-    def get_success_url(self):
-        return self.object.get_absolute_url()
-
     def form_valid(self, form):
         formset = self.get_formset()
         with transaction.atomic():
             # Create the access group.
-            self.object = form.save(commit=False)
             access_group_name = "{}_CDSA_ACCESS_{}".format(
                 settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
-                self.object.cc_id,
+                form.instance.cc_id,
             )
             access_group = ManagedGroup(name=access_group_name)
             # Make sure the group doesn't exist already.
@@ -123,6 +114,26 @@ class MemberAgreementCreate(
         return self.render_to_response(
             self.get_context_data(form=form, formset=formset)
         )
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+
+class MemberAgreementCreate(
+    AnVILConsortiumManagerEditRequired,
+    AgreementTypeCreateMixin,
+    SuccessMessageMixin,
+    FormView,
+):
+    """View to create a new MemberAgreement and corresponding SignedAgreement."""
+
+    model = models.SignedAgreement
+    form_class = forms.SignedAgreementForm
+    agreement_type_model = models.MemberAgreement
+    agreement_type_form_class = forms.MemberAgreementForm
+    template_name = "cdsa/memberagreement_form.html"
+    success_message = "Successfully created new Member Agreement."
+    ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
 
 
 class DataAffiliateAgreementCreate(

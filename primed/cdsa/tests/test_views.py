@@ -178,8 +178,9 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIsInstance(response.context_data["form"], forms.SignedAgreementForm)
+        self.assertEqual(len(response.context_data["formset"].forms), 1)
         self.assertIsInstance(
-            response.context_data["formset"], forms.MemberAgreementInlineFormset
+            response.context_data["formset"].forms[0], forms.MemberAgreementForm
         )
 
     def test_can_create_object(self):
@@ -206,11 +207,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -260,11 +261,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         new_object = models.SignedAgreement.objects.latest("pk")
@@ -294,11 +295,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
@@ -321,11 +322,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -357,11 +358,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -391,11 +392,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -425,11 +426,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -461,11 +462,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -497,11 +498,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -532,11 +533,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 # "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -567,11 +568,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": 999,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -603,11 +604,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 # "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -639,11 +640,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 # "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -674,11 +675,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                # "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                # "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -712,11 +713,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": 999,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": 999,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -750,11 +751,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -804,11 +805,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -843,11 +844,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -882,11 +883,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -922,11 +923,11 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
                 "is_primary": True,
-                "memberagreement-TOTAL_FORMS": 1,
-                "memberagreement-INITIAL_FORMS": 0,
-                "memberagreement-MIN_NUM_FORMS": 1,
-                "memberagreement-MAX_NUM_FORMS": 1,
-                "memberagreement-0-study_site": study_site.pk,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 200)

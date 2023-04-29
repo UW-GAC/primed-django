@@ -51,17 +51,6 @@ class MemberAgreementForm(forms.ModelForm):
         )
 
 
-MemberAgreementInlineFormset = forms.inlineformset_factory(
-    models.SignedAgreement,
-    models.MemberAgreement,
-    form=MemberAgreementForm,
-    can_delete=False,
-    extra=1,
-    min_num=1,
-    max_num=1,
-)
-
-
 class DataAffiliateAgreementForm(forms.ModelForm):
     class Meta:
         model = models.DataAffiliateAgreement
