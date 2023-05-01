@@ -3200,3 +3200,62 @@ class NonDataAffiliateAgreementListTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 3)
+
+
+class RepresentativeRecordsList(TestCase):
+    """Tests for the RepresentativeRecordsList view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:records:representatives", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.RepresentativeRecordsList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_user_logged_in(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.RepresentativeRecordsTable
+        )
+
+    def test_table_no_rows(self):
+        """No rows are shown if there are no SignedAgreement objects."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_table_three_rows(self):
+        """Three rows are shown if there are three SignedAgreement objects."""
+        factories.MemberAgreementFactory.create()
+        factories.DataAffiliateAgreementFactory.create()
+        factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 3)

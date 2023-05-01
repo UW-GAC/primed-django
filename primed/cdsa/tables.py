@@ -113,3 +113,33 @@ class NonDataAffiliateAgreementTable(tables.Table):
             "signed_agreement__date_signed",
             "number_accessors",
         )
+
+
+class RepresentativeRecordsTable(tables.Table):
+
+    representative__name = tables.Column(verbose_name="Representative")
+    is_primary = BooleanCheckColumn()
+    group = tables.Column(accessor="pk")
+
+    class Meta:
+        model = models.SignedAgreement
+        fields = (
+            "cc_id",
+            "representative__name",
+            "representative_role",
+            "signing_institution",
+            "group",
+            "type",
+            "is_primary",
+        )
+
+    def render_group(self, record):
+        if hasattr(record, "memberagreement"):
+            value = record.memberagreement.study_site.short_name
+        elif hasattr(record, "dataaffiliateagreement"):
+            value = record.dataaffiliateagreement.study.short_name
+        elif hasattr(record, "nondataaffiliateagreement"):
+            value = record.nondataaffiliateagreement.affiliation
+        else:
+            value = None
+        return value

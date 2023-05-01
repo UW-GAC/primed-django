@@ -47,7 +47,19 @@ agreement_patterns = (
     "agreements",
 )
 
+records_patterns = (
+    [
+        path(
+            "representatives/",
+            views.RepresentativeRecords.as_view(),
+            name="representatives",
+        ),
+    ],
+    "records",
+)
+
 
 urlpatterns = [
     path("agreements/", include(agreement_patterns)),
+    path("records/", include(records_patterns)),
 ]

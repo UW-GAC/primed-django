@@ -8,6 +8,7 @@ from anvil_consortium_manager.auth import (
 from anvil_consortium_manager.models import ManagedGroup
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -282,3 +283,10 @@ class NonDataAffiliateAgreementList(
 
     model = models.NonDataAffiliateAgreement
     table_class = tables.NonDataAffiliateAgreementTable
+
+
+class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
+    """Display a list of representative for required records."""
+
+    table_class = tables.RepresentativeRecordsTable
+    model = models.SignedAgreement
