@@ -176,19 +176,25 @@ class RepresentativeRecordsTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 3)
 
-    def test_render_group(self):
+    def test_render_signing_group(self):
         table = self.table_class(self.model.objects.all())
         # Members.
         study_site = StudySiteFactory.create(short_name="Test Site")
         record = factories.MemberAgreementFactory(study_site=study_site)
-        self.assertEqual(table.render_group(record.signed_agreement), "Test Site")
+        self.assertEqual(
+            table.render_signing_group(record.signed_agreement), "Test Site"
+        )
         # Data affiliates.
         study = StudyFactory.create(short_name="Test Study")
         record = factories.DataAffiliateAgreementFactory(study=study)
-        self.assertEqual(table.render_group(record.signed_agreement), "Test Study")
+        self.assertEqual(
+            table.render_signing_group(record.signed_agreement), "Test Study"
+        )
         # Non-data affiliates.
         record = factories.NonDataAffiliateAgreementFactory(affiliation="Test Affil")
-        self.assertEqual(table.render_group(record.signed_agreement), "Test Affil")
+        self.assertEqual(
+            table.render_signing_group(record.signed_agreement), "Test Affil"
+        )
 
 
 class StudyRecordsTableTest(TestCase):

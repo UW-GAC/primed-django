@@ -120,7 +120,7 @@ class RepresentativeRecordsTable(tables.Table):
 
     representative__name = tables.Column(verbose_name="Representative")
     is_primary = BooleanCheckColumn()
-    group = tables.Column(accessor="pk")
+    signing_group = tables.Column(accessor="pk", orderable=False)
 
     class Meta:
         model = models.SignedAgreement
@@ -129,12 +129,12 @@ class RepresentativeRecordsTable(tables.Table):
             "representative__name",
             "representative_role",
             "signing_institution",
-            "group",
+            "signing_group",
             "type",
             "is_primary",
         )
 
-    def render_group(self, record):
+    def render_signing_group(self, record):
         if hasattr(record, "memberagreement"):
             value = record.memberagreement.study_site.short_name
         elif hasattr(record, "dataaffiliateagreement"):
