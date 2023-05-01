@@ -290,6 +290,7 @@ class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
 
     table_class = tables.RepresentativeRecordsTable
     model = models.SignedAgreement
+    template_name = "cdsa/representative_records.html"
 
 
 class StudyRecords(LoginRequiredMixin, SingleTableView):
@@ -297,6 +298,7 @@ class StudyRecords(LoginRequiredMixin, SingleTableView):
 
     table_class = tables.StudyRecordsTable
     model = models.DataAffiliateAgreement
+    template_name = "cdsa/study_records.html"
 
     def get_table_data(self):
         return self.model.objects.filter(signed_agreement__is_primary=True)
