@@ -1,5 +1,6 @@
 """Tests for the tables in the `cdsa` app."""
 
+from anvil_consortium_manager.models import GroupAccountMembership
 from anvil_consortium_manager.tests.factories import GroupAccountMembershipFactory
 from django.test import TestCase
 
@@ -217,3 +218,82 @@ class StudyRecordsTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
+
+
+class UserAccessRecordsTableTest(TestCase):
+    """Tests for the UserAccessRecordsTable class."""
+
+    model = GroupAccountMembership
+    table_class = tables.UserAccessRecordsTable
+
+    def test_row_count_with_no_objects(self):
+        factories.MemberAgreementFactory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_agreement(self):
+        member_agreement = factories.MemberAgreementFactory.create()
+        GroupAccountMembershipFactory.create(
+            group__signedagreement=member_agreement.signed_agreement
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_one_agreement_multiple_members(self):
+        member_agreement = factories.MemberAgreementFactory.create()
+        GroupAccountMembershipFactory.create_batch(
+            5, group__signedagreement=member_agreement.signed_agreement
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 5)
+
+    def test_row_count_with_two_agreements_multiple_members(self):
+        member_agreement_1 = factories.MemberAgreementFactory.create()
+        GroupAccountMembershipFactory.create_batch(
+            2, group__signedagreement=member_agreement_1.signed_agreement
+        )
+        member_agreement_2 = factories.MemberAgreementFactory.create()
+        GroupAccountMembershipFactory.create_batch(
+            3, group__signedagreement=member_agreement_2.signed_agreement
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 5)
+
+    def test_includes_components(self):
+        agreement_1 = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement_1.signed_agreement
+        )
+        agreement_2 = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=False
+        )
+        GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement_2.signed_agreement
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+    def test_render_signing_group(self):
+        table = self.table_class(self.model.objects.all())
+        # Members.
+        agreement = factories.MemberAgreementFactory(study_site__short_name="Test Site")
+        record = GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement.signed_agreement
+        )
+        self.assertEqual(table.render_signing_group(record), "Test Site")
+        # Data affiliates.
+        agreement = factories.DataAffiliateAgreementFactory(
+            study__short_name="Test Study"
+        )
+        record = GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement.signed_agreement
+        )
+        self.assertEqual(table.render_signing_group(record), "Test Study")
+        # Non-data affiliates.
+        agreement = factories.NonDataAffiliateAgreementFactory(affiliation="Test affil")
+        record = GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement.signed_agreement
+        )
+        self.assertEqual(table.render_signing_group(record), "Test affil")

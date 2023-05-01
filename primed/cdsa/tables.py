@@ -1,6 +1,7 @@
 """Tables for the `cdsa` app."""
 
 import django_tables2 as tables
+from anvil_consortium_manager.models import GroupAccountMembership
 
 from primed.primed_anvil.tables import BooleanCheckColumn
 
@@ -159,3 +160,35 @@ class StudyRecordsTable(tables.Table):
             "study",
             "signed_agreement__representative__name",
         )
+
+
+class UserAccessRecordsTable(tables.Table):
+    """Table tracking the users who have access to data via a CDSA."""
+
+    group__signedagreement__signing_institution = tables.Column()
+    group__signedagreement__representative__name = tables.Column(
+        verbose_name="Signing representatitve",
+    )
+    signing_group = tables.Column(
+        verbose_name="Signing group", accessor="group__signedagreement", orderable=False
+    )
+
+    class Meta:
+        model = GroupAccountMembership
+        fields = (
+            "account__user__name",
+            "signing_group",
+            "group__signedagreement__signing_institution",
+            "group__signedagreement__representative__name",
+        )
+
+    def render_signing_group(self, record):
+        if hasattr(record.group.signedagreement, "memberagreement"):
+            value = record.group.signedagreement.memberagreement.study_site.short_name
+        elif hasattr(record.group.signedagreement, "dataaffiliateagreement"):
+            value = record.group.signedagreement.dataaffiliateagreement.study.short_name
+        elif hasattr(record.group.signedagreement, "nondataaffiliateagreement"):
+            value = record.group.signedagreement.nondataaffiliateagreement.affiliation
+        else:
+            return None
+        return value

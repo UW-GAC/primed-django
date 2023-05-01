@@ -4,7 +4,10 @@ from datetime import date
 
 import responses
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, ManagedGroup
-from anvil_consortium_manager.tests.factories import ManagedGroupFactory
+from anvil_consortium_manager.tests.factories import (
+    GroupAccountMembershipFactory,
+    ManagedGroupFactory,
+)
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -3350,3 +3353,169 @@ class StudyRecordsList(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(primary_agreement, table.data)
         self.assertNotIn(component_agreement, table.data)
+
+
+class UserAccessRecordsList(TestCase):
+    """Tests for the StudyRecordsList view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:records:user_access", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UserAccessRecordsList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_user_logged_in(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.UserAccessRecordsTable
+        )
+
+    def test_table_no_rows(self):
+        """No rows are shown if there are no users in CDSA access groups."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_table_one_agreement_no_members(self):
+        """No row is shown if there is one agreement with no account group members."""
+        factories.MemberAgreementFactory.create(signed_agreement__is_primary=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_table_one_agreement_one_member(self):
+        """One row is shown if there is one agreement and one account group member."""
+        agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_table_one_agreements_two_members(self):
+        """Two rows are shown if there is one agreement with two account group members."""
+        agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create_batch(
+            2, group=agreement.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+    def test_table_two_agreements(self):
+        """Multiple rows is shown if there are two agreements and multiple account group members."""
+        agreement_1 = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create_batch(
+            2, group=agreement_1.signed_agreement.anvil_access_group
+        )
+        agreement_2 = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create_batch(
+            3, group=agreement_2.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 5)
+
+    def test_only_shows_records_for_all_agreement_types(self):
+        agreement_1 = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement_1.signed_agreement.anvil_access_group
+        )
+        agreement_2 = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement_2.signed_agreement.anvil_access_group
+        )
+        agreement_3 = factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement_3.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 3)
+
+    def test_shows_includes_component_agreements(self):
+        agreement_1 = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=False
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement_1.signed_agreement.anvil_access_group
+        )
+        agreement_2 = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement_2.signed_agreement.anvil_access_group
+        )
+        agreement_3 = factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False
+        )
+        GroupAccountMembershipFactory.create(
+            group=agreement_3.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 3)
+
+    def test_does_not_show_anvil_upload_group_members(self):
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        GroupAccountMembershipFactory.create(group=agreement.anvil_upload_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 0)
+
+    def test_does_not_show_other_group_members(self):
+        factories.MemberAgreementFactory.create()
+        GroupAccountMembershipFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 0)

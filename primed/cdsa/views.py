@@ -5,7 +5,7 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import ManagedGroup
+from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -302,3 +302,14 @@ class StudyRecords(LoginRequiredMixin, SingleTableView):
 
     def get_table_data(self):
         return self.model.objects.filter(signed_agreement__is_primary=True)
+
+
+class UserAccessRecords(LoginRequiredMixin, SingleTableView):
+    """Display a list of users that have access to CDSA data via a signed CDSA."""
+
+    table_class = tables.UserAccessRecordsTable
+    model = GroupAccountMembership
+    template_name = "cdsa/user_access_records.html"
+
+    def get_table_data(self):
+        return self.model.objects.filter(group__signedagreement__isnull=False)

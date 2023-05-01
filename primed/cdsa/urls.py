@@ -59,6 +59,11 @@ records_patterns = (
             views.StudyRecords.as_view(),
             name="studies",
         ),
+        path(
+            "users/",
+            views.UserAccessRecords.as_view(),
+            name="user_access",
+        ),
     ],
     "records",
 )
