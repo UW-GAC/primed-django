@@ -290,3 +290,13 @@ class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
 
     table_class = tables.RepresentativeRecordsTable
     model = models.SignedAgreement
+
+
+class StudyRecords(LoginRequiredMixin, SingleTableView):
+    """Display a list of studies that have signed the CDSA for required records."""
+
+    table_class = tables.StudyRecordsTable
+    model = models.DataAffiliateAgreement
+
+    def get_table_data(self):
+        return self.model.objects.filter(signed_agreement__is_primary=True)

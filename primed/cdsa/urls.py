@@ -54,6 +54,11 @@ records_patterns = (
             views.RepresentativeRecords.as_view(),
             name="representatives",
         ),
+        path(
+            "studies/",
+            views.StudyRecords.as_view(),
+            name="studies",
+        ),
     ],
     "records",
 )

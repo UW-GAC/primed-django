@@ -189,3 +189,25 @@ class RepresentativeRecordsTableTest(TestCase):
         # Non-data affiliates.
         record = factories.NonDataAffiliateAgreementFactory(affiliation="Test Affil")
         self.assertEqual(table.render_group(record.signed_agreement), "Test Affil")
+
+
+class StudyRecordsTableTest(TestCase):
+    """Tests for the StudyRecordsTable class."""
+
+    model = models.DataAffiliateAgreement
+    model_factory = factories.DataAffiliateAgreementFactory
+    table_class = tables.StudyRecordsTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)

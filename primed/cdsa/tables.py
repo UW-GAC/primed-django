@@ -116,6 +116,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
 
 
 class RepresentativeRecordsTable(tables.Table):
+    """Table for a list of representatives that have signed the CDSA."""
 
     representative__name = tables.Column(verbose_name="Representative")
     is_primary = BooleanCheckColumn()
@@ -143,3 +144,18 @@ class RepresentativeRecordsTable(tables.Table):
         else:
             value = None
         return value
+
+
+class StudyRecordsTable(tables.Table):
+    """Table for a list of studies that have signed the CDSA."""
+
+    signed_agreement__representative__name = tables.Column(
+        verbose_name="Representative"
+    )
+
+    class Meta:
+        model = models.DataAffiliateAgreement
+        fields = (
+            "study",
+            "signed_agreement__representative__name",
+        )
