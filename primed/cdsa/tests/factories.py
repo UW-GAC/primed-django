@@ -86,7 +86,7 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
     acknowledgments = Faker("paragraph")
     requested_by = SubFactory(UserFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)
-    workspace = SubFactory(WorkspaceFactory)
+    workspace = SubFactory(WorkspaceFactory, workspace_type="cdsa")
 
     class Meta:
         model = models.CDSAWorkspace
