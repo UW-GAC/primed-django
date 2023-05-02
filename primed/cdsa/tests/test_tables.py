@@ -1,7 +1,10 @@
 """Tests for the tables in the `cdsa` app."""
 
-from anvil_consortium_manager.models import GroupAccountMembership
-from anvil_consortium_manager.tests.factories import GroupAccountMembershipFactory
+from anvil_consortium_manager.models import GroupAccountMembership, Workspace
+from anvil_consortium_manager.tests.factories import (
+    GroupAccountMembershipFactory,
+    WorkspaceGroupSharingFactory,
+)
 from django.test import TestCase
 
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
@@ -297,3 +300,53 @@ class UserAccessRecordsTableTest(TestCase):
             group__signedagreement=agreement.signed_agreement
         )
         self.assertEqual(table.render_signing_group(record), "Test affil")
+
+
+class CDSAWorkspaceTableTest(TestCase):
+    """Tests for the CDSAWorkspaceTable class."""
+
+    model = Workspace
+    model_factory = factories.CDSAWorkspaceFactory
+    table_class = tables.CDSAWorkspaceTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_three_objects(self):
+        self.model_factory.create_batch(3)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 3)
+
+    def test_render_is_shared_not_shared(self):
+        """render_is_shared works correctly when the workspace is not shared with anyone."""
+        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+
+    def test_render_is_shared_true(self):
+        """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
+        group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        cdsa_workspace = self.model_factory.create()
+        WorkspaceGroupSharingFactory.create(
+            group=group, workspace=cdsa_workspace.workspace
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
+
+    def test_render_is_shared_shared_with_different_group(self):
+        """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
+        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+        group = factories.ManagedGroupFactory.create()
+        cdsa_workspace = self.model_factory.create()
+        WorkspaceGroupSharingFactory.create(
+            group=group, workspace=cdsa_workspace.workspace
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))

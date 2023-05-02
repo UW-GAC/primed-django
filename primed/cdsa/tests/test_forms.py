@@ -1,8 +1,15 @@
 """Tests for the `cdsa` app."""
 
+from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.test import TestCase
 
-from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.duo.models import DataUseModifier
+from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.primed_anvil.tests.factories import (
+    AvailableDataFactory,
+    StudyFactory,
+    StudySiteFactory,
+)
 from primed.users.tests.factories import UserFactory
 
 from .. import forms, models
@@ -421,3 +428,207 @@ class NonDataAffiliateAgreementFormTest(TestCase):
         self.assertIn("signed_agreement", form.errors)
         self.assertEqual(len(form.errors["signed_agreement"]), 1)
         self.assertIn("expected type", form.errors["signed_agreement"][0])
+
+
+class CDSAWorkspaceFormTest(TestCase):
+    """Tests for the CDSAWorkspaceForm class."""
+
+    form_class = forms.CDSAWorkspaceForm
+
+    def setUp(self):
+        """Create a workspace for use in the form."""
+        self.workspace = WorkspaceFactory()
+        self.study = StudyFactory.create()
+        self.requester = UserFactory.create()
+        self.duo_permission = DataUsePermissionFactory.create()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_with_one_data_use_modifier(self):
+        DataUseModifierFactory.create()
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_modifier": DataUseModifier.objects.all(),
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_with_two_data_use_modifiers(self):
+        DataUseModifierFactory.create_batch(2)
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_modifier": DataUseModifier.objects.all(),
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_missing_workspace(self):
+        """Form is invalid when missing workspace."""
+        form_data = {
+            # "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("required", form.errors["workspace"][0])
+
+    def test_invalid_missing_study(self):
+        """Form is invalid when missing study."""
+        form_data = {
+            "workspace": self.workspace,
+            # "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("study", form.errors)
+        self.assertEqual(len(form.errors["study"]), 1)
+        self.assertIn("required", form.errors["study"][0])
+
+    def test_invalid_missing_requested_by(self):
+        """Form is invalid when missing requested_by."""
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            # "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("requested_by", form.errors)
+        self.assertEqual(len(form.errors["requested_by"]), 1)
+        self.assertIn("required", form.errors["requested_by"][0])
+
+    def test_invalid_missing_data_use_permission(self):
+        """Form is invalid when missing data_use_permission."""
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            # "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("data_use_permission", form.errors)
+        self.assertEqual(len(form.errors["data_use_permission"]), 1)
+        self.assertIn("required", form.errors["data_use_permission"][0])
+
+    def test_invalid_missing_data_use_limitations(self):
+        """Form is invalid when missing data_use_limitations."""
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            # "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("data_use_limitations", form.errors)
+        self.assertEqual(len(form.errors["data_use_limitations"]), 1)
+        self.assertIn("required", form.errors["data_use_limitations"][0])
+
+    def test_invalid_missing_acknowledgments(self):
+        """Form is invalid when missing acknowledgments."""
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            # "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("acknowledgments", form.errors)
+        self.assertEqual(len(form.errors["acknowledgments"]), 1)
+        self.assertIn("required", form.errors["acknowledgments"][0])
+
+    def test_invalid_duplicate_workspace(self):
+        """Form is invalid with a duplicated workspace."""
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        form_data = {
+            "workspace": cdsa_workspace.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("workspace", form.errors)
+        self.assertEqual(len(form.errors["workspace"]), 1)
+        self.assertIn("already exists", form.errors["workspace"][0])
+
+    def test_valid_one_available_data(self):
+        """Form is valid with necessary input and one available data record."""
+        available_data = AvailableDataFactory.create()
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+            "available_data": [available_data],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_available_data(self):
+        """Form is valid with necessary input and two available data records."""
+        available_data = AvailableDataFactory.create_batch(2)
+        form_data = {
+            "workspace": self.workspace,
+            "study": self.study,
+            "requested_by": self.requester,
+            "data_use_permission": self.duo_permission,
+            "data_use_limitations": "test limitations",
+            "acknowledgments": "test acknowledgmnts",
+            "available_data": available_data,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())

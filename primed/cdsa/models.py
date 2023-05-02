@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from anvil_consortium_manager.models import ManagedGroup
+from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -11,7 +11,8 @@ from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from primed.primed_anvil.models import Study, StudySite
+from primed.duo.models import DataUseOntologyModel
+from primed.primed_anvil.models import AvailableData, RequesterModel, Study, StudySite
 
 
 class AgreementVersion(TimeStampedModel, models.Model):
@@ -201,3 +202,31 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
             "cdsa:agreements:non_data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
+
+
+class CDSAWorkspace(
+    TimeStampedModel, RequesterModel, DataUseOntologyModel, BaseWorkspaceData
+):
+    """A model to track additional data about a CDSA workspace."""
+
+    # Only one study per workspace.
+    study = models.ForeignKey(
+        Study,
+        on_delete=models.PROTECT,
+        help_text="The study associated with data in this workspace.",
+    )
+    data_use_limitations = models.TextField(
+        help_text="""The full data use limitations for this workspace."""
+    )
+    acknowledgments = models.TextField(
+        help_text="Acknowledgments associated with data in this workspace."
+    )
+    available_data = models.ManyToManyField(
+        AvailableData,
+        help_text="Data available in this accession.",
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = " CDSA workspace"
+        verbose_name_plural = " CDSA workspaces"

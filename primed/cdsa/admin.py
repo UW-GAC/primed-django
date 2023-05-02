@@ -89,3 +89,15 @@ class NonDataAffiliateAgreementAdmin(SimpleHistoryAdmin):
         "affiliation",
     )
     list_filter = ("signed_agreement__is_primary",)
+
+
+@admin.register(models.CDSAWorkspace)
+class CDSAWorkspaceAdmin(SimpleHistoryAdmin):
+    """Admin class for the `CDSAWorkspace` model."""
+
+    list_displa = (
+        "workspace",
+        "available_data",
+        "data_use_permission",
+        "data_use_modifiers",
+    )

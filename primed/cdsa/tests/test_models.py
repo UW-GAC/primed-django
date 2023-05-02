@@ -2,13 +2,21 @@
 
 from datetime import datetime
 
-from anvil_consortium_manager.tests.factories import ManagedGroupFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceFactory,
+)
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.primed_anvil.tests.factories import (
+    AvailableDataFactory,
+    StudyFactory,
+    StudySiteFactory,
+)
 from primed.users.tests.factories import UserFactory
 
 from .. import models
@@ -445,3 +453,73 @@ class NonDataAffiliateAgreementTest(TestCase):
         )
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+
+class CDSAWorkspaceTest(TestCase):
+    """Tests for the CDSA workspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        study = StudyFactory.create()
+        requester = UserFactory.create()
+        instance = models.CDSAWorkspace(
+            study=study,
+            data_use_limitations="test limitations",
+            acknowledgments="test acknowledgments",
+            requested_by=requester,
+            workspace=workspace,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.CDSAWorkspace)
+
+    def test_str_method(self):
+        """The custom __str__ method returns the correct string."""
+        instance = factories.CDSAWorkspaceFactory.create()
+        self.assertIsInstance(instance.__str__(), str)
+
+    def test_can_add_data_use_permission(self):
+        """Saving a model with data_use_permission set is valid."""
+        workspace = WorkspaceFactory.create()
+        study = StudyFactory.create()
+        requester = UserFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        instance = models.CDSAWorkspace(
+            workspace=workspace,
+            study=study,
+            data_use_limitations="test limitations",
+            acknowledgments="test acknowledgments",
+            requested_by=requester,
+            data_use_permission=data_use_permission,
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.CDSAWorkspace)
+        self.assertEqual(instance.data_use_permission, data_use_permission)
+
+    def test_can_add_data_use_modifiers(self):
+        """Saving a model with data_use_permission and data_use_modifiers set is valid."""
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifiers = DataUseModifierFactory.create_batch(2)
+        instance = factories.CDSAWorkspaceFactory.create(
+            data_use_permission=data_use_permission,
+        )
+        instance.data_use_modifiers.add(*data_use_modifiers)
+        self.assertIn(data_use_modifiers[0], instance.data_use_modifiers.all())
+        self.assertIn(data_use_modifiers[1], instance.data_use_modifiers.all())
+
+    def test_study_protect(self):
+        """Cannot delete a Study if it has an associated CDSAWorkspace."""
+        study = factories.StudyFactory.create()
+        factories.CDSAWorkspaceFactory.create(
+            study=study,
+        )
+        with self.assertRaises(ProtectedError):
+            study.delete()
+
+    def test_available_data(self):
+        """Can add available data to a workspace."""
+        available_data = AvailableDataFactory.create_batch(2)
+        instance = factories.CDSAWorkspaceFactory.create()
+        instance.available_data.add(*available_data)
+        self.assertIn(available_data[0], instance.available_data.all())
+        self.assertIn(available_data[1], instance.available_data.all())

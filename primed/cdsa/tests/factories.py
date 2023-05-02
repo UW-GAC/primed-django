@@ -1,8 +1,12 @@
-from anvil_consortium_manager.tests.factories import ManagedGroupFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceFactory,
+)
 from factory import Faker, Sequence, SubFactory
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
+from primed.duo.tests.factories import DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
@@ -73,3 +77,16 @@ class NonDataAffiliateAgreementFactory(DjangoModelFactory):
 
     class Meta:
         model = models.NonDataAffiliateAgreement
+
+
+class CDSAWorkspaceFactory(DjangoModelFactory):
+
+    study = SubFactory(StudyFactory)
+    data_use_limitations = Faker("paragraph")
+    acknowledgments = Faker("paragraph")
+    requested_by = SubFactory(UserFactory)
+    data_use_permission = SubFactory(DataUsePermissionFactory)
+    workspace = SubFactory(WorkspaceFactory)
+
+    class Meta:
+        model = models.CDSAWorkspace

@@ -3,6 +3,7 @@
 from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
+from tree_queries.forms import TreeNodeMultipleChoiceField
 
 from . import models
 
@@ -67,3 +68,45 @@ class NonDataAffiliateAgreementForm(forms.ModelForm):
             "signed_agreement",
             "affiliation",
         )
+
+
+class CDSAWorkspaceForm(forms.ModelForm):
+    """Form for `CDSAWorkspace` objects."""
+
+    class Meta:
+        model = models.CDSAWorkspace
+        fields = (
+            "requested_by",
+            "study",
+            "data_use_permission",
+            "data_use_modifiers",
+            "data_use_limitations",
+            "acknowledgments",
+            "available_data",
+            "disease_term",
+            "workspace",
+        )
+        widgets = {
+            "study": autocomplete.ModelSelect2(
+                url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "data_use_modifiers": forms.CheckboxSelectMultiple,
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "available_data": forms.CheckboxSelectMultiple,
+        }
+        field_classes = {
+            "data_use_modifiers": TreeNodeMultipleChoiceField,
+        }
+        help_texts = {
+            "data_use_modifiers": """The DataUseModifiers associated with this study-consent group.
+            --- represents a child modifier."""
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Making location required
+        self.fields["data_use_permission"].required = True

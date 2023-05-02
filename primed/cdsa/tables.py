@@ -2,6 +2,7 @@
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import GroupAccountMembership
+from django.utils.html import format_html
 
 from primed.primed_anvil.tables import BooleanCheckColumn
 
@@ -191,4 +192,44 @@ class UserAccessRecordsTable(tables.Table):
             value = record.group.signedagreement.nondataaffiliateagreement.affiliation
         else:
             return None
+        return value
+
+
+class CDSAWorkspaceTable(tables.Table):
+    """A table for the CDSAWorkspace model."""
+
+    name = tables.Column(linkify=True)
+    billing_project = tables.Column(linkify=True)
+    cdsaworkspace__study = tables.Column(linkify=True)
+    cdsaworkspace__data_use_modifiers = tables.ManyToManyColumn(
+        transform=lambda x: x.abbreviation
+    )
+    is_shared = tables.columns.Column(
+        accessor="pk",
+        verbose_name="Shared with PRIMED?",
+        orderable=False,
+    )
+
+    class Meta:
+        model = models.CDSAWorkspace
+        fields = (
+            "name",
+            "billing_project",
+            "cdsaworkspace__study",
+            "cdsaworkspace__data_use_permission__abbreviation",
+            "cdsaworkspace__data_use_modifiers",
+        )
+
+    def render_is_shared(self, record):
+        is_shared = record.workspacegroupsharing_set.filter(
+            group__name="PRIMED_ALL"
+        ).exists()
+        if is_shared:
+            icon = "check-circle-fill"
+            color = "green"
+            value = format_html(
+                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
+            )
+        else:
+            value = ""
         return value
