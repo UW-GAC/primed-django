@@ -3,8 +3,13 @@
 from datetime import date
 
 import responses
-from anvil_consortium_manager.models import AnVILProjectManagerAccess, ManagedGroup
+from anvil_consortium_manager.models import (
+    AnVILProjectManagerAccess,
+    ManagedGroup,
+    Workspace,
+)
 from anvil_consortium_manager.tests.factories import (
+    BillingProjectFactory,
     GroupAccountMembershipFactory,
     ManagedGroupFactory,
 )
@@ -19,6 +24,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
+from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
@@ -3519,3 +3525,183 @@ class UserAccessRecordsList(TestCase):
         response = self.client.get(self.get_url())
         table = response.context_data["table"]
         self.assertEqual(len(table.rows), 0)
+
+
+class CDSAWorkspaceDetailTest(TestCase):
+    """Tests of the WorkspaceDetail view from ACM with this app's CDSAWorkspace model."""
+
+    def setUp(self):
+        """Set up test class."""
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_shows_disease_term_if_required_by_duo_permission(self):
+        """Displays the disease term if required by the DUO permission."""
+        permission = DataUsePermissionFactory.create(requires_disease_term=True)
+        obj = factories.CDSAWorkspaceFactory.create(
+            data_use_permission=permission,
+            disease_term="MONDO:0000045",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertContains(response, "(Term: MONDO:0000045)")
+
+    def test_does_not_show_disease_term_if_not_required_by_duo_permission(self):
+        """Does not display a disease term or parentheses if a disease term is not required by the DUO permission."""
+        permission = DataUsePermissionFactory.create()
+        obj = factories.CDSAWorkspaceFactory.create(
+            data_use_permission=permission,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertNotContains(response, "(Term:")
+
+
+class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with this app's CDSAWorkspace model."""
+
+    api_success_code = 201
+
+    def setUp(self):
+        """Set up test class."""
+        # The superclass uses the responses package to mock API responses.
+        super().setUp()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.requester = UserFactory.create()
+        self.workspace_type = "cdsa"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:new", args=args)
+
+    def get_api_url(self, billing_project_name, workspace_name):
+        """Return the Terra API url for a given billing project and workspace."""
+        return (
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/"
+            + billing_project_name
+            + "/"
+            + workspace_name
+        )
+
+    def test_creates_upload_workspace_without_duos(self):
+        """Posting valid data to the form creates a workspace data object when using a custom adapter."""
+        study = factories.StudyFactory.create()
+        duo_permission = DataUsePermissionFactory.create()
+        # Create an extra that won't be specified.
+        DataUseModifierFactory.create()
+        billing_project = BillingProjectFactory.create(name="test-billing-project")
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
+        json_data = {
+            "namespace": "test-billing-project",
+            "name": "test-workspace",
+            "attributes": {},
+        }
+        self.anvil_response_mock.add(
+            responses.POST,
+            url,
+            status=self.api_success_code,
+            match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "billing_project": billing_project.pk,
+                "name": "test-workspace",
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-study": study.pk,
+                "workspacedata-0-data_use_permission": duo_permission.pk,
+                "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # The workspace is created.
+        new_workspace = Workspace.objects.latest("pk")
+        # Workspace data is added.
+        self.assertEqual(models.CDSAWorkspace.objects.count(), 1)
+        new_workspace_data = models.CDSAWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.workspace, new_workspace)
+        self.assertEqual(new_workspace_data.study, study)
+        self.assertEqual(new_workspace_data.data_use_permission, duo_permission)
+        self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
+        self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
+        self.assertEqual(new_workspace_data.requested_by, self.requester)
+
+    def test_creates_upload_workspace_with_duo_modifiers(self):
+        """Posting valid data to the form creates a workspace data object when using a custom adapter."""
+        study = factories.StudyFactory.create()
+        data_use_permission = DataUsePermissionFactory.create()
+        data_use_modifier_1 = DataUseModifierFactory.create()
+        data_use_modifier_2 = DataUseModifierFactory.create()
+        # Create an extra that won't be specified.
+        DataUseModifierFactory.create()
+        billing_project = BillingProjectFactory.create(name="test-billing-project")
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
+        json_data = {
+            "namespace": "test-billing-project",
+            "name": "test-workspace",
+            "attributes": {},
+        }
+        self.anvil_response_mock.add(
+            responses.POST,
+            url,
+            status=self.api_success_code,
+            match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "billing_project": billing_project.pk,
+                "name": "test-workspace",
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-study": study.pk,
+                "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
+                "workspacedata-0-data_use_permission": data_use_permission.pk,
+                "workspacedata-0-data_use_modifiers": [
+                    data_use_modifier_1.pk,
+                    data_use_modifier_2.pk,
+                ],
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_workspace_data = models.CDSAWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
+        self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
+        self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())

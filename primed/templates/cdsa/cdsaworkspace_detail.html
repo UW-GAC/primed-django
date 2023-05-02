@@ -15,6 +15,9 @@
       <a href="{{ object.dbgapworkspace.data_use_permission.get_absolute_url}}">
         {{ object.cdsaworkspace.data_use_permission.abbreviation }}
       </a>
+      {% if object.cdsaworkspace.data_use_permission.requires_disease_term %}
+        (Term: {{ object.cdsaworkspace.disease_term }})
+      {% endif %}
     </dd>
     <dt class="col-sm-2">DUO modifiers</dt> <dd class="col-sm-10">
       {% for modifier in object.cdsaworkspace.data_use_modifiers.all %}
