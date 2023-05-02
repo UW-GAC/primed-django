@@ -64,6 +64,12 @@ records_patterns = (
             views.UserAccessRecords.as_view(),
             name="user_access",
         ),
+        # To add once we add CDSA workspaces.
+        # path(
+        #     "workspaces/",
+        #     views.WorkspaceRecords.as_view(),
+        #     name="workspaces",
+        # ),
     ],
     "records",
 )
