@@ -358,6 +358,7 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
+    "primed.cdsa.adapters.CDSAWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
