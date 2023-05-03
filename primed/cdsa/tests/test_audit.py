@@ -1,9 +1,8 @@
 # from datetime import timedelta
 
-# from anvil_consortium_manager.tests.factories import (
-#     GroupGroupMembershipFactory,
-#     ManagedGroupFactory,
-# )
+from anvil_consortium_manager.tests.factories import (  # GroupGroupMembershipFactory,; ManagedGroupFactory,
+    ManagedGroupFactory,
+)
 from django.test import TestCase
 
 from .. import audit
@@ -12,72 +11,62 @@ from . import factories
 # from django.utils import timezone
 
 
-class AuditResultTest(TestCase):
+class SignedAgreementAuditResultTest(TestCase):
     """General tests of the AuditResult dataclasses."""
 
+    def setUp(self):
+        super().setUp()
+        ManagedGroupFactory.objects.create(name="PRIMED_CDSA")
+
     def test_verified_access(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         audit.VerifiedAccess(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )
 
     def test_verified_no_access(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         audit.VerifiedNoAccess(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )
 
     def test_grant_access(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         instance = audit.GrantAccess(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )
         instance.get_action_url()
 
     def test_remove_access(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         instance = audit.RemoveAccess(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )
         instance.get_action_url()
 
     def test_remove_access_no_dar(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         instance = audit.RemoveAccess(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )
         instance.get_action_url()
 
     def test_error(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         instance = audit.Error(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )
         instance.get_action_url()
 
     def test_error_no_dar(self):
-        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         signed_agreement = factories.SignedAgreementFactory.create()
         instance = audit.Error(
-            workspace=cdsa_workspace,
             signed_agreement=signed_agreement,
             note="foo",
         )

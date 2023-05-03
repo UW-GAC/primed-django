@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 
 # import django_tables2 as tables
+from anvil_consortium_manager.models import ManagedGroup
 from django.urls import reverse
 
 # from . import models
@@ -12,12 +13,14 @@ from . import models
 
 # Dataclasses for storing audit results?
 @dataclass
-class AuditResult:
-    """Base class to hold results for auditing dbGaP workspace access for a dbGaPDataAccessSnapshot."""
+class SignedAgreementAccessAuditResult:
+    """Base class to hold results for auditing CDSA access for a specific SignedAgreement."""
 
-    workspace: models.CDSAWorkspace
     note: str
     signed_agreement: models.SignedAgreement
+
+    def __init__(self):
+        self.cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -40,21 +43,21 @@ class AuditResult:
 
 
 @dataclass
-class VerifiedAccess(AuditResult):
+class VerifiedSignedAgreementAccess(SignedAgreementAccessAuditResult):
     """Audit results class for when access has been verified."""
 
     pass
 
 
 @dataclass
-class VerifiedNoAccess(AuditResult):
+class VerifiedNoSignedAgreementAccess(SignedAgreementAccessAuditResult):
     """Audit results class for when no access has been verified."""
 
     pass
 
 
 @dataclass
-class GrantAccess(AuditResult):
+class GrantSignedAgreementAccess(SignedAgreementAccessAuditResult):
     """Audit results class for when access should be granted."""
 
     def get_action(self):
@@ -64,14 +67,14 @@ class GrantAccess(AuditResult):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
             args=[
-                self.workspace.workspace.authorization_domains.first(),
+                self.cdsa_group,
                 self.signed_agreement.anvil_access_group,
             ],
         )
 
 
 @dataclass
-class RemoveAccess(AuditResult):
+class RemoveSignedAgreementAccess(SignedAgreementAccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
     def get_action(self):
@@ -81,14 +84,14 @@ class RemoveAccess(AuditResult):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_groups:delete",
             args=[
-                self.workspace.workspace.authorization_domains.first(),
+                self.cdsa_group,
                 self.signed_agreement.anvil_access_group,
             ],
         )
 
 
 @dataclass
-class Error(AuditResult):
+class SignedAgreementAccessError(SignedAgreementAccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
     pass
@@ -119,19 +122,20 @@ class Error(AuditResult):
 #     VALID_CDSA = "Valid Signed Agreement."
 #
 #     # # Allowed reasons for no access.
+#     NO_PRIMARY_CDSA = "No primary CDSA for this group exists."
 #     # NO_SNAPSHOTS = "No snapshots for this application."
 #     # NO_DAR = "No matching DAR."
 #     # DAR_NOT_APPROVED = "DAR is not approved."
 #     #
 #     # # Allowed reasons to grant or remove access.
-#     # NEW_APPROVED_DAR = "New approved DAR."
-#     # NEW_WORKSPACE = "New workspace."
+#     NEW_VALID_CDSA = "New valid Signed Agreement."
+#     NEW_WORKSPACE = "New workspace."
 #     # PREVIOUS_APPROVAL = "Previously approved."
 #
 #     # Unexpected.
 #     ERROR_HAS_ACCESS = "Has access for an unknown reason."
 #
-#     results_table_class = CDSAAccessAuditTable
+#     # results_table_class = CDSAAccessAuditTable
 #
 #     def __init__(self):
 #         self.completed = False
@@ -140,143 +144,12 @@ class Error(AuditResult):
 #         self.needs_action = None
 #         self.errors = None
 #
-#     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
-#         """Audit access for a specific dbGaP application and a specific workspace."""
-#         in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
-#             dbgap_application.anvil_access_group
+#     def audit_agreement_and_workspace(self, signed_agreement, cdsa_workspace):
+#         """Audit access for a specific SignedAgreement and a specific CDSA workspace."""
+#         # First, check if the access group is in the auth domain for the workspace.
+#         in_auth_domain = cdsa_workspace.workspace.is_in_authorization_domain(
+#             signed_agreement.anvil_access_group
 #         )
-#
-#         # Get the most recent snapshot.
-#         try:
-#             dar_snapshot = dbgap_application.dbgapdataaccesssnapshot_set.get(
-#                 is_most_recent=True
-#             )
-#         except dbGaPDataAccessSnapshot.DoesNotExist:
-#             if in_auth_domain:
-#                 # Error!
-#                 self.errors.append(
-#                     RemoveAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         data_access_request=None,
-#                         note=self.ERROR_HAS_ACCESS,
-#                     )
-#                 )
-#             else:
-#                 # As expected, no access and no DAR
-#                 self.verified.append(
-#                     VerifiedNoAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         note=self.NO_SNAPSHOTS,
-#                     )
-#                 )
-#             return  # Go to the next workspace.
-#
-#         try:
-#             # There should only be one DAR from this snapshot associated with a given workspace.
-#             dar = dbgap_workspace.get_data_access_requests().get(
-#                 dbgap_data_access_snapshot=dar_snapshot
-#             )
-#         except dbGaPDataAccessRequest.DoesNotExist:
-#             # No matching DAR exists for this application.
-#             if in_auth_domain:
-#                 # Error!
-#                 self.errors.append(
-#                     RemoveAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         data_access_request=None,
-#                         note=self.ERROR_HAS_ACCESS,
-#                     )
-#                 )
-#             else:
-#                 # As expected, no access and no DAR
-#                 self.verified.append(
-#                     VerifiedNoAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         note=self.NO_DAR,
-#                     )
-#                 )
-#             return  # Go to the next workspace.
-#
-#         # Is the dbGaP access group associated with the DAR in the auth domain of the workspace?
-#         # We'll need to know this for future checks.
-#         if dar.is_approved and in_auth_domain:
-#             # Verified access!
-#             self.verified.append(
-#                 VerifiedAccess(
-#                     workspace=dbgap_workspace,
-#                     dbgap_application=dbgap_application,
-#                     data_access_request=dar,
-#                     note=self.APPROVED_DAR,
-#                 )
-#             )
-#         elif dar.is_approved and not in_auth_domain:
-#             # Check why we should grant access.
-#             # Do we need to differentiate between NEW and UPDATED dars? I don't think so.
-#             if dbgap_workspace.created > dar.dbgap_data_access_snapshot.created:
-#                 self.needs_action.append(
-#                     GrantAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         data_access_request=dar,
-#                         note=self.NEW_WORKSPACE,
-#                     )
-#                 )
-#             else:
-#                 self.needs_action.append(
-#                     GrantAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         data_access_request=dar,
-#                         note=self.NEW_APPROVED_DAR,
-#                     )
-#                 )
-#         elif not dar.is_approved and in_auth_domain:
-#             # Group has access that needs to be removed.
-#             # Make sure it is due to an expected reason.
-#             # the last snapshot, and it no longer is.
-#             # Check if this dbgap_dar_id was ever approved in the past.
-#             previously_approved = (
-#                 dbGaPDataAccessRequest.objects.approved()
-#                 .filter(
-#                     dbgap_dar_id=dar.dbgap_dar_id,
-#                     dbgap_data_access_snapshot__created__lt=dar.dbgap_data_access_snapshot.created,
-#                 )
-#                 .exists()
-#             )
-#             if previously_approved:
-#                 self.needs_action.append(
-#                     RemoveAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         data_access_request=dar,
-#                         note=self.PREVIOUS_APPROVAL,
-#                     )
-#                 )
-#             else:
-#                 # Otherwise, it's an error.
-#                 self.errors.append(
-#                     RemoveAccess(
-#                         workspace=dbgap_workspace,
-#                         dbgap_application=dbgap_application,
-#                         data_access_request=dar,
-#                         note=self.ERROR_HAS_ACCESS,
-#                     )
-#                 )
-#             pass
-#         else:
-#             # Verified no access because DAR is not approved.
-#             self.verified.append(
-#                 VerifiedNoAccess(
-#                     workspace=dbgap_workspace,
-#                     dbgap_application=dbgap_application,
-#                     data_access_request=dar,
-#                     note=self.DAR_NOT_APPROVED,
-#                 )
-#             )
 #
 #     def get_verified_table(self):
 #         """Return a table of verified results."""
@@ -293,7 +166,7 @@ class Error(AuditResult):
 #     def get_errors_table(self):
 #         """Return a table of audit errors."""
 #         return self.results_table_class([x.get_table_dictionary() for x in self.errors])
-
+#
 
 # class SignedAgreementAccessAudit(CDSAAccessAudit):
 #     def __init__(self, signed_agreement):
