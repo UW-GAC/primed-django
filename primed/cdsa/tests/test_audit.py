@@ -3,7 +3,8 @@
 from anvil_consortium_manager.tests.factories import (  # GroupGroupMembershipFactory,; ManagedGroupFactory,
     ManagedGroupFactory,
 )
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 
 from .. import audit
 from . import factories
@@ -16,25 +17,27 @@ class SignedAgreementAuditResultTest(TestCase):
 
     def setUp(self):
         super().setUp()
-        ManagedGroupFactory.objects.create(name="PRIMED_CDSA")
+        self.cdsa_group = ManagedGroupFactory.create(
+            name=settings.ANVIL_CDSA_GROUP_NAME
+        )
 
     def test_verified_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        audit.VerifiedAccess(
+        audit.VerifiedSignedAgreementAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
 
     def test_verified_no_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        audit.VerifiedNoAccess(
+        audit.VerifiedNoSignedAgreementAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
 
     def test_grant_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        instance = audit.GrantAccess(
+        instance = audit.GrantSignedAgreementAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
@@ -42,7 +45,7 @@ class SignedAgreementAuditResultTest(TestCase):
 
     def test_remove_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        instance = audit.RemoveAccess(
+        instance = audit.RemoveSignedAgreementAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
@@ -50,7 +53,7 @@ class SignedAgreementAuditResultTest(TestCase):
 
     def test_remove_access_no_dar(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        instance = audit.RemoveAccess(
+        instance = audit.RemoveSignedAgreementAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
@@ -58,19 +61,29 @@ class SignedAgreementAuditResultTest(TestCase):
 
     def test_error(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        instance = audit.Error(
+        instance = audit.SignedAgreementAccessError(
             signed_agreement=signed_agreement,
             note="foo",
         )
         instance.get_action_url()
 
-    def test_error_no_dar(self):
+    def test_anvil_group_name(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        instance = audit.Error(
+        instance = audit.VerifiedSignedAgreementAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
-        instance.get_action_url()
+        self.assertEqual(instance.anvil_cdsa_group, self.cdsa_group)
+
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOO")
+    def test_anvil_group_name_setting(self):
+        group = ManagedGroupFactory.create(name="FOO")
+        signed_agreement = factories.SignedAgreementFactory.create()
+        instance = audit.VerifiedSignedAgreementAccess(
+            signed_agreement=signed_agreement,
+            note="foo",
+        )
+        self.assertEqual(instance.anvil_cdsa_group, group)
 
 
 # class dbGaPApplicationAccessAuditTest(TestCase):

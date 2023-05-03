@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 # import django_tables2 as tables
 from anvil_consortium_manager.models import ManagedGroup
+from django.conf import settings
 from django.urls import reverse
 
 # from . import models
@@ -19,8 +20,14 @@ class SignedAgreementAccessAuditResult:
     note: str
     signed_agreement: models.SignedAgreement
 
-    def __init__(self):
-        self.cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
+    # def __init__(self, *args, **kwargs):
+    #     super().__init(*args, **kwargs)
+    #     self.anvil_cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
+
+    def __post_init__(self):
+        self.anvil_cdsa_group = ManagedGroup.objects.get(
+            name=settings.ANVIL_CDSA_GROUP_NAME
+        )
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -67,7 +74,7 @@ class GrantSignedAgreementAccess(SignedAgreementAccessAuditResult):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
             args=[
-                self.cdsa_group,
+                self.anvil_cdsa_group,
                 self.signed_agreement.anvil_access_group,
             ],
         )
@@ -84,7 +91,7 @@ class RemoveSignedAgreementAccess(SignedAgreementAccessAuditResult):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_groups:delete",
             args=[
-                self.cdsa_group,
+                self.anvil_cdsa_group,
                 self.signed_agreement.anvil_access_group,
             ],
         )
