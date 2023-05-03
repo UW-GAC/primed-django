@@ -2,19 +2,19 @@
 from dataclasses import dataclass
 
 # import django_tables2 as tables
-from anvil_consortium_manager.models import ManagedGroup
+from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
 from django.conf import settings
 from django.urls import reverse
 
 # from . import models
-from . import models
+from .. import models
 
 # from django.utils.safestring import mark_safe
 
 
 # Dataclasses for storing audit results?
 @dataclass
-class SignedAgreementAccessAuditResult:
+class AccessAuditResult:
     """Base class to hold results for auditing CDSA access for a specific SignedAgreement."""
 
     note: str
@@ -50,21 +50,21 @@ class SignedAgreementAccessAuditResult:
 
 
 @dataclass
-class VerifiedSignedAgreementAccess(SignedAgreementAccessAuditResult):
+class VerifiedAccess(AccessAuditResult):
     """Audit results class for when access has been verified."""
 
     pass
 
 
 @dataclass
-class VerifiedNoSignedAgreementAccess(SignedAgreementAccessAuditResult):
+class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when no access has been verified."""
 
     pass
 
 
 @dataclass
-class GrantSignedAgreementAccess(SignedAgreementAccessAuditResult):
+class GrantAccess(AccessAuditResult):
     """Audit results class for when access should be granted."""
 
     def get_action(self):
@@ -81,7 +81,7 @@ class GrantSignedAgreementAccess(SignedAgreementAccessAuditResult):
 
 
 @dataclass
-class RemoveSignedAgreementAccess(SignedAgreementAccessAuditResult):
+class RemoveAccess(AccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
     def get_action(self):
@@ -98,7 +98,7 @@ class RemoveSignedAgreementAccess(SignedAgreementAccessAuditResult):
 
 
 @dataclass
-class SignedAgreementAccessError(SignedAgreementAccessAuditResult):
+class OtherError(AccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
     pass
@@ -123,6 +123,129 @@ class SignedAgreementAccessError(SignedAgreementAccessAuditResult):
 #         )
 #
 #
+
+
+class SignedAgreementAccessAudit:
+    """Audit for Signed Agreements."""
+
+    # Access verified.
+    VALID_CDSA = "Valid Signed Agreement."
+
+    # Allowed reasons for no access.
+    NO_PRIMARY_CDSA = "No primary CDSA for this group exists."
+
+    # Other errors
+    ERROR_OTHER_CASE = "Signed Agreement did not match any expected situations."
+
+    def __init__(self):
+        # Store the CDSA group for auditing membership.
+        self.anvil_cdsa_group = ManagedGroup.objects.get(
+            name=settings.ANVIL_CDSA_GROUP_NAME
+        )
+        self.completed = False
+        # Set up lists to hold audit results.
+        self.verified = []
+        self.needs_action = []
+        self.errors = []
+
+    # Audit a single signed agreement.
+    def _audit_signed_agreement(self, signed_agreement):
+        # Check if the access group is in the overall CDSA group.
+        in_cdsa_group = GroupGroupMembership.objects.filter(
+            parent_group=self.anvil_cdsa_group,
+            child_group=signed_agreement.anvil_access_group,
+        ).exists()
+        # Primary agreements don't need to check components.
+        if signed_agreement.is_primary and in_cdsa_group:
+            self.verified.append(
+                VerifiedAccess(
+                    signed_agreement=signed_agreement,
+                    note=self.VALID_CDSA,
+                )
+            )
+            return
+        elif signed_agreement.is_primary and not in_cdsa_group:
+            self.needs_action.append(
+                GrantAccess(
+                    signed_agreement=signed_agreement,
+                    note=self.VALID_CDSA,
+                )
+            )
+            return
+        elif not signed_agreement.is_primary:
+            # component agreements need to check for a primary.
+            if hasattr(signed_agreement, "memberagreement"):
+                # Member
+                primary_exists = models.MemberAgreement.objects.filter(
+                    signed_agreement__is_primary=True,
+                    study_site=signed_agreement.memberagreement.study_site,
+                ).exists()
+            elif hasattr(signed_agreement, "dataaffiliateagreement"):
+                # Data affiliate
+                primary_exists = models.DataAffiliateAgreement.objects.filter(
+                    signed_agreement__is_primary=True,
+                    study=signed_agreement.dataaffiliateagreement.study,
+                ).exists()
+            elif hasattr(signed_agreement, "nondataaffiliateagreement"):
+                # Non-data affiliate should not have components so this is an error.
+                raise RuntimeError(
+                    "Non data affiliates should always be a primary CDSA."
+                )
+            else:
+                # Some other case happened - log it as an error.
+                self.errors.append(
+                    OtherError(
+                        signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE
+                    )
+                )
+                return
+
+            # Now check access for the component given the primary agreement.
+            if primary_exists and in_cdsa_group:
+                self.verified.append(
+                    VerifiedAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.VALID_CDSA,
+                    )
+                )
+                return
+            elif primary_exists and not in_cdsa_group:
+                self.needs_action.append(
+                    GrantAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.VALID_CDSA,
+                    )
+                )
+                return
+            elif not primary_exists and not in_cdsa_group:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.NO_PRIMARY_CDSA,
+                    )
+                )
+                return
+            elif not primary_exists and in_cdsa_group:
+                self.errors.append(
+                    RemoveAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.NO_PRIMARY_CDSA,
+                    )
+                )
+                return
+
+        # If we made it this far in audit, some other case happened - log it as an error.
+        self.errors.append(
+            OtherError(signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE)
+        )
+
+    def run_audit(self):
+        """Run an audit on all SignedAgreements."""
+        for signed_agreement in models.SignedAgreement.objects.all():
+            self._audit_signed_agreement(signed_agreement)
+        self.completed = True
+
+
 # class CDSAAccessAudit(ABC):
 #
 #     # Access verified.
