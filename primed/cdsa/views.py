@@ -14,10 +14,11 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.http import Http404
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, TemplateView
 from django_tables2 import SingleTableView
 
 from . import forms, models, tables
+from .audit import signed_agreement_audit
 
 logger = logging.getLogger(__name__)
 
@@ -283,6 +284,23 @@ class NonDataAffiliateAgreementList(
 
     model = models.NonDataAffiliateAgreement
     table_class = tables.NonDataAffiliateAgreementTable
+
+
+class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
+    """View to show audit results for `SignedAgreements`."""
+
+    template_name = "cdsa/signedagreement_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit on all SignedAgreements.
+        audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
+        return context
 
 
 class RepresentativeRecords(LoginRequiredMixin, SingleTableView):

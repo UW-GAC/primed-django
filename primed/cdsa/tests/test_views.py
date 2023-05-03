@@ -11,6 +11,7 @@ from anvil_consortium_manager.models import (
 from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
     GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
     ManagedGroupFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
@@ -29,6 +30,7 @@ from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
+from ..audit import signed_agreement_audit
 from . import factories
 
 User = get_user_model()
@@ -3268,6 +3270,174 @@ class RepresentativeRecordsList(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 3)
+
+
+class SignedAgreementAuditTest(TestCase):
+    """Tests for the SignedAgreementAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.anvil_cdsa_group = ManagedGroupFactory.create(
+            name=settings.ANVIL_CDSA_GROUP_NAME
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "cdsa:agreements:audit",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_data_access_audit(self):
+        """The data_access_audit exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit"],
+            signed_agreement_audit.SignedAgreementAccessAudit,
+        )
+        self.assertTrue(response.context_data["audit"].completed)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            signed_agreement_audit.SignedAgreementAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("signed_agreement"),
+            member_agreement.signed_agreement,
+        )
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            signed_agreement_audit.SignedAgreementAccessAudit.VALID_CDSA,
+        )
+        self.assertIsNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=False
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            signed_agreement_audit.SignedAgreementAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("signed_agreement"),
+            member_agreement.signed_agreement,
+        )
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_CDSA,
+        )
+        self.assertIsNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_needs_action_table_grant(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            signed_agreement_audit.SignedAgreementAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("signed_agreement"),
+            member_agreement.signed_agreement,
+        )
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            signed_agreement_audit.SignedAgreementAccessAudit.VALID_CDSA,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_error_table_has_access(self):
+        """error shows a record when audit finds that access needs to be removed."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__is_primary=False
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            signed_agreement_audit.SignedAgreementAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("signed_agreement"),
+            member_agreement.signed_agreement,
+        )
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_CDSA,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
 
 class StudyRecordsList(TestCase):

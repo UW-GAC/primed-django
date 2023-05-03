@@ -134,6 +134,8 @@ class SignedAgreementAccessAudit:
     # Other errors
     ERROR_OTHER_CASE = "Signed Agreement did not match any expected situations."
 
+    results_table_class = SignedAgreementAccessAuditTable
+
     def __init__(self):
         # Store the CDSA group for auditing membership.
         self.anvil_cdsa_group = ManagedGroup.objects.get(

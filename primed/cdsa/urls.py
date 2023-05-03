@@ -40,6 +40,7 @@ non_data_affiliate_agreement_patterns = (
 agreement_patterns = (
     [
         path("", views.SignedAgreementList.as_view(), name="list"),
+        path("audit/", views.SignedAgreementAudit.as_view(), name="audit"),
         path("members/", include(member_agreement_patterns)),
         path("data_affiliates/", include(data_affiliate_agreement_patterns)),
         path("non_data_affiliates/", include(non_data_affiliate_agreement_patterns)),
