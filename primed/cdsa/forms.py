@@ -18,9 +18,10 @@ class CustomDateInput(forms.widgets.DateInput):
 class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SignedAgreement object."""
 
-    is_primary = forms.BooleanField(
-        widget=forms.RadioSelect(choices=[(True, "Primary"), (False, "Component")]),
-        required=True,
+    is_primary = forms.TypedChoiceField(
+        coerce=lambda x: x == "True",
+        choices=((True, "Primary"), (False, "Component")),
+        widget=forms.RadioSelect,
         label="Agreement type",
     )
 
