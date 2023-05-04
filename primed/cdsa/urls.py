@@ -40,7 +40,6 @@ non_data_affiliate_agreement_patterns = (
 agreement_patterns = (
     [
         path("", views.SignedAgreementList.as_view(), name="list"),
-        path("audit/", views.SignedAgreementAudit.as_view(), name="audit"),
         path("members/", include(member_agreement_patterns)),
         path("data_affiliates/", include(data_affiliate_agreement_patterns)),
         path("non_data_affiliates/", include(non_data_affiliate_agreement_patterns)),
@@ -48,6 +47,13 @@ agreement_patterns = (
     "agreements",
 )
 
+audit_patterns = (
+    [
+        path("agreements/", views.SignedAgreementAudit.as_view(), name="agreements"),
+        path("workspaces/", views.CDSAWorkspaceAudit.as_view(), name="workspaces"),
+    ],
+    "audit",
+)
 records_patterns = (
     [
         path(
@@ -79,4 +85,5 @@ records_patterns = (
 urlpatterns = [
     path("agreements/", include(agreement_patterns)),
     path("records/", include(records_patterns)),
+    path("audit/", include(audit_patterns)),
 ]

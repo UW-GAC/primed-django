@@ -679,3 +679,76 @@ class WorkspaceAccessAuditTest(TestCase):
     #     self.assertIsInstance(record, signed_agreement_audit.OtherError)
     #     self.assertEqual(record.signed_agreement, signed_agreement)
     #     self.assertEqual(record.note, cdsa_audit.ERROR_OTHER_CASE)
+
+
+class WorkspaceAccessAuditTableTest(TestCase):
+    """Tests for the `WorkspaceAccessAuditTable` table."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = workspace_audit.WorkspaceAccessAuditTable([])
+        self.assertIsInstance(table, workspace_audit.WorkspaceAccessAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row(self):
+        """Table works with one row."""
+        study = StudyFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        data = [
+            {
+                "data_affiliate_agreement": agreement,
+                "workspace": workspace,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            }
+        ]
+        table = workspace_audit.WorkspaceAccessAuditTable(data)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        study_1 = StudyFactory.create()
+        agreement_1 = factories.DataAffiliateAgreementFactory.create(study=study_1)
+        workspace_1 = factories.CDSAWorkspaceFactory.create(study=study_1)
+        study_2 = StudyFactory.create()
+        agreement_2 = factories.DataAffiliateAgreementFactory.create(study=study_2)
+        workspace_2 = factories.CDSAWorkspaceFactory.create(study=study_2)
+        data = [
+            {
+                "data_affiliate_agreement": agreement_1,
+                "workspace": workspace_1,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            },
+            {
+                "data_affiliate_agreement": agreement_2,
+                "workspace": workspace_2,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            },
+        ]
+        table = workspace_audit.WorkspaceAccessAuditTable(data)
+        self.assertEqual(len(table.rows), 2)
+
+    def test_render_action(self):
+        """Render action works as expected for grant access types."""
+        study = StudyFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        data = [
+            {
+                "data_affiliate_agreement": agreement,
+                "workspace": workspace,
+                "note": "a note",
+                "action": "Grant",
+                "action_url": "foo",
+            }
+        ]
+        table = workspace_audit.WorkspaceAccessAuditTable(data)
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn("foo", table.rows[0].get_cell("action"))
+        self.assertIn("Grant", table.rows[0].get_cell("action"))

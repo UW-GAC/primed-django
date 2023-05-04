@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
+import django_tables2 as tables
 from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
 from django.conf import settings
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 # from . import models
 from .. import models
@@ -37,7 +39,7 @@ class AccessAuditResult:
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
         row = {
             "workspace": self.workspace,
-            "signed_agreement": self.signed_agreement,
+            "data_affiliate_agreement": self.data_affiliate_agreement,
             "note": self.note,
             "action": self.get_action(),
             "action_url": self.get_action_url(),
@@ -100,6 +102,25 @@ class OtherError(AccessAuditResult):
     pass
 
 
+class WorkspaceAccessAuditTable(tables.Table):
+    """A table to show results from a WorkspaceAccessAudit instance."""
+
+    workspace = tables.Column(linkify=True)
+    data_affiliate_agreement = tables.Column(linkify=True)
+    note = tables.Column()
+    action = tables.Column()
+
+    class Meta:
+        attrs = {"class": "table align-middle"}
+
+    def render_action(self, record, value):
+        return mark_safe(
+            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
+                record["action_url"], value
+            )
+        )
+
+
 class WorkspaceAccessAudit:
     """Audit for CDSA Workspaces."""
 
@@ -112,7 +133,7 @@ class WorkspaceAccessAudit:
     # Other errors
     ERROR_OTHER_CASE = "Workspace did not match any expected situations."
 
-    # results_table_class = SignedAgreementAccessAuditTable
+    results_table_class = WorkspaceAccessAuditTable
 
     def __init__(self):
         # Store the CDSA group for auditing membership.
@@ -184,18 +205,18 @@ class WorkspaceAccessAudit:
             self._audit_workspace(workspace)
         self.completed = True
 
-    # def get_verified_table(self):
-    #     """Return a table of verified results."""
-    #     return self.results_table_class(
-    #         [x.get_table_dictionary() for x in self.verified]
-    #     )
-    #
-    # def get_needs_action_table(self):
-    #     """Return a table of results where action is needed."""
-    #     return self.results_table_class(
-    #         [x.get_table_dictionary() for x in self.needs_action]
-    #     )
-    #
-    # def get_errors_table(self):
-    #     """Return a table of audit errors."""
-    #     return self.results_table_class([x.get_table_dictionary() for x in self.errors])
+    def get_verified_table(self):
+        """Return a table of verified results."""
+        return self.results_table_class(
+            [x.get_table_dictionary() for x in self.verified]
+        )
+
+    def get_needs_action_table(self):
+        """Return a table of results where action is needed."""
+        return self.results_table_class(
+            [x.get_table_dictionary() for x in self.needs_action]
+        )
+
+    def get_errors_table(self):
+        """Return a table of audit errors."""
+        return self.results_table_class([x.get_table_dictionary() for x in self.errors])

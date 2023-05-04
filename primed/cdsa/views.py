@@ -18,7 +18,7 @@ from django.views.generic import DetailView, FormView, TemplateView
 from django_tables2 import SingleTableView
 
 from . import forms, models, tables
-from .audit import signed_agreement_audit
+from .audit import signed_agreement_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
 
@@ -295,6 +295,23 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
         context = super().get_context_data(**kwargs)
         # Run the audit on all SignedAgreements.
         audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
+        return context
+
+
+class CDSAWorkspaceAudit(AnVILConsortiumManagerViewRequired, TemplateView):
+    """View to show audit results for `CDSAWorkspaces`."""
+
+    template_name = "cdsa/cdsaworkspace_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit on all SignedAgreements.
+        audit = workspace_audit.WorkspaceAccessAudit()
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
