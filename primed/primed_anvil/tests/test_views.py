@@ -12,6 +12,9 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.cdsa.tables import CDSAWorkspaceTable
+from primed.cdsa.tests.factories import CDSAWorkspaceFactory
+from primed.dbgap.tables import dbGaPWorkspaceTable
 from primed.dbgap.tests.factories import (
     dbGaPStudyAccessionFactory,
     dbGaPWorkspaceFactory,
@@ -83,6 +86,14 @@ class StudyDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
 
+    def test_table_classes(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
+
     def test_dbgap_workspace_table(self):
         """Contains a table of dbGaPWorkspaces with the correct studies."""
         obj = self.model_factory.create()
@@ -91,14 +102,27 @@ class StudyDetailTest(TestCase):
             dbgap_study_accession=dbgap_study_accession
         )
         other_workspace = dbGaPWorkspaceFactory.create()
-        # import ipdb; ipdb.set_trace()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("dbgap_workspace_table", response.context_data)
-        table = response.context_data["dbgap_workspace_table"]
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn(dbgap_workspace.workspace, table.data)
-        self.assertNotIn(other_workspace.workspace, table.data)
+        context_tables = response.context_data["tables"]
+        self.assertEqual(len(context_tables[0].rows), 1)
+        self.assertIn(dbgap_workspace.workspace, context_tables[0].data)
+        self.assertNotIn(other_workspace.workspace, context_tables[0].data)
+        # CDSA table has nothing.
+        self.assertEqual(len(context_tables[1].rows), 0)
+
+    def test_cdsa_workspace_table(self):
+        """Contains a table of CDSAWorkspaces with the correct studies."""
+        obj = self.model_factory.create()
+        cdsa_workspace = CDSAWorkspaceFactory.create(study=obj)
+        other_workspace = CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        context_tables = response.context_data["tables"]
+        self.assertEqual(len(context_tables[0].rows), 0)
+        self.assertEqual(len(context_tables[1].rows), 1)
+        self.assertIn(cdsa_workspace.workspace, context_tables[1].data)
+        self.assertNotIn(other_workspace.workspace, context_tables[1].data)
 
 
 class StudyAutocompleteTest(TestCase):

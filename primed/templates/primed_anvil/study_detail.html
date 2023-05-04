@@ -14,6 +14,11 @@
 {% endblock panel %}
 
 {% block after_panel %}
+
   <h3>dbGaP workspaces</h3>
-  {% render_table dbgap_workspace_table %}
+  {% render_table tables.0 %}
+
+  <h3>CDSA workspaces</h3>
+  {% render_table tables.1 %}
+
 {% endblock after_panel %}

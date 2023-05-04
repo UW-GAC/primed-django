@@ -8,8 +8,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView
-from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
+from primed.cdsa.tables import CDSAWorkspaceTable
 from primed.dbgap.tables import dbGaPWorkspaceTable
 from primed.users.tables import UserTable
 
@@ -18,17 +19,25 @@ from . import models, tables
 User = get_user_model()
 
 
-class StudyDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
+class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `Study`."""
 
     model = models.Study
-    table_class = dbGaPWorkspaceTable
-    context_table_name = "dbgap_workspace_table"
+    tables = [dbGaPWorkspaceTable, CDSAWorkspaceTable]
+    # table_class = dbGaPWorkspaceTable
+    # context_table_name = "dbgap_workspace_table"
 
-    def get_table_data(self):
-        return Workspace.objects.filter(
+    def get_tables_data(self):
+        dbgap_table = Workspace.objects.filter(
             dbgapworkspace__dbgap_study_accession__studies=self.object
         )
+        cdsa_table = Workspace.objects.filter(cdsaworkspace__study=self.object)
+        return [dbgap_table, cdsa_table]
+
+    # def get_table_data(self):
+    #     return Workspace.objects.filter(
+    #         dbgapworkspace__dbgap_study_accession__studies=self.object
+    #     )
 
 
 class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
