@@ -2,7 +2,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from factory import Faker, Sequence, SubFactory
+from factory import Faker, Sequence, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
@@ -87,6 +87,17 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
     requested_by = SubFactory(UserFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)
     workspace = SubFactory(WorkspaceFactory, workspace_type="cdsa")
+
+    @post_generation
+    def authorization_domains(self, create, extracted, **kwargs):
+        # Add an authorization domain.
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        # Create an authorization domain.
+        auth_domain = ManagedGroupFactory.create()
+        self.workspace.authorization_domains.add(auth_domain)
 
     class Meta:
         model = models.CDSAWorkspace

@@ -7,10 +7,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-# from . import models
 from .. import models
-
-# from django.utils.safestring import mark_safe
 
 
 # Dataclasses for storing audit results?
