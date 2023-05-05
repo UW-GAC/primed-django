@@ -10,8 +10,10 @@ from django.db.models import Q
 from django.views.generic import CreateView, DetailView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
-from primed.cdsa.tables import CDSAWorkspaceTable
-from primed.dbgap.tables import dbGaPWorkspaceTable
+from primed.cdsa.models import MemberAgreement
+from primed.cdsa.tables import CDSAWorkspaceTable, MemberAgreementTable
+from primed.dbgap.models import dbGaPApplication
+from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceTable
 from primed.users.tables import UserTable
 
 from . import models, tables
@@ -28,11 +30,11 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
     # context_table_name = "dbgap_workspace_table"
 
     def get_tables_data(self):
-        dbgap_table = Workspace.objects.filter(
+        dbgap_qs = Workspace.objects.filter(
             dbgapworkspace__dbgap_study_accession__studies=self.object
         )
-        cdsa_table = Workspace.objects.filter(cdsaworkspace__study=self.object)
-        return [dbgap_table, cdsa_table]
+        cdsa_qs = Workspace.objects.filter(cdsaworkspace__study=self.object)
+        return [dbgap_qs, cdsa_qs]
 
     # def get_table_data(self):
     #     return Workspace.objects.filter(
@@ -83,14 +85,25 @@ class StudyAutocomplete(
         return qs
 
 
-class StudySiteDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
+class StudySiteDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
-    context_table_name = "site_user_table"
+    tables = [
+        UserTable,
+        dbGaPApplicationTable,
+        MemberAgreementTable,
+    ]
 
-    def get_table(self):
-        return UserTable(User.objects.filter(study_sites=self.object))
+    # def get_table(self):
+    #     return UserTable(User.objects.filter(study_sites=self.object))
+    def get_tables_data(self):
+        user_qs = User.objects.filter(study_sites=self.object)
+        dbgap_qs = dbGaPApplication.objects.filter(
+            principal_investigator__study_sites=self.object
+        )
+        cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
+        return [user_qs, dbgap_qs, cdsa_qs]
 
 
 class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):
