@@ -42,11 +42,6 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
 
         return [dbgap_qs, cdsa_qs, agreement_qs]
 
-    # def get_table_data(self):
-    #     return Workspace.objects.filter(
-    #         dbgapworkspace__dbgap_study_accession__studies=self.object
-    #     )
-
 
 class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `Study`s."""

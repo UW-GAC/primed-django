@@ -107,7 +107,6 @@ class AgreementTypeCreateMixin:
                 self.object = self.get_agreement(form, formset)
                 self.object.save()
                 if not formset.is_valid():
-                    # import ipdb; ipdb.set_trace()
                     transaction.set_rollback(True)
                     return self.form_invalid(form, formset)
                 # For some reason, signed_agreement isn't getting set unless I set it here.
