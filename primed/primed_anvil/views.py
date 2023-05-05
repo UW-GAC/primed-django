@@ -10,8 +10,12 @@ from django.db.models import Q
 from django.views.generic import CreateView, DetailView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
-from primed.cdsa.models import MemberAgreement
-from primed.cdsa.tables import CDSAWorkspaceTable, MemberAgreementTable
+from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
+from primed.cdsa.tables import (
+    CDSAWorkspaceTable,
+    DataAffiliateAgreementTable,
+    MemberAgreementTable,
+)
 from primed.dbgap.models import dbGaPApplication
 from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceTable
 from primed.users.tables import UserTable
@@ -25,7 +29,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
     """View to show details about a `Study`."""
 
     model = models.Study
-    tables = [dbGaPWorkspaceTable, CDSAWorkspaceTable]
+    tables = [dbGaPWorkspaceTable, CDSAWorkspaceTable, DataAffiliateAgreementTable]
     # table_class = dbGaPWorkspaceTable
     # context_table_name = "dbgap_workspace_table"
 
@@ -34,7 +38,9 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
             dbgapworkspace__dbgap_study_accession__studies=self.object
         )
         cdsa_qs = Workspace.objects.filter(cdsaworkspace__study=self.object)
-        return [dbgap_qs, cdsa_qs]
+        agreement_qs = DataAffiliateAgreement.objects.filter(study=self.object)
+
+        return [dbgap_qs, cdsa_qs, agreement_qs]
 
     # def get_table_data(self):
     #     return Workspace.objects.filter(
