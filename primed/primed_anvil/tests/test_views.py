@@ -16,6 +16,8 @@ from primed.dbgap.tests.factories import (
     dbGaPStudyAccessionFactory,
     dbGaPWorkspaceFactory,
 )
+from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
+from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import models, tables, views
@@ -24,6 +26,40 @@ from . import factories
 # from .utils import AnVILAPIMockTestMixin
 
 User = get_user_model()
+
+
+class HomeTest(TestCase):
+    """Tests of the home page. This is maybe not the best place to put this test?"""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("home", args=args)
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_logged_in(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
 
 
 class StudyDetailTest(TestCase):
@@ -769,3 +805,63 @@ class AvailableDataTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(dbgap_workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
+
+
+class DataSummaryTableTest(TestCase):
+    """Tests for the DataSummaryTable view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        # Need at least one AvailableData for the view to work.
+        self.available_data = AvailableDataFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:summaries:data", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DataSummaryView.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_authenticated_user(self):
+        """Returns successful response code."""
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_table_class(self):
+        """A summary table exists."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["summary_table"], tables.DataSummaryTable
+        )
+
+    def test_table_rows(self):
+        """A summary table exists."""
+        # One open access workspace with one study, with one available data type.
+        # One dbGaP workspae with two studies.
+        study_1 = StudyFactory.create()
+        open_workspace = OpenAccessWorkspaceFactory.create()
+        open_workspace.studies.add(study_1)
+        open_workspace.available_data.add(self.available_data)
+        study_2 = StudyFactory.create()
+        study_3 = StudyFactory.create()
+        dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study_2, study_3])
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 2)
