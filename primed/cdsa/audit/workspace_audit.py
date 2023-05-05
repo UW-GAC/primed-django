@@ -125,7 +125,7 @@ class WorkspaceAccessAudit:
     """Audit for CDSA Workspaces."""
 
     # Access verified.
-    VALID_CDSA = "Valid Signed Agreement."
+    VALID_PRIMARY_CDSA = "Valid primary CDSA."
 
     # Allowed reasons for no access.
     NO_PRIMARY_CDSA = "No primary CDSA for this study exists."
@@ -166,7 +166,7 @@ class WorkspaceAccessAudit:
                     VerifiedAccess(
                         workspace=workspace,
                         data_affiliate_agreement=primary_agreement,
-                        note=self.VALID_CDSA,
+                        note=self.VALID_PRIMARY_CDSA,
                     )
                 )
                 return
@@ -175,7 +175,7 @@ class WorkspaceAccessAudit:
                     GrantAccess(
                         workspace=workspace,
                         data_affiliate_agreement=primary_agreement,
-                        note=self.VALID_CDSA,
+                        note=self.VALID_PRIMARY_CDSA,
                     )
                 )
                 return

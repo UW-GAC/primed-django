@@ -89,8 +89,8 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(instance.anvil_cdsa_group, group)
 
 
-class AccessAuditResultTest(TestCase):
-    """Tests for the AccessAuditResult class."""
+class SignedAgreementAccessAuditResultTest(TestCase):
+    """Tests for the SignedAgreementAccessAuditResult class."""
 
     def setUp(self):
         super().setUp()
@@ -127,7 +127,7 @@ class AccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_CDSA)
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
@@ -144,7 +144,7 @@ class AccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_CDSA)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
     def test_one_signed_agreement_member_component_verified_access(self):
@@ -164,7 +164,7 @@ class AccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, component_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_CDSA)
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
@@ -205,7 +205,7 @@ class AccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, component_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_CDSA)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
     def test_one_signed_agreement_member_component_needs_error(self):
@@ -245,7 +245,7 @@ class AccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, component_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_CDSA)
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
@@ -286,7 +286,7 @@ class AccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, component_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_CDSA)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
     def test_one_signed_agreement_data_affiliate_component_needs_error(self):
@@ -558,7 +558,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_CDSA)
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
@@ -617,7 +617,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.GrantAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_CDSA)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
     def test_ignores_component_agreement(self):
@@ -665,12 +665,12 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace_1)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_CDSA)
         record = cdsa_audit.verified[1]
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace_2)
-        self.assertEqual(record.note, cdsa_audit.VALID_CDSA)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_CDSA)
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 

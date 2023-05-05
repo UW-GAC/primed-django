@@ -3359,7 +3359,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.VALID_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_CDSA,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3407,7 +3407,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.VALID_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_CDSA,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3533,7 +3533,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.VALID_CDSA,
+            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_CDSA,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3586,7 +3586,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.VALID_CDSA,
+            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_CDSA,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 

@@ -127,7 +127,8 @@ class SignedAgreementAccessAudit:
     """Audit for Signed Agreements."""
 
     # Access verified.
-    VALID_CDSA = "Valid Signed Agreement."
+    VALID_PRIMARY_CDSA = "Valid primary CDSA."
+    VALID_COMPONENT_CDSA = "Valid component CDSA."
 
     # Allowed reasons for no access.
     NO_PRIMARY_CDSA = "No primary CDSA for this group exists."
@@ -160,7 +161,7 @@ class SignedAgreementAccessAudit:
             self.verified.append(
                 VerifiedAccess(
                     signed_agreement=signed_agreement,
-                    note=self.VALID_CDSA,
+                    note=self.VALID_PRIMARY_CDSA,
                 )
             )
             return
@@ -168,7 +169,7 @@ class SignedAgreementAccessAudit:
             self.needs_action.append(
                 GrantAccess(
                     signed_agreement=signed_agreement,
-                    note=self.VALID_CDSA,
+                    note=self.VALID_PRIMARY_CDSA,
                 )
             )
             return
@@ -205,7 +206,7 @@ class SignedAgreementAccessAudit:
                 self.verified.append(
                     VerifiedAccess(
                         signed_agreement=signed_agreement,
-                        note=self.VALID_CDSA,
+                        note=self.VALID_COMPONENT_CDSA,
                     )
                 )
                 return
@@ -213,7 +214,7 @@ class SignedAgreementAccessAudit:
                 self.needs_action.append(
                     GrantAccess(
                         signed_agreement=signed_agreement,
-                        note=self.VALID_CDSA,
+                        note=self.VALID_COMPONENT_CDSA,
                     )
                 )
                 return
