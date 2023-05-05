@@ -39,6 +39,8 @@ class AccessAuditResult:
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
         row = {
             "signed_agreement": self.signed_agreement,
+            "agreement_group": self.signed_agreement.agreement_group,
+            "agreement_type": self.signed_agreement.combined_type,
             "note": self.note,
             "action": self.get_action(),
             "action_url": self.get_action_url(),
@@ -105,6 +107,8 @@ class SignedAgreementAccessAuditTable(tables.Table):
     """A table to show results from a SignedAgreementAccessAudit instance."""
 
     signed_agreement = tables.Column(linkify=True)
+    agreement_group = tables.Column()
+    agreement_type = tables.Column()
     note = tables.Column()
     action = tables.Column()
 

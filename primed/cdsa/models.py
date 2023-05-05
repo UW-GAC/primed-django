@@ -112,20 +112,27 @@ class SignedAgreement(TimeStampedModel, models.Model):
     def __str__(self):
         return "{}".format(self.cc_id)
 
-    def get_absolute_url(self):
-        if self.type == self.MEMBER:
-            return self.memberagreement.get_absolute_url()
-        elif self.type == self.DATA_AFFILIATE:
-            return self.dataaffiliateagreement.get_absolute_url()
-        elif self.type == self.NON_DATA_AFFILIATE:
-            return self.nondataaffiliateagreement.get_absolute_url()
-
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
         if not self.is_primary:
             combined_type = combined_type + " component"
         return combined_type
+
+    def get_absolute_url(self):
+        return self.get_agreement_type().get_absolute_url()
+
+    def get_agreement_type(self):
+        if self.type == self.MEMBER:
+            return self.memberagreement
+        elif self.type == self.DATA_AFFILIATE:
+            return self.dataaffiliateagreement
+        elif self.type == self.NON_DATA_AFFILIATE:
+            return self.nondataaffiliateagreement
+
+    @property
+    def agreement_group(self):
+        return self.get_agreement_type().get_agreement_group()
 
 
 class AgreementTypeModel(models.Model):
@@ -154,6 +161,10 @@ class AgreementTypeModel(models.Model):
         ):
             raise ValidationError({"signed_agreement": self.ERROR_TYPE_DOES_NOT_MATCH})
 
+    def get_agreement_group(self):
+        """Return the group associated with this agreement type."""
+        raise NotImplementedError("get_group must be implemented by the subclass.")
+
 
 class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
     """A model to hold additional fields for signed member CDSAs."""
@@ -172,6 +183,9 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 
+    def get_agreement_group(self):
+        return self.study_site
+
 
 class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
     """A model to hold additional fields for signed data affiliate CDSAs."""
@@ -186,6 +200,9 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
             "cdsa:agreements:data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
+
+    def get_agreement_group(self):
+        return self.study
 
 
 class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
@@ -202,6 +219,9 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
             "cdsa:agreements:non_data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
+
+    def get_agreement_group(self):
+        return self.affiliation
 
 
 class CDSAWorkspace(

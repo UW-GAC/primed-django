@@ -262,6 +262,22 @@ class SignedAgreementTest(TestCase):
             obj.signed_agreement.combined_type, "Non-data affiliate component"
         )
 
+    def test_get_agreement_type(self):
+        obj = factories.MemberAgreementFactory()
+        self.assertEqual(obj.signed_agreement.get_agreement_type(), obj)
+        obj = factories.DataAffiliateAgreementFactory()
+        self.assertEqual(obj.signed_agreement.get_agreement_type(), obj)
+        obj = factories.NonDataAffiliateAgreementFactory()
+        self.assertEqual(obj.signed_agreement.get_agreement_type(), obj)
+
+    def test_get_agreement_group(self):
+        obj = factories.MemberAgreementFactory()
+        self.assertEqual(obj.signed_agreement.agreement_group, obj.study_site)
+        obj = factories.DataAffiliateAgreementFactory()
+        self.assertEqual(obj.signed_agreement.agreement_group, obj.study)
+        obj = factories.NonDataAffiliateAgreementFactory()
+        self.assertEqual(obj.signed_agreement.agreement_group, obj.affiliation)
+
 
 class MemberAgreementTest(TestCase):
     """Tests for the MemberAgremeent model."""
@@ -323,6 +339,10 @@ class MemberAgreementTest(TestCase):
         )
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+    def test_get_agreement_group(self):
+        instance = factories.MemberAgreementFactory.create()
+        self.assertEqual(instance.get_agreement_group(), instance.study_site)
 
 
 class DataAffiliateAgreementTest(TestCase):
@@ -394,6 +414,10 @@ class DataAffiliateAgreementTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance_2.save()
 
+    def test_get_agreement_group(self):
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.assertEqual(instance.get_agreement_group(), instance.study)
+
 
 class NonDataAffiliateAgreementTest(TestCase):
     """Tests for the NonDataAffiliateAgreement model."""
@@ -453,6 +477,10 @@ class NonDataAffiliateAgreementTest(TestCase):
         )
         with self.assertRaises(IntegrityError):
             instance_2.save()
+
+    def test_get_agreement_group(self):
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.assertEqual(instance.get_agreement_group(), instance.affiliation)
 
 
 class CDSAWorkspaceTest(TestCase):

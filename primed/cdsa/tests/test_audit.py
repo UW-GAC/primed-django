@@ -349,6 +349,8 @@ class SignedAgreementAccessAuditTableTest(TestCase):
         data = [
             {
                 "signed_agreement": signed_agreement,
+                "agreement_type": "Foo",
+                "agreement_group": "Bar",
                 "note": "a note",
                 "action": "",
                 "action_url": "",
@@ -367,12 +369,16 @@ class SignedAgreementAccessAuditTableTest(TestCase):
         data = [
             {
                 "signed_agreement": signed_agreement_1,
+                "agreement_type": "Foo",
+                "agreement_group": "Bar",
                 "note": "a note",
                 "action": "",
                 "action_url": "",
             },
             {
                 "signed_agreement": signed_agreement_2,
+                "agreement_type": "Foo",
+                "agreement_group": "Bar",
                 "note": "a note",
                 "action": "",
                 "action_url": "",
@@ -390,6 +396,8 @@ class SignedAgreementAccessAuditTableTest(TestCase):
         data = [
             {
                 "signed_agreement": signed_agreement,
+                "agreement_type": "Foo",
+                "agreement_group": "Bar",
                 "note": "a note",
                 "action": "Grant",
                 "action_url": "foo",
