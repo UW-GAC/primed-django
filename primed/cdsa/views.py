@@ -319,6 +319,13 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerViewRequired, TemplateView):
         return context
 
 
+# TODO: are these open to the world, or loginrequired?
+class RecordsIndex(LoginRequiredMixin, TemplateView):
+    """Index page for records."""
+
+    template_name = "cdsa/records_index.html"
+
+
 class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
     """Display a list of representative for required records."""
 

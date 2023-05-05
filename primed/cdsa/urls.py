@@ -56,6 +56,7 @@ audit_patterns = (
 )
 records_patterns = (
     [
+        path("", views.RecordsIndex.as_view(), name="index"),
         path(
             "representatives/",
             views.RepresentativeRecords.as_view(),
