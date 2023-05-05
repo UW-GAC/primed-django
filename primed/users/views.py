@@ -55,7 +55,7 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
 
     def get_queryset(self):
         """Filter to users matching the query."""
-        qs = User.objects.all()
+        qs = User.objects.all().order_by("username")
 
         if self.q:
             # Filter to users whose name or email matches the query.

@@ -1,1 +1,28 @@
 {% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="px-4 py-5 my-5 text-center">
+  <h1 class="display-5 fw-bold text-body-emphasis">PRIMED workspaces</h1>
+  <div class="col-lg-6 mx-auto">
+    <p class="lead mb-4">
+      Data for the PRIMED consortium is stored in workspaces on the <a href="https://anvil.terra.bio/">AnVIL platform</a>.
+      Once data have been added to the workspaces and formatted to fit the <a href="https://github.com/UW-GAC/primed_data_models">PRIMED data model</a>, they will be shared with the Consortium and accessible to people who have approved data access via one of the PRIMED data access mechanisms.
+      This site facilitates the creation and sharing of workspaces for PRIMED.
+    </p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a type="button" class="btn btn-primary btn-lg px-4 gap-3" href="{% url 'primed_anvil:summaries:data' %}">See data availability</a>
+    </div>
+    {% if not request.user.account %}
+    <p class="lead mb-4 pt-5">
+      If you have not linked your AnVIL account, you must do so before you can access any data on AnVIL.
+    </p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+        <a type="button" class="btn btn-secondary btn-lg px-4 gap-3" href="{% url 'anvil_consortium_manager:accounts:link' %}">Link your AnVIL account</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock content %}

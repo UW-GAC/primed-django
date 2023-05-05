@@ -101,6 +101,12 @@ class TestsUserSocialLoginAdapter(object):
         assert user.study_sites.filter(pk=rc1.pk).exists()
         assert user.study_sites.all().count() == 1
 
+    def test_update_user_study_sites_uknown(self):
+        adapter = SocialAccountAdapter()
+        user = UserFactory()
+        adapter.update_user_study_sites(user, dict(study_site_or_center=["UNKNOWN"]))
+        assert user.study_sites.all().count() == 0
+
     def test_update_study_sites_malformed(self):
         adapter = SocialAccountAdapter()
         user = UserFactory()
@@ -122,6 +128,22 @@ class TestsUserSocialLoginAdapter(object):
             user, extra_data=dict(managed_scope_status={rc1.name: True})
         )
         assert user.groups.filter(pk=rc1.pk).exists()
+        assert user.groups.all().count() == 1
+
+    def test_update_user_groups_add_new(self):
+        adapter = SocialAccountAdapter()
+
+        User = get_user_model()
+        user = User()
+        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
+        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
+
+        user.save()
+        new_group_name = "NEW_GROUP"
+        adapter.update_user_groups(
+            user, extra_data=dict(managed_scope_status={new_group_name: True})
+        )
+        assert user.groups.filter(name=new_group_name).exists()
         assert user.groups.all().count() == 1
 
     def test_update_user_groups_remove(self):
