@@ -1,7 +1,10 @@
 """Tables for the `cdsa` app."""
 
 import django_tables2 as tables
-from anvil_consortium_manager.models import GroupAccountMembership
+from anvil_consortium_manager.models import (
+    GroupAccountMembership,
+    WorkspaceGroupSharing,
+)
 from django.utils.html import format_html
 
 from primed.primed_anvil.tables import BooleanCheckColumn
@@ -199,6 +202,38 @@ class UserAccessRecordsTable(tables.Table):
         else:
             return None
         return value
+
+
+class CDSAWorkspaceRecordsTable(tables.Table):
+    """CDSA workspace table for records reporting."""
+
+    workspace__name = tables.Column()
+    workspace__billing_project = tables.Column()
+    study = tables.Column()
+    data_use_modifiers = tables.ManyToManyColumn(transform=lambda x: x.abbreviation)
+    workspace__created = tables.columns.Column(verbose_name="Date created")
+    date_shared = tables.columns.Column(accessor="pk", verbose_name="Date shared")
+
+    class Meta:
+        model = models.CDSAWorkspace
+        fields = (
+            "workspace__name",
+            "workspace__billing_project",
+            "study",
+            "data_use_permission__abbreviation",
+            "data_use_modifiers",
+            "workspace__created",
+            "date_shared",
+        )
+
+    def render_date_shared(self, record):
+        try:
+            wgs = record.workspace.workspacegroupsharing_set.get(
+                group__name="PRIMED_ALL"
+            )
+            return wgs.created
+        except WorkspaceGroupSharing.DoesNotExist:
+            return "—"
 
 
 class CDSAWorkspaceTable(tables.Table):

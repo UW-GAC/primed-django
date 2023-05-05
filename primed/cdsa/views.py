@@ -338,6 +338,14 @@ class StudyRecords(LoginRequiredMixin, SingleTableView):
         return self.model.objects.filter(signed_agreement__is_primary=True)
 
 
+class CDSAWorkspaceRecords(LoginRequiredMixin, SingleTableView):
+    """Display a list of workspaces that contain CDSA data."""
+
+    table_class = tables.CDSAWorkspaceRecordsTable
+    model = models.CDSAWorkspace
+    template_name = "cdsa/cdsaworkspace_records.html"
+
+
 class UserAccessRecords(LoginRequiredMixin, SingleTableView):
     """Display a list of users that have access to CDSA data via a signed CDSA."""
 
