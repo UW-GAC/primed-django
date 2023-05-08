@@ -17,7 +17,7 @@ class StudyFactory(DjangoModelFactory):
 class StudySiteFactory(DjangoModelFactory):
     """A factory for the StudySite model."""
 
-    short_name = Sequence(lambda n: "StudySite:{0:07d}".format(n))
+    short_name = Sequence(lambda n: "Site:{0:07d}".format(n))
     full_name = Faker("company")
 
     class Meta:
