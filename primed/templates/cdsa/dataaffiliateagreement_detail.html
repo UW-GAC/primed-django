@@ -7,7 +7,7 @@
 <dl class="row">
   <dt class="col-sm-2">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
   <dt class="col-sm-2">Representative</dt> <dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative }}</a>
+    <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative.name }}</a>
   </dd>
   <dt class="col-sm-2">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
   <dt class="col-sm-2">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
