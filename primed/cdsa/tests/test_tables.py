@@ -199,6 +199,9 @@ class RepresentativeRecordsTableTest(TestCase):
         self.assertEqual(
             table.render_signing_group(record.signed_agreement), "Test Affil"
         )
+        # Other catch-all case that shouldn't happen.
+        record = factories.SignedAgreementFactory()
+        self.assertIsNone(table.render_signing_group(record))
 
 
 class StudyRecordsTableTest(TestCase):
@@ -300,6 +303,45 @@ class UserAccessRecordsTableTest(TestCase):
             group__signedagreement=agreement.signed_agreement
         )
         self.assertEqual(table.render_signing_group(record), "Test affil")
+        # Other catch-all case that shouldn't happen.
+        agreement = factories.SignedAgreementFactory()
+        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement)
+        self.assertIsNone(table.render_signing_group(record))
+
+
+class CDSAWorkspaceRecordsTableTest(TestCase):
+    """Tests for the CDSAWorkspaceRecordsTable class."""
+
+    model = Workspace
+    table_class = tables.CDSAWorkspaceRecordsTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(cdsa_workspace.workspace, table.data)
+
+    def test_row_count_with_two_objects(self):
+        cdsa_workspaces = factories.CDSAWorkspaceFactory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+        self.assertIn(cdsa_workspaces[0].workspace, table.data)
+        self.assertIn(cdsa_workspaces[1].workspace, table.data)
+
+    def test_render_date_shared(self):
+        table = self.table_class(self.model.objects.all())
+        # Not shared.
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.assertEqual(table.render_date_shared(cdsa_workspace), "—")
+        # Shared.
+        WorkspaceGroupSharingFactory.create(
+            workspace=cdsa_workspace.workspace, group__name="PRIMED_ALL"
+        )
+        self.assertNotEqual(table.render_date_shared(cdsa_workspace), "—")
 
 
 class CDSAWorkspaceTableTest(TestCase):

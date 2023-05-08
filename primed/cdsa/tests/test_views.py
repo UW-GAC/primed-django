@@ -3226,10 +3226,6 @@ class RecordsIndexTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:index", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return views.RecordsIndex.as_view()
-
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
@@ -3267,10 +3263,6 @@ class RepresentativeRecordsList(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:representatives", args=args)
-
-    def get_view(self):
-        """Return the view being tested."""
-        return views.RepresentativeRecordsList.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -3670,10 +3662,6 @@ class StudyRecordsList(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:studies", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return views.StudyRecordsList.as_view()
-
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
@@ -3760,10 +3748,6 @@ class UserAccessRecordsList(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:user_access", args=args)
-
-    def get_view(self):
-        """Return the view being tested."""
-        return views.UserAccessRecordsList.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -3927,10 +3911,6 @@ class CDSAWorkspaceRecordsList(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:workspaces", args=args)
 
-    def get_view(self):
-        """Return the view being tested."""
-        return views.CDSAWorkspaceRecordsList.as_view()
-
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
@@ -4040,16 +4020,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_upload_workspace_without_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
