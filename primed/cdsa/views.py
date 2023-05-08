@@ -79,7 +79,9 @@ class AgreementTypeCreateMixin:
             settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
             form.instance.cc_id,
         )
-        access_group = ManagedGroup(name=access_group_name)
+        access_group = ManagedGroup(
+            name=access_group_name, email=access_group_name + "@firecloud.org"
+        )
         # Make sure the group doesn't exist already.
         access_group.full_clean()
         access_group.save()
@@ -183,7 +185,9 @@ class DataAffiliateAgreementCreate(
             settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
             form.instance.cc_id,
         )
-        upload_group = ManagedGroup(name=upload_group_name)
+        upload_group = ManagedGroup(
+            name=upload_group_name, email=upload_group_name + "@firecloud.org"
+        )
         # Make sure the group doesn't exist already.
         upload_group.full_clean()
         upload_group.save()
