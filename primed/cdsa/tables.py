@@ -15,7 +15,7 @@ from . import models
 class SignedAgreementTable(tables.Table):
 
     cc_id = tables.Column(linkify=True)
-    representative = tables.Column(linkify=True)
+    representative__name = tables.Column(linkify=True, verbose_name="Representative")
     representative_role = tables.Column(verbose_name="Role")
     combined_type = tables.Column(order_by=("type", "-is_primary"))
     number_accessors = tables.Column(
@@ -32,7 +32,7 @@ class SignedAgreementTable(tables.Table):
         model = models.SignedAgreement
         fields = (
             "cc_id",
-            "representative",
+            "representative__name",
             "representative_role",
             "signing_institution",
             "agreement_group",
@@ -49,7 +49,9 @@ class MemberAgreementTable(tables.Table):
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
     signed_agreement__is_primary = BooleanCheckColumn()
-    signed_agreement__representative = tables.Column(linkify=True)
+    signed_agreement__representative__name = tables.Column(
+        linkify=True, verbose_name="Representative"
+    )
     signed_agreement__representative_role = tables.Column(verbose_name="Role")
     number_accessors = tables.Column(
         verbose_name="Number of accessors",
@@ -62,7 +64,7 @@ class MemberAgreementTable(tables.Table):
             "signed_agreement__cc_id",
             "study_site",
             "signed_agreement__is_primary",
-            "signed_agreement__representative",
+            "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
@@ -77,7 +79,9 @@ class DataAffiliateAgreementTable(tables.Table):
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
     signed_agreement__is_primary = BooleanCheckColumn()
-    signed_agreement__representative = tables.Column(linkify=True)
+    signed_agreement__representative__name = tables.Column(
+        linkify=True, verbose_name="Representative"
+    )
     signed_agreement__representative_role = tables.Column(verbose_name="Role")
     number_accessors = tables.Column(
         verbose_name="Number of accessors",
@@ -90,7 +94,7 @@ class DataAffiliateAgreementTable(tables.Table):
             "signed_agreement__cc_id",
             "study",
             "signed_agreement__is_primary",
-            "signed_agreement__representative",
+            "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
@@ -104,7 +108,9 @@ class NonDataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     signed_agreement__is_primary = BooleanCheckColumn()
-    signed_agreement__representative = tables.Column(linkify=True)
+    signed_agreement__representative__name = tables.Column(
+        linkify=True, verbose_name="Representative"
+    )
     signed_agreement__representative_role = tables.Column(verbose_name="Role")
     number_accessors = tables.Column(
         verbose_name="Number of accessors",
@@ -117,7 +123,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
             "signed_agreement__cc_id",
             "affiliation",
             "signed_agreement__is_primary",
-            "signed_agreement__representative",
+            "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
