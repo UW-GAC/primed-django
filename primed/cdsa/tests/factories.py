@@ -2,7 +2,8 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from factory import Faker, Sequence, SubFactory, post_generation
+from django.conf import settings
+from factory import Faker, LazyAttribute, Sequence, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 from factory.fuzzy import FuzzyChoice
 
@@ -39,7 +40,14 @@ class SignedAgreementFactory(DjangoModelFactory):
     is_primary = True
     version = SubFactory(AgreementVersionFactory)
     date_signed = Faker("date")
-    anvil_access_group = SubFactory(ManagedGroupFactory)
+    anvil_access_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(
+            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX
+            + "_CDSA_ACCESS_"
+            + str(o.factory_parent.cc_id)
+        ),
+    )
 
     class Meta:
         model = models.SignedAgreement
@@ -62,7 +70,14 @@ class DataAffiliateAgreementFactory(DjangoModelFactory):
         SignedAgreementFactory, type=models.SignedAgreement.DATA_AFFILIATE
     )
     study = SubFactory(StudyFactory)
-    anvil_upload_group = SubFactory(ManagedGroupFactory)
+    anvil_upload_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(
+            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX
+            + "_CDSA_UPLOAD_"
+            + str(o.factory_parent.signed_agreement.cc_id)
+        ),
+    )
 
     class Meta:
         model = models.DataAffiliateAgreement
