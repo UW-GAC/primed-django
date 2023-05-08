@@ -14,7 +14,6 @@ from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
-    WorkspaceAuthorizationDomainFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
@@ -3488,7 +3487,6 @@ class dbGaPApplicationAuditTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(
             dbgap_study_accession__dbgap_phs=1
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
@@ -3517,7 +3515,6 @@ class dbGaPApplicationAuditTest(TestCase):
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Check the table in the context.
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.application.dbgap_project_id))
@@ -3541,7 +3538,6 @@ class dbGaPApplicationAuditTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(
             created=timezone.now() - timedelta(weeks=4)
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
@@ -3566,7 +3562,6 @@ class dbGaPApplicationAuditTest(TestCase):
     def test_context_needs_action_table_remove(self):
         """needs_action_table shows a record when audit finds that access needs to be removed."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot,
             dbgap_workspace=workspace,
@@ -3609,7 +3604,6 @@ class dbGaPApplicationAuditTest(TestCase):
     def test_context_error_table_has_access(self):
         """error shows a record when audit finds that access needs to be removed."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Create a rejected DAR.
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot,
@@ -3654,8 +3648,7 @@ class dbGaPApplicationAuditTest(TestCase):
 
     def test_no_snapshots(self):
         """Audit is not run and message shown when there are no snapshots for this application."""
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
+        factories.dbGaPWorkspaceFactory.create()
         application = factories.dbGaPApplicationFactory.create()
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3682,9 +3675,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
                 codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        self.auth_domain = factories.ManagedGroupFactory.create()
         self.dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        self.dbgap_workspace.workspace.authorization_domains.add(self.auth_domain)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""

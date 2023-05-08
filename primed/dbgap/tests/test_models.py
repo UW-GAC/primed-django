@@ -1608,6 +1608,9 @@ class dbGaPDataAccessRequestTest(TestCase):
         """has_access returns True when there is no auth domain."""
         # Create a workspace and no auth domain
         workspace = factories.dbGaPWorkspaceFactory.create()
+        workspace.workspace.authorization_domains.remove(
+            workspace.workspace.authorization_domains.first()
+        )
         data_access_request = (
             factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
                 dbgap_workspace=workspace
@@ -1619,7 +1622,6 @@ class dbGaPDataAccessRequestTest(TestCase):
         """has_access returns False when the anvil group is not in auth domain and workspace is not shared."""
         # Create a workspace and an auth domain
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Create a matching dar.
         data_access_request = (
             factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
@@ -1633,9 +1635,6 @@ class dbGaPDataAccessRequestTest(TestCase):
         """has_access returns True when the anvil group is in auth domain but workspace is not shared."""
         # Create a workspace and an auth domain.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        auth_domain = WorkspaceAuthorizationDomainFactory.create(
-            workspace=workspace.workspace
-        )
         # Create a matching DAR
         data_access_request = (
             factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
@@ -1644,7 +1643,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         )
         # Add the AnVIL group to the workspace authorization domain
         GroupGroupMembershipFactory.create(
-            parent_group=auth_domain.group,
+            parent_group=workspace.workspace.authorization_domains.first(),
             child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertTrue(data_access_request.has_access())
@@ -1653,8 +1652,8 @@ class dbGaPDataAccessRequestTest(TestCase):
         """has_access returns True when the anvil group is in both auth domains."""
         # Create a workspace and a auth domains.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        auth_domains = WorkspaceAuthorizationDomainFactory.create_batch(
-            2, workspace=workspace.workspace
+        auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(
+            workspace=workspace.workspace
         )
         # Create a matching DAR
         data_access_request = (
@@ -1664,11 +1663,11 @@ class dbGaPDataAccessRequestTest(TestCase):
         )
         # Add the AnVIL group to the workspace authorization domains
         GroupGroupMembershipFactory.create(
-            parent_group=auth_domains[0].group,
+            parent_group=workspace.workspace.authorization_domains.first(),
             child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         GroupGroupMembershipFactory.create(
-            parent_group=auth_domains[1].group,
+            parent_group=auth_domain_2.group,
             child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertTrue(data_access_request.has_access())
@@ -1677,9 +1676,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         """has_access returns false when the anvil group is in only one of the auth domains."""
         # Create a workspace and a auth domains.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        auth_domains = WorkspaceAuthorizationDomainFactory.create_batch(
-            2, workspace=workspace.workspace
-        )
+        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Create a matching DAR
         data_access_request = (
             factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
@@ -1688,7 +1685,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         )
         # Add the AnVIL group to the workspace authorization domains
         GroupGroupMembershipFactory.create(
-            parent_group=auth_domains[0].group,
+            parent_group=workspace.workspace.authorization_domains.first(),
             child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertFalse(data_access_request.has_access())
@@ -1697,7 +1694,6 @@ class dbGaPDataAccessRequestTest(TestCase):
         """has_access returns False when the anvil group is not in auth domain but workspace is shared."""
         # Create a workspace and an auth domain.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Create a matching DAR
         data_access_request = (
             factories.dbGaPDataAccessRequestForWorkspaceFactory.create(

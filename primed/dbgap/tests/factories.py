@@ -63,9 +63,7 @@ class dbGaPStudyAccessionFactory(DjangoModelFactory):
         model = models.dbGaPStudyAccession
 
 
-class dbGaPWorkspaceFactory(
-    TimeStampedModelFactory, DjangoModelFactory
-):  # DataUseOntologyModelFactory):
+class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
     """A factory for the dbGaPWorkspace model."""
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")
@@ -80,6 +78,17 @@ class dbGaPWorkspaceFactory(
 
     class Meta:
         model = models.dbGaPWorkspace
+
+    @post_generation
+    def authorization_domains(self, create, extracted, **kwargs):
+        # Add an authorization domain.
+        if not create:
+            # Simple build, do nothing.
+            return
+
+        # Create an authorization domain.
+        auth_domain = ManagedGroupFactory.create()
+        self.workspace.authorization_domains.add(auth_domain)
 
 
 class dbGaPApplicationFactory(DjangoModelFactory):
