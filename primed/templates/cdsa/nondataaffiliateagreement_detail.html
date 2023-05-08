@@ -5,25 +5,25 @@
 
 {% block panel %}
 <dl class="row">
-  <dt class="col-sm-3">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
-  <dt class="col-sm-3">Representative</dt> <dd class="col-sm-9">
+  <dt class="col-sm-2">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
+  <dt class="col-sm-2">Representative</dt> <dd class="col-sm-9">
     <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative }}</a>
   </dd>
-  <dt class="col-sm-3">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
-  <dt class="col-sm-3">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
-  <dt class="col-sm-3">Primary?</dt> <dd class="col-sm-9">{{ object.signed_agreement.is_primary }}</dd>
-  <dt class="col-sm-3">Agreement version</dt> <dd class="col-sm-9">{{ object.signed_agreement.version }}</dd>
-  <dt class="col-sm-3">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
+  <dt class="col-sm-2">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
+  <dt class="col-sm-2">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
+  <dt class="col-sm-2">Primary?</dt> <dd class="col-sm-9">{{ object.signed_agreement.is_primary }}</dd>
+  <dt class="col-sm-2">Agreement version</dt> <dd class="col-sm-9">{{ object.signed_agreement.version }}</dd>
+  <dt class="col-sm-2">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
 
-  <dt class="col-sm-3">Affiliation</dt> <dd class="col-sm-9">{{ object.affiliation }}</dd>
-  <dt class="col-sm-3">AnVIL access group</dt><dd class="col-sm-9">
+  <dt class="col-sm-2">Affiliation</dt> <dd class="col-sm-9">{{ object.affiliation }}</dd>
+  <dt class="col-sm-2">AnVIL access group</dt><dd class="col-sm-9">
     <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
   </dd>
 
   <hr>
 
-  <dt class="col-sm-3">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
-  <dt class="col-sm-3">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+  <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
+  <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
 
 </dl>
 {% endblock panel %}
