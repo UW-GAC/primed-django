@@ -203,7 +203,9 @@ class dbGaPApplicationCreate(
         group_name = "{}_DBGAP_ACCESS_{}".format(
             settings.ANVIL_DATA_ACCESS_GROUP_PREFIX, project_id
         )
-        managed_group = ManagedGroup(name=group_name)
+        managed_group = ManagedGroup(
+            name=group_name, email=group_name + "@firecloud.org"
+        )
         try:
             managed_group.full_clean()
         except ValidationError:

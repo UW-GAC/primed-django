@@ -335,6 +335,12 @@ SOCIALACCOUNT_PROVIDERS = {
                 "request_scope": True,
                 "django_group_name": "DCC ACM Admin",
             },
+            # For now, grant the ACM AccountLink permission to any authenticated user.
+            {
+                "drupal_machine_name": "authenticated",
+                "request_scope": True,
+                "django_group_name": "Authenticated",
+            },
         ],
     }
 }

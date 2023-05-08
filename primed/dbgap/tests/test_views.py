@@ -827,6 +827,27 @@ class dbGaPWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertEqual(response.status_code, 200)
 
+    def test_shows_disease_term_if_required_by_duo_permission(self):
+        """Displays the disease term if required by the DUO permission."""
+        permission = DataUsePermissionFactory.create(requires_disease_term=True)
+        obj = factories.dbGaPWorkspaceFactory.create(
+            data_use_permission=permission,
+            disease_term="MONDO:0000045",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertContains(response, "(Term: MONDO:0000045)")
+
+    def test_does_not_show_disease_term_if_not_required_by_duo_permission(self):
+        """Does not display a disease term or parentheses if a disease term is not required by the DUO permission."""
+        permission = DataUsePermissionFactory.create()
+        obj = factories.dbGaPWorkspaceFactory.create(
+            data_use_permission=permission,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertNotContains(response, "(Term:")
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""

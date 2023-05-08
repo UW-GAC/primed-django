@@ -5,9 +5,10 @@ from anvil_consortium_manager.auth import (
 from anvil_consortium_manager.models import Workspace
 from dal import autocomplete
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, TemplateView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
@@ -20,7 +21,7 @@ from primed.dbgap.models import dbGaPApplication
 from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceTable
 from primed.users.tables import UserTable
 
-from . import models, tables
+from . import helpers, models, tables
 
 User = get_user_model()
 
@@ -133,3 +134,14 @@ class AvailableDataDetail(
 
     def get_table_data(self):
         return Workspace.objects.filter(dbgapworkspace__available_data=self.object)
+
+
+class DataSummaryView(LoginRequiredMixin, TemplateView):
+
+    template_name = "primed_anvil/data_summary.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        table_data = helpers.get_summary_table_data()
+        context["summary_table"] = tables.DataSummaryTable(table_data)
+        return context

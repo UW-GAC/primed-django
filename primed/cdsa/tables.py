@@ -242,6 +242,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             return "—"
 
 
+# TODO: also subclass WorkspaceSharedWithConsortiumTable and remove is_shared from this class.
 class CDSAWorkspaceTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
