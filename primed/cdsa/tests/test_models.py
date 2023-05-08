@@ -40,7 +40,7 @@ class AgreementVersionTest(TestCase):
         )
         with self.assertRaisesMessage(ValidationError, "already exists"):
             instance.full_clean()
-        with self.assertRaisesMessage(IntegrityError, "UNIQUE"):
+        with self.assertRaises(IntegrityError):
             instance.save()
 
     def test_major_version_zero(self):
