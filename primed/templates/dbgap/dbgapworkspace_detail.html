@@ -33,12 +33,16 @@
       {% endif %}
     </dd>
     <dt class="col-sm-3">DUO modifiers</dt> <dd class="col-sm-9">
-      {% for modifier in object.dbgapworkspace.data_use_modifiers.all %}
+      {% if object.dbgapworkspace.data_use_modifiers.all %}
+        {% for modifier in object.dbgapworkspace.data_use_modifiers.all %}
       <a href="{{ modifier.get_absolute_url }}">
-        {{ modifier.abbreviation }}
+          {{ modifier.abbreviation }}
       </a>
-        {% if not forloop.last %}, {% endif %}
-      {% endfor %}
+          {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      {% else %}
+        —
+      {% endif %}
     </dd>
   </dl>
 
