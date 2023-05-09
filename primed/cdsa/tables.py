@@ -218,7 +218,12 @@ class CDSAWorkspaceRecordsTable(tables.Table):
     workspace__name = tables.Column()
     workspace__billing_project = tables.Column()
     study = tables.Column()
-    data_use_modifiers = tables.ManyToManyColumn(transform=lambda x: x.abbreviation)
+    data_use_permission__abbreviation = tables.Column(
+        verbose_name="Data use permission"
+    )
+    data_use_modifiers = tables.ManyToManyColumn(
+        transform=lambda x: x.abbreviation, verbose_name="Data use modifiers"
+    )
     workspace__created = tables.columns.Column(verbose_name="Date created")
     date_shared = tables.columns.Column(accessor="pk", verbose_name="Date shared")
 
