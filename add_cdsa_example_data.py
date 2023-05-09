@@ -195,10 +195,15 @@ GroupAccountMembershipFactory.create(
 )
 
 cdsa_workspace_1 = factories.CDSAWorkspaceFactory.create(
+    workspace__billing_project__name="demo-primed-cdsa",
+    workspace__name="DEMO_PRIMED_CDSA_MESA_1",
     study=Study.objects.get(short_name="MESA"),
     data_use_permission=dup,
 )
-cdsa_workspace_1.workspace.authorization_domains.add(cdsa_group)
+GroupGroupMembershipFactory.create(
+    parent_group=cdsa_workspace_1.workspace.authorization_domains.first(),
+    child_group=cdsa_group,
+)
 
 # Share with primed_all.
 primed_all_group = ManagedGroup.objects.get(name="PRIMED_ALL")
@@ -208,6 +213,8 @@ WorkspaceGroupSharingFactory.create(
 
 # Create a second workspace that is not shared.
 cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
+    workspace__billing_project__name="demo-primed-cdsa",
+    workspace__name="DEMO_PRIMED_CDSA_MESA_2",
     study=Study.objects.get(short_name="MESA"),
     data_use_permission=dup,
 )
