@@ -147,6 +147,9 @@ class RepresentativeRecordsTable(tables.Table):
 
     representative__name = tables.Column(verbose_name="Representative")
     signing_group = tables.Column(accessor="pk", orderable=False)
+    agreement_type = tables.Column(
+        accessor="combined_type", order_by=("type", "-is_primary")
+    )
 
     class Meta:
         model = models.SignedAgreement
@@ -156,7 +159,6 @@ class RepresentativeRecordsTable(tables.Table):
             "representative_role",
             "signing_institution",
             "signing_group",
-            "combined_type",
         )
 
     def render_signing_group(self, record):
