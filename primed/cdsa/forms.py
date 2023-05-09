@@ -5,14 +5,9 @@ from dal import autocomplete
 from django import forms
 from tree_queries.forms import TreeNodeMultipleChoiceField
 
+from primed.primed_anvil.forms import CustomDateInput
+
 from . import models
-
-
-# I forget why I had to code this for PRIMED but I did.
-class CustomDateInput(forms.widgets.DateInput):
-    """Form input field to display a date with a calendar picker."""
-
-    input_type = "date"
 
 
 class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
@@ -41,6 +36,7 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
+            "date_signed": CustomDateInput(),
         }
 
 
