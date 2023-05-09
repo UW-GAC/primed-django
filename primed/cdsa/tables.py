@@ -138,7 +138,6 @@ class RepresentativeRecordsTable(tables.Table):
     """Table for a list of representatives that have signed the CDSA."""
 
     representative__name = tables.Column(verbose_name="Representative")
-    is_primary = BooleanCheckColumn()
     signing_group = tables.Column(accessor="pk", orderable=False)
 
     class Meta:
@@ -149,8 +148,7 @@ class RepresentativeRecordsTable(tables.Table):
             "representative_role",
             "signing_institution",
             "signing_group",
-            "type",
-            "is_primary",
+            "combined_type",
         )
 
     def render_signing_group(self, record):
