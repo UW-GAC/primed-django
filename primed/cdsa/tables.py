@@ -132,7 +132,6 @@ class NonDataAffiliateAgreementTable(tables.Table):
         fields = (
             "signed_agreement__cc_id",
             "affiliation",
-            "signed_agreement__is_primary",
             "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
