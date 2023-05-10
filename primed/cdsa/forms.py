@@ -73,7 +73,7 @@ class NonDataAffiliateAgreementForm(forms.ModelForm):
         )
 
 
-class CDSAWorkspaceForm(forms.ModelForm):
+class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for `CDSAWorkspace` objects."""
 
     class Meta:
