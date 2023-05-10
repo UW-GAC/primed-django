@@ -198,7 +198,11 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     AGREEMENT_TYPE = SignedAgreement.DATA_AFFILIATE
 
-    study = models.ForeignKey(Study, on_delete=models.PROTECT)
+    study = models.ForeignKey(
+        Study,
+        on_delete=models.PROTECT,
+        help_text="Study that this agreement is associated with.",
+    )
     anvil_upload_group = models.ForeignKey(ManagedGroup, on_delete=models.PROTECT)
 
     def get_absolute_url(self):
