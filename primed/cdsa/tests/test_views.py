@@ -4154,3 +4154,46 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.data_use_modifiers.count(), 2)
         self.assertIn(data_use_modifier_1, new_workspace_data.data_use_modifiers.all())
         self.assertIn(data_use_modifier_2, new_workspace_data.data_use_modifiers.all())
+
+    def test_creates_upload_workspace_with_disease_term(self):
+        """Posting valid data to the form creates a workspace data object when using a custom adapter."""
+        study = factories.StudyFactory.create()
+        data_use_permission = DataUsePermissionFactory.create(
+            requires_disease_term=True
+        )
+        # Create an extra that won't be specified.
+        billing_project = BillingProjectFactory.create(name="test-billing-project")
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
+        json_data = {
+            "namespace": "test-billing-project",
+            "name": "test-workspace",
+            "attributes": {},
+        }
+        self.anvil_response_mock.add(
+            responses.POST,
+            url,
+            status=self.api_success_code,
+            match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "billing_project": billing_project.pk,
+                "name": "test-workspace",
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-study": study.pk,
+                "workspacedata-0-data_use_limitations": "test limitations",
+                "workspacedata-0-acknowledgments": "test acknowledgments",
+                "workspacedata-0-data_use_permission": data_use_permission.pk,
+                "workspacedata-0-disease_term": "foo",
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_workspace_data = models.CDSAWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.disease_term, "foo")

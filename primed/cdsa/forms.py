@@ -83,6 +83,7 @@ class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "study",
             "data_use_permission",
             "data_use_modifiers",
+            "disease_term",
             "data_use_limitations",
             "acknowledgments",
             "available_data",
