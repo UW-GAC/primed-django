@@ -261,9 +261,15 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
 
     name = tables.Column(linkify=True)
     billing_project = tables.Column(linkify=True)
+    cdsaworkspace__data_use_permission__abbreviation = tables.Column(
+        verbose_name="DUO permission",
+        linkify=lambda record: record.cdsaworkspace.data_use_permission.get_absolute_url(),
+    )
     cdsaworkspace__study = tables.Column(linkify=True)
     cdsaworkspace__data_use_modifiers = tables.ManyToManyColumn(
-        transform=lambda x: x.abbreviation
+        transform=lambda x: x.abbreviation,
+        verbose_name="DUO modifiers",
+        linkify_item=True,
     )
 
     class Meta:
