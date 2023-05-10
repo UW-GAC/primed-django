@@ -90,7 +90,7 @@ class SignedAgreement(TimeStampedModel, models.Model):
         choices=TYPE_CHOICES,
     )
     is_primary = models.BooleanField(
-        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement)."
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
     )
     version = models.ForeignKey(
         AgreementVersion,
@@ -111,6 +111,12 @@ class SignedAgreement(TimeStampedModel, models.Model):
 
     def __str__(self):
         return "{}".format(self.cc_id)
+
+    def clean(self):
+        if self.type == self.NON_DATA_AFFILIATE and self.is_primary is False:
+            raise ValidationError(
+                "Non-data affiliate agreements must be primary agreements."
+            )
 
     @property
     def combined_type(self):

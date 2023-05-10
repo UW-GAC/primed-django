@@ -19,7 +19,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.messages import get_messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import NON_FIELD_ERRORS, PermissionDenied
 from django.http import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
@@ -2813,6 +2813,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
+        print(form.errors)
         self.assertEqual(len(form.errors), 1)
         self.assertIn("is_primary", form.errors)
         self.assertEqual(len(form.errors["is_primary"]), 1)
@@ -2894,6 +2895,40 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("cc_id", form.errors)
         self.assertEqual(len(form.errors["cc_id"]), 1)
         self.assertIn("already exists", form.errors["cc_id"][0])
+
+    def test_error_is_primary_false(self):
+        """Form shows an error when trying to create a duplicate dbgap_phs."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": False,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # No new objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 0)
+        self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 0)
+        # Form has errors in the correct field.
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn(NON_FIELD_ERRORS, form.errors)
+        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn("primary", form.errors[NON_FIELD_ERRORS][0])
 
     def test_post_blank_data(self):
         """Posting blank data does not create an object."""

@@ -6,7 +6,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -277,6 +277,26 @@ class SignedAgreementTest(TestCase):
         self.assertEqual(obj.signed_agreement.agreement_group, obj.study)
         obj = factories.NonDataAffiliateAgreementFactory()
         self.assertEqual(obj.signed_agreement.agreement_group, obj.affiliation)
+
+    def test_clean_non_data_affiliate_is_primary_false(self):
+        """ValidationError is raised when is_primary is False for a non-data affiliate."""
+        user = UserFactory.create()
+        group = ManagedGroupFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(major_version=0)
+        instance = factories.SignedAgreementFactory.build(
+            representative=user,
+            anvil_access_group=group,
+            version=agreement_version,
+            type=models.SignedAgreement.NON_DATA_AFFILIATE,
+            is_primary=False,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict[NON_FIELD_ERRORS]), 1)
+        self.assertIn("primary", e.exception.message_dict[NON_FIELD_ERRORS][0])
 
 
 class MemberAgreementTest(TestCase):
