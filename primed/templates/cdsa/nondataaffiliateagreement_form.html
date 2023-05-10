@@ -1,25 +1,9 @@
-{% extends "anvil_consortium_manager/base.html" %}
+{% extends "cdsa/signedagreement_form.html" %}
 {% load crispy_forms_tags %}
 
 {% block title %}New Non-data Affiliate Agreement{% endblock %}
 
 
-{% block content %}
-
-<h1>New Non-data Affiliate Agreement</h1>
-
-  <form method="post">
-
-    {% csrf_token %}
-    {{ form|crispy }}
-    {{ formset|crispy }}
-
-    <button type="submit" class="btn btn-success">Save</button>
-  </form>
-
-{% endblock content %}
-
-
-{% block inline_javascript %}
-  {{ form.media }}
-{% endblock inline_javascript %}
+{% block agreement_type_title %}
+New Non-data Affiliate Agreement
+{% endblock agreement_type_title %}
