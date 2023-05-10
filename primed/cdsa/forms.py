@@ -49,13 +49,19 @@ class MemberAgreementForm(forms.ModelForm):
         )
 
 
-class DataAffiliateAgreementForm(forms.ModelForm):
+class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     class Meta:
         model = models.DataAffiliateAgreement
         fields = (
             "signed_agreement",
             "study",
         )
+        widgets = {
+            "study": autocomplete.ModelSelect2(
+                url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class NonDataAffiliateAgreementForm(forms.ModelForm):
