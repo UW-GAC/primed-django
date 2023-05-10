@@ -55,7 +55,7 @@ class MemberAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn()
+    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -86,7 +86,7 @@ class DataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn()
+    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
