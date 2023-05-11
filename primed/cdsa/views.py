@@ -17,7 +17,7 @@ from django.http import Http404
 from django.views.generic import DetailView, FormView, TemplateView
 from django_tables2 import SingleTableView
 
-from . import forms, models, tables
+from . import forms, helpers, models, tables
 from .audit import signed_agreement_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
@@ -335,36 +335,38 @@ class RecordsIndex(LoginRequiredMixin, TemplateView):
 class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
     """Display a list of representative for required records."""
 
-    table_class = tables.RepresentativeRecordsTable
     model = models.SignedAgreement
     template_name = "cdsa/representative_records.html"
+
+    def get_table(self):
+        return helpers.get_representative_records_table()
 
 
 class StudyRecords(LoginRequiredMixin, SingleTableView):
     """Display a list of studies that have signed the CDSA for required records."""
 
-    table_class = tables.StudyRecordsTable
     model = models.DataAffiliateAgreement
     template_name = "cdsa/study_records.html"
 
-    def get_table_data(self):
-        return self.model.objects.filter(signed_agreement__is_primary=True)
+    def get_table(self):
+        return helpers.get_study_records_table()
 
 
 class CDSAWorkspaceRecords(LoginRequiredMixin, SingleTableView):
     """Display a list of workspaces that contain CDSA data."""
 
-    table_class = tables.CDSAWorkspaceRecordsTable
     model = models.CDSAWorkspace
     template_name = "cdsa/cdsaworkspace_records.html"
+
+    def get_table(self):
+        return helpers.get_cdsa_workspace_records_table()
 
 
 class UserAccessRecords(LoginRequiredMixin, SingleTableView):
     """Display a list of users that have access to CDSA data via a signed CDSA."""
 
-    table_class = tables.UserAccessRecordsTable
     model = GroupAccountMembership
     template_name = "cdsa/user_access_records.html"
 
-    def get_table_data(self):
-        return self.model.objects.filter(group__signedagreement__isnull=False)
+    def get_table(self):
+        return helpers.get_user_access_records_table()
