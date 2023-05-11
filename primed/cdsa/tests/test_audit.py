@@ -6,6 +6,7 @@ from anvil_consortium_manager.tests.factories import (
 )
 from django.conf import settings
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 
@@ -26,17 +27,19 @@ class SignedAgreementAuditResultTest(TestCase):
 
     def test_verified_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        signed_agreement_audit.VerifiedAccess(
+        instance = signed_agreement_audit.VerifiedAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
+        self.assertIsNone(instance.get_action_url())
 
     def test_verified_no_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
-        signed_agreement_audit.VerifiedNoAccess(
+        instance = signed_agreement_audit.VerifiedNoAccess(
             signed_agreement=signed_agreement,
             note="foo",
         )
+        self.assertIsNone(instance.get_action_url())
 
     def test_grant_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -44,7 +47,11 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        instance.get_action_url()
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            args=[self.cdsa_group, signed_agreement.anvil_access_group],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -52,15 +59,11 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        instance.get_action_url()
-
-    def test_remove_access_no_dar(self):
-        signed_agreement = factories.SignedAgreementFactory.create()
-        instance = signed_agreement_audit.RemoveAccess(
-            signed_agreement=signed_agreement,
-            note="foo",
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            args=[self.cdsa_group, signed_agreement.anvil_access_group],
         )
-        instance.get_action_url()
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -68,7 +71,7 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        instance.get_action_url()
+        self.assertIsNone(instance.get_action_url())
 
     def test_anvil_group_name(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -427,22 +430,24 @@ class WorkspaceAuditResultTest(TestCase):
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
             study=self.study
         )
-        workspace_audit.VerifiedAccess(
+        instance = workspace_audit.VerifiedAccess(
             workspace=workspace,
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
+        self.assertIsNone(instance.get_action_url())
 
     def test_verified_no_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
             study=self.study
         )
-        workspace_audit.VerifiedNoAccess(
+        instance = workspace_audit.VerifiedNoAccess(
             workspace=workspace,
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
+        self.assertIsNone(instance.get_action_url())
 
     def test_grant_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -454,7 +459,11 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        instance.get_action_url()
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            args=[workspace.workspace.authorization_domains.first(), self.cdsa_group],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -466,7 +475,11 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        instance.get_action_url()
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            args=[workspace.workspace.authorization_domains.first(), self.cdsa_group],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -478,7 +491,7 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        instance.get_action_url()
+        self.assertIsNone(instance.get_action_url())
 
     def test_error_no_data_affiliate_agreement(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -486,7 +499,7 @@ class WorkspaceAuditResultTest(TestCase):
             workspace=workspace,
             note="foo",
         )
-        instance.get_action_url()
+        self.assertIsNone(instance.get_action_url())
 
     def test_anvil_group_name(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
