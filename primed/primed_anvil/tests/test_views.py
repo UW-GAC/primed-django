@@ -162,6 +162,19 @@ class StudyDetailTest(TestCase):
         self.assertIn(cdsa_workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
 
+    def test_open_access_workspace_table(self):
+        """Contains a table of OpenAccessWorkspaces with the correct studies."""
+        obj = self.model_factory.create()
+        open_access_workspace = OpenAccessWorkspaceFactory.create()
+        open_access_workspace.studies.add(obj)
+        other_workspace = OpenAccessWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][3]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(open_access_workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
     def test_cdsa_table(self):
         obj = self.model_factory.create()
         site_cdsa = DataAffiliateAgreementFactory.create(study=obj)

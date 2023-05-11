@@ -19,6 +19,7 @@ from primed.cdsa.tables import (
 )
 from primed.dbgap.models import dbGaPApplication
 from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceTable
+from primed.miscellaneous_workspaces.tables import OpenAccessWorkspaceTable
 from primed.users.tables import UserTable
 
 from . import helpers, models, tables
@@ -30,7 +31,12 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
     """View to show details about a `Study`."""
 
     model = models.Study
-    tables = [dbGaPWorkspaceTable, CDSAWorkspaceTable, DataAffiliateAgreementTable]
+    tables = [
+        dbGaPWorkspaceTable,
+        CDSAWorkspaceTable,
+        DataAffiliateAgreementTable,
+        OpenAccessWorkspaceTable,
+    ]
     # table_class = dbGaPWorkspaceTable
     # context_table_name = "dbgap_workspace_table"
 
@@ -40,8 +46,10 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         )
         cdsa_qs = Workspace.objects.filter(cdsaworkspace__study=self.object)
         agreement_qs = DataAffiliateAgreement.objects.filter(study=self.object)
-
-        return [dbgap_qs, cdsa_qs, agreement_qs]
+        open_access_qs = Workspace.objects.filter(
+            openaccessworkspace__studies=self.object
+        )
+        return [dbgap_qs, cdsa_qs, agreement_qs, open_access_qs]
 
 
 class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):

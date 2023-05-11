@@ -23,7 +23,7 @@
       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#data-access-collapse-CDSA" aria-expanded="false" aria-controls="data-access-collapse-CDSA">
         <span class="fa-solid fa-computer mx-2"></span>
         CDSAs
-        <span class="badge bg-secondary mx-3"> {{tables.2.rows|length}} </span>
+        <span class="badge bg-{% if tables.2.rows|length %}primary{% else %}secondary{% endif %} mx-3"> {{tables.2.rows|length}} </span>
       </button>
     </h2>
     <div id="data-access-collapse-CDSA" class="accordion-collapse collapse" aria-labelledby="data-access-heading-CDSA">
@@ -43,7 +43,7 @@
       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#workspaces-collapse-dbGaP" aria-expanded="false" aria-controls="workspaces-collapse-dbGaP">
         <span class="fa-solid fa-computer mx-2"></span>
         dbGaP workspaces
-        <span class="badge bg-secondary mx-3"> {{tables.0.rows|length}} </span>
+        <span class="badge bg-{% if tables.0.rows|length %}primary{% else %}secondary{% endif %} mx-3"> {{tables.0.rows|length}} </span>
       </button>
     </h2>
     <div id="workspaces-collapse-dbGaP" class="accordion-collapse collapse" aria-labelledby="workspaces-heading-dbGaP">
@@ -57,12 +57,26 @@
       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#workspaces-collapse-CDSA" aria-expanded="false" aria-controls="workspaces-collapse-CDSA">
         <span class="fa-solid fa-computer mx-2"></span>
         CDSA workspaces
-        <span class="badge bg-secondary mx-3"> {{tables.1.rows|length}} </span>
+        <span class="badge bg-{% if tables.1.rows|length %}primary{% else %}secondary{% endif %} mx-3"> {{tables.1.rows|length}} </span>
       </button>
     </h2>
     <div id="workspaces-collapse-CDSA" class="accordion-collapse collapse" aria-labelledby="workspaces-heading-CDSA">
       <div class="accordion-body">
         {% render_table tables.1 %}
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="workspaces-heading-openaccess">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#workspaces-collapse-openaccess" aria-expanded="false" aria-controls="workspaces-collapse-openaccess">
+        <span class="fa-solid fa-computer mx-2"></span>
+        Open access workspaces
+        <span class="badge bg-{% if tables.3.rows|length %}primary{% else %}secondary{% endif %} mx-3"> {{tables.3.rows|length}} </span>
+      </button>
+    </h2>
+    <div id="workspaces-collapse-openaccess" class="accordion-collapse collapse" aria-labelledby="workspaces-heading-openaccess">
+      <div class="accordion-body">
+        {% render_table tables.3 %}
       </div>
     </div>
   </div>
