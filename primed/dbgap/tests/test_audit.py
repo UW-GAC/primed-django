@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from .. import audit, models
@@ -14,22 +15,24 @@ class AuditResultTest(TestCase):
     def test_verified_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create()
-        audit.VerifiedAccess(
+        instance = audit.VerifiedAccess(
             workspace=dbgap_workspace,
             dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
             data_access_request=dar,
             note="foo",
         )
+        self.assertIsNone(instance.get_action_url())
 
     def test_verified_no_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create()
-        audit.VerifiedNoAccess(
+        instance = audit.VerifiedNoAccess(
             workspace=dbgap_workspace,
             dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
             data_access_request=dar,
             note="foo",
         )
+        self.assertIsNone(instance.get_action_url())
 
     def test_grant_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -41,6 +44,14 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         instance.get_action_url()
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            args=[
+                dbgap_workspace.workspace.authorization_domains.first(),
+                dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -52,6 +63,14 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         instance.get_action_url()
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            args=[
+                dbgap_workspace.workspace.authorization_domains.first(),
+                dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access_no_dar(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -59,7 +78,14 @@ class AuditResultTest(TestCase):
         instance = audit.RemoveAccess(
             workspace=dbgap_workspace, dbgap_application=dbgap_application, note="foo"
         )
-        instance.get_action_url()
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            args=[
+                dbgap_workspace.workspace.authorization_domains.first(),
+                dbgap_application.anvil_access_group,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -70,7 +96,7 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        instance.get_action_url()
+        self.assertIsNone(instance.get_action_url())
 
     def test_error_no_dar(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -78,7 +104,7 @@ class AuditResultTest(TestCase):
         instance = audit.Error(
             workspace=dbgap_workspace, dbgap_application=dbgap_application, note="foo"
         )
-        instance.get_action_url()
+        self.assertIsNone(instance.get_action_url())
 
     def test_post_init(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
