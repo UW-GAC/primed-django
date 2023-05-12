@@ -20,7 +20,7 @@
       {% endif %}
     </dd>
     <dt class="col-sm-2">DUO modifiers</dt> <dd class="col-sm-10">
-      {% if modifier in object.cdsaworkspace.data_use_modifiers.all %}
+      {% if object.cdsaworkspace.data_use_modifiers.all %}
         {% for modifier in object.cdsaworkspace.data_use_modifiers.all %}
       <a href="{{ modifier.get_absolute_url }}">
           {{ modifier.abbreviation }}

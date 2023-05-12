@@ -26,7 +26,11 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.primed_anvil.tests.factories import (
+    AvailableDataFactory,
+    StudyFactory,
+    StudySiteFactory,
+)
 from primed.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
@@ -4026,6 +4030,29 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertNotContains(response, "(Term:")
+
+    def test_render_available_data(self):
+        """Test coverage for available_data display."""
+        available_datas = AvailableDataFactory.create_batch(2)
+        obj = factories.CDSAWorkspaceFactory.create()
+        obj.available_data.add(*available_datas)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertContains(response, available_datas[0].name)
+        self.assertContains(response, available_datas[1].name)
+
+    def test_render_duo_modifiers(self):
+        """Test coverage for available_data display."""
+        permission = DataUsePermissionFactory.create()
+        modifiers = DataUseModifierFactory.create_batch(2)
+        obj = factories.CDSAWorkspaceFactory.create(
+            data_use_permission=permission,
+        )
+        obj.data_use_modifiers.add(*modifiers)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertContains(response, modifiers[0].abbreviation)
+        self.assertContains(response, modifiers[1].abbreviation)
 
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
