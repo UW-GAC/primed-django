@@ -44,3 +44,6 @@ mysqlclient==2.1.0 # https://github.com/PyMySQL/mysqlclient
 
 # pandas for data summaries
 pandas==1.5.2
+
+# for exporting django-tables2 tables to tsv.
+tablib==3.4.0
