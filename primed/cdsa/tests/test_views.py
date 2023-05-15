@@ -3265,14 +3265,11 @@ class RecordsIndexTest(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:index", args=args)
 
-    def test_view_redirect_not_logged_in(self):
+    def test_status_code_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
-        )
+        self.assertEqual(response.status_code, 200)
 
     def test_status_code_user_logged_in(self):
         """Returns successful response code."""
@@ -3303,14 +3300,11 @@ class RepresentativeRecordsList(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:representatives", args=args)
 
-    def test_view_redirect_not_logged_in(self):
+    def test_status_code_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
-        )
+        self.assertEqual(response.status_code, 200)
 
     def test_status_code_user_logged_in(self):
         """Returns successful response code."""
@@ -3701,14 +3695,11 @@ class StudyRecordsList(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:studies", args=args)
 
-    def test_view_redirect_not_logged_in(self):
+    def test_status_code_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
-        )
+        self.assertEqual(response.status_code, 200)
 
     def test_status_code_user_logged_in(self):
         """Returns successful response code."""
@@ -3788,14 +3779,11 @@ class UserAccessRecordsList(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:user_access", args=args)
 
-    def test_view_redirect_not_logged_in(self):
+    def test_status_code_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
-        )
+        self.assertEqual(response.status_code, 200)
 
     def test_status_code_user_logged_in(self):
         """Returns successful response code."""
@@ -3950,14 +3938,11 @@ class CDSAWorkspaceRecordsList(TestCase):
         """Get the url for the view being tested."""
         return reverse("cdsa:records:workspaces", args=args)
 
-    def test_view_redirect_not_logged_in(self):
+    def test_status_code_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response,
-            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
-        )
+        self.assertEqual(response.status_code, 200)
 
     def test_status_code_user_logged_in(self):
         """Returns successful response code."""

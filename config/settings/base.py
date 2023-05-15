@@ -302,6 +302,11 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "socialaccount_signup",
     "admin:index",
     "admin:login",
+    "cdsa:records:index",
+    "cdsa:records:representatives",
+    "cdsa:records:studies",
+    "cdsa:records:workspaces",
+    "cdsa:records:user_access",
 ]
 
 # django-dbbackup
