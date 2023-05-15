@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.tests.factories import (
-    WorkspaceAuthorizationDomainFactory,
+    GroupGroupMembershipFactory,
     WorkspaceGroupSharingFactory,
 )
 from django.db.models import Count
@@ -458,7 +458,6 @@ class dbGaPDataAccessRequestTableTest(TestCase):
     def test_matching_workspace(self):
         """Table works if there is a matching workspace without access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=workspace.dbgap_version,
@@ -480,9 +479,13 @@ class dbGaPDataAccessRequestTableTest(TestCase):
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
         WorkspaceGroupSharingFactory.create(
             workspace=workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)

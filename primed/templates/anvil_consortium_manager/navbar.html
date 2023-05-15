@@ -1,7 +1,6 @@
 {% extends "anvil_consortium_manager/navbar.html" %}
 
 {% block anvil_consortium_manager_nav_items %}
-  {{ block.super }}
 
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -39,36 +38,12 @@
     </ul>
   </li>
 
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-      dbGaP
-    </a>
-    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-      <li>
-        <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:list' %}">List dbGaP study accessions</a>
-      </li>
-      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
-        <li>
-          <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:new' %}">Add a new dbGaP study accession</a>
-        </li>
-      {% endif %}
+  {% include 'dbgap/nav_items.html' %}
 
-      <li><hr class="dropdown-divider"></li>
+  {% include 'cdsa/nav_items.html' %}
 
-      <li>
-        <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:list' %}">List dbGaP applications</a>
-      </li>
-      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
-        <li>
-          <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
-        </li>
-        <li>
-          <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:update_dars' %}">Update DARs for all applications</a>
-        </li>
-      {% endif %}
 
-    </ul>
+  {{ block.super }}
 
-  </li>
 
 {% endblock anvil_consortium_manager_nav_items %}

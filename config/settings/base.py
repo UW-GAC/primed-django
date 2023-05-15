@@ -96,6 +96,7 @@ LOCAL_APPS = [
     "primed.dbgap",
     "primed.miscellaneous_workspaces",
     "primed.duo",
+    "primed.cdsa",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -363,6 +364,7 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
+    "primed.cdsa.adapters.CDSAWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
@@ -375,3 +377,4 @@ ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
 ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
+ANVIL_CDSA_GROUP_NAME = "PRIMED_CDSA"

@@ -1,0 +1,26 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<h1>{% block agreement_type_title %}{% endblock agreement_type_title %}</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>Before creating a new signed agreement using this form, verify that it has passed validation pre-checks.</p>
+</div>
+
+  <form method="post">
+
+    {% csrf_token %}
+    {{ form|crispy }}
+    {{ formset|crispy }}
+
+    <button type="submit" class="btn btn-success">Save</button>
+  </form>
+
+{% endblock content %}
+
+
+{% block inline_javascript %}
+  {{ form.media }}
+{% endblock inline_javascript %}

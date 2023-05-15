@@ -1,0 +1,66 @@
+{% extends "anvil_consortium_manager/base.html" %}
+
+{% block title %}CDSA records{% endblock %}
+
+{% block content %}
+<h1>CDSA records</h1>
+
+
+   <div class="row g-4 py-2 mx-4 row-cols-2">
+
+     <div class="col d-flex align-items-start">
+       <div class="icon-square text-dark flex-shrink-0 me-3">
+         <h2><span class="fa-solid fa-handshake-simple mx-2"></span></h2>
+       </div>
+       <div>
+         <h2>Representatives</h2>
+         <p>View representatives who have signed the PRIMED CDSA.</p>
+         <a href="{% url 'cdsa:records:representatives' %}" class="btn btn-primary">
+           View representatives
+         </a>
+       </div>
+     </div>
+
+     <div class="col d-flex align-items-start">
+       <div class="icon-square text-dark flex-shrink-0 me-3">
+         <h2><span class="fa-solid fa-building-columns mx-2"></span></h2>
+       </div>
+       <div>
+         <h2>Studies</h2>
+         <p>View studies who have signed the PRIMED CDSA.</p>
+         <a href="{% url 'cdsa:records:studies' %}" class="btn btn-primary">
+           View studies
+         </a>
+       </div>
+     </div>
+
+     <div class="col d-flex align-items-start">
+       <div class="icon-square text-dark flex-shrink-0 me-3">
+         <h2><span class="fa-solid fa-users mx-2"></span></h2>
+       </div>
+       <div>
+         <h2>User access</h2>
+         <p>View users who have access to data via a PRIMED CDSA.</p>
+         <a href="{% url 'cdsa:records:user_access' %}" class="btn btn-primary">
+           View users
+         </a>
+       </div>
+     </div>
+
+     <div class="col d-flex align-items-start">
+       <div class="icon-square text-dark flex-shrink-0 me-3">
+         <h2><span class="fa-solid fa-computer mx-2"></span></h2>
+       </div>
+       <div>
+         <h2>Workspaces</h2>
+         <p>View workspaces containing PRIMED CDSA data.</p>
+         <a href="{% url 'cdsa:records:workspaces' %}" class="btn btn-primary">
+           View workspaces
+         </a>
+       </div>
+     </div>
+
+   </div>
+
+
+{% endblock content %}
