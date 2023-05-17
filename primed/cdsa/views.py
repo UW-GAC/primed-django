@@ -8,7 +8,6 @@ from anvil_consortium_manager.auth import (
 from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -325,14 +324,13 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerViewRequired, TemplateView):
         return context
 
 
-# TODO: are these open to the world, or loginrequired?
-class RecordsIndex(LoginRequiredMixin, TemplateView):
+class RecordsIndex(TemplateView):
     """Index page for records."""
 
     template_name = "cdsa/records_index.html"
 
 
-class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
+class RepresentativeRecords(SingleTableView):
     """Display a list of representative for required records."""
 
     model = models.SignedAgreement
@@ -342,7 +340,7 @@ class RepresentativeRecords(LoginRequiredMixin, SingleTableView):
         return helpers.get_representative_records_table()
 
 
-class StudyRecords(LoginRequiredMixin, SingleTableView):
+class StudyRecords(SingleTableView):
     """Display a list of studies that have signed the CDSA for required records."""
 
     model = models.DataAffiliateAgreement
@@ -352,7 +350,7 @@ class StudyRecords(LoginRequiredMixin, SingleTableView):
         return helpers.get_study_records_table()
 
 
-class CDSAWorkspaceRecords(LoginRequiredMixin, SingleTableView):
+class CDSAWorkspaceRecords(SingleTableView):
     """Display a list of workspaces that contain CDSA data."""
 
     model = models.CDSAWorkspace
@@ -362,7 +360,7 @@ class CDSAWorkspaceRecords(LoginRequiredMixin, SingleTableView):
         return helpers.get_cdsa_workspace_records_table()
 
 
-class UserAccessRecords(LoginRequiredMixin, SingleTableView):
+class UserAccessRecords(SingleTableView):
     """Display a list of users that have access to CDSA data via a signed CDSA."""
 
     model = GroupAccountMembership
