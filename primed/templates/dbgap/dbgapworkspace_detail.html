@@ -9,13 +9,12 @@
       {% endfor %}
     </dd>
     <dt class="col-sm-3">dbGaP accession</dt> <dd class="col-sm-9">
+      <a href="{{ object.dbgapworkspace.get_dbgap_link }}" target="_blank">
         {{ object.dbgapworkspace.get_dbgap_accession }}
-        <br>
-        <a class="btn btn-light btn-sm" href="{{ object.dbgapworkspace.get_dbgap_link }}" target="_blank" role="button">
-          <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
-          View on dbGaP
-        </a>
+        <i class="bi bi-box-arrow-up-right"></i>
+      </a>
     </dd>
+
     <dt class="col-sm-3">Consent abbreviation</dt> <dd class="col-sm-9">{{ object.dbgapworkspace.dbgap_consent_abbreviation }}</dd>
     <dt class="col-sm-3">Consent code</dt> <dd class="col-sm-9">{{ object.dbgapworkspace.dbgap_consent_code }}</dd>
     <hr>
