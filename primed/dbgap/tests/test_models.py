@@ -548,6 +548,10 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertIn(available_data[0], instance.available_data.all())
         self.assertIn(available_data[1], instance.available_data.all())
 
+    def test_get_dbgap_link(self):
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        self.assertIsInstance(workspace.get_dbgap_link(), str)
+
 
 class dbGaPApplicationTest(TestCase):
     """Tests for the dbGaPApplication model."""

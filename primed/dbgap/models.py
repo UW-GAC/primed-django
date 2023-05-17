@@ -158,6 +158,12 @@ class dbGaPWorkspace(
             qs = qs.filter(dbgap_data_access_snapshot__is_most_recent=True)
         return qs
 
+    def get_dbgap_link(self):
+        url = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={}".format(
+            self.get_dbgap_accession()
+        )
+        return url
+
 
 class dbGaPApplication(TimeStampedModel, models.Model):
     """A model to track dbGaP applications."""

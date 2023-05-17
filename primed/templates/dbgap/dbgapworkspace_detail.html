@@ -11,7 +11,7 @@
     <dt class="col-sm-3">dbGaP accession</dt> <dd class="col-sm-9">
         {{ object.dbgapworkspace.get_dbgap_accession }}
         <br>
-        <a class="btn btn-light btn-sm" href="https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={{object.dbgapworkspace.get_dbgap_accession}}" target="_blank" role="button">
+        <a class="btn btn-light btn-sm" href="{{ object.dbgapworkspace.get_dbgap_link }}" target="_blank" role="button">
           <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
           View on dbGaP
         </a>
