@@ -39,7 +39,7 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     billing_project = tables.Column(linkify=True)
     dbgap_accession = tables.columns.Column(
         verbose_name="dbGaP accession",
-        accessor="pk",
+        accessor="dbgapworkspace__get_dbgap_accession",
         order_by=(
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
@@ -72,8 +72,16 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         )
         order_by = ("name",)
 
-    def render_dbgap_accession(self, record):
-        return record.dbgapworkspace.get_dbgap_accession()
+    def render_dbgap_accession(self, value, record):
+        return format_html(
+            """<a href="{}" target="_blank">
+              {}
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            """.format(
+                record.dbgapworkspace.get_dbgap_link(), value
+            )
+        )
 
     def render_number_approved_dars(self, record):
         n = (
@@ -202,11 +210,14 @@ class dbGaPDataAccessRequestTable(tables.Table):
         return "phs{0:06d}".format(value)
 
     def render_dbgap_accession(self, value, record):
-        link = """<a href="{}" target="_blank">{}</a>""".format(
-            record.get_dbgap_link(), value
-        )
         return format_html(
-            """{} <i class="bi bi-box-arrow-up-right"></i>""".format(link)
+            """<a href="{}" target="_blank">
+              {}
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            """.format(
+                record.get_dbgap_link(), value
+            )
         )
 
     class Meta:
