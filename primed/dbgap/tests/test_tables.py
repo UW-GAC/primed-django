@@ -78,11 +78,12 @@ class dbGaPWorkspaceTableTest(TestCase):
             dbgap_participant_set=3,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(
-            table.render_dbgap_accession(instance.workspace), "phs000001.v2.p3"
+        self.assertIn(
+            "phs000001.v2.p3",
+            table.rows[0].get_cell_value("dbgap_accession"),
         )
-        self.assertEqual(
-            table.rows[0].get_cell_value("dbgap_accession"), "phs000001.v2.p3"
+        self.assertIn(
+            instance.get_dbgap_link(), table.rows[0].get_cell_value("dbgap_accession")
         )
 
     def test_render_number_approved_dars_no_dars(self):

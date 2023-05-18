@@ -847,6 +847,16 @@ class dbGaPWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertNotContains(response, "(Term:")
 
+    def test_response_contains_dbgap_link(self):
+        """Response contains the link to the dbGaP page."""
+        permission = DataUsePermissionFactory.create()
+        obj = factories.dbGaPWorkspaceFactory.create(
+            data_use_permission=permission,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertContains(response, obj.get_dbgap_link())
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""

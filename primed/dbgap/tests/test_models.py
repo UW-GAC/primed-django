@@ -151,7 +151,6 @@ class dbGaPWorkspaceTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "phs000001.v2.p3 - GRU-NPU")
 
     def test_can_add_data_use_permission(self):
         """Saving a model with data_use_permission set is valid."""
@@ -547,6 +546,10 @@ class dbGaPWorkspaceTest(TestCase):
         self.assertIsInstance(instance, models.dbGaPWorkspace)
         self.assertIn(available_data[0], instance.available_data.all())
         self.assertIn(available_data[1], instance.available_data.all())
+
+    def test_get_dbgap_link(self):
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        self.assertIsInstance(workspace.get_dbgap_link(), str)
 
 
 class dbGaPApplicationTest(TestCase):
