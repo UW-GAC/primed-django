@@ -39,7 +39,7 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     billing_project = tables.Column(linkify=True)
     dbgap_accession = tables.columns.Column(
         verbose_name="dbGaP accession",
-        accessor="dbgapworkspace__get_dbgap_accession",
+        accessor="dbgapworkspace",
         order_by=(
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
@@ -72,14 +72,15 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         )
         order_by = ("name",)
 
-    def render_dbgap_accession(self, value, record):
+    def render_dbgap_accession(self, record):
         return format_html(
             """<a href="{}" target="_blank">
               {}
               <i class="bi bi-box-arrow-up-right"></i>
             </a>
             """.format(
-                record.dbgapworkspace.get_dbgap_link(), value
+                record.dbgapworkspace.get_dbgap_link(),
+                record.dbgapworkspace.get_dbgap_accession(),
             )
         )
 
