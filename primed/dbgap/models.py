@@ -128,16 +128,6 @@ class dbGaPWorkspace(
             ),
         ]
 
-    def __str__(self):
-        """String method.
-        Returns:
-            A string showing the workspace name of the object.
-        """
-        return "{} - {}".format(
-            self.get_dbgap_accession(),
-            self.dbgap_consent_abbreviation,
-        )
-
     def get_dbgap_accession(self):
         """Return the full dbGaP accession including phs, version, and participant set."""
         return "phs{phs:06d}.v{v}.p{ps}".format(

@@ -151,7 +151,6 @@ class dbGaPWorkspaceTest(TestCase):
         )
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
-        self.assertEqual(instance.__str__(), "phs000001.v2.p3 - GRU-NPU")
 
     def test_can_add_data_use_permission(self):
         """Saving a model with data_use_permission set is valid."""
