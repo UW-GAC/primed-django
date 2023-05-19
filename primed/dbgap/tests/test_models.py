@@ -1592,6 +1592,138 @@ class dbGaPDataAccessRequestTest(TestCase):
         with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
             dar.get_dbgap_workspace()
 
+    def test_get_dbgap_workspaces_no_study_accession(self):
+        """Raises DoesNotExist when there is no matching study accession."""
+        dar = factories.dbGaPDataAccessRequestFactory.create()
+        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
+            dar.get_dbgap_workspaces()
+
+    def test_get_dbgap_workspaces_no_matches(self):
+        """Returns an empty queryset when there is no matching workspace."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create()
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=study_accession.dbgap_phs
+        )
+        self.assertEqual(dar.get_dbgap_workspaces().count(), 0)
+
+    def test_get_dbgap_workspaces_one_match(self):
+        """Returns the correct workspace when there is one match."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], workspace)
+
+    def test_get_dbgap_workspaces_two_matches(self):
+        """Returns the correct workspace when there are two match."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create()
+        workspace_1 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=study_accession,
+            dbgap_version=1,
+            dbgap_participant_set=1,
+            dbgap_consent_code=1,
+        )
+        workspace_2 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=study_accession,
+            dbgap_version=2,
+            dbgap_participant_set=1,
+            dbgap_consent_code=1,
+        )
+
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=study_accession.dbgap_phs,
+            original_version=1,
+            original_participant_set=1,
+            dbgap_consent_code=1,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(qs[0], workspace_1)
+        self.assertEqual(qs[1], workspace_2)
+
+    def test_get_dbgap_workspaces_smaller_version(self):
+        """Raises ObjectNotFound for workspace with the same phs but a smaller version."""
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=1)
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=2,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 0)
+
+    def test_get_dbgap_workspaces_larger_version(self):
+        """Finds match for workspace with the same phs but a larger version."""
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=3)
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=2,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], workspace)
+
+    def test_get_dbgap_workspaces_smaller_participant_set(self):
+        """Raises ObjectNotFound for workspace with the same phs/version but different participant set."""
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_participant_set=1)
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=2,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 0)
+
+    def test_get_dbgap_workspaces_larger_participant_set(self):
+        """Finds a matching workspace with a larger version and participant set."""
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_version=2, dbgap_participant_set=2
+        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=1,
+            original_participant_set=1,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], workspace)
+
+    def test_get_dbgap_workspaces_different_dbgap_study_accession(self):
+        """Raises ObjectNotFound for workspace with the same phs/version but different phs."""
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession__dbgap_phs=1
+        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=2,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=workspace.dbgap_consent_code,
+        )
+        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
+            dar.get_dbgap_workspaces()
+
+    def test_get_dbgap_workspaces_different_consent_code(self):
+        """Raises ObjectNotFound for workspace with the same phs/version/participant set but different consent code."""
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_consent_code=1)
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
+            original_version=workspace.dbgap_version,
+            original_participant_set=workspace.dbgap_participant_set,
+            dbgap_consent_code=2,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 0)
+
     def test_has_access_no_match_no_study_accession(self):
         """has_access raises exception when no matching workspace exists."""
         data_access_request = factories.dbGaPDataAccessRequestFactory.create()
