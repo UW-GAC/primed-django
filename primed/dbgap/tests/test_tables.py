@@ -456,43 +456,57 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
-    def test_matching_workspace(self):
-        """Table works if there is a matching workspace without access."""
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
-            original_version=workspace.dbgap_version,
-            original_participant_set=workspace.dbgap_participant_set,
-            dbgap_consent_code=workspace.dbgap_consent_code,
-        )
-        table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
-        self.assertIn(
-            "square-fill", table.rows[0].get_cell_value("in_authorization_domain")
-        )
-
-    def test_matching_workspace_with_access(self):
+    def test_one_matching_workspace_with_access(self):
         """Table works if there is a matching workspace with access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
-            original_version=workspace.dbgap_version,
-            original_participant_set=workspace.dbgap_participant_set,
-            dbgap_consent_code=workspace.dbgap_consent_code,
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace
         )
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
-        WorkspaceGroupSharingFactory.create(
-            workspace=workspace.workspace,
-            group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        table = self.table_class([dar])
+        value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
+        self.assertIn(str(workspace), value)
+        self.assertIn("circle-fill", value)
+
+    def test_one_matching_workspace_without_access(self):
+        """Table works if there is a matching workspace with access."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(
+            dbgap_workspace=workspace
         )
-        table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
-        self.assertIn(
-            "circle-fill", table.rows[0].get_cell_value("in_authorization_domain")
+        table = self.table_class([dar])
+        value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
+        self.assertIn(str(workspace), value)
+        self.assertIn("square-fill", value)
+
+    def test_two_matching_workspaces(self):
+        """Table works if there is are two matching workspaces."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create()
+        workspace_1 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=study_accession,
+            dbgap_version=1,
+            dbgap_participant_set=1,
+            dbgap_consent_code=1,
         )
+        workspace_2 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=study_accession,
+            dbgap_version=2,
+            dbgap_participant_set=1,
+            dbgap_consent_code=1,
+        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=study_accession.dbgap_phs,
+            original_version=1,
+            original_participant_set=1,
+            dbgap_consent_code=1,
+        )
+        table = self.table_class([dar])
+        value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
+        self.assertIn(str(workspace_1), value)
+        self.assertIn(str(workspace_2), value)
 
 
 class dbGaPDataAccessRequestSummaryTable(TestCase):

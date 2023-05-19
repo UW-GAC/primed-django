@@ -507,7 +507,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
             dbgap_version__gte=self.original_version,
             dbgap_participant_set__gte=self.original_participant_set,
             dbgap_consent_code=self.dbgap_consent_code,
-        )
+        ).order_by("dbgap_version")
         return dbgap_workspaces
 
     def has_access(self):
