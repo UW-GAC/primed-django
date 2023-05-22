@@ -481,20 +481,6 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
             participant_set=self.original_participant_set,
         )
 
-    def get_dbgap_workspace(self):
-        """Get a dbGaPWorkspace associated with this data access request.
-
-        This checks that the dbGaP study accession, version, and participant set match between the
-        dbGaPDataAccessRequest and the dbGaPWorkspace."""
-        # We may need to modify this to match the DAR version *or greater*, and DAR participant set *or larger*.
-        study_accession = dbGaPStudyAccession.objects.get(dbgap_phs=self.dbgap_phs)
-        dbgap_workspace = study_accession.dbgapworkspace_set.get(
-            dbgap_version__gte=self.original_version,
-            dbgap_participant_set__gte=self.original_participant_set,
-            dbgap_consent_code=self.dbgap_consent_code,
-        )
-        return dbgap_workspace
-
     def get_dbgap_workspaces(self):
         """Get the set of dbGaPWorkspaces associated with this data access request.
 
@@ -509,13 +495,3 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
             dbgap_consent_code=self.dbgap_consent_code,
         ).order_by("dbgap_version")
         return dbgap_workspaces
-
-    def has_access(self):
-        """Check if the dbGaPApplication associated with this DAR has access to the matching dbGaP workspace.
-
-        For dbGaP workspaces, the dbGaPApplication anvil_access_group is considered to have access if it is in all auth
-        domains of the workspace, but the workspace does not need to be shared with it."""
-        dbgap_workspace = self.get_dbgap_workspace()
-        return dbgap_workspace.workspace.is_in_authorization_domain(
-            self.dbgap_data_access_snapshot.dbgap_application.anvil_access_group
-        )
