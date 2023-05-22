@@ -5,11 +5,8 @@ from datetime import timedelta
 import jsonschema
 import responses
 from anvil_consortium_manager.tests.factories import (
-    GroupGroupMembershipFactory,
     ManagedGroupFactory,
-    WorkspaceAuthorizationDomainFactory,
     WorkspaceFactory,
-    WorkspaceGroupSharingFactory,
 )
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
@@ -1492,22 +1489,21 @@ class dbGaPDataAccessRequestTest(TestCase):
             ).is_approved
         )
 
-    def test_get_dbgap_workspace_no_study_accession(self):
+    def test_get_dbgap_workspaces_no_study_accession(self):
         """Raises DoesNotExist when there is no matching study accession."""
         dar = factories.dbGaPDataAccessRequestFactory.create()
         with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
-            dar.get_dbgap_workspace()
+            dar.get_dbgap_workspaces()
 
-    def test_get_dbgap_workspace_no_matches(self):
-        """Raises DoesNotExist when there is no matching workspace."""
+    def test_get_dbgap_workspaces_no_matches(self):
+        """Returns an empty queryset when there is no matching workspace."""
         study_accession = factories.dbGaPStudyAccessionFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=study_accession.dbgap_phs
         )
-        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
-            dar.get_dbgap_workspace()
+        self.assertEqual(dar.get_dbgap_workspaces().count(), 0)
 
-    def test_get_dbgap_workspace_one_match(self):
+    def test_get_dbgap_workspaces_one_match(self):
         """Returns the correct workspace when there is one match."""
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestFactory.create(
@@ -1516,9 +1512,38 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
-        self.assertEqual(dar.get_dbgap_workspace(), workspace)
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], workspace)
 
-    def test_get_dbgap_workspace_smaller_version(self):
+    def test_get_dbgap_workspaces_two_matches(self):
+        """Returns the correct workspace when there are two match."""
+        study_accession = factories.dbGaPStudyAccessionFactory.create()
+        workspace_1 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=study_accession,
+            dbgap_version=1,
+            dbgap_participant_set=1,
+            dbgap_consent_code=1,
+        )
+        workspace_2 = factories.dbGaPWorkspaceFactory.create(
+            dbgap_study_accession=study_accession,
+            dbgap_version=2,
+            dbgap_participant_set=1,
+            dbgap_consent_code=1,
+        )
+
+        dar = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=study_accession.dbgap_phs,
+            original_version=1,
+            original_participant_set=1,
+            dbgap_consent_code=1,
+        )
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(qs[0], workspace_1)
+        self.assertEqual(qs[1], workspace_2)
+
+    def test_get_dbgap_workspaces_smaller_version(self):
         """Raises ObjectNotFound for workspace with the same phs but a smaller version."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
@@ -1527,11 +1552,11 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
-        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
-            dar.get_dbgap_workspace()
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 0)
 
-    def test_get_dbgap_workspace_larger_version(self):
-        """Raises ObjectNotFound for workspace with the same phs but a larger version."""
+    def test_get_dbgap_workspaces_larger_version(self):
+        """Finds match for workspace with the same phs but a larger version."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=3)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
@@ -1539,9 +1564,11 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
-        self.assertEqual(dar.get_dbgap_workspace(), workspace)
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], workspace)
 
-    def test_get_dbgap_workspace_smaller_participant_set(self):
+    def test_get_dbgap_workspaces_smaller_participant_set(self):
         """Raises ObjectNotFound for workspace with the same phs/version but different participant set."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_participant_set=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
@@ -1550,10 +1577,10 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=2,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
-        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
-            dar.get_dbgap_workspace()
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 0)
 
-    def test_get_dbgap_workspace_larger_participant_set(self):
+    def test_get_dbgap_workspaces_larger_participant_set(self):
         """Finds a matching workspace with a larger version and participant set."""
         workspace = factories.dbGaPWorkspaceFactory.create(
             dbgap_version=2, dbgap_participant_set=2
@@ -1564,9 +1591,11 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=1,
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
-        self.assertEqual(dar.get_dbgap_workspace(), workspace)
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], workspace)
 
-    def test_get_dbgap_workspace_different_dbgap_study_accession(self):
+    def test_get_dbgap_workspaces_different_dbgap_study_accession(self):
         """Raises ObjectNotFound for workspace with the same phs/version but different phs."""
         workspace = factories.dbGaPWorkspaceFactory.create(
             dbgap_study_accession__dbgap_phs=1
@@ -1578,9 +1607,9 @@ class dbGaPDataAccessRequestTest(TestCase):
             dbgap_consent_code=workspace.dbgap_consent_code,
         )
         with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
-            dar.get_dbgap_workspace()
+            dar.get_dbgap_workspaces()
 
-    def test_get_dbgap_workspace_different_consent_code(self):
+    def test_get_dbgap_workspaces_different_consent_code(self):
         """Raises ObjectNotFound for workspace with the same phs/version/participant set but different consent code."""
         workspace = factories.dbGaPWorkspaceFactory.create(dbgap_consent_code=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
@@ -1589,126 +1618,8 @@ class dbGaPDataAccessRequestTest(TestCase):
             original_participant_set=workspace.dbgap_participant_set,
             dbgap_consent_code=2,
         )
-        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
-            dar.get_dbgap_workspace()
-
-    def test_has_access_no_match_no_study_accession(self):
-        """has_access raises exception when no matching workspace exists."""
-        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
-        with self.assertRaises(models.dbGaPStudyAccession.DoesNotExist):
-            data_access_request.has_access()
-
-    def test_has_access_no_match(self):
-        """has_access raises exception when no matching workspace exists."""
-        data_access_request = factories.dbGaPDataAccessRequestFactory.create()
-        factories.dbGaPStudyAccessionFactory.create(
-            dbgap_phs=data_access_request.dbgap_phs
-        )
-        with self.assertRaises(models.dbGaPWorkspace.DoesNotExist):
-            data_access_request.has_access()
-
-    def test_has_access_match_no_auth_domain(self):
-        """has_access returns True when there is no auth domain."""
-        # Create a workspace and no auth domain
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        workspace.workspace.authorization_domains.remove(
-            workspace.workspace.authorization_domains.first()
-        )
-        data_access_request = (
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=workspace
-            )
-        )
-        self.assertTrue(data_access_request.has_access())
-
-    def test_has_access_match_not_in_auth_domain_not_shared(self):
-        """has_access returns False when the anvil group is not in auth domain and workspace is not shared."""
-        # Create a workspace and an auth domain
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        # Create a matching dar.
-        data_access_request = (
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=workspace
-            )
-        )
-        # Do not add the anvil group to the workspace auth domain.
-        self.assertFalse(data_access_request.has_access())
-
-    def test_has_access_match_in_auth_domain_not_shared(self):
-        """has_access returns True when the anvil group is in auth domain but workspace is not shared."""
-        # Create a workspace and an auth domain.
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        # Create a matching DAR
-        data_access_request = (
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=workspace
-            )
-        )
-        # Add the AnVIL group to the workspace authorization domain
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-        self.assertTrue(data_access_request.has_access())
-
-    def test_has_access_match_two_auth_domains_in_both(self):
-        """has_access returns True when the anvil group is in both auth domains."""
-        # Create a workspace and a auth domains.
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(
-            workspace=workspace.workspace
-        )
-        # Create a matching DAR
-        data_access_request = (
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=workspace
-            )
-        )
-        # Add the AnVIL group to the workspace authorization domains
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-        GroupGroupMembershipFactory.create(
-            parent_group=auth_domain_2.group,
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-        self.assertTrue(data_access_request.has_access())
-
-    def test_has_access_match_two_auth_domains_in_one(self):
-        """has_access returns false when the anvil group is in only one of the auth domains."""
-        # Create a workspace and a auth domains.
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
-        # Create a matching DAR
-        data_access_request = (
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=workspace
-            )
-        )
-        # Add the AnVIL group to the workspace authorization domains
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
-            child_group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-        self.assertFalse(data_access_request.has_access())
-
-    def test_has_access_match_not_in_auth_domain_shared(self):
-        """has_access returns False when the anvil group is not in auth domain but workspace is shared."""
-        # Create a workspace and an auth domain.
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        # Create a matching DAR
-        data_access_request = (
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=workspace
-            )
-        )
-        # Share the workspace with the group but do not add to the auth domain.
-        WorkspaceGroupSharingFactory.create(
-            workspace=workspace.workspace,
-            group=data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-        self.assertFalse(data_access_request.has_access())
+        qs = dar.get_dbgap_workspaces()
+        self.assertEqual(qs.count(), 0)
 
     def test_get_dbgap_accession(self):
         """`get_dbgap_accession` returns the correct string"""
