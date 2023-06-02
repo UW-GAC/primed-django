@@ -3,6 +3,7 @@
 import django_tables2 as tables
 from anvil_consortium_manager.models import (
     GroupAccountMembership,
+    Workspace,
     WorkspaceGroupSharing,
 )
 
@@ -273,7 +274,7 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     )
 
     class Meta:
-        model = models.CDSAWorkspace
+        model = Workspace
         fields = (
             "name",
             "billing_project",

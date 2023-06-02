@@ -312,7 +312,7 @@ class UserAccessRecordsTableTest(TestCase):
 class CDSAWorkspaceRecordsTableTest(TestCase):
     """Tests for the CDSAWorkspaceRecordsTable class."""
 
-    model = Workspace
+    model = models.CDSAWorkspace
     table_class = tables.CDSAWorkspaceRecordsTable
 
     def test_row_count_with_no_objects(self):
@@ -323,14 +323,14 @@ class CDSAWorkspaceRecordsTableTest(TestCase):
         cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 1)
-        self.assertIn(cdsa_workspace.workspace, table.data)
+        self.assertIn(cdsa_workspace, table.data)
 
     def test_row_count_with_two_objects(self):
         cdsa_workspaces = factories.CDSAWorkspaceFactory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
-        self.assertIn(cdsa_workspaces[0].workspace, table.data)
-        self.assertIn(cdsa_workspaces[1].workspace, table.data)
+        self.assertIn(cdsa_workspaces[0], table.data)
+        self.assertIn(cdsa_workspaces[1], table.data)
 
     def test_render_date_shared(self):
         table = self.table_class(self.model.objects.all())
