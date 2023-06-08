@@ -1,6 +1,6 @@
 -r base.txt
 
-Werkzeug==2.1.1 # https://github.com/pallets/werkzeug
+Werkzeug==2.2.3 # https://github.com/pallets/werkzeug
 ipdb==0.13.9  # https://github.com/gotcha/ipdb
 
 # Testing
@@ -29,7 +29,8 @@ pre-commit==2.18.1  # https://github.com/pre-commit/pre-commit
 
 # Security
 # ------------------------------------------------------------------------------
-safety==2.1.1
+safety==2.3.5  # https://github.com/pyupio/safety
+setuptools==65.5.1 # https://github.com/pypa/setuptools
 
 # Django
 # ------------------------------------------------------------------------------
