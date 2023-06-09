@@ -6,6 +6,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+from django.core.mail import mail_admins
 from django.http import HttpRequest
 
 from primed.primed_anvil.models import StudySite
@@ -49,6 +50,10 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                     logger.debug(
                         f"[SocialAccountAdatpter:update_user_study_sites] Ignoring drupal "
                         f"study_site_or_center {rc_name} - not in StudySite domain"
+                    )
+                    mail_admins(
+                        subject="Missing StudySite",
+                        message=f"Missing study site {rc_name} passed from drupal for user {user}",
                     )
                     continue
                 else:
