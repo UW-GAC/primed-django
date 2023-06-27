@@ -42,6 +42,7 @@ user_search_patterns = (
         path(
             "autocomplete/", views.UserSearchAutocomplete.as_view(), name="autocomplete"
         ),
+        path("search/", views.UserSearchFormView.as_view(), name="search"),
     ],
     "user",
 )
