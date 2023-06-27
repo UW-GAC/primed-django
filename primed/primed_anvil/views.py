@@ -153,3 +153,23 @@ class DataSummaryView(LoginRequiredMixin, TemplateView):
         table_data = helpers.get_summary_table_data()
         context["summary_table"] = tables.DataSummaryTable(table_data)
         return context
+
+
+class UserSearchAutocomplete(
+    AnVILConsortiumManagerEditRequired, autocomplete.Select2QuerySetView
+):
+    """View to provide autocompletion for User."""
+
+    def get_result_label(self, item):
+        return "{} ({})".format(item.name, item.username)
+
+    def get_result_value(self, item):
+        """Return the value of a result."""
+        return item.username
+
+    def get_queryset(self):
+        qs = User.objects.all().order_by("name")
+
+        if self.q:
+            qs = qs.filter(Q(name__icontains=self.q) | Q(username__icontains=self.q))
+        return qs
