@@ -3352,9 +3352,8 @@ class SignedAgreementAuditTest(TestCase):
                 codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        self.anvil_cdsa_group = ManagedGroupFactory.create(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        # Create the test group.
+        self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
