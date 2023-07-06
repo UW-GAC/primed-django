@@ -5,11 +5,10 @@
 
 {% block panel %}
 <dl class="row">
-  <hr>
   <dt class="col-sm-2">dbGaP PI</dt> <dd class="col-sm-9">{{ object.principal_investigator }}</dd>
   <dt class="col-sm-2">dbGaP Project ID</dt> <dd class="col-sm-9">{{ object.dbgap_project_id }}</dd>
   <dt class="col-sm-2">AnVIL access Group</dt> <dd class="col-sm-9">
-    <a href="{{ object.anvil_group.get_absolute_url }}">{{ object.anvil_group }}</a>
+    <a href="{{ object.anvil_access_group.get_absolute_url }}">{{ object.anvil_access_group }}</a>
   </dd>
   <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
   <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>

@@ -9,13 +9,12 @@
       {% endfor %}
     </dd>
     <dt class="col-sm-3">dbGaP accession</dt> <dd class="col-sm-9">
+      <a href="{{ object.dbgapworkspace.get_dbgap_link }}" target="_blank">
         {{ object.dbgapworkspace.get_dbgap_accession }}
-        <br>
-        <a class="btn btn-light btn-sm" href="https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={{object.dbgapworkspace.get_dbgap_accession}}" target="_blank" role="button">
-          <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
-          View on dbGaP
-        </a>
+        <i class="bi bi-box-arrow-up-right"></i>
+      </a>
     </dd>
+
     <dt class="col-sm-3">Consent abbreviation</dt> <dd class="col-sm-9">{{ object.dbgapworkspace.dbgap_consent_abbreviation }}</dd>
     <dt class="col-sm-3">Consent code</dt> <dd class="col-sm-9">{{ object.dbgapworkspace.dbgap_consent_code }}</dd>
     <hr>
@@ -33,12 +32,16 @@
       {% endif %}
     </dd>
     <dt class="col-sm-3">DUO modifiers</dt> <dd class="col-sm-9">
-      {% for modifier in object.dbgapworkspace.data_use_modifiers.all %}
+      {% if object.dbgapworkspace.data_use_modifiers.all %}
+        {% for modifier in object.dbgapworkspace.data_use_modifiers.all %}
       <a href="{{ modifier.get_absolute_url }}">
-        {{ modifier.abbreviation }}
+          {{ modifier.abbreviation }}
       </a>
-        {% if not forloop.last %}, {% endif %}
-      {% endfor %}
+          {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      {% else %}
+        —
+      {% endif %}
     </dd>
   </dl>
 
@@ -57,6 +60,24 @@
       <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
         <div class="accordion-body">
           {{ object.dbgapworkspace.data_use_limitations }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="my-3">
+  <div class="accordion" id="accordionGroupsAcknowledgments">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAcknowledgments">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAcknowledgments" aria-expanded="false" aria-controls="collapseAcknowledgments">
+          <span class="fa-solid fa-note-sticky mx-2"></span>
+          Acknowledgments
+        </button>
+      </h2>
+      <div id="collapseAcknowledgments" class="accordion-collapse collapse" aria-labelledby="headingAcknowledgments" data-bs-parent="#accordionAcknowledgments">
+        <div class="accordion-body">
+          {{ object.dbgapworkspace.acknowledgments }}
         </div>
       </div>
     </div>

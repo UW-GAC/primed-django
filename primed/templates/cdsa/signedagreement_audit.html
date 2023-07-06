@@ -1,0 +1,44 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}Signed Agreement audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Signed Agreement audit</h1>
+
+<h2>Audit results</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    For each Signed Agreement in the app, the audit checks that access is correct.
+    To have access to CDSA workspaces, the group associated with the Signed Agreement must be a member of the PRIMED CDSA group. The audit does not check that the workspace is shared with the group.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>Primary Signed Agreements that are in the PRIMED CDSA group on AnVIL.</li>
+          <li>Component Signed Agreements with a primary that are in the PRIMED CDSA group on AnVIL.</li>
+          <li>Component Signed Agreements without a primary that are <b>not</b> in the PRIMED CDSA group on AnVIL.</li>
+        </ul>
+
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>Valid Signed Agreements that are not in the PRIMED CDSA group on AnVIL.</li>
+      </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>The Signed Agreement access group is in the PRIMED CDSA group on AnVIL for an unknown reason.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

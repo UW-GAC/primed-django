@@ -88,7 +88,7 @@ class GrantAccess(AuditResult):
             "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
             args=[
                 self.workspace.workspace.authorization_domains.first(),
-                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
             ],
         )
 
@@ -105,7 +105,7 @@ class RemoveAccess(AuditResult):
             "anvil_consortium_manager:managed_groups:member_groups:delete",
             args=[
                 self.workspace.workspace.authorization_domains.first(),
-                self.dbgap_application.anvil_group,
+                self.dbgap_application.anvil_access_group,
             ],
         )
 
@@ -169,7 +169,7 @@ class dbGaPAccessAudit(ABC):
     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
         """Audit access for a specific dbGaP application and a specific workspace."""
         in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
-            dbgap_application.anvil_group
+            dbgap_application.anvil_access_group
         )
 
         # Get the most recent snapshot.

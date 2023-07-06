@@ -1,0 +1,85 @@
+{% extends "anvil_consortium_manager/workspace_detail.html" %}
+
+{% block workspace_data %}
+  <dl class="row">
+    <hr>
+    <dt class="col-sm-2">Study</dt> <dd class="col-sm-9">
+      <a href="{{ object.cdsaworkspace.study.get_absolute_url }}">{{ object.cdsaworkspace.study }}</a>
+    </dd>
+    <dt class="col-sm-2">Available data</dt> <dd class="col-sm-9">
+      {% for data_type in object.cdsaworkspace.available_data.all %}
+      {{ data_type.name}}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </dd>
+    <dt class="col-sm-2">DUO permission</dt> <dd class="col-sm-9">
+      <a href="{{ object.dbgapworkspace.data_use_permission.get_absolute_url}}">
+        {{ object.cdsaworkspace.data_use_permission.abbreviation }}
+      </a>
+      {% if object.cdsaworkspace.data_use_permission.requires_disease_term %}
+        (Term: {{ object.cdsaworkspace.disease_term }})
+      {% endif %}
+    </dd>
+    <dt class="col-sm-2">DUO modifiers</dt> <dd class="col-sm-10">
+      {% if object.cdsaworkspace.data_use_modifiers.all %}
+        {% for modifier in object.cdsaworkspace.data_use_modifiers.all %}
+      <a href="{{ modifier.get_absolute_url }}">
+          {{ modifier.abbreviation }}
+      </a>
+          {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      {% else %}
+        —
+      {% endif %}
+    </dd>
+  </dl>
+
+{% endblock workspace_data %}
+
+{% block after_panel %}
+<div class="my-3">
+  <div class="accordion" id="accordionGroupsDUL">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingDUL">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDUL" aria-expanded="true" aria-controls="collapseDUL">
+          <span class="fa-solid fa-list-check mx-2"></span>
+          Full data use limitations
+        </button>
+      </h2>
+      <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
+        <div class="accordion-body">
+          {{ object.cdsaworkspace.data_use_limitations }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="my-3">
+  <div class="accordion" id="accordionGroupsAcknowledgments">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAcknowledgments">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAcknowledgments" aria-expanded="false" aria-controls="collapseAcknowledgments">
+          <span class="fa-solid fa-note-sticky mx-2"></span>
+          Acknowledgments
+        </button>
+      </h2>
+      <div id="collapseAcknowledgments" class="accordion-collapse collapse" aria-labelledby="headingAcknowledgments" data-bs-parent="#accordionAcknowledgments">
+        <div class="accordion-body">
+          {{ object.cdsaworkspace.acknowledgments }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{block.super}}
+{% endblock after_panel %}
+
+
+{% block action_buttons %}
+<p>
+  <!-- <a href="{% url 'dbgap:workspaces:audit' billing_project_slug=object.billing_project.name workspace_slug=object.name%}" class="btn btn-secondary" role="button">Audit application access</a> -->
+</p>
+
+{{block.super}}
+{% endblock action_buttons %}

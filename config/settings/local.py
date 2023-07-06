@@ -67,6 +67,12 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES += [  # noqa F405
 # ------------------------------------------------------------------------------
 # Specify the path to the service account to use for managing access on AnVIL.
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
-ANVIL_DBGAP_APPLICATION_GROUP_PREFIX = env(
-    "ANVIL_DBGAP_APPLICATION_GROUP_PREFIX", default="DEV_PRIMED_DBGAP_ACCESS"
+# ANVIL_DBGAP_APPLICATION_GROUP_PREFIX = env(
+#     "ANVIL_DBGAP_APPLICATION_GROUP_PREFIX", default="DEV_PRIMED_DBGAP_ACCESS"
+# )
+# ANVIL_CDSA_GROUP_PREFIX = env(
+#     "ANVIL_CDSA_GROUP_PREFIX", default="DEV_PRIMED_CDSA_ACCESS"
+# )
+ANVIL_DATA_ACCESS_GROUP_PREFIX = env(
+    "ANVIL_DATA_ACCESS_GROUP_PREFIX", default="DEV_PRIMED"
 )

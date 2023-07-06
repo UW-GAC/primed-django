@@ -14,7 +14,6 @@ from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
-    WorkspaceAuthorizationDomainFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
@@ -848,6 +847,16 @@ class dbGaPWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertNotContains(response, "(Term:")
 
+    def test_response_contains_dbgap_link(self):
+        """Response contains the link to the dbGaP page."""
+        permission = DataUsePermissionFactory.create()
+        obj = factories.dbGaPWorkspaceFactory.create(
+            data_use_permission=permission,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertContains(response, obj.get_dbgap_link())
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""
@@ -1554,7 +1563,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Can create an object."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
-        # API response to create the associated anvil_group.
+        # API response to create the associated anvil_access_group.
         api_url = (
             self.api_client.sam_entry_point
             + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
@@ -1576,7 +1585,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
-        # API response to create the associated anvil_group.
+        # API response to create the associated anvil_access_group.
         api_url = (
             self.api_client.sam_entry_point
             + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
@@ -1594,7 +1603,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
-        # API response to create the associated anvil_group.
+        # API response to create the associated anvil_access_group.
         api_url = (
             self.api_client.sam_entry_point
             + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
@@ -1705,11 +1714,11 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("required", form.errors["dbgap_project_id"][0])
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
 
-    def test_creates_anvil_group(self):
+    def test_creates_anvil_access_group(self):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
-        # API response to create the associated anvil_group.
+        # API response to create the associated anvil_access_group.
         api_url = (
             self.api_client.sam_entry_point
             + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
@@ -1725,17 +1734,19 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(ManagedGroup.objects.count(), 1)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
-        self.assertEqual(new_object.anvil_group, new_group)
+        self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "TEST_PRIMED_DBGAP_ACCESS_12498")
         self.assertTrue(new_group.is_managed_by_app)
 
-    @override_settings(ANVIL_DBGAP_APPLICATION_GROUP_PREFIX="foo")
-    def test_creates_anvil_group_different_setting(self):
+    @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
+    def test_creates_anvil_access_group_different_setting(self):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
-        # API response to create the associated anvil_group.
-        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_12498"
+        # API response to create the associated anvil_access_group.
+        api_url = (
+            self.api_client.sam_entry_point + "/api/groups/v1/foo_DBGAP_ACCESS_12498"
+        )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
@@ -1747,15 +1758,15 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(ManagedGroup.objects.count(), 1)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
-        self.assertEqual(new_object.anvil_group, new_group)
-        self.assertEqual(new_group.name, "foo_12498")
+        self.assertEqual(new_object.anvil_access_group, new_group)
+        self.assertEqual(new_group.name, "foo_DBGAP_ACCESS_12498")
         self.assertTrue(new_group.is_managed_by_app)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
-        # API response to create the associated anvil_group.
+        # API response to create the associated anvil_access_group.
         api_url = (
             self.api_client.sam_entry_point
             + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
@@ -3486,13 +3497,12 @@ class dbGaPApplicationAuditTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(
             dbgap_study_accession__dbgap_phs=1
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
-            child_group=self.snapshot.dbgap_application.anvil_group,
+            child_group=self.snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3515,7 +3525,6 @@ class dbGaPApplicationAuditTest(TestCase):
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Check the table in the context.
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.application.dbgap_project_id))
@@ -3539,7 +3548,6 @@ class dbGaPApplicationAuditTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create(
             created=timezone.now() - timedelta(weeks=4)
         )
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
@@ -3564,7 +3572,6 @@ class dbGaPApplicationAuditTest(TestCase):
     def test_context_needs_action_table_remove(self):
         """needs_action_table shows a record when audit finds that access needs to be removed."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot,
             dbgap_workspace=workspace,
@@ -3584,7 +3591,7 @@ class dbGaPApplicationAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
-            child_group=self.snapshot.dbgap_application.anvil_group,
+            child_group=self.snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3607,7 +3614,6 @@ class dbGaPApplicationAuditTest(TestCase):
     def test_context_error_table_has_access(self):
         """error shows a record when audit finds that access needs to be removed."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
         # Create a rejected DAR.
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot,
@@ -3617,7 +3623,7 @@ class dbGaPApplicationAuditTest(TestCase):
         # Create the membership.
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
-            child_group=self.snapshot.dbgap_application.anvil_group,
+            child_group=self.snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3652,8 +3658,7 @@ class dbGaPApplicationAuditTest(TestCase):
 
     def test_no_snapshots(self):
         """Audit is not run and message shown when there are no snapshots for this application."""
-        workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceAuthorizationDomainFactory.create(workspace=workspace.workspace)
+        factories.dbGaPWorkspaceFactory.create()
         application = factories.dbGaPApplicationFactory.create()
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3680,9 +3685,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
                 codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        self.auth_domain = factories.ManagedGroupFactory.create()
         self.dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        self.dbgap_workspace.workspace.authorization_domains.add(self.auth_domain)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -3793,7 +3796,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3989,7 +3992,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         )
         GroupGroupMembershipFactory.create(
             parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -4026,7 +4029,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         # Create the membership.
         GroupGroupMembershipFactory.create(
             parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_group,
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -4059,7 +4062,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         # Add the application group to the auth domain.
         GroupGroupMembershipFactory.create(
             parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
-            child_group=dbgap_application.anvil_group,
+            child_group=dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -4092,7 +4095,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         # Add the application group to the auth domain.
         GroupGroupMembershipFactory.create(
             parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
-            child_group=snapshot.dbgap_application.anvil_group,
+            child_group=snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
         self.client.force_login(self.user)

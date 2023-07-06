@@ -39,7 +39,7 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
     billing_project = tables.Column(linkify=True)
     dbgap_accession = tables.columns.Column(
         verbose_name="dbGaP accession",
-        accessor="pk",
+        accessor="dbgapworkspace",
         order_by=(
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
@@ -73,7 +73,16 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         order_by = ("name",)
 
     def render_dbgap_accession(self, record):
-        return record.dbgapworkspace.get_dbgap_accession()
+        return format_html(
+            """<a href="{}" target="_blank">
+              {}
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            """.format(
+                record.dbgapworkspace.get_dbgap_link(),
+                record.dbgapworkspace.get_dbgap_accession(),
+            )
+        )
 
     def render_number_approved_dars(self, record):
         n = (
@@ -172,41 +181,48 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
 class dbGaPDataAccessRequestTable(tables.Table):
     """Class to render a table of dbGaPDataAccessRequest objects."""
 
-    workspace = tables.columns.Column(
-        linkify=True, accessor="get_dbgap_workspace", orderable=False
-    )
-    in_authorization_domain = tables.columns.Column(
-        accessor="has_access",
-        empty_values=(None,),
-        orderable=False,
-        verbose_name="In auth domain?",
-    )
     dbgap_accession = tables.columns.Column(
         verbose_name=" dbGaP accession",
         accessor="get_dbgap_accession",
     )
+    matching_workspaces = tables.columns.Column(
+        accessor="get_dbgap_workspaces", orderable=False, default=" "
+    )
 
-    def render_in_authorization_domain(self, value, record):
-        if value:
-            icon = "check-circle-fill"
-            color = "green"
-        else:
-            icon = "x-square-fill"
-            color = "red"
-        html = format_html(
-            """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
-        )
+    def render_matching_workspaces(self, value, record):
+        template_code = """
+        <li>
+            <a href="{{workspace.get_absolute_url}}">{{workspace}}</a>
+            <i class="bi bi-{% if has_access %}check-circle-fill"
+            style="color: green{% else %}x-square-fill" style="color: red{% endif %};"></i>
+        </li>
+        """
+        items = []
+        for dbgap_workspace in value:
+            has_access = dbgap_workspace.workspace.is_in_authorization_domain(
+                record.dbgap_data_access_snapshot.dbgap_application.anvil_access_group
+            )
+            this_context = {
+                "has_access": has_access,
+                "workspace": dbgap_workspace,
+            }
+            this = Template(template_code).render(Context(this_context))
+            items = items + [this]
+        html = format_html("<ul>" + " ".join(items) + "</ul>")
         return html
 
     def render_dbgap_phs(self, value):
         return "phs{0:06d}".format(value)
 
     def render_dbgap_accession(self, value, record):
-        link = """<a href="{}" target="_blank">{}</a>""".format(
-            record.get_dbgap_link(), value
-        )
         return format_html(
-            """{} <i class="bi bi-box-arrow-up-right"></i>""".format(link)
+            """<a href="{}" target="_blank">
+              {}
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            """.format(
+                record.get_dbgap_link(), value
+            )
         )
 
     class Meta:

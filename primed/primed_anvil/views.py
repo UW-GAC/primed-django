@@ -9,9 +9,17 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView, TemplateView
-from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
-from primed.dbgap.tables import dbGaPWorkspaceTable
+from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
+from primed.cdsa.tables import (
+    CDSAWorkspaceTable,
+    DataAffiliateAgreementTable,
+    MemberAgreementTable,
+)
+from primed.dbgap.models import dbGaPApplication
+from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceTable
+from primed.miscellaneous_workspaces.tables import OpenAccessWorkspaceTable
 from primed.users.tables import UserTable
 
 from . import helpers, models, tables
@@ -19,17 +27,29 @@ from . import helpers, models, tables
 User = get_user_model()
 
 
-class StudyDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
+class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `Study`."""
 
     model = models.Study
-    table_class = dbGaPWorkspaceTable
-    context_table_name = "dbgap_workspace_table"
+    tables = [
+        dbGaPWorkspaceTable,
+        CDSAWorkspaceTable,
+        DataAffiliateAgreementTable,
+        OpenAccessWorkspaceTable,
+    ]
+    # table_class = dbGaPWorkspaceTable
+    # context_table_name = "dbgap_workspace_table"
 
-    def get_table_data(self):
-        return Workspace.objects.filter(
+    def get_tables_data(self):
+        dbgap_qs = Workspace.objects.filter(
             dbgapworkspace__dbgap_study_accession__studies=self.object
         )
+        cdsa_qs = Workspace.objects.filter(cdsaworkspace__study=self.object)
+        agreement_qs = DataAffiliateAgreement.objects.filter(study=self.object)
+        open_access_qs = Workspace.objects.filter(
+            openaccessworkspace__studies=self.object
+        )
+        return [dbgap_qs, cdsa_qs, agreement_qs, open_access_qs]
 
 
 class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
@@ -75,14 +95,25 @@ class StudyAutocomplete(
         return qs
 
 
-class StudySiteDetail(AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView):
+class StudySiteDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
-    context_table_name = "site_user_table"
+    tables = [
+        UserTable,
+        dbGaPApplicationTable,
+        MemberAgreementTable,
+    ]
 
-    def get_table(self):
-        return UserTable(User.objects.filter(study_sites=self.object))
+    # def get_table(self):
+    #     return UserTable(User.objects.filter(study_sites=self.object))
+    def get_tables_data(self):
+        user_qs = User.objects.filter(study_sites=self.object)
+        dbgap_qs = dbGaPApplication.objects.filter(
+            principal_investigator__study_sites=self.object
+        )
+        cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
+        return [user_qs, dbgap_qs, cdsa_qs]
 
 
 class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):

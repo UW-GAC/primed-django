@@ -96,6 +96,7 @@ LOCAL_APPS = [
     "primed.dbgap",
     "primed.miscellaneous_workspaces",
     "primed.duo",
+    "primed.cdsa",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -245,7 +246,7 @@ EMAIL_TIMEOUT = 5
 # Django Admin URL.
 ADMIN_URL = "admin/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = [("""Jonas Carson""", "jcarson@uw.edu")]
+ADMINS = [("""Primed Admins""", "primedweb@uw.edu")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 
@@ -301,6 +302,11 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "socialaccount_signup",
     "admin:index",
     "admin:login",
+    "cdsa:records:index",
+    "cdsa:records:representatives",
+    "cdsa:records:studies",
+    "cdsa:records:workspaces",
+    "cdsa:records:user_access",
 ]
 
 # django-dbbackup
@@ -363,6 +369,7 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
+    "primed.cdsa.adapters.CDSAWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
@@ -375,3 +382,4 @@ ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
 ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
+ANVIL_CDSA_GROUP_NAME = "PRIMED_CDSA"

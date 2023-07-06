@@ -12,7 +12,15 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.cdsa.tables import CDSAWorkspaceTable
+from primed.cdsa.tests.factories import (
+    CDSAWorkspaceFactory,
+    DataAffiliateAgreementFactory,
+    MemberAgreementFactory,
+)
+from primed.dbgap.tables import dbGaPWorkspaceTable
 from primed.dbgap.tests.factories import (
+    dbGaPApplicationFactory,
     dbGaPStudyAccessionFactory,
     dbGaPWorkspaceFactory,
 )
@@ -119,6 +127,14 @@ class StudyDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
 
+    def test_table_classes(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
+
     def test_dbgap_workspace_table(self):
         """Contains a table of dbGaPWorkspaces with the correct studies."""
         obj = self.model_factory.create()
@@ -127,14 +143,49 @@ class StudyDetailTest(TestCase):
             dbgap_study_accession=dbgap_study_accession
         )
         other_workspace = dbGaPWorkspaceFactory.create()
-        # import ipdb; ipdb.set_trace()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("dbgap_workspace_table", response.context_data)
-        table = response.context_data["dbgap_workspace_table"]
+        table = response.context_data["tables"][0]
         self.assertEqual(len(table.rows), 1)
         self.assertIn(dbgap_workspace.workspace, table.data)
         self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_cdsa_workspace_table(self):
+        """Contains a table of CDSAWorkspaces with the correct studies."""
+        obj = self.model_factory.create()
+        cdsa_workspace = CDSAWorkspaceFactory.create(study=obj)
+        other_workspace = CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(cdsa_workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_open_access_workspace_table(self):
+        """Contains a table of OpenAccessWorkspaces with the correct studies."""
+        obj = self.model_factory.create()
+        open_access_workspace = OpenAccessWorkspaceFactory.create()
+        open_access_workspace.studies.add(obj)
+        other_workspace = OpenAccessWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][3]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(open_access_workspace.workspace, table.data)
+        self.assertNotIn(other_workspace.workspace, table.data)
+
+    def test_cdsa_table(self):
+        obj = self.model_factory.create()
+        site_cdsa = DataAffiliateAgreementFactory.create(study=obj)
+        other_cdsa = DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(site_cdsa, table.data)
+        self.assertNotIn(other_cdsa, table.data)
 
 
 class StudyAutocompleteTest(TestCase):
@@ -551,7 +602,6 @@ class StudySiteDetailTest(TestCase):
         obj = self.model_factory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-
         self.assertContains(response, obj.short_name)
         self.assertTemplateUsed(response, "primed_anvil/studysite_detail.html")
 
@@ -587,15 +637,39 @@ class StudySiteDetailTest(TestCase):
         site_user = UserFactory.create()
         site_user.study_sites.set([obj])
         non_site_user = UserFactory.create()
-
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
-        self.assertIn("site_user_table", response.context_data)
-        table = response.context_data["site_user_table"]
+        self.assertIn("tables", response.context_data)
+        table = response.context_data["tables"][0]
         self.assertEqual(len(table.rows), 1)
 
         self.assertIn(site_user, table.data)
         self.assertNotIn(non_site_user, table.data)
+
+    def test_dbgap_table(self):
+        obj = self.model_factory.create()
+        site_application = dbGaPApplicationFactory.create()
+        site_application.principal_investigator.study_sites.add(obj)
+        other_application = dbGaPApplicationFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        table = response.context_data["tables"][1]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(site_application, table.data)
+        self.assertNotIn(other_application, table.data)
+
+    def test_cdsa_table(self):
+        obj = self.model_factory.create()
+        site_cdsa = MemberAgreementFactory.create(study_site=obj)
+        other_cdsa = MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        table = response.context_data["tables"][2]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(site_cdsa, table.data)
+        self.assertNotIn(other_cdsa, table.data)
 
 
 class StudySiteListTest(TestCase):

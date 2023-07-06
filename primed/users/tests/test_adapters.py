@@ -6,6 +6,7 @@ from allauth.utils import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
@@ -101,11 +102,18 @@ class TestsUserSocialLoginAdapter(object):
         assert user.study_sites.filter(pk=rc1.pk).exists()
         assert user.study_sites.all().count() == 1
 
-    def test_update_user_study_sites_uknown(self):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_update_user_study_sites_unknown(self, settings):
         adapter = SocialAccountAdapter()
         user = UserFactory()
+
         adapter.update_user_study_sites(user, dict(study_site_or_center=["UNKNOWN"]))
         assert user.study_sites.all().count() == 0
+        assert len(mail.outbox) == 1
+        assert (
+            mail.outbox[0].subject
+            == f"{settings.EMAIL_SUBJECT_PREFIX}Missing StudySite"
+        )
 
     def test_update_study_sites_malformed(self):
         adapter = SocialAccountAdapter()
