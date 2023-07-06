@@ -3352,9 +3352,8 @@ class SignedAgreementAuditTest(TestCase):
                 codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        self.anvil_cdsa_group = ManagedGroupFactory.create(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        # Create the test group.
+        self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -3506,6 +3505,18 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOOBAR")
+    def test_anvil_cdsa_group_does_not_exist(self):
+        """The view redirects with a message if the CDSA group does not exist in the app."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertRedirects(response, reverse("anvil_consortium_manager:index"))
+        # Check messages.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("FOOBAR", str(messages[0]))
+        self.assertIn("does not exist", str(messages[0]))
+
 
 class CDSAWorkspaceAuditTest(TestCase):
     """Tests for the SignedAgreementAudit view."""
@@ -3520,9 +3531,7 @@ class CDSAWorkspaceAuditTest(TestCase):
                 codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
-        self.anvil_cdsa_group = ManagedGroupFactory.create(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -3680,6 +3689,18 @@ class CDSAWorkspaceAuditTest(TestCase):
             workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_CDSA,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOOBAR")
+    def test_anvil_cdsa_group_does_not_exist(self):
+        """The view redirects with a message if the CDSA group does not exist in the app."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertRedirects(response, reverse("anvil_consortium_manager:index"))
+        # Check messages.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("FOOBAR", str(messages[0]))
+        self.assertIn("does not exist", str(messages[0]))
 
 
 class StudyRecordsList(TestCase):

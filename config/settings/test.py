@@ -29,6 +29,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # ------------------------------------------------------------------------------
 ANVIL_API_SERVICE_ACCOUNT_FILE = "foo"
 ANVIL_DATA_ACCESS_GROUP_PREFIX = "TEST_PRIMED"
+ANVIL_CDSA_GROUP_NAME = "TEST_PRIMED_CDSA"
 
 # template tests require debug to be set
 # get the last templates entry and set debug option

@@ -12,7 +12,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import inlineformset_factory
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
+from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django_tables2 import SingleTableView
 
@@ -294,16 +295,31 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
     """View to show audit results for `SignedAgreements`."""
 
     template_name = "cdsa/signedagreement_audit.html"
+    ERROR_CDSA_GROUP_DOES_NOT_EXIST = (
+        """The CDSA group "{}" does not exist in the app."""
+    )
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        except models.ManagedGroup.DoesNotExist:
+            messages.error(
+                self.request,
+                self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(
+                    settings.ANVIL_CDSA_GROUP_NAME
+                ),
+            )
+            return HttpResponseRedirect(reverse("anvil_consortium_manager:index"))
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit on all SignedAgreements.
-        audit = signed_agreement_audit.SignedAgreementAccessAudit()
-        audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit"] = audit
+        self.audit.run_audit()
+        context["verified_table"] = self.audit.get_verified_table()
+        context["errors_table"] = self.audit.get_errors_table()
+        context["needs_action_table"] = self.audit.get_needs_action_table()
+        context["audit"] = self.audit
         return context
 
 
@@ -311,16 +327,31 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerViewRequired, TemplateView):
     """View to show audit results for `CDSAWorkspaces`."""
 
     template_name = "cdsa/cdsaworkspace_audit.html"
+    ERROR_CDSA_GROUP_DOES_NOT_EXIST = (
+        """The CDSA group "{}" does not exist in the app."""
+    )
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.audit = workspace_audit.WorkspaceAccessAudit()
+        except models.ManagedGroup.DoesNotExist:
+            messages.error(
+                self.request,
+                self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(
+                    settings.ANVIL_CDSA_GROUP_NAME
+                ),
+            )
+            return HttpResponseRedirect(reverse("anvil_consortium_manager:index"))
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit on all SignedAgreements.
-        audit = workspace_audit.WorkspaceAccessAudit()
-        audit.run_audit()
-        context["verified_table"] = audit.get_verified_table()
-        context["errors_table"] = audit.get_errors_table()
-        context["needs_action_table"] = audit.get_needs_action_table()
-        context["audit"] = audit
+        self.audit.run_audit()
+        context["verified_table"] = self.audit.get_verified_table()
+        context["errors_table"] = self.audit.get_errors_table()
+        context["needs_action_table"] = self.audit.get_needs_action_table()
+        context["audit"] = self.audit
         return context
 
 
