@@ -193,15 +193,15 @@ class dbGaPApplicationCreate(
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationForm
     success_message = "dbGaP application successfully created."
-    anvil_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
+    anvil_access_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
     ERROR_CREATING_GROUP = "Error creating Managed Group in app."
 
     # @transaction.atomic
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
         project_id = form.cleaned_data["dbgap_project_id"]
-        group_name = "{}_{}".format(
-            settings.ANVIL_DBGAP_APPLICATION_GROUP_PREFIX, project_id
+        group_name = "{}_DBGAP_ACCESS_{}".format(
+            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX, project_id
         )
         managed_group = ManagedGroup(
             name=group_name, email=group_name + "@firecloud.org"
@@ -221,7 +221,7 @@ class dbGaPApplicationCreate(
             )
             return self.render_to_response(self.get_context_data(form=form))
         managed_group.save()
-        form.instance.anvil_group = managed_group
+        form.instance.anvil_access_group = managed_group
         return super().form_valid(form)
 
 

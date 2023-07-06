@@ -1,0 +1,44 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}CDSA workspace audit{% endblock %}
+
+
+{% block content %}
+
+<h1>CDSA workspace audit</h1>
+
+<h2>Audit results</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    For each CDSA Workspace in the app, the audit checks that access is correct.
+    To be accessed by PRIMED members, the workspace must have a valid, primary Signed Agreement from the study whose data it contains.
+    If that is the case, the CDSA group should be in the auth domain of the workspace.
+    The audit does not check that the workspace is shared with the CDSA group.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>CDSA workspaces that have a valid, primary Signed Agreement from the same study, and the PRIMED CDSA group is in the auth domain of the workspace.</li>
+          <li>CDSA workspaces that do not have a valid, primary Signed Agreement from the same study, and the PRIMED CDSA group is <b>not</b> in the auth domain of the workspace.</li>
+        </ul>
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>CDSA workspaces that have an associated valid, primary Signed Agreement for the same study, but the PRIMED CDSA group is not in the auth domain of the workspace.</li>
+      </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>The PRIMED CDSA group is in the auth domain of the workspace, but there is no associated valid, primary Signed Agreement for the study.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}
