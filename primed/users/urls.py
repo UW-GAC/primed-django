@@ -2,6 +2,7 @@ from django.urls import path
 
 from primed.users.views import (
     UserAutocompleteView,
+    UserSearchFormView,
     user_detail_view,
     user_redirect_view,
     user_update_view,
@@ -13,4 +14,5 @@ urlpatterns = [
     path("~update/", view=user_update_view, name="update"),
     path("autocomplete/", view=UserAutocompleteView.as_view(), name="autocomplete"),
     path("<str:username>/", view=user_detail_view, name="detail"),
+    path("search/", UserSearchFormView.as_view(), name="search"),
 ]

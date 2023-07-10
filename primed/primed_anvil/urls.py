@@ -37,20 +37,9 @@ summary_patterns = (
     "summaries",
 )
 
-user_search_patterns = (
-    [
-        path(
-            "autocomplete/", views.UserSearchAutocomplete.as_view(), name="autocomplete"
-        ),
-        path("search/", views.UserSearchFormView.as_view(), name="search"),
-    ],
-    "user",
-)
-
 urlpatterns = [
     path("studies/", include(study_patterns)),
     path("study_sites/", include(study_site_patterns)),
     path("available_data/", include(available_data_patterns)),
     path("summaries/", include(summary_patterns)),
-    path("user/", include(user_search_patterns)),
 ]

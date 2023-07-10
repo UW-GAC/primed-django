@@ -23,6 +23,7 @@ from primed.users.tests.factories import UserFactory
 from primed.users.views import (
     UserAutocompleteView,
     UserRedirectView,
+    UserSearchFormView,
     UserUpdateView,
     user_detail_view,
 )
@@ -351,4 +352,58 @@ class UserAutocompleteTest(TestCase):
         view.setup(request)
         self.assertEqual(
             view.get_selected_result_label(instance), "First Last (foo@bar.com)"
+        )
+
+
+class UserSearchFormViewTest(TestCase):
+    """Test for UserSearchForm view"""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = UserFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self):
+        """Get the url for the view being tested."""
+        return reverse("users:search")
+
+    def get_view(self):
+        """Return the view being tested"""
+        return UserSearchFormView.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+
+    def test_redirect_to_the_correct_profile_page(self):
+        """The search view correctly redirect to the user profile page"""
+        object = UserFactory.create(
+            username="user1",
+            password="passwd",
+            email="user1@example.com",
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"user": "user1"})
+        self.assertRedirects(
+            response,
+            resolve_url(reverse("users:detail", kwargs={"username": object.username})),
         )
