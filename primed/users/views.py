@@ -5,7 +5,9 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView, RedirectView, UpdateView
+from django.views.generic import DetailView, FormView, RedirectView, UpdateView
+
+from .forms import UserLookupForm
 
 User = get_user_model()
 
@@ -62,3 +64,19 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
             qs = qs.filter(Q(email__icontains=self.q) | Q(name__icontains=self.q))
 
         return qs
+
+
+class UserLookup(LoginRequiredMixin, FormView):
+    """view to allow searching by user and redirect to the profile page of the selected user."""
+
+    template_name = "users/userlookup_form.html"
+    form_class = UserLookupForm
+
+    def form_valid(self, form):
+        self.user = form.cleaned_data["user"]
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        """Redirect to the user profile page after processing a valid form."""
+
+        return reverse("users:detail", kwargs={"username": self.user.username})

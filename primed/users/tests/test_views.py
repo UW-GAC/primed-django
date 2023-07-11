@@ -22,6 +22,7 @@ from primed.users.models import User
 from primed.users.tests.factories import UserFactory
 from primed.users.views import (
     UserAutocompleteView,
+    UserLookupForm,
     UserRedirectView,
     UserUpdateView,
     user_detail_view,
@@ -352,3 +353,82 @@ class UserAutocompleteTest(TestCase):
         self.assertEqual(
             view.get_selected_result_label(instance), "First Last (foo@bar.com)"
         )
+
+
+class UserLookup(TestCase):
+    """Test for UserLookup view"""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = UserFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+
+    def get_url(self):
+        """Get the url for the view being tested."""
+        return reverse("users:lookup")
+
+    def test_form_class(self):
+        """The form class is as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("form", response.context_data)
+        self.assertIsInstance(response.context_data["form"], UserLookupForm)
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_redirect_to_the_correct_profile_page(self):
+        """The search view correctly redirect to the user profile page"""
+        object = UserFactory.create(
+            username="user1",
+            password="passwd",
+            email="user1@example.com",
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"user": object.pk})
+        self.assertRedirects(
+            response,
+            resolve_url(reverse("users:detail", kwargs={"username": object.username})),
+        )
+
+    def test_invalid_input(self):
+        """Posting invalid data re-renders the form with an error."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {"user": -1},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("user", form.errors.keys())
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("valid choice", form.errors["user"][0])
+
+    def test_blank_user(self):
+        """Posting invalid data does not create an object."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors.keys()), 1)
+        self.assertIn("user", form.errors.keys())
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("required", form.errors["user"][0])
