@@ -66,7 +66,7 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
         return qs
 
 
-class UserLookupFormView(LoginRequiredMixin, FormView):
+class UserLookup(LoginRequiredMixin, FormView):
     """view to allow searching by user and redirect to the profile page of the selected user."""
 
     template_name = "users/userlookup_form.html"

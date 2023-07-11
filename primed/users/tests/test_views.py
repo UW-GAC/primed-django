@@ -355,8 +355,8 @@ class UserAutocompleteTest(TestCase):
         )
 
 
-class UserLookupFormViewTest(TestCase):
-    """Test for UserLookupForm view"""
+class UserLookup(TestCase):
+    """Test for UserLookup view"""
 
     def setUp(self):
         """Set up test class."""
