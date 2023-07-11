@@ -355,7 +355,7 @@ class UserAutocompleteTest(TestCase):
         )
 
 
-class UserLookuphFormViewTest(TestCase):
+class UserLookupFormViewTest(TestCase):
     """Test for UserLookupForm view"""
 
     def setUp(self):
@@ -364,11 +364,6 @@ class UserLookuphFormViewTest(TestCase):
         self.model_factory = UserFactory
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
-        self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
-        )
 
     def get_url(self):
         """Get the url for the view being tested."""
@@ -393,9 +388,6 @@ class UserLookuphFormViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
-
-    def test_access_without_user_permission(self):
-        """Raises permission denied if user has no permissions."""
 
     def test_redirect_to_the_correct_profile_page(self):
         """The search view correctly redirect to the user profile page"""
