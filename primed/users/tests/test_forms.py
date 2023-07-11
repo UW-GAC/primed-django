@@ -5,7 +5,7 @@ import pytest
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 
-from primed.users.forms import UserCreationForm, UserSearchForm
+from primed.users.forms import UserCreationForm, UserLookupForm
 from primed.users.models import User
 from primed.users.tests.factories import UserFactory
 
@@ -41,18 +41,15 @@ class TestUserCreationForm:
         assert form.errors["username"][0] == _("This username has already been taken.")
 
 
-class UserSearchFormTest(TestCase):
+class UserLookupFormTest(TestCase):
 
-    form_class = UserSearchForm
-
-    def setUp(self):
-        """Create a user for use in the form."""
-        self.user = UserFactory.create()
+    form_class = UserLookupForm
 
     def test_valid(self):
         """Form is valid with necessary input."""
+        user_obj = UserFactory.create()
         form_data = {
-            "user": self.user.name,
+            "user": user_obj,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
