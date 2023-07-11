@@ -21,14 +21,15 @@ class UserCreationForm(admin_forms.UserCreationForm):
         }
 
 
-class UserSearchForm(forms.Form):
-    """Form for the user search"""
+class UserLookupForm(forms.Form):
+    """Form for the user lookup"""
 
-    user = forms.CharField(
-        widget=autocomplete.ListSelect2(
+    user = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        widget=autocomplete.ModelSelect2(
             url="users:autocomplete",
             attrs={"data-theme": "bootstrap-5"},
         ),
         required=True,
-        help_text="Enter either the name or username to search",
+        help_text="To lookup a user, enter either the name or username.",
     )

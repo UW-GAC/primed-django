@@ -1,15 +1,13 @@
 from dal import autocomplete
-from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
-from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, UpdateView
 
-from .forms import UserSearchForm
+from .forms import UserLookupForm
 
 User = get_user_model()
 
@@ -68,12 +66,11 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
         return qs
 
 
-class UserSearchFormView(LoginRequiredMixin, FormView):
+class UserLookupFormView(LoginRequiredMixin, FormView):
     """view to allow searching by user and redirect to the profile page of the selected user."""
 
-    template_name = "primed_anvil/usersearch_form.html"
-    form_class = UserSearchForm
-    message_name_is_required = "Enter a name or a username to search"
+    template_name = "users/userlookup_form.html"
+    form_class = UserLookupForm
 
     def post(self, request, *args, **kwargs):
         """Redirect to the user profile page"""
