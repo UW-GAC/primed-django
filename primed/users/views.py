@@ -72,15 +72,11 @@ class UserLookupFormView(LoginRequiredMixin, FormView):
     template_name = "users/userlookup_form.html"
     form_class = UserLookupForm
 
-    def post(self, request, *args, **kwargs):
-        """Redirect to the user profile page"""
+    def form_valid(self, form):
+        self.user = form.cleaned_data["user"]
+        return super().form_valid(form)
 
-        form = self.get_form()
-        if form.is_valid():
-            url = reverse("users:detail", kwargs={"username": request.POST.get("user")})
-            return HttpResponseRedirect(url)
-        else:
-            messages.add_message(
-                self.request, messages.ERROR, self.message_name_is_required
-            )
-            return HttpResponseRedirect(reverse("primed_anvil:user:search"))
+    def get_success_url(self):
+        """Redirect to the user profile page after processing a valid form."""
+
+        return reverse("users:detail", kwargs={"username": self.user.username})
