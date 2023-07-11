@@ -1,3 +1,4 @@
+from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
 from django.contrib.auth import forms as admin_forms
@@ -21,7 +22,7 @@ class UserCreationForm(admin_forms.UserCreationForm):
         }
 
 
-class UserLookupForm(forms.Form):
+class UserLookupForm(Bootstrap5MediaFormMixin, forms.Form):
     """Form for the user lookup"""
 
     user = forms.ModelChoiceField(
