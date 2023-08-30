@@ -35,6 +35,7 @@ class SignedAgreementTable(tables.Table):
         if hasattr(record.agreement_group, "get_absolute_url")
         else None
     )
+    version = tables.Column(linkify=True)
 
     class Meta:
         model = models.SignedAgreement
@@ -66,6 +67,7 @@ class MemberAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.MemberAgreement
@@ -97,6 +99,7 @@ class DataAffiliateAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.DataAffiliateAgreement
@@ -127,6 +130,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.NonDataAffiliateAgreement
