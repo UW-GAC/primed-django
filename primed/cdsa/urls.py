@@ -4,6 +4,21 @@ from . import views
 
 app_name = "cdsa"
 
+agreement_version_patterns = (
+    [
+        path(
+            "<int:major_version>",
+            views.AgreementMajorVersionDetail.as_view(),
+            name="major_version_detail",
+        ),
+        path(
+            "v<int:major_version>.<int:minor_version>",
+            views.AgreementVersionDetail.as_view(),
+            name="detail",
+        ),
+    ],
+    "agreement_versions",
+)
 member_agreement_patterns = (
     [
         path("", views.MemberAgreementList.as_view(), name="list"),
@@ -87,6 +102,7 @@ records_patterns = (
 
 
 urlpatterns = [
+    path("agreement_versions/", include(agreement_version_patterns)),
     path("signed_agreements/", include(signed_agreement_patterns)),
     path("records/", include(records_patterns)),
     path("audit/", include(audit_patterns)),

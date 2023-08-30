@@ -40,6 +40,192 @@ from . import factories
 User = get_user_model()
 
 
+class AgreementVersionDetailTest(TestCase):
+    """Tests for the AgreementVersionDetail view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        # Create an object test this with.
+        self.obj = factories.AgreementVersionFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreement_versions:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AgreementVersionDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(2, 5))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(2, 5),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(2, 5))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=2, minor_version=5)
+
+    def test_view_status_code_with_existing_object(self):
+        """Returns a successful status code for an existing object pk."""
+        # Only clients load the template.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_status_code_with_invalid_version(self):
+        """Raises a 404 error with an invalid major and minor version."""
+        request = self.factory.get(
+            self.get_url(self.obj.major_version + 1, self.obj.minor_version + 1)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version=self.obj.major_version + 1,
+                minor_version=self.obj.minor_version + 1,
+            )
+
+    def test_view_status_code_with_other_major_version(self):
+        """Raises a 404 error with an invalid object major version."""
+        other_agreement = factories.AgreementVersionFactory.create(
+            major_version=self.obj.major_version + 1,
+            minor_version=self.obj.minor_version,
+        )
+        request = self.factory.get(
+            self.get_url(
+                other_agreement.major_version + 1, other_agreement.minor_version
+            )
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version=other_agreement.major_version + 1,
+                minor_version=other_agreement.minor_version,
+            )
+
+    def test_view_status_code_with_other_minor_version(self):
+        """Raises a 404 error with an invalid object minor version."""
+        other_agreement = factories.AgreementVersionFactory.create(
+            major_version=self.obj.major_version,
+            minor_version=self.obj.minor_version + 1,
+        )
+        request = self.factory.get(
+            self.get_url(
+                other_agreement.major_version, other_agreement.minor_version + 1
+            )
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version=other_agreement.major_version,
+                minor_version=other_agreement.minor_version + 1,
+            )
+
+    # def test_response_includes_link_to_major_agreement(self):
+    #     """Response includes a link to the user profile page."""
+    #     self.client.force_login(self.user)
+    #     response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+    #     self.assertContains(
+    #         response, self.obj.signed_agreement.representative.get_absolute_url()
+    #     )
+
+    def test_response_includes_signed_agreement_table(self):
+        """Response includes a table of SignedAgreements."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("signed_agreement_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["signed_agreement_table"], tables.SignedAgreementTable
+        )
+
+    def test_response_signed_agreement_table_three_agreements(self):
+        """signed_agreement_table includes all types of agreements."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__version=self.obj
+        )
+        da_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__version=self.obj
+        )
+        nda_agreement = factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__version=self.obj
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 3)
+        self.assertIn(
+            member_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertIn(
+            da_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertIn(
+            nda_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+
+    def test_response_signed_agreement_table_other_version(self):
+        """signed_agreement_table does not include agreements from other versions."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        da_agreement = factories.DataAffiliateAgreementFactory.create()
+        nda_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 0)
+        self.assertNotIn(
+            member_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertNotIn(
+            da_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertNotIn(
+            nda_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+
+
 class SignedAgreementListTest(TestCase):
     """Tests for the SignedAgreementList view."""
 

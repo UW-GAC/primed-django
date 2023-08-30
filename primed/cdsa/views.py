@@ -14,13 +14,49 @@ from django.db import transaction
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic import DetailView, FormView, TemplateView
-from django_tables2 import SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from . import forms, helpers, models, tables
 from .audit import signed_agreement_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
+
+
+class AgreementMajorVersionDetail(
+    AnVILConsortiumManagerViewRequired, MultiTableMixin, TemplateView
+):
+    """Display a "detail" page for an agreement major version (e.g., 1.x)."""
+
+
+class AgreementVersionDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
+    """Display a "detail" page for an agreement major/minor version (e.g., 1.3)."""
+
+    model = models.AgreementVersion
+    table_class = tables.SignedAgreementTable
+    context_table_name = "signed_agreement_table"
+
+    def get_table_data(self):
+        qs = models.SignedAgreement.objects.filter(version=self.object)
+        # import ipdb; ipdb.set_trace()
+        print(qs)
+        return qs
+
+    def get_object(self, queryset=None):
+        queryset = self.model.objects.all()
+        try:
+            major_version = self.kwargs["major_version"]
+            minor_version = self.kwargs["minor_version"]
+            obj = queryset.get(major_version=major_version, minor_version=minor_version)
+        except (KeyError, self.model.DoesNotExist):
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class SignedAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
