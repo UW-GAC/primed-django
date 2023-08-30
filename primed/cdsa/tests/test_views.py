@@ -56,7 +56,7 @@ class SignedAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:list", args=args)
+        return reverse("cdsa:signed_agreements:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -136,7 +136,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:members:new", args=args)
+        return reverse("cdsa:signed_agreements:members:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -977,7 +977,7 @@ class MemberAgreementDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:members:detail", args=args)
+        return reverse("cdsa:signed_agreements:members:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1061,7 +1061,7 @@ class MemberAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:members:list", args=args)
+        return reverse("cdsa:signed_agreements:members:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1139,7 +1139,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:data_affiliates:new", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2125,7 +2125,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:data_affiliates:detail", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2215,7 +2215,7 @@ class DataAffiliateAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:data_affiliates:list", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2293,7 +2293,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:non_data_affiliates:new", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -3118,7 +3118,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:non_data_affiliates:detail", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -3196,7 +3196,7 @@ class NonDataAffiliateAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:non_data_affiliates:list", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -3358,7 +3358,7 @@ class SignedAgreementAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "cdsa:audit:agreements",
+            "cdsa:audit:signed_agreements",
             args=args,
         )
 

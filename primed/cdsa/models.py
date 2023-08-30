@@ -185,7 +185,7 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            "cdsa:agreements:members:detail",
+            "cdsa:signed_agreements:members:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 
@@ -207,7 +207,7 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     def get_absolute_url(self):
         return reverse(
-            "cdsa:agreements:data_affiliates:detail",
+            "cdsa:signed_agreements:data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 
@@ -226,7 +226,7 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
 
     def get_absolute_url(self):
         return reverse(
-            "cdsa:agreements:non_data_affiliates:detail",
+            "cdsa:signed_agreements:non_data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 
