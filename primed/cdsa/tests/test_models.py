@@ -116,6 +116,11 @@ class AgreementVersionTest(TestCase):
         instance = factories.AgreementVersionFactory.build()
         self.assertIsInstance(str(instance), str)
 
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.AgreementVersionFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
 
 class SignedAgreementTest(TestCase):
     """Tests for the SignedAgreement model."""
