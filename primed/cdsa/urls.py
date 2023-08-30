@@ -12,12 +12,12 @@ agreement_version_patterns = (
             name="list",
         ),
         path(
-            "<int:major_version>",
+            "v<int:major_version>/",
             views.AgreementMajorVersionDetail.as_view(),
             name="major_version_detail",
         ),
         path(
-            "v<int:major_version>.<int:minor_version>",
+            "v<int:major_version>.<int:minor_version>/",
             views.AgreementVersionDetail.as_view(),
             name="detail",
         ),

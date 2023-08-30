@@ -29,6 +29,36 @@ class AgreementMajorVersionDetail(
 ):
     """Display a "detail" page for an agreement major version (e.g., 1.x)."""
 
+    template_name = "cdsa/agreementmajorversion_detail.html"
+    tables = (tables.AgreementVersionTable, tables.SignedAgreementTable)
+
+    def get_major_version(self):
+        major_version = self.kwargs.get("major_version")
+        qs = models.AgreementVersion.objects.filter(major_version=major_version)
+        if not qs.count():
+            raise Http404(
+                _("No AgreementVersions with major_version found matching the query")
+            )
+        return major_version
+
+    def get(self, request, *args, **kwargs):
+        self.major_version = self.get_major_version()
+        return super().get(request, *args, **kwargs)
+
+    def get_tables_data(self):
+        agreement_version_qs = models.AgreementVersion.objects.filter(
+            major_version=self.major_version
+        )
+        signed_agreement_qs = models.SignedAgreement.objects.filter(
+            version__major_version=self.major_version
+        )
+        return [agreement_version_qs, signed_agreement_qs]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context["major_version"] = self.major_version
+        return context
+
 
 class AgreementVersionDetail(
     AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
