@@ -15,6 +15,23 @@ from primed.primed_anvil.tables import (
 from . import models
 
 
+class AgreementVersionTable(tables.Table):
+
+    full_version = tables.Column(
+        linkify=True, order_by=("major_version", "minor_version")
+    )
+    major_version = tables.Column()
+
+    class Meta:
+        model = models.AgreementVersion
+        fields = (
+            "full_version",
+            "major_version",
+            "minor_version",
+            "date_approved",
+        )
+
+
 class SignedAgreementTable(tables.Table):
 
     cc_id = tables.Column(linkify=True)

@@ -13,6 +13,26 @@ from .. import models, tables
 from . import factories
 
 
+class AgreementVersionTableTest(TestCase):
+    model = models.AgreementVersion
+    model_factory = factories.AgreementVersionFactory
+    table_class = tables.AgreementVersionTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_three_objects(self):
+        self.model_factory.create_batch(3)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 3)
+
+
 class SignedAgreementTableTest(TestCase):
     model = models.SignedAgreement
     table_class = tables.SignedAgreementTable

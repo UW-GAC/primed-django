@@ -7,6 +7,11 @@ app_name = "cdsa"
 agreement_version_patterns = (
     [
         path(
+            "",
+            views.AgreementVersionList.as_view(),
+            name="list",
+        ),
+        path(
             "<int:major_version>",
             views.AgreementMajorVersionDetail.as_view(),
             name="major_version_detail",

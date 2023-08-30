@@ -3,6 +3,12 @@
     CDSA
   </a>
   <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+
+    <li>
+      <a class="dropdown-item" href="{% url 'cdsa:agreement_versions:list'%}">List agreement versions</a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+
     <li class="dropdown-item"><b>List signed agreements</b></li>
     <li>
       <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:list' %}">All</a>

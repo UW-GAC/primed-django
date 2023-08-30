@@ -59,6 +59,13 @@ class AgreementVersionDetail(
         return obj
 
 
+class AgreementVersionList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """Display a list of AgreementVersions."""
+
+    model = models.AgreementVersion
+    table_class = tables.AgreementVersionTable
+
+
 class SignedAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """Display a list of SignedAgreement objects."""
 
