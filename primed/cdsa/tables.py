@@ -17,19 +17,23 @@ from . import models
 
 class AgreementVersionTable(tables.Table):
 
+    major_version = tables.Column(
+        linkify=lambda record: record.get_major_version_absolute_url()
+    )
     full_version = tables.Column(
         linkify=True, order_by=("major_version", "minor_version")
     )
-    major_version = tables.Column()
 
     class Meta:
         model = models.AgreementVersion
         fields = (
-            "full_version",
             "major_version",
-            "minor_version",
+            "full_version",
             "date_approved",
         )
+
+    def render_major_version(self, record):
+        return "v{}".format(record.major_version)
 
 
 class SignedAgreementTable(tables.Table):
