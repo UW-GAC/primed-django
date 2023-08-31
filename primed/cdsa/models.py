@@ -36,11 +36,7 @@ class AgreementMajorVersion(TimeStampedModel, models.Model):
 class AgreementVersion(TimeStampedModel, models.Model):
     """Model to track approved CDSA versions."""
 
-    major_version = models.IntegerField(
-        help_text="Major version of the CDSA. Changes to the major version require resigning.",
-        validators=[MinValueValidator(1)],
-    )
-    major_version_fk = models.ForeignKey(
+    major_version = models.ForeignKey(
         AgreementMajorVersion,
         help_text="Major version of the CDSA. Changes to the major version require resigning.",
         on_delete=models.CASCADE,
@@ -62,7 +58,7 @@ class AgreementVersion(TimeStampedModel, models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["major_version", "minor_version"],
-                name="unique_agreement_version",
+                name="unique_agreement_version_2",
             )
         ]
         ordering = ["major_version", "minor_version"]
@@ -89,7 +85,7 @@ class AgreementVersion(TimeStampedModel, models.Model):
 
     @property
     def full_version(self):
-        return "v{}.{}".format(self.major_version, self.minor_version)
+        return "{}.{}".format(self.major_version, self.minor_version)
 
     @property
     def is_valid(self):
