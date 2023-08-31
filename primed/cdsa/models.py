@@ -68,22 +68,23 @@ class AgreementVersion(TimeStampedModel, models.Model):
         return reverse(
             "cdsa:agreement_versions:detail",
             kwargs={
-                "major_version": self.major_version,
+                "major_version": self.major_version.version,
                 "minor_version": self.minor_version,
             },
         )
 
     def get_major_version_absolute_url(self):
+        # TODO: remove and change to a detail view on AgreementMajorVersion.
         return reverse(
             "cdsa:agreement_versions:major_version_detail",
             kwargs={
-                "major_version": self.major_version,
+                "major_version": self.major_version.version,
             },
         )
 
     @property
     def full_version(self):
-        return "{}.{}".format(self.major_version, self.minor_version)
+        return "{}.{}".format(str(self.major_version), self.minor_version)
 
     @property
     def is_valid(self):
