@@ -78,54 +78,40 @@ class AgreementVersionTest(TestCase):
     """Tests for the AgreementVersion model."""
 
     def test_model_saving(self):
+        major_version = factories.AgreementMajorVersionFactory.create()
         instance = models.AgreementVersion(
-            major_version=1, minor_version=0, date_approved=datetime.today()
+            major_version=major_version, minor_version=0, date_approved=datetime.today()
         )
         instance.save()
         self.assertIsInstance(instance, models.AgreementVersion)
 
     def test_unique(self):
-        factories.AgreementVersionFactory.create(major_version=1, minor_version=0)
+        major_version = factories.AgreementMajorVersionFactory.create()
+        factories.AgreementVersionFactory.create(
+            major_version=major_version, minor_version=0
+        )
         instance = factories.AgreementVersionFactory.build(
-            major_version=1, minor_version=0
+            major_version=major_version, minor_version=0
         )
         with self.assertRaisesMessage(ValidationError, "already exists"):
             instance.full_clean()
         with self.assertRaises(IntegrityError):
             instance.save()
 
-    def test_major_version_zero(self):
-        """ValidationError raised when major_version is zero."""
-        instance = factories.AgreementVersionFactory.build(major_version=0)
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        self.assertEqual(len(e.exception.message_dict), 1)
-        self.assertIn("major_version", e.exception.message_dict)
-        self.assertEqual(len(e.exception.message_dict["major_version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["major_version"][0]
-        )
-
-    def test_major_version_negative(self):
-        """ValidationError raised when major_version is negative."""
-        instance = factories.AgreementVersionFactory.build(major_version=-1)
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        self.assertEqual(len(e.exception.message_dict), 1)
-        self.assertIn("major_version", e.exception.message_dict)
-        self.assertEqual(len(e.exception.message_dict["major_version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["major_version"][0]
-        )
-
     def test_minor_version_zero(self):
         """full_clean raises no exception when minor_version is zero."""
-        instance = factories.AgreementVersionFactory.build(minor_version=0)
+        major_version = factories.AgreementMajorVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(
+            major_version=major_version, minor_version=0
+        )
         instance.full_clean()
 
     def test_minor_version_negative(self):
         """ValidationError raised when minor_version is negative."""
-        instance = factories.AgreementVersionFactory.build(minor_version=-1)
+        major_version = factories.AgreementMajorVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(
+            major_version=major_version, minor_version=-1
+        )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertEqual(len(e.exception.message_dict), 1)
@@ -139,25 +125,25 @@ class AgreementVersionTest(TestCase):
         """full_version property works as expected."""
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=1, minor_version=0
+                major_version__version=1, minor_version=0
             ).full_version,
             "v1.0",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=1, minor_version=5
+                major_version__version=1, minor_version=5
             ).full_version,
             "v1.5",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=1, minor_version=10
+                major_version__version=1, minor_version=10
             ).full_version,
             "v1.10",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=2, minor_version=3
+                major_version__version=2, minor_version=3
             ).full_version,
             "v2.3",
         )
@@ -263,7 +249,6 @@ class SignedAgreementTest(TestCase):
         user = UserFactory.create()
         group = ManagedGroupFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(major_version=0)
         instance = factories.SignedAgreementFactory.build(
             cc_id=0,
             representative=user,
@@ -282,7 +267,6 @@ class SignedAgreementTest(TestCase):
         user = UserFactory.create()
         group = ManagedGroupFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(major_version=0)
         instance = factories.SignedAgreementFactory.build(
             cc_id=-1,
             representative=user,
@@ -344,7 +328,6 @@ class SignedAgreementTest(TestCase):
         user = UserFactory.create()
         group = ManagedGroupFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(major_version=0)
         instance = factories.SignedAgreementFactory.build(
             representative=user,
             anvil_access_group=group,
