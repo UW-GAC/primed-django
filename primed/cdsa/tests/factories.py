@@ -14,6 +14,15 @@ from primed.users.tests.factories import UserFactory
 from .. import models
 
 
+class AgreementMajorVersionFactory(DjangoModelFactory):
+    """A factory for the AgreementMajorVersion model."""
+
+    class Meta:
+        model = models.AgreementMajorVersion
+
+    version = Faker("random_int", min=1)
+
+
 class AgreementVersionFactory(DjangoModelFactory):
     """A factory for the AgreementVersion model."""
 

@@ -15,6 +15,24 @@ from primed.duo.models import DataUseOntologyModel
 from primed.primed_anvil.models import AvailableData, RequesterModel, Study, StudySite
 
 
+class AgreementMajorVersion(TimeStampedModel, models.Model):
+    """A model for a major agreement version."""
+
+    version = models.IntegerField(
+        help_text="Major version of the CDSA. Changes to the major version require resigning.",
+        validators=[MinValueValidator(1)],
+        unique=True,
+    )
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return "v{}".format(self.version)
+
+    # def get_absolute_url(self):
+    #     pass
+
+
 class AgreementVersion(TimeStampedModel, models.Model):
     """Model to track approved CDSA versions."""
 
@@ -65,6 +83,10 @@ class AgreementVersion(TimeStampedModel, models.Model):
     @property
     def full_version(self):
         return "v{}.{}".format(self.major_version, self.minor_version)
+
+    @property
+    def is_valid(self):
+        return True
 
 
 class SignedAgreement(TimeStampedModel, models.Model):

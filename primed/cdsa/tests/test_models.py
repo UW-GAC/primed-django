@@ -23,6 +23,57 @@ from .. import models
 from . import factories
 
 
+class AgreementMajorVersionTest(TestCase):
+    """Tests for the AgreementMajorVersion model."""
+
+    def test_model_saving(self):
+        instance = models.AgreementMajorVersion(version=1)
+        instance.save()
+        self.assertIsInstance(instance, models.AgreementMajorVersion)
+
+    def test_unique(self):
+        factories.AgreementMajorVersionFactory.create(version=1)
+        instance = factories.AgreementMajorVersionFactory.build(version=1)
+        with self.assertRaisesMessage(ValidationError, "already exists"):
+            instance.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_version_zero(self):
+        """ValidationError raised when version is zero."""
+        instance = factories.AgreementMajorVersionFactory.build(version=0)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["version"]), 1)
+        self.assertIn(
+            "greater than or equal to", e.exception.message_dict["version"][0]
+        )
+
+    def test_version_negative(self):
+        """ValidationError raised when version is negative."""
+        instance = factories.AgreementMajorVersionFactory.build(version=-1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["version"]), 1)
+        self.assertIn(
+            "greater than or equal to", e.exception.message_dict["version"][0]
+        )
+
+    def test_str(self):
+        """__str__ method works as expected."""
+        instance = factories.AgreementMajorVersionFactory.build()
+        self.assertIsInstance(str(instance), str)
+
+    # def test_get_absolute_url(self):
+    #     """get_absolute_url method works correctly."""
+    #     instance = factories.AgreementMajorVersionFactory.create()
+    #     self.assertIsInstance(instance.get_absolute_url(), str)
+
+
 class AgreementVersionTest(TestCase):
     """Tests for the AgreementVersion model."""
 
