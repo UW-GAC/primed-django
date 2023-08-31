@@ -40,6 +40,13 @@ class AgreementVersion(TimeStampedModel, models.Model):
         help_text="Major version of the CDSA. Changes to the major version require resigning.",
         validators=[MinValueValidator(1)],
     )
+    major_version_fk = models.ForeignKey(
+        AgreementMajorVersion,
+        help_text="Major version of the CDSA. Changes to the major version require resigning.",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     minor_version = models.IntegerField(
         help_text="Minor version of the CDSA. Changes to the minor version do not require resigning.",
         validators=[MinValueValidator(0)],
