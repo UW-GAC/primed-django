@@ -4,6 +4,15 @@ from simple_history.admin import SimpleHistoryAdmin
 from . import models
 
 
+@admin.register(models.AgreementMajorVersion)
+class AgreementMajorVersion(SimpleHistoryAdmin):
+    """Admin class for the `AgreementMajorVersion` model."""
+
+    list_display = ("version",)
+    list_filter = ("version",)
+    sortable_by = ("version",)
+
+
 @admin.register(models.AgreementVersion)
 class AgreementVersion(SimpleHistoryAdmin):
     """Admin class for the `AgreementVersion` model."""
