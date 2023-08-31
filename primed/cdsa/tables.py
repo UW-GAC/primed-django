@@ -179,7 +179,6 @@ class RepresentativeRecordsTable(tables.Table):
     class Meta:
         model = models.SignedAgreement
         fields = (
-            "cc_id",
             "representative__name",
             "representative_role",
             "signing_institution",
