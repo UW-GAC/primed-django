@@ -37,3 +37,7 @@ setuptools==65.5.1 # https://github.com/pypa/setuptools
 django-debug-toolbar==3.4.0  # https://github.com/jazzband/django-debug-toolbar
 django-coverage-plugin==2.0.3  # https://github.com/nedbat/django_coverage_plugin
 pytest-django==4.5.2  # https://github.com/pytest-dev/pytest-django
+
+# Other additions
+# ------------------------------------------------------------------------------
+django-test-migrations==1.3.0
