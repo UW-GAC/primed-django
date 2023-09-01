@@ -283,7 +283,7 @@ class AgreementVersionDetailTest(TestCase):
         """Returns successful response code."""
         self.client.force_login(self.user)
         response = self.client.get(
-            self.get_url(self.obj.major_version, self.obj.minor_version)
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
         )
         self.assertEqual(response.status_code, 200)
 
@@ -302,59 +302,47 @@ class AgreementVersionDetailTest(TestCase):
         # Only clients load the template.
         self.client.force_login(self.user)
         response = self.client.get(
-            self.get_url(self.obj.major_version, self.obj.minor_version)
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
         )
         self.assertEqual(response.status_code, 200)
 
     def test_view_status_code_with_invalid_version(self):
         """Raises a 404 error with an invalid major and minor version."""
         request = self.factory.get(
-            self.get_url(self.obj.major_version + 1, self.obj.minor_version + 1)
+            self.get_url(self.obj.major_version.version + 1, self.obj.minor_version + 1)
         )
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
                 request,
-                major_version=self.obj.major_version + 1,
+                major_version=self.obj.major_version.version + 1,
                 minor_version=self.obj.minor_version + 1,
             )
 
     def test_view_status_code_with_other_major_version(self):
         """Raises a 404 error with an invalid object major version."""
-        other_agreement = factories.AgreementVersionFactory.create(
-            major_version=self.obj.major_version + 1,
-            minor_version=self.obj.minor_version,
-        )
         request = self.factory.get(
-            self.get_url(
-                other_agreement.major_version + 1, other_agreement.minor_version
-            )
+            self.get_url(self.obj.major_version.version + 1, self.obj.minor_version)
         )
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
                 request,
-                major_version=other_agreement.major_version + 1,
-                minor_version=other_agreement.minor_version,
+                major_version__version=self.obj.major_version.version + 1,
+                minor_version=self.obj.minor_version,
             )
 
     def test_view_status_code_with_other_minor_version(self):
         """Raises a 404 error with an invalid object minor version."""
-        other_agreement = factories.AgreementVersionFactory.create(
-            major_version=self.obj.major_version,
-            minor_version=self.obj.minor_version + 1,
-        )
         request = self.factory.get(
-            self.get_url(
-                other_agreement.major_version, other_agreement.minor_version + 1
-            )
+            self.get_url(self.obj.major_version.version, self.obj.minor_version + 1)
         )
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
                 request,
-                major_version=other_agreement.major_version,
-                minor_version=other_agreement.minor_version + 1,
+                major_version=self.obj.major_version.version,
+                minor_version=self.obj.minor_version + 1,
             )
 
     # def test_response_includes_link_to_major_agreement(self):
@@ -369,7 +357,7 @@ class AgreementVersionDetailTest(TestCase):
         """Response includes a table of SignedAgreements."""
         self.client.force_login(self.user)
         response = self.client.get(
-            self.get_url(self.obj.major_version, self.obj.minor_version)
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("signed_agreement_table", response.context_data)
@@ -390,7 +378,7 @@ class AgreementVersionDetailTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(
-            self.get_url(self.obj.major_version, self.obj.minor_version)
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 3)
@@ -414,7 +402,7 @@ class AgreementVersionDetailTest(TestCase):
         nda_agreement = factories.NonDataAffiliateAgreementFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(
-            self.get_url(self.obj.major_version, self.obj.minor_version)
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 0)

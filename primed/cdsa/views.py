@@ -29,6 +29,7 @@ class AgreementMajorVersionDetail(
 ):
     """Display a "detail" page for an agreement major version (e.g., 1.x)."""
 
+    # TODO: update for new model.
     template_name = "cdsa/agreementmajorversion_detail.html"
     tables = (tables.AgreementVersionTable, tables.SignedAgreementTable)
 
@@ -80,7 +81,9 @@ class AgreementVersionDetail(
         try:
             major_version = self.kwargs["major_version"]
             minor_version = self.kwargs["minor_version"]
-            obj = queryset.get(major_version=major_version, minor_version=minor_version)
+            obj = queryset.get(
+                major_version__version=major_version, minor_version=minor_version
+            )
         except (KeyError, self.model.DoesNotExist):
             raise Http404(
                 _("No %(verbose_name)s found matching the query")
