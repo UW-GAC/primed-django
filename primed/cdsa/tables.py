@@ -30,9 +30,6 @@ class AgreementVersionTable(tables.Table):
             "date_approved",
         )
 
-    def render_major_version(self, record):
-        return "v{}".format(record.major_version)
-
 
 class SignedAgreementTable(tables.Table):
 
