@@ -107,6 +107,9 @@ class WorkspaceAccessAuditTable(tables.Table):
 
     workspace = tables.Column(linkify=True)
     data_affiliate_agreement = tables.Column(linkify=True)
+    agreement_version = tables.Column(
+        accessor="data_affiliate_agreement__signed_agreement__version"
+    )
     note = tables.Column()
     action = tables.Column()
 
