@@ -68,10 +68,10 @@ class AgreementMajorVersionTest(TestCase):
         instance = factories.AgreementMajorVersionFactory.build()
         self.assertIsInstance(str(instance), str)
 
-    # def test_get_absolute_url(self):
-    #     """get_absolute_url method works correctly."""
-    #     instance = factories.AgreementMajorVersionFactory.create()
-    #     self.assertIsInstance(instance.get_absolute_url(), str)
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
 
 class AgreementVersionTest(TestCase):
@@ -157,11 +157,6 @@ class AgreementVersionTest(TestCase):
         """get_absolute_url method works correctly."""
         instance = factories.AgreementVersionFactory.create()
         self.assertIsInstance(instance.get_absolute_url(), str)
-
-    def test_get_major_version_absolute_url(self):
-        """test_get_major_version_absolute_url method works correctly."""
-        instance = factories.AgreementVersionFactory.create()
-        self.assertIsInstance(instance.get_major_version_absolute_url(), str)
 
 
 class SignedAgreementTest(TestCase):

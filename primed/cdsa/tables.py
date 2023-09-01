@@ -17,9 +17,7 @@ from . import models
 
 class AgreementVersionTable(tables.Table):
 
-    major_version = tables.Column(
-        linkify=lambda record: record.get_major_version_absolute_url()
-    )
+    major_version = tables.Column(linkify=True)
     full_version = tables.Column(
         linkify=True, order_by=("major_version", "minor_version")
     )

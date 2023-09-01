@@ -126,7 +126,7 @@ class AgreementMajorVersionDetailTest(TestCase):
             )
         )
         # Create an object test this with.
-        self.obj = factories.AgreementVersionFactory.create()
+        self.obj = factories.AgreementMajorVersionFactory.create()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -148,7 +148,7 @@ class AgreementMajorVersionDetailTest(TestCase):
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
+        response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
@@ -165,30 +165,22 @@ class AgreementMajorVersionDetailTest(TestCase):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
+        response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(response.status_code, 200)
 
     def test_view_status_code_with_invalid_version(self):
         """Raises a 404 error with an invalid major and minor version."""
-        request = self.factory.get(self.get_url(self.obj.major_version + 1))
+        request = self.factory.get(self.get_url(self.obj.version + 1))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
                 request,
-                major_version=self.obj.major_version + 1,
+                major_version=self.obj.version + 1,
             )
-
-    def test_context_major_version(self):
-        """Context includes major_version."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("major_version", response.context_data)
-        self.assertEqual(response.context_data["major_version"], self.obj.major_version)
 
     def test_context_table_classes(self):
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
+        response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(response.status_code, 200)
         self.assertIn("tables", response.context_data)
         self.assertEqual(len(response.context_data["tables"]), 2)
@@ -201,37 +193,34 @@ class AgreementMajorVersionDetailTest(TestCase):
 
     def test_response_includes_agreement_version_table(self):
         """agreement_version_table includes agreement_versions with this major version."""
-        factories.AgreementVersionFactory.create(major_version=self.obj.major_version)
+        factories.AgreementVersionFactory.create(major_version=self.obj)
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
-        # 2 - one for the object we created in the setup method, one for the new object in this test.
-        self.assertEqual(len(response.context_data["tables"][0].rows), 2)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 1)
 
     def test_response_includes_agreement_version_table_other_major_version(self):
         """agreement_version_table includes only agreement_versions with this major version."""
         other_agreement = factories.AgreementVersionFactory.create(
-            major_version=self.obj.major_version + 1
+            major_version__version=self.obj.version + 1
         )
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
-        # 2 - one for the object we created in the setup method, one for the new object in this test.
-        self.assertEqual(len(response.context_data["tables"][0].rows), 1)
-        self.assertIn(self.obj, response.context_data["tables"][0].data)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
         self.assertNotIn(other_agreement, response.context_data["tables"][0].data)
 
     def test_response_signed_agreement_table_three_agreements(self):
         """signed_agreement_table includes all types of agreements."""
         factories.MemberAgreementFactory.create(
-            signed_agreement__version__major_version=self.obj.major_version
+            signed_agreement__version__major_version__version=self.obj.version
         )
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__version__major_version=self.obj.major_version
+            signed_agreement__version__major_version__version=self.obj.version
         )
         factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__version__major_version=self.obj.major_version
+            signed_agreement__version__major_version__version=self.obj.version
         )
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
+        response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["tables"][1].rows), 3)
 
@@ -241,7 +230,7 @@ class AgreementMajorVersionDetailTest(TestCase):
         factories.DataAffiliateAgreementFactory.create()
         factories.NonDataAffiliateAgreementFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.major_version))
+        response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["tables"][1].rows), 0)
 

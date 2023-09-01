@@ -25,40 +25,34 @@ logger = logging.getLogger(__name__)
 
 
 class AgreementMajorVersionDetail(
-    AnVILConsortiumManagerViewRequired, MultiTableMixin, TemplateView
+    AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView
 ):
     """Display a "detail" page for an agreement major version (e.g., 1.x)."""
 
-    # TODO: update for new model.
+    model = models.AgreementMajorVersion
     template_name = "cdsa/agreementmajorversion_detail.html"
     tables = (tables.AgreementVersionTable, tables.SignedAgreementTable)
 
-    def get_major_version(self):
-        major_version = self.kwargs.get("major_version")
-        qs = models.AgreementVersion.objects.filter(major_version=major_version)
-        if not qs.count():
+    def get_object(self, queryset=None):
+        queryset = self.model.objects.all()
+        try:
+            major_version = self.kwargs["major_version"]
+            obj = queryset.get(version=major_version)
+        except (KeyError, self.model.DoesNotExist):
             raise Http404(
-                _("No AgreementVersions with major_version found matching the query")
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
             )
-        return major_version
-
-    def get(self, request, *args, **kwargs):
-        self.major_version = self.get_major_version()
-        return super().get(request, *args, **kwargs)
+        return obj
 
     def get_tables_data(self):
         agreement_version_qs = models.AgreementVersion.objects.filter(
-            major_version=self.major_version
+            major_version=self.object
         )
         signed_agreement_qs = models.SignedAgreement.objects.filter(
-            version__major_version=self.major_version
+            version__major_version=self.object
         )
         return [agreement_version_qs, signed_agreement_qs]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-        context["major_version"] = self.major_version
-        return context
 
 
 class AgreementVersionDetail(
