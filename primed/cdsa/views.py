@@ -56,9 +56,7 @@ class AgreementMajorVersionDetail(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_deprecation_message"] = (
-            self.object.status == self.object.DEPRECATED
-        )
+        context["show_deprecation_message"] = not self.object.is_valid
         return context
 
 
@@ -94,9 +92,7 @@ class AgreementVersionDetail(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_deprecation_message"] = (
-            self.object.major_version.status == self.object.major_version.DEPRECATED
-        )
+        context["show_deprecation_message"] = not self.object.major_version.is_valid
         return context
 
 
@@ -300,10 +296,9 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_deprecation_message"] = (
-            self.object.signed_agreement.version.major_version.status
-            == models.AgreementMajorVersion.DEPRECATED
-        )
+        context[
+            "show_deprecation_message"
+        ] = not self.object.signed_agreement.version.major_version.is_valid
         return context
 
 
@@ -333,10 +328,9 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_deprecation_message"] = (
-            self.object.signed_agreement.version.major_version.status
-            == models.AgreementMajorVersion.DEPRECATED
-        )
+        context[
+            "show_deprecation_message"
+        ] = not self.object.signed_agreement.version.major_version.is_valid
         return context
 
 
@@ -383,10 +377,9 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["show_deprecation_message"] = (
-            self.object.signed_agreement.version.major_version.status
-            == models.AgreementMajorVersion.DEPRECATED
-        )
+        context[
+            "show_deprecation_message"
+        ] = not self.object.signed_agreement.version.major_version.is_valid
         return context
 
 

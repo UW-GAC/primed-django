@@ -31,15 +31,9 @@ class AgreementMajorVersionTest(TestCase):
         instance.save()
         self.assertIsInstance(instance, models.AgreementMajorVersion)
 
-    def test_status_default(self):
+    def test_is_valid_default(self):
         instance = factories.AgreementMajorVersionFactory.create()
-        self.assertEqual(instance.status, models.AgreementMajorVersion.VALID)
-
-    def test_status_deprecated(self):
-        instance = factories.AgreementMajorVersionFactory.create(
-            status=models.AgreementMajorVersion.DEPRECATED
-        )
-        self.assertEqual(instance.status, models.AgreementMajorVersion.DEPRECATED)
+        self.assertTrue(instance.is_valid)
 
     def test_unique(self):
         factories.AgreementMajorVersionFactory.create(version=1)

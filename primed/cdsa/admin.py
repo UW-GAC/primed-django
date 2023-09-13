@@ -10,11 +10,11 @@ class AgreementMajorVersion(SimpleHistoryAdmin):
 
     list_display = (
         "version",
-        "status",
+        "is_valid",
     )
     list_filter = (
         "version",
-        "status",
+        "is_valid",
     )
     sortable_by = ("version",)
 
@@ -29,7 +29,7 @@ class AgreementVersion(SimpleHistoryAdmin):
     )
     list_filter = (
         "major_version",
-        "major_version__status",
+        "major_version__is_valid",
     )
     sortable_by = (
         "major_version",

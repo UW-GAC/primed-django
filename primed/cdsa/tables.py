@@ -21,13 +21,14 @@ class AgreementVersionTable(tables.Table):
     full_version = tables.Column(
         linkify=True, order_by=("major_version", "minor_version")
     )
+    major_version__is_valid = BooleanCheckColumn(verbose_name="Valid?")
 
     class Meta:
         model = models.AgreementVersion
         fields = (
             "major_version",
             "full_version",
-            "major_version__status",
+            "major_version__is_valid",
             "date_approved",
         )
 
