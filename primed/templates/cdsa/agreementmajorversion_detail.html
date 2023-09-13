@@ -3,15 +3,27 @@
 
 {% block title %}Agreement version v{{ object.version }}{% endblock %}
 
+{% block pills %}
+  {% if show_deprecation_message %}
+<span class="badge bg-danger">
+  <span class="fa-solid fa-skull-crossbones me-1"></span>
+  Deprecated
+</span>
+  {% endif %}
+{% endblock pills %}
+
 {% block panel %}
 <dl class="row">
   <dt class="col-sm-2">Version</dt> <dd class="col-sm-9"> v{{ object.version }}</dd>
+  <dt class="col-sm-2">Status</dt><dd class="col-sm-9"> {{ object.get_status_display }}</dd>
+  <dt class="col-sm-2">Date modified</dt><dd class="col-sm-9"> {{ object.modified }}</dd>
 </dl>
 {% endblock panel %}
 
 {% block after_panel %}
 
 <h3>Agreement versions</h3>
+
 
 <div class="accordion my-3" id="accordionAgreementVersions">
   <div class="accordion-item">

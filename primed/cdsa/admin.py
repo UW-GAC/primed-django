@@ -8,8 +8,14 @@ from . import models
 class AgreementMajorVersion(SimpleHistoryAdmin):
     """Admin class for the `AgreementMajorVersion` model."""
 
-    list_display = ("version",)
-    list_filter = ("version",)
+    list_display = (
+        "version",
+        "status",
+    )
+    list_filter = (
+        "version",
+        "status",
+    )
     sortable_by = ("version",)
 
 
@@ -19,11 +25,12 @@ class AgreementVersion(SimpleHistoryAdmin):
 
     list_display = (
         "full_version",
-        "major_version",
-        "minor_version",
         "date_approved",
     )
-    list_filter = ("major_version",)
+    list_filter = (
+        "major_version",
+        "major_version__status",
+    )
     sortable_by = (
         "major_version",
         "minor_version",

@@ -9,13 +9,26 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from model_utils.models import StatusModel
 from simple_history.models import HistoricalRecords
 
 from primed.duo.models import DataUseOntologyModel
 from primed.primed_anvil.models import AvailableData, RequesterModel, Study, StudySite
 
 
-class AgreementMajorVersion(TimeStampedModel, models.Model):
+class AgreementMajorVersionStatusMixin:
+    # Workaround to use django-simple-history and django-model-utils StatusField together.
+    VALID = "valid"
+    DEPRECATED = "deprecated"
+    STATUS = (
+        (VALID, "Valid"),
+        (DEPRECATED, "Deprecated"),
+    )
+
+
+class AgreementMajorVersion(
+    TimeStampedModel, StatusModel, AgreementMajorVersionStatusMixin, models.Model
+):
     """A model for a major agreement version."""
 
     version = models.IntegerField(
@@ -24,7 +37,7 @@ class AgreementMajorVersion(TimeStampedModel, models.Model):
         unique=True,
     )
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(bases=[AgreementMajorVersionStatusMixin, models.Model])
 
     def __str__(self):
         return "v{}".format(self.version)

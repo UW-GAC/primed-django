@@ -234,6 +234,26 @@ class AgreementMajorVersionDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["tables"][1].rows), 0)
 
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated", response.content)
+
+    def test_response_show_deprecation_message_deprecated(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is deprecated."""
+        self.obj.status = self.obj.DEPRECATED
+        self.obj.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated", response.content)
+
 
 class AgreementVersionDetailTest(TestCase):
     """Tests for the AgreementVersionDetail view."""
@@ -407,6 +427,30 @@ class AgreementVersionDetailTest(TestCase):
             nda_agreement.signed_agreement,
             response.context_data["signed_agreement_table"].data,
         )
+
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated", response.content)
+
+    def test_response_show_deprecation_message_deprecated(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is deprecated."""
+        self.obj.major_version.status = self.obj.major_version.DEPRECATED
+        self.obj.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated", response.content)
 
 
 class SignedAgreementListTest(TestCase):
@@ -1412,6 +1456,28 @@ class MemberAgreementDetailTest(TestCase):
         self.assertContains(
             response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
         )
+
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated CDSA version", response.content)
+
+    def test_response_show_deprecation_message_deprecated(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is deprecated."""
+        self.obj.signed_agreement.version.major_version.status = (
+            models.AgreementMajorVersion.DEPRECATED
+        )
+        self.obj.signed_agreement.version.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated CDSA version", response.content)
 
 
 class MemberAgreementListTest(TestCase):
@@ -2567,6 +2633,28 @@ class DataAffiliateAgreementDetailTest(TestCase):
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
         self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
 
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated CDSA version", response.content)
+
+    def test_response_show_deprecation_message_deprecated(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is deprecated."""
+        self.obj.signed_agreement.version.major_version.status = (
+            models.AgreementMajorVersion.DEPRECATED
+        )
+        self.obj.signed_agreement.version.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated CDSA version", response.content)
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
@@ -3547,6 +3635,28 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(
             response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
         )
+
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated CDSA version", response.content)
+
+    def test_response_show_deprecation_message_deprecated(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is deprecated."""
+        self.obj.signed_agreement.version.major_version.status = (
+            models.AgreementMajorVersion.DEPRECATED
+        )
+        self.obj.signed_agreement.version.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated CDSA version", response.content)
 
 
 class NonDataAffiliateAgreementListTest(TestCase):

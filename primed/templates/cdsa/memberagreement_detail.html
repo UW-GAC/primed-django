@@ -1,6 +1,15 @@
 {% extends "anvil_consortium_manager/__object_detail.html" %}
 {% load django_tables2 %}
 
+{% block pills %}
+  {% if show_deprecation_message %}
+<span class="badge bg-danger">
+  <span class="fa-solid fa-skull-crossbones me-1"></span>
+  Deprecated CDSA version
+</span>
+  {% endif %}
+{% endblock pills %}
+
 {% block title %}Member agreement {{ object }}{% endblock %}
 
 {% block panel %}

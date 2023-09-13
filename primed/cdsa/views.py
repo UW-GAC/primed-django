@@ -54,6 +54,13 @@ class AgreementMajorVersionDetail(
         )
         return [agreement_version_qs, signed_agreement_qs]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = (
+            self.object.status == self.object.DEPRECATED
+        )
+        return context
+
 
 class AgreementVersionDetail(
     AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
@@ -84,6 +91,13 @@ class AgreementVersionDetail(
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = (
+            self.object.major_version.status == self.object.major_version.DEPRECATED
+        )
+        return context
 
 
 class AgreementVersionList(AnVILConsortiumManagerViewRequired, SingleTableView):
@@ -284,6 +298,14 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
             )
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = (
+            self.object.signed_agreement.version.major_version.status
+            == models.AgreementMajorVersion.DEPRECATED
+        )
+        return context
+
 
 class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """Display a list of MemberAgreement objects."""
@@ -308,6 +330,14 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = (
+            self.object.signed_agreement.version.major_version.status
+            == models.AgreementMajorVersion.DEPRECATED
+        )
+        return context
 
 
 class DataAffiliateAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
@@ -350,6 +380,14 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = (
+            self.object.signed_agreement.version.major_version.status
+            == models.AgreementMajorVersion.DEPRECATED
+        )
+        return context
 
 
 class NonDataAffiliateAgreementList(

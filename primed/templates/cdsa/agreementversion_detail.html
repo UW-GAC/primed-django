@@ -3,6 +3,15 @@
 
 {% block title %}Agreement version {{ object }}{% endblock %}
 
+{% block pills %}
+  {% if show_deprecation_message %}
+<span class="badge bg-danger">
+  <span class="fa-solid fa-skull-crossbones me-1"></span>
+  Deprecated
+</span>
+  {% endif %}
+{% endblock pills %}
+
 {% block panel %}
 <dl class="row">
   <dt class="col-sm-2">Full version</dt> <dd class="col-sm-9">{{ object.full_version }}</dd>

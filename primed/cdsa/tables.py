@@ -27,6 +27,7 @@ class AgreementVersionTable(tables.Table):
         fields = (
             "major_version",
             "full_version",
+            "major_version__status",
             "date_approved",
         )
 
