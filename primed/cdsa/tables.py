@@ -8,7 +8,7 @@ from anvil_consortium_manager.models import (
 )
 
 from primed.primed_anvil.tables import (
-    BooleanCheckColumn,
+    BooleanIconColumn,
     WorkspaceSharedWithConsortiumTable,
 )
 
@@ -21,7 +21,9 @@ class AgreementVersionTable(tables.Table):
     full_version = tables.Column(
         linkify=True, order_by=("major_version", "minor_version")
     )
-    major_version__is_valid = BooleanCheckColumn(verbose_name="Valid?")
+    major_version__is_valid = BooleanIconColumn(
+        verbose_name="Valid?", show_false_icon=True
+    )
 
     class Meta:
         model = models.AgreementVersion
@@ -75,7 +77,7 @@ class MemberAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
+    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -107,7 +109,7 @@ class DataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
+    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -138,7 +140,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
     """Table to display `DataAffiliateAgreement` objects."""
 
     signed_agreement__cc_id = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn()
+    signed_agreement__is_primary = BooleanIconColumn()
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",

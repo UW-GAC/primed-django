@@ -5,24 +5,29 @@ from django.utils.html import format_html
 from . import models
 
 
-class BooleanCheckColumn(tables.BooleanColumn):
+class BooleanIconColumn(tables.BooleanColumn):
 
     #    attrs = {"td": {"align": "center"}}
     # attrs = {"th": {"class": "center"}}
 
+    def __init__(self, show_false_icon=False, **kwargs):
+        super().__init__(**kwargs)
+        self.show_false_icon = show_false_icon
+
     def render(self, value, record, bound_column):
         value = self._get_bool_value(record, value, bound_column)
         if value:
-            icon = "check-circle-fill"
-            color = "green"
-            value = format_html(
-                """<i class="bi bi-{} bi-align-center px-2" style="color: {};"></i>""".format(
-                    icon, color
-                )
+            rendered_value = format_html(
+                """<i class="bi bi-check-circle-fill bi-align-center px-2" style="color: green;"></i>"""
             )
         else:
-            value = ""
-        return value
+            if self.show_false_icon:
+                rendered_value = format_html(
+                    """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""
+                )
+            else:
+                rendered_value = ""
+        return rendered_value
 
 
 class WorkspaceSharedWithConsortiumTable(tables.Table):
@@ -131,6 +136,6 @@ class DataSummaryTable(tables.Table):
             "name", flat=True
         )
         extra_columns = [
-            (x, BooleanCheckColumn(default=False)) for x in available_data_types
+            (x, BooleanIconColumn(default=False)) for x in available_data_types
         ]
         super().__init__(*args, extra_columns=extra_columns, **kwargs)

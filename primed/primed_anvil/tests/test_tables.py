@@ -138,10 +138,24 @@ class DataSummaryTableTest(TestCase):
         self.assertEqual(table.columns[4].name, "Foo")
 
 
-class BooleanCheckColumnTest(TestCase):
-    def test_render_available_data(self):
-        factories.AvailableDataFactory.create(name="Foo")
-        self.assertIn(
-            "bi-check-circle-fill", tables.BooleanCheckColumn().render(True, None, None)
-        )
-        self.assertEqual(tables.BooleanCheckColumn().render(False, None, None), "")
+class BooleanIconColumnTest(TestCase):
+    """Tests for the BooleanIconColumn class."""
+
+    def test_render_default(self):
+        """render method with defaults."""
+        column = tables.BooleanIconColumn()
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+        value = column.render(False, None, None)
+        self.assertEqual(value, "")
+
+    def test_render_show_false_icon(self):
+        """render method with defaults."""
+        column = tables.BooleanIconColumn(show_false_icon=True)
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+        value = column.render(False, None, None)
+        self.assertIn("bi-x-circle-fill", value)
+        self.assertIn("red", value)
