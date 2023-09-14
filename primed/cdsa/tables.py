@@ -182,6 +182,8 @@ class RepresentativeRecordsTable(tables.Table):
             "representative_role",
             "signing_institution",
             "signing_group",
+            "agreement_type",
+            "version",
         )
 
     def render_signing_group(self, record):
