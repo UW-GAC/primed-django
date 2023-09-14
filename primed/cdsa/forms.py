@@ -19,6 +19,9 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         widget=forms.RadioSelect,
         label="Agreement type",
     )
+    version = forms.ModelChoiceField(
+        queryset=models.AgreementVersion.objects.filter(major_version__is_valid=True)
+    )
 
     class Meta:
         model = models.SignedAgreement

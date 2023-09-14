@@ -202,6 +202,26 @@ class SignedAgreementFormTest(TestCase):
         self.assertEqual(len(form.errors["cc_id"]), 1)
         self.assertIn("already exists", form.errors["cc_id"][0])
 
+    def test_invalid_version(self):
+        """Cannot select an AgreementVersion that is not valid."""
+        self.agreement_version.major_version.is_valid = False
+        self.agreement_version.major_version.save()
+        form_data = {
+            "cc_id": 1234,
+            "representative": self.representative,
+            "representative_role": "Test role",
+            "signing_institution": "Test insitution",
+            "version": self.agreement_version,
+            "date_signed": "2023-01-01",
+            "is_primary": True,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("version", form.errors)
+        self.assertEqual(len(form.errors["version"]), 1)
+        self.assertIn("valid choice", form.errors["version"][0])
+
 
 class MemberAgreementFormTest(TestCase):
     """Tests for the MemberAgreementForm class."""
