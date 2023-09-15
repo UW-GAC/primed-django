@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 import django_tables2 as tables
-from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
+from anvil_consortium_manager.models import ManagedGroup
 from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -126,118 +126,205 @@ class SignedAgreementAccessAudit:
     """Audit for Signed Agreements."""
 
     # Access verified.
-    VALID_PRIMARY_CDSA = "Valid primary CDSA."
-    VALID_COMPONENT_CDSA = "Valid component CDSA."
+    VALID_PRIMARY_AGREEMENT = "Valid primary CDSA."
+    VALID_COMPONENT_AGREEMENT = "Valid component CDSA."
 
     # Allowed reasons for no access.
-    NO_PRIMARY_CDSA = "No primary CDSA for this group exists."
+    NO_PRIMARY_AGREEMENT = "No valid primary CDSA for this group exists."
+    PRIMARY_NOT_VALID = "Primary agreement for this CDSA is not valid."
+    INVALID_AGREEMENT_VERSION = "CDSA version is not valid."
 
     # Other errors
+    ERROR_NON_DATA_AFFILIATE_COMPONENT = (
+        "Non-data affiliate agreements must be primary."
+    )
     ERROR_OTHER_CASE = "Signed Agreement did not match any expected situations."
 
     results_table_class = SignedAgreementAccessAuditTable
 
     def __init__(self):
         # Store the CDSA group for auditing membership.
-        self.anvil_cdsa_group = ManagedGroup.objects.get(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
         self.completed = False
         # Set up lists to hold audit results.
         self.verified = []
         self.needs_action = []
         self.errors = []
 
-    # Audit a single signed agreement.
-    def _audit_signed_agreement(self, signed_agreement):
-        # Check if the access group is in the overall CDSA group.
-        in_cdsa_group = GroupGroupMembership.objects.filter(
-            parent_group=self.anvil_cdsa_group,
-            child_group=signed_agreement.anvil_access_group,
-        ).exists()
-        # Primary agreements don't need to check components.
-        if signed_agreement.is_primary and in_cdsa_group:
-            self.verified.append(
-                VerifiedAccess(
-                    signed_agreement=signed_agreement,
-                    note=self.VALID_PRIMARY_CDSA,
-                )
-            )
-            return
-        elif signed_agreement.is_primary and not in_cdsa_group:
-            self.needs_action.append(
-                GrantAccess(
-                    signed_agreement=signed_agreement,
-                    note=self.VALID_PRIMARY_CDSA,
-                )
-            )
-            return
-        elif not signed_agreement.is_primary:
-            # component agreements need to check for a primary.
-            if hasattr(signed_agreement, "memberagreement"):
-                # Member
-                primary_exists = models.MemberAgreement.objects.filter(
-                    signed_agreement__is_primary=True,
-                    study_site=signed_agreement.memberagreement.study_site,
-                ).exists()
-            elif hasattr(signed_agreement, "dataaffiliateagreement"):
-                # Data affiliate
-                primary_exists = models.DataAffiliateAgreement.objects.filter(
-                    signed_agreement__is_primary=True,
-                    study=signed_agreement.dataaffiliateagreement.study,
-                ).exists()
-            elif hasattr(signed_agreement, "nondataaffiliateagreement"):
-                # Non-data affiliate should not have components so this is an error.
-                raise RuntimeError(
-                    "Non data affiliates should always be a primary CDSA."
-                )
-            else:
-                # Some other case happened - log it as an error.
-                self.errors.append(
-                    OtherError(
-                        signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE
-                    )
-                )
-                return
+    def _audit_primary_agreement(self, signed_agreement):
+        """Audit a single component signed agreement.
 
-            # Now check access for the component given the primary agreement.
-            if primary_exists and in_cdsa_group:
+        The following items are checked:
+        * if the primary agreement is valid.
+        * if the primary agreement is in the CDSA group.
+        """
+        is_valid = signed_agreement.version.major_version.is_valid
+        in_cdsa_group = signed_agreement.is_in_cdsa_group()
+
+        if is_valid:
+            if in_cdsa_group:
                 self.verified.append(
                     VerifiedAccess(
                         signed_agreement=signed_agreement,
-                        note=self.VALID_COMPONENT_CDSA,
+                        note=self.VALID_PRIMARY_AGREEMENT,
                     )
                 )
                 return
-            elif primary_exists and not in_cdsa_group:
+            else:
                 self.needs_action.append(
                     GrantAccess(
                         signed_agreement=signed_agreement,
-                        note=self.VALID_COMPONENT_CDSA,
+                        note=self.VALID_PRIMARY_AGREEMENT,
                     )
                 )
                 return
-            elif not primary_exists and not in_cdsa_group:
+        else:
+            if in_cdsa_group:
+                self.needs_action.append(
+                    RemoveAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.INVALID_AGREEMENT_VERSION,
+                    )
+                )
+                return
+            else:
                 self.verified.append(
                     VerifiedNoAccess(
                         signed_agreement=signed_agreement,
-                        note=self.NO_PRIMARY_CDSA,
-                    )
-                )
-                return
-            elif not primary_exists and in_cdsa_group:
-                self.errors.append(
-                    RemoveAccess(
-                        signed_agreement=signed_agreement,
-                        note=self.NO_PRIMARY_CDSA,
+                        note=self.INVALID_AGREEMENT_VERSION,
                     )
                 )
                 return
 
         # If we made it this far in audit, some other case happened - log it as an error.
-        self.errors.append(
-            OtherError(signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE)
-        )
+        # Haven't figured out a test for this because it is unexpected.
+        self.errors.append(  # pragma: no cover
+            OtherError(
+                signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE
+            )  # pragma: no cover
+        )  # pragma: no cover
+
+    def _audit_component_agreement(self, signed_agreement):
+        """Audit a single component signed agreement.
+
+        The following items are checked:
+        * If a primary agreement exists.
+        * if the component agreement is valid.
+        * if the corresponding primary is invalid.
+        * if the component agreement is in the CDSA group.
+        """
+        is_valid = signed_agreement.version.major_version.is_valid
+        in_cdsa_group = signed_agreement.is_in_cdsa_group()
+
+        # Get the set of potential primary agreements for this component.
+        if hasattr(signed_agreement, "memberagreement"):
+            # Member
+            primary_qs = models.SignedAgreement.objects.filter(
+                is_primary=True,
+                memberagreement__study_site=signed_agreement.memberagreement.study_site,
+            )
+        elif hasattr(signed_agreement, "dataaffiliateagreement"):
+            # Data affiliate
+            primary_qs = models.SignedAgreement.objects.filter(
+                is_primary=True,
+                dataaffiliateagreement__study=signed_agreement.dataaffiliateagreement.study,
+            )
+        elif hasattr(signed_agreement, "nondataaffiliateagreement"):
+            self.errors.append(
+                OtherError(
+                    signed_agreement=signed_agreement,
+                    note=self.ERROR_NON_DATA_AFFILIATE_COMPONENT,
+                )
+            )
+            return
+        primary_exists = primary_qs.exists()
+        primary_valid = primary_qs.filter(
+            version__major_version__is_valid=True
+        ).exists()
+
+        if primary_exists:
+            if is_valid:
+                if primary_valid:
+                    if in_cdsa_group:
+                        self.verified.append(
+                            VerifiedAccess(
+                                signed_agreement=signed_agreement,
+                                note=self.VALID_COMPONENT_AGREEMENT,
+                            )
+                        )
+                        return
+                    else:
+                        self.needs_action.append(
+                            GrantAccess(
+                                signed_agreement=signed_agreement,
+                                note=self.VALID_COMPONENT_AGREEMENT,
+                            )
+                        )
+                        return
+                else:
+                    if in_cdsa_group:
+                        self.needs_action.append(
+                            RemoveAccess(
+                                signed_agreement=signed_agreement,
+                                note=self.PRIMARY_NOT_VALID,
+                            )
+                        )
+                        return
+                    else:
+                        self.verified.append(
+                            VerifiedNoAccess(
+                                signed_agreement=signed_agreement,
+                                note=self.PRIMARY_NOT_VALID,
+                            )
+                        )
+                        return
+            else:
+                if in_cdsa_group:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            signed_agreement=signed_agreement,
+                            note=self.INVALID_AGREEMENT_VERSION,
+                        )
+                    )
+                    return
+                else:
+                    self.verified.append(
+                        VerifiedNoAccess(
+                            signed_agreement=signed_agreement,
+                            note=self.INVALID_AGREEMENT_VERSION,
+                        )
+                    )
+                    return
+        else:
+            if in_cdsa_group:
+                self.errors.append(
+                    RemoveAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.NO_PRIMARY_AGREEMENT,
+                    )
+                )
+                return
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        signed_agreement=signed_agreement,
+                        note=self.NO_PRIMARY_AGREEMENT,
+                    )
+                )
+                return
+
+        # If we made it this far in audit, some other case happened - log it as an error.
+        # Haven't figured out a test for this because it is unexpected.
+        self.errors.append(  # pragma: no cover
+            OtherError(
+                signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE
+            )  # pragma: no cover
+        )  # pragma: no cover
+
+    def _audit_signed_agreement(self, signed_agreement):
+        if signed_agreement.is_primary:
+            self._audit_primary_agreement(signed_agreement)
+        else:
+            self._audit_component_agreement(signed_agreement)
 
     def run_audit(self):
         """Run an audit on all SignedAgreements."""

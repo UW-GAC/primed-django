@@ -3898,14 +3898,14 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
         member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
+            signed_agreement__version__major_version__is_valid=False
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3923,7 +3923,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.INVALID_AGREEMENT_VERSION,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3946,7 +3946,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3974,7 +3974,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 

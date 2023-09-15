@@ -401,9 +401,9 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
     )
 
     def get(self, request, *args, **kwargs):
-        try:
-            self.audit = signed_agreement_audit.SignedAgreementAccessAudit()
-        except models.ManagedGroup.DoesNotExist:
+        if not models.ManagedGroup.objects.filter(
+            name=settings.ANVIL_CDSA_GROUP_NAME
+        ).exists():
             messages.error(
                 self.request,
                 self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(
@@ -415,12 +415,12 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Run the audit on all SignedAgreements.
-        self.audit.run_audit()
-        context["verified_table"] = self.audit.get_verified_table()
-        context["errors_table"] = self.audit.get_errors_table()
-        context["needs_action_table"] = self.audit.get_needs_action_table()
-        context["audit"] = self.audit
+        audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
         return context
 
 
