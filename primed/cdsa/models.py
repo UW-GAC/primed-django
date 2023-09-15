@@ -2,7 +2,11 @@
 
 from datetime import date
 
-from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
+from anvil_consortium_manager.models import (
+    BaseWorkspaceData,
+    GroupGroupMembership,
+    ManagedGroup,
+)
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -179,6 +183,13 @@ class SignedAgreement(TimeStampedModel, models.Model):
     @property
     def agreement_group(self):
         return self.get_agreement_type().get_agreement_group()
+
+    def is_in_cdsa_group(self):
+        anvil_cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
+        return GroupGroupMembership.objects.filter(
+            parent_group=anvil_cdsa_group,
+            child_group=self.anvil_access_group,
+        ).exists()
 
 
 class AgreementTypeModel(models.Model):

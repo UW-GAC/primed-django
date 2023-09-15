@@ -2,14 +2,16 @@
 
 from datetime import datetime
 
+from anvil_consortium_manager.models import ManagedGroup
 from anvil_consortium_manager.tests.factories import (
+    GroupGroupMembershipFactory,
     ManagedGroupFactory,
     WorkspaceFactory,
 )
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (
@@ -340,6 +342,37 @@ class SignedAgreementTest(TestCase):
         self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
         self.assertEqual(len(e.exception.message_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("primary", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_is_in_cdsa_group(self):
+        """is_in_cdsa_group works as expected."""
+        obj = factories.SignedAgreementFactory.create()
+        # When group does not exist
+        with self.assertRaises(ManagedGroup.DoesNotExist):
+            obj.is_in_cdsa_group()
+        # Create group, without adding agreement
+        cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
+        self.assertFalse(obj.is_in_cdsa_group())
+        # Add agreement and check again,
+        GroupGroupMembershipFactory.create(
+            parent_group=cdsa_group, child_group=obj.anvil_access_group
+        )
+        self.assertTrue(obj.is_in_cdsa_group())
+
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOO")
+    def test_is_in_cdsa_group_different_group_name(self):
+        """is_in_cdsa_group works as expected."""
+        obj = factories.SignedAgreementFactory.create()
+        # When group does not exist
+        with self.assertRaises(ManagedGroup.DoesNotExist):
+            obj.is_in_cdsa_group()
+        # Create group, without adding agreement
+        cdsa_group = ManagedGroupFactory.create(name="FOO")
+        self.assertFalse(obj.is_in_cdsa_group())
+        # Add agreement and check again,
+        GroupGroupMembershipFactory.create(
+            parent_group=cdsa_group, child_group=obj.anvil_access_group
+        )
+        self.assertTrue(obj.is_in_cdsa_group())
 
 
 class MemberAgreementTest(TestCase):
