@@ -1530,7 +1530,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedNoAccess)
         self.assertIsNone(record.data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
 
     def test_primary_invalid_version_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
@@ -1552,7 +1552,51 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.RemoveAccess)
         self.assertIsNone(record.data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
+
+    def test_primary_inactive_not_in_auth_domain(self):
+        workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            study=workspace.study,
+        )
+        # Do not add the CDSA group to the auth domain.
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     child_group=self.cdsa_group,
+        # )
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit()
+        cdsa_audit._audit_workspace(workspace)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, workspace_audit.VerifiedNoAccess)
+        self.assertIsNone(record.data_affiliate_agreement)
+        self.assertEqual(record.workspace, workspace)
+        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
+
+    def test_primary_inactive_in_auth_domain(self):
+        workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            study=workspace.study,
+        )
+        # Add the CDSA group to the auth domain.
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.cdsa_group,
+        )
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit()
+        cdsa_audit._audit_workspace(workspace)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, workspace_audit.RemoveAccess)
+        self.assertIsNone(record.data_affiliate_agreement)
+        self.assertEqual(record.workspace, workspace)
+        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
 
     def test_component_agreement_not_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1711,6 +1755,60 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
             study=study, signed_agreement__version__major_version__is_valid=True
+        )
+        # Do not add the CDSA group to the auth domain.
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     child_group=self.cdsa_group,
+        # )
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit()
+        cdsa_audit._audit_workspace(workspace)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, workspace_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.workspace, workspace)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+
+    def test_two_primary_one_active_one_inactive_in_auth_domain(self):
+        study = StudyFactory.create()
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+        )
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+        )
+        # Add the CDSA group to the auth domain.
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.cdsa_group,
+        )
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit()
+        cdsa_audit._audit_workspace(workspace)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, workspace_audit.VerifiedAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.workspace, workspace)
+        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+
+    def test_two_primary_one_active_one_inactive_not_in_auth_domain(self):
+        study = StudyFactory.create()
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+        )
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
