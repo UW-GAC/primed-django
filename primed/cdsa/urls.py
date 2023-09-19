@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from . import views
+from . import models, views
 
 app_name = "cdsa"
 
@@ -29,6 +29,12 @@ member_agreement_patterns = (
         path("", views.MemberAgreementList.as_view(), name="list"),
         path("new/", views.MemberAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.MemberAgreementDetail.as_view(), name="detail"),
+        path(
+            "<int:cc_id>/update/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.MEMBER},
+            name="update",
+        ),
     ],
     "members",
 )
@@ -39,6 +45,12 @@ data_affiliate_agreement_patterns = (
         path("new/", views.DataAffiliateAgreementCreate.as_view(), name="new"),
         path(
             "<int:cc_id>/", views.DataAffiliateAgreementDetail.as_view(), name="detail"
+        ),
+        path(
+            "<int:cc_id>/update/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
+            name="update",
         ),
     ],
     "data_affiliates",
@@ -52,6 +64,12 @@ non_data_affiliate_agreement_patterns = (
             "<int:cc_id>/",
             views.NonDataAffiliateAgreementDetail.as_view(),
             name="detail",
+        ),
+        path(
+            "<int:cc_id>/update/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
+            name="update",
         ),
     ],
     "non_data_affiliates",

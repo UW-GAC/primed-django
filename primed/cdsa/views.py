@@ -15,7 +15,7 @@ from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import DetailView, FormView, TemplateView
+from django.views.generic import DetailView, FormView, TemplateView, UpdateView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from . import forms, helpers, models, tables
@@ -307,6 +307,31 @@ class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
     model = models.MemberAgreement
     table_class = tables.MemberAgreementTable
+
+
+class SignedAgreementStatusUpdate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+
+    model = models.SignedAgreement
+    form_class = forms.SignedAgreementStatusForm
+    template_name = "cdsa/signedagreement_status_update.html"
+    agreement_type = None
+    success_message = "Successfully updated Signed Agreement status."
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(
+                cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type")
+            )
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):

@@ -43,6 +43,16 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         }
 
 
+class SignedAgreementStatusForm(forms.ModelForm):
+    """Form to update the status of a SignedAgreement."""
+
+    class Meta:
+        model = models.SignedAgreement
+        fields = ("status",)
+        help_texts = {"status": """The status of this Signed Agreement."""}
+        widgets = {"status": forms.RadioSelect}
+
+
 class MemberAgreementForm(forms.ModelForm):
     class Meta:
         model = models.MemberAgreement
