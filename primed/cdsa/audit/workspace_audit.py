@@ -128,10 +128,11 @@ class WorkspaceAccessAudit:
     """Audit for CDSA Workspaces."""
 
     # Access verified.
-    VALID_PRIMARY_CDSA = "Valid primary CDSA."
+    VALID_PRIMARY_AGREEMENT = "Valid primary CDSA."
 
     # Allowed reasons for no access.
-    NO_PRIMARY_CDSA = "No primary CDSA for this study exists."
+    NO_PRIMARY_AGREEMENT = "No primary CDSA for this study exists."
+    INVALID_AGREEMENT_VERSION = "CDSA version is not valid."
 
     # Other errors
     ERROR_OTHER_CASE = "Workspace did not match any expected situations."
@@ -149,7 +150,6 @@ class WorkspaceAccessAudit:
         self.needs_action = []
         self.errors = []
 
-    # Audit a single signed agreement.
     def _audit_workspace(self, workspace):
         # Check if the access group is in the overall CDSA group.
         auth_domain = workspace.workspace.authorization_domains.first()
@@ -157,47 +157,76 @@ class WorkspaceAccessAudit:
             parent_group=auth_domain,
             child_group=self.anvil_cdsa_group,
         ).exists()
-        # WRITE ME!
-        # See if there is a primary data affiliate agreement for this study.
-        try:
-            primary_agreement = models.DataAffiliateAgreement.objects.get(
-                study=workspace.study,
-                signed_agreement__is_primary=True,
+        primary_qs = models.DataAffiliateAgreement.objects.filter(
+            study=workspace.study, signed_agreement__is_primary=True
+        )
+        primary_exists = primary_qs.exists()
+
+        if primary_exists:
+            primary_agreement = (
+                primary_qs.filter(
+                    signed_agreement__version__major_version__is_valid=True
+                )
+                .order_by(
+                    "-signed_agreement__version__major_version__version",
+                    "-signed_agreement__version__minor_version",
+                )
+                .first()
             )
+            if primary_agreement:
+                if has_cdsa_group_in_auth_domain:
+                    self.verified.append(
+                        VerifiedAccess(
+                            workspace=workspace,
+                            data_affiliate_agreement=primary_agreement,
+                            note=self.VALID_PRIMARY_AGREEMENT,
+                        )
+                    )
+                    return
+                else:
+                    self.needs_action.append(
+                        GrantAccess(
+                            workspace=workspace,
+                            data_affiliate_agreement=primary_agreement,
+                            note=self.VALID_PRIMARY_AGREEMENT,
+                        )
+                    )
+                    return
+            else:
+                if has_cdsa_group_in_auth_domain:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            workspace=workspace,
+                            data_affiliate_agreement=primary_agreement,
+                            note=self.INVALID_AGREEMENT_VERSION,
+                        )
+                    )
+                    return
+                else:
+                    self.verified.append(
+                        VerifiedNoAccess(
+                            workspace=workspace,
+                            data_affiliate_agreement=primary_agreement,
+                            note=self.INVALID_AGREEMENT_VERSION,
+                        )
+                    )
+                    return
+        else:
             if has_cdsa_group_in_auth_domain:
-                self.verified.append(
-                    VerifiedAccess(
-                        workspace=workspace,
-                        data_affiliate_agreement=primary_agreement,
-                        note=self.VALID_PRIMARY_CDSA,
-                    )
-                )
-                return
-            else:
-                self.needs_action.append(
-                    GrantAccess(
-                        workspace=workspace,
-                        data_affiliate_agreement=primary_agreement,
-                        note=self.VALID_PRIMARY_CDSA,
-                    )
-                )
-                return
-        except models.DataAffiliateAgreement.DoesNotExist:
-            if not has_cdsa_group_in_auth_domain:
-                self.verified.append(
-                    VerifiedNoAccess(
-                        workspace=workspace,
-                        data_affiliate_agreement=None,
-                        note=self.NO_PRIMARY_CDSA,
-                    )
-                )
-                return
-            else:
                 self.errors.append(
                     RemoveAccess(
                         workspace=workspace,
                         data_affiliate_agreement=None,
-                        note=self.NO_PRIMARY_CDSA,
+                        note=self.NO_PRIMARY_AGREEMENT,
+                    )
+                )
+                return
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        workspace=workspace,
+                        data_affiliate_agreement=None,
+                        note=self.NO_PRIMARY_AGREEMENT,
                     )
                 )
                 return

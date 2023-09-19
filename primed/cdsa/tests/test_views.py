@@ -4082,7 +4082,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -4106,7 +4106,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("data_affiliate_agreement"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -4135,7 +4135,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4159,7 +4159,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("data_affiliate_agreement"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
