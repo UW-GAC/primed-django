@@ -24,6 +24,7 @@
   <dt class="col-sm-2">Agreement version</dt> <dd class="col-sm-9">
     <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
   </dd>
+  <dt class="col-sm-2">Status</dt> <dd class="col-sm-9">{{ object.signed_agreement.get_status_display }}</dd>
   <dt class="col-sm-2">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
 
   <dt class="col-sm-2">Study site</dt> <dd class="col-sm-9">
