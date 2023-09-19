@@ -659,6 +659,9 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
         )
+        self.assertEqual(
+            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
+        )
         # Check the agreement type.
         self.assertEqual(models.MemberAgreement.objects.count(), 1)
         new_agreement_type = models.MemberAgreement.objects.latest("pk")
@@ -1688,6 +1691,9 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.assertEqual(
+            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
         )
         # Check the agreement type.
         self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)
@@ -2855,6 +2861,9 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.assertEqual(
+            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
         )
         # Check the agreement type.
         self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 1)
