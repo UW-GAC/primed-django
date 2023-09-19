@@ -54,6 +54,7 @@ class SignedAgreement(SimpleHistoryAdmin):
         "type",
         "is_primary",
         "version",
+        "status",
     )
     search_fields = (
         "representative",
@@ -79,6 +80,7 @@ class MemberAgreementAdmin(SimpleHistoryAdmin):
     list_filter = (
         "study_site",
         "signed_agreement__is_primary",
+        "signed_agreement__status",
     )
 
 
@@ -93,6 +95,7 @@ class DataAffiliateAgreementAdmin(SimpleHistoryAdmin):
     list_filter = (
         "study",
         "signed_agreement__is_primary",
+        "signed_agreement__status",
     )
 
 
@@ -104,7 +107,10 @@ class NonDataAffiliateAgreementAdmin(SimpleHistoryAdmin):
         "signed_agreement",
         "affiliation",
     )
-    list_filter = ("signed_agreement__is_primary",)
+    list_filter = (
+        "signed_agreement__is_primary",
+        "signed_agreement__status",
+    )
 
 
 @admin.register(models.CDSAWorkspace)
