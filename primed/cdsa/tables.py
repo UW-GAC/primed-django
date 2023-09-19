@@ -67,6 +67,7 @@ class SignedAgreementTable(tables.Table):
             "agreement_group",
             "agreement_type",
             "version",
+            "status",
             "date_signed",
             "number_accessors",
         )
@@ -99,6 +100,7 @@ class MemberAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
@@ -131,6 +133,7 @@ class DataAffiliateAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
@@ -140,7 +143,6 @@ class NonDataAffiliateAgreementTable(tables.Table):
     """Table to display `DataAffiliateAgreement` objects."""
 
     signed_agreement__cc_id = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanIconColumn()
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -161,6 +163,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
