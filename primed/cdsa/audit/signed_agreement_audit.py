@@ -126,13 +126,16 @@ class SignedAgreementAccessAudit:
     """Audit for Signed Agreements."""
 
     # Access verified.
-    VALID_PRIMARY_AGREEMENT = "Valid primary CDSA."
-    VALID_COMPONENT_AGREEMENT = "Valid component CDSA."
+    VALID_PRIMARY_AGREEMENT = "Valid, active primary CDSA."
+    VALID_COMPONENT_AGREEMENT = "Valid, active component CDSA."
 
     # Allowed reasons for no access.
-    NO_PRIMARY_AGREEMENT = "No valid primary CDSA for this group exists."
-    PRIMARY_NOT_VALID = "Primary agreement for this CDSA is not valid."
+    NO_PRIMARY_AGREEMENT = "No primary CDSA for this group exists."
+    PRIMARY_NOT_VALID = (
+        "Primary agreement for this CDSA is either not valid or not active."
+    )
     INVALID_AGREEMENT_VERSION = "CDSA version is not valid."
+    INACTIVE_AGREEMENT = "CDSA is inactive."
 
     # Other errors
     ERROR_NON_DATA_AFFILIATE_COMPONENT = (
@@ -159,24 +162,46 @@ class SignedAgreementAccessAudit:
         """
         is_valid = signed_agreement.version.major_version.is_valid
         in_cdsa_group = signed_agreement.is_in_cdsa_group()
+        is_active = (
+            signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
+        )
 
         if is_valid:
-            if in_cdsa_group:
-                self.verified.append(
-                    VerifiedAccess(
-                        signed_agreement=signed_agreement,
-                        note=self.VALID_PRIMARY_AGREEMENT,
+            if is_active:
+                if in_cdsa_group:
+                    self.verified.append(
+                        VerifiedAccess(
+                            signed_agreement=signed_agreement,
+                            note=self.VALID_PRIMARY_AGREEMENT,
+                        )
                     )
-                )
-                return
+                    return
+                else:
+                    self.needs_action.append(
+                        GrantAccess(
+                            signed_agreement=signed_agreement,
+                            note=self.VALID_PRIMARY_AGREEMENT,
+                        )
+                    )
+                    return
+
             else:
-                self.needs_action.append(
-                    GrantAccess(
-                        signed_agreement=signed_agreement,
-                        note=self.VALID_PRIMARY_AGREEMENT,
+                if in_cdsa_group:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            signed_agreement=signed_agreement,
+                            note=self.INACTIVE_AGREEMENT,
+                        )
                     )
-                )
-                return
+                    return
+                else:
+                    self.verified.append(
+                        VerifiedNoAccess(
+                            signed_agreement=signed_agreement,
+                            note=self.INACTIVE_AGREEMENT,
+                        )
+                    )
+                    return
         else:
             if in_cdsa_group:
                 self.needs_action.append(
@@ -214,6 +239,9 @@ class SignedAgreementAccessAudit:
         """
         is_valid = signed_agreement.version.major_version.is_valid
         in_cdsa_group = signed_agreement.is_in_cdsa_group()
+        is_active = (
+            signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
+        )
 
         # Get the set of potential primary agreements for this component.
         if hasattr(signed_agreement, "memberagreement"):
@@ -238,34 +266,53 @@ class SignedAgreementAccessAudit:
             return
         primary_exists = primary_qs.exists()
         primary_valid = primary_qs.filter(
-            version__major_version__is_valid=True
+            version__major_version__is_valid=True,
+            status=models.SignedAgreement.StatusChoices.ACTIVE,
         ).exists()
 
         if primary_exists:
-            if is_valid:
-                if primary_valid:
-                    if in_cdsa_group:
-                        self.verified.append(
-                            VerifiedAccess(
-                                signed_agreement=signed_agreement,
-                                note=self.VALID_COMPONENT_AGREEMENT,
+            if primary_valid:
+                if is_valid:
+                    if is_active:
+                        if in_cdsa_group:
+                            self.verified.append(
+                                VerifiedAccess(
+                                    signed_agreement=signed_agreement,
+                                    note=self.VALID_COMPONENT_AGREEMENT,
+                                )
                             )
-                        )
-                        return
+                            return
+                        else:
+                            self.needs_action.append(
+                                GrantAccess(
+                                    signed_agreement=signed_agreement,
+                                    note=self.VALID_COMPONENT_AGREEMENT,
+                                )
+                            )
+                            return
                     else:
-                        self.needs_action.append(
-                            GrantAccess(
-                                signed_agreement=signed_agreement,
-                                note=self.VALID_COMPONENT_AGREEMENT,
+                        if in_cdsa_group:
+                            self.needs_action.append(
+                                RemoveAccess(
+                                    signed_agreement=signed_agreement,
+                                    note=self.INACTIVE_AGREEMENT,
+                                )
                             )
-                        )
-                        return
+                            return
+                        else:
+                            self.verified.append(
+                                VerifiedNoAccess(
+                                    signed_agreement=signed_agreement,
+                                    note=self.INACTIVE_AGREEMENT,
+                                )
+                            )
+                            return
                 else:
                     if in_cdsa_group:
                         self.needs_action.append(
                             RemoveAccess(
                                 signed_agreement=signed_agreement,
-                                note=self.PRIMARY_NOT_VALID,
+                                note=self.INVALID_AGREEMENT_VERSION,
                             )
                         )
                         return
@@ -273,7 +320,7 @@ class SignedAgreementAccessAudit:
                         self.verified.append(
                             VerifiedNoAccess(
                                 signed_agreement=signed_agreement,
-                                note=self.PRIMARY_NOT_VALID,
+                                note=self.INVALID_AGREEMENT_VERSION,
                             )
                         )
                         return
@@ -282,7 +329,7 @@ class SignedAgreementAccessAudit:
                     self.needs_action.append(
                         RemoveAccess(
                             signed_agreement=signed_agreement,
-                            note=self.INVALID_AGREEMENT_VERSION,
+                            note=self.PRIMARY_NOT_VALID,
                         )
                     )
                     return
@@ -290,7 +337,7 @@ class SignedAgreementAccessAudit:
                     self.verified.append(
                         VerifiedNoAccess(
                             signed_agreement=signed_agreement,
-                            note=self.INVALID_AGREEMENT_VERSION,
+                            note=self.PRIMARY_NOT_VALID,
                         )
                     )
                     return
@@ -311,6 +358,70 @@ class SignedAgreementAccessAudit:
                     )
                 )
                 return
+
+        # if primary_exists:
+        #     if is_valid:
+        #         if primary_valid:
+        #             if in_cdsa_group:
+        #             else:
+        #                 self.needs_action.append(
+        #                     GrantAccess(
+        #                         signed_agreement=signed_agreement,
+        #                         note=self.VALID_COMPONENT_AGREEMENT,
+        #                     )
+        #                 )
+        #                 return
+        #         else:
+        #             if in_cdsa_group:
+        #                 self.needs_action.append(
+        #                     RemoveAccess(
+        #                         signed_agreement=signed_agreement,
+        #                         note=self.PRIMARY_NOT_VALID,
+        #                     )
+        #                 )
+        #                 return
+        #             else:
+        #                 self.verified.append(
+        #                     VerifiedNoAccess(
+        #                         signed_agreement=signed_agreement,
+        #                         note=self.PRIMARY_NOT_VALID,
+        #                     )
+        #                 )
+        #                 return
+        #     else:
+        #         if in_cdsa_group:
+        #             self.needs_action.append(
+        #                 RemoveAccess(
+        #                     signed_agreement=signed_agreement,
+        #                     note=self.INVALID_AGREEMENT_VERSION,
+        #                 )
+        #             )
+        #             return
+        #         else:
+        #             self.verified.append(
+        #                 VerifiedNoAccess(
+        #                     signed_agreement=signed_agreement,
+        #                     note=self.INVALID_AGREEMENT_VERSION,
+        #                 )
+        #             )
+        #             return
+        # else:
+        #     if in_cdsa_group:
+        #         self.errors.append(
+        #             RemoveAccess(
+        #                 signed_agreement=signed_agreement,
+        #                 note=self.NO_PRIMARY_AGREEMENT,
+        #             )
+        #         )
+        #         return
+        #     else:
+        #         self.verified.append(
+        #             VerifiedNoAccess(
+        #                 signed_agreement=signed_agreement,
+        #                 note=self.NO_PRIMARY_AGREEMENT,
+        #             )
+        #         )
+        #         return
 
         # If we made it this far in audit, some other case happened - log it as an error.
         # Haven't figured out a test for this because it is unexpected.
