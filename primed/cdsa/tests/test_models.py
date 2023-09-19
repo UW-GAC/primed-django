@@ -288,6 +288,22 @@ class SignedAgreementTest(TestCase):
         with self.assertRaises(ProtectedError):
             agreement_version.delete()
 
+    def test_status_field(self):
+        # default
+        instance = factories.SignedAgreementFactory.create()
+        self.assertEqual(instance.status, instance.StatusChoices.ACTIVE)
+        instance.full_clean()
+        # other choices
+        instance = factories.SignedAgreementFactory.create(
+            status=models.SignedAgreement.StatusChoices.REPLACED
+        )
+        self.assertEqual(instance.status, instance.StatusChoices.REPLACED)
+        instance.full_clean()
+        # not allowed
+        instance = factories.SignedAgreementFactory.create(status="foo")
+        with self.assertRaises(ValidationError):
+            instance.full_clean()
+
     def test_get_combined_type(self):
         obj = factories.MemberAgreementFactory()
         self.assertEqual(obj.signed_agreement.combined_type, "Member")

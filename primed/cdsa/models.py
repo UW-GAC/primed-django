@@ -13,6 +13,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from model_utils.models import StatusModel
 from simple_history.models import HistoricalRecords
 
 from primed.duo.models import DataUseOntologyModel
@@ -94,7 +95,22 @@ class AgreementVersion(TimeStampedModel, models.Model):
         return True
 
 
-class SignedAgreement(TimeStampedModel, models.Model):
+class SignedAgreementStatusMixin:
+    """Mixin to define status choices for SignedAgreements."""
+
+    # This is required because we are using django-model-util's StatusModel with django-simple-history:
+    # See GitHub issue: https://github.com/jazzband/django-simple-history/issues/190
+
+    class StatusChoices(models.TextChoices):
+        ACTIVE = "active", "Active"
+        REPLACED = "replaced", "Replaced"
+
+    STATUS = StatusChoices.choices
+
+
+class SignedAgreement(
+    TimeStampedModel, SignedAgreementStatusMixin, StatusModel, models.Model
+):
     """Model to track verified, signed consortium data sharing agreements."""
 
     MEMBER = "member"
@@ -151,7 +167,7 @@ class SignedAgreement(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
     )
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(bases=[SignedAgreementStatusMixin, models.Model])
 
     def __str__(self):
         return "{}".format(self.cc_id)
