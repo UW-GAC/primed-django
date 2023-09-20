@@ -142,7 +142,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_member_primary_not_in_group(self):
         """Member primary agreement with valid version not in CDSA group."""
@@ -160,10 +160,10 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_member_primary_invalid_version_in_group(self):
-        """Member primary agreement with invalid version in CDSA group."""
+        """Member primary agreement, active, with invalid version in CDSA group."""
         this_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__version__major_version__is_valid=False
         )
@@ -174,13 +174,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_member_primary_invalid_version_not_in_group(self):
         """Member primary agreement, with invalid version, not in CDSA group."""
@@ -194,13 +194,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_member_primary_valid_not_active_in_group(self):
         """Member primary agreement with valid version but isn't active, in CDSA group."""
@@ -262,7 +262,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_has_primary_not_in_group(self):
         """Member component agreement, with valid version, with primary with valid version, not in CDSA group."""
@@ -284,7 +284,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_inactive_has_primary_in_group(self):
         """Member component agreement, inactive, with valid version, with primary with valid version, in CDSA group."""
@@ -335,7 +335,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
 
     def test_member_component_has_primary_with_invalid_version_in_group(self):
-        """Member component agreement, with valid version, with primary with invalid version, in CDSA group."""
+        """Member component agreement, with valid version, with active primary with invalid version, in CDSA group."""
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(
             study_site=study_site,
@@ -351,16 +351,16 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_has_primary_with_invalid_version_not_in_group(self):
-        """Member component agreement, with valid version, with primary with invalid version, not in CDSA group."""
+        """Member component agreement, with valid version, with active primary with invalid version, not in group."""
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(
             study_site=study_site,
@@ -376,13 +376,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_has_inactive_primary_in_group(self):
         """Member component agreement, with valid version, with inactive primary, in CDSA group."""
@@ -407,7 +407,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_ACTIVE)
 
     def test_member_component_has_inactive_primary_not_in_group(self):
         """Member component agreement, with valid version, with inactive primary, not in CDSA group."""
@@ -432,7 +432,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_ACTIVE)
 
     def test_member_component_no_primary_in_group(self):
         """Member component agreement, with valid version, with no primary, in CDSA group."""
@@ -492,13 +492,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_invalid_version_has_primary_not_in_group(self):
         """Member component agreement, with invalid version, with a valid primary, not in CDSA group."""
@@ -516,13 +516,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_invalid_version_has_primary_with_invalid_version_in_group(
         self,
@@ -542,13 +542,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_invalid_version_has_primary_with_invalid_version_not_in_group(
         self,
@@ -568,13 +568,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_member_component_invalid_version_no_primary_in_group(self):
         """Member component agreement, with invalid version, with no primary, in CDSA group."""
@@ -619,7 +619,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_primary_in_group(self):
-        """Data affiliate primary agreement with valid version in CDSA group."""
+        """Member primary agreement with valid version in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create()
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -634,10 +634,10 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_primary_not_in_group(self):
-        """Data affiliate primary agreement with valid version not in CDSA group."""
+        """Member primary agreement with valid version not in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create()
         # Do not add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -652,10 +652,10 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_primary_invalid_version_in_group(self):
-        """Data affiliate primary agreement with invalid version in CDSA group."""
+        """Member primary agreement, active, with invalid version in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__version__major_version__is_valid=False
         )
@@ -666,16 +666,16 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_primary_invalid_version_not_in_group(self):
-        """Data affiliate primary agreement, with invalid version, not in CDSA group."""
+        """Member primary agreement, with invalid version, not in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__version__major_version__is_valid=False
         )
@@ -686,16 +686,16 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_primary_valid_not_active_in_group(self):
-        """Data affiliate primary agreement with valid version but isn't active, in CDSA group."""
+        """Member primary agreement with valid version but isn't active, in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
@@ -715,7 +715,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
 
     def test_data_affiliate_primary_valid_not_active_not_in_group(self):
-        """Data affiliate primary agreement with valid version but isn't active, not in CDSA group."""
+        """Member primary agreement with valid version but isn't active, not in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
@@ -735,7 +735,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
 
     def test_data_affiliate_component_has_primary_in_group(self):
-        """Data affiliate component agreement, with valid version, with primary with valid version, in CDSA group."""
+        """Member component agreement, with valid version, with primary with valid version, in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
@@ -754,10 +754,10 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_data_affiliate_component_has_primary_not_in_group(self):
-        """Data affiliate component agreement, valid version, with primary with valid version, not in CDSA group."""
+        """Member component agreement, with valid version, with primary with valid version, not in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
@@ -776,13 +776,62 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_COMPONENT_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
+
+    def test_data_affiliate_component_inactive_has_primary_in_group(self):
+        """Member component agreement, inactive, with valid version, with primary with valid version, in CDSA group."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        this_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False,
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        # Add the signed agreement access group to the CDSA group.
+        GroupGroupMembershipFactory.create(
+            parent_group=self.cdsa_group,
+            child_group=this_agreement.signed_agreement.anvil_access_group,
+        )
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
+
+    def test_data_affiliate_component_inactive_has_primary_not_in_group(self):
+        """Member component agreement, inactive, with valid version, with valid active primary, not in CDSA group."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        this_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False,
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        # # Add the signed agreement access group to the CDSA group.
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.cdsa_group,
+        #     child_group=this_agreement.signed_agreement.anvil_access_group,
+        # )
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
 
     def test_data_affiliate_component_has_primary_with_invalid_version_in_group(self):
-        """Data affiliate component agreement, valid version, with primary with invalid version, in CDSA group."""
+        """Member component agreement, with valid version, with active primary with invalid version, in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__version__major_version__is_valid=False
+            study=study,
+            signed_agreement__version__major_version__is_valid=False,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False, study=study
@@ -794,19 +843,22 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
-    def test_data_affiliate_has_primary_with_invalid_version_not_in_group(self):
-        """Data affiliate component agreement, valid version, with primary with invalid version, not in CDSA group."""
+    def test_data_affiliate_component_has_primary_with_invalid_version_not_in_group(
+        self,
+    ):
+        """Member component agreement, with valid version, with active primary with invalid version, not in group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__version__major_version__is_valid=False
+            study=study,
+            signed_agreement__version__major_version__is_valid=False,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False, study=study
@@ -818,16 +870,16 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_data_affiliate_component_has_inactive_primary_in_group(self):
-        """Data Affiliate component agreement, with valid version, with inactive primary, in CDSA group."""
+        """Member component agreement, with valid version, with inactive primary, in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(
             study=study,
@@ -849,10 +901,10 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_ACTIVE)
 
     def test_data_affiliate_component_has_inactive_primary_not_in_group(self):
-        """Data Affiliate component agreement, with valid version, with inactive primary, not in CDSA group."""
+        """Member component agreement, with valid version, with inactive primary, not in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(
             study=study,
@@ -874,10 +926,10 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_VALID)
+        self.assertEqual(record.note, cdsa_audit.PRIMARY_NOT_ACTIVE)
 
     def test_data_affiliate_component_no_primary_in_group(self):
-        """Data affiliate component agreement, with valid version, with no primary, in CDSA group."""
+        """Member component agreement, with valid version, with no primary, in CDSA group."""
         study = StudyFactory.create()
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False, study=study
@@ -898,7 +950,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_component_no_primary_not_in_group(self):
-        """Data affiliate component agreement, with valid version, with no primary, not in CDSA group."""
+        """Member component agreement, with valid version, with no primary, not in CDSA group."""
         study = StudyFactory.create()
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False, study=study
@@ -919,7 +971,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_component_invalid_version_has_primary_in_group(self):
-        """Data affiliate component agreement, with invalid version, with a valid primary, in CDSA group."""
+        """Member component agreement, with invalid version, with a valid primary, in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
@@ -934,16 +986,16 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_data_affiliate_component_invalid_version_has_primary_not_in_group(self):
-        """Data affiliate component agreement, with invalid version, with a valid primary, not in CDSA group."""
+        """Member component agreement, with invalid version, with a valid primary, not in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
@@ -958,18 +1010,18 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_data_affiliate_component_invalid_version_has_primary_with_invalid_version_in_group(
         self,
     ):
-        """Data affiliate component agreement, with invalid version, with an invalid primary, in CDSA group."""
+        """Member component agreement, with invalid version, with an invalid primary, in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
@@ -984,18 +1036,18 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_data_affiliate_component_invalid_version_has_primary_with_invalid_version_not_in_group(
         self,
     ):
-        """Data affiliate component agreement, with invalid version, with an invalid primary, not in CDSA group."""
+        """Member component agreement, with invalid version, with an invalid primary, not in CDSA group."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
@@ -1010,20 +1062,18 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_COMPONENT_AGREEMENT)
 
     def test_data_affiliate_component_invalid_version_no_primary_in_group(self):
-        """Data affiliate component agreement, with invalid version, with no primary, in CDSA group."""
-        study = StudyFactory.create()
+        """Member component agreement, with invalid version, with no primary, in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False,
-            study=study,
             signed_agreement__version__major_version__is_valid=False,
         )
         # Add the signed agreement access group to the CDSA group.
@@ -1042,11 +1092,9 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
 
     def test_data_affiliate_component_invalid_version_no_primary_not_in_group(self):
-        """Data affiliate component agreement, with invalid version, with no primary, not in CDSA group."""
-        study = StudyFactory.create()
+        """Member component agreement, with invalid version, with no primary, not in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False,
-            study=study,
             signed_agreement__version__major_version__is_valid=False,
         )
         # # Add the signed agreement access group to the CDSA group.
@@ -1080,7 +1128,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.verified[0]
         self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_non_data_affiliate_primary_not_in_group(self):
         """Non data affiliate primary agreement with valid version not in CDSA group."""
@@ -1098,7 +1146,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         record = cdsa_audit.needs_action[0]
         self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_non_data_affiliate_primary_invalid_version_in_group(self):
         """Non data affiliate primary agreement with invalid version in CDSA group."""
@@ -1112,13 +1160,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, signed_agreement_audit.RemoveAccess)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, signed_agreement_audit.VerifiedAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_non_data_affiliate_primary_invalid_version_not_in_group(self):
         """Non data affiliate primary agreement, with invalid version, not in CDSA group."""
@@ -1132,13 +1180,13 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         # )
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.INVALID_AGREEMENT_VERSION)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_non_data_affiliate_primary_valid_not_active_in_group(self):
         """Non Data affiliate primary agreement with valid version but isn't active, in CDSA group."""
@@ -1450,7 +1498,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_primary_not_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1472,7 +1520,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.GrantAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_no_primary_not_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
@@ -1512,7 +1560,7 @@ class WorkspaceAccessAuditTest(TestCase):
 
     def test_primary_invalid_version_not_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
-        factories.DataAffiliateAgreementFactory.create(
+        this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__version__major_version__is_valid=False,
             study=workspace.study,
         )
@@ -1523,18 +1571,18 @@ class WorkspaceAccessAuditTest(TestCase):
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
         cdsa_audit._audit_workspace(workspace)
-        self.assertEqual(len(cdsa_audit.verified), 1)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.verified[0]
-        self.assertIsInstance(record, workspace_audit.VerifiedNoAccess)
-        self.assertIsNone(record.data_affiliate_agreement)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, workspace_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, this_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_primary_invalid_version_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
-        factories.DataAffiliateAgreementFactory.create(
+        this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__version__major_version__is_valid=False,
             study=workspace.study,
         )
@@ -1545,14 +1593,14 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
         cdsa_audit._audit_workspace(workspace)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
-        record = cdsa_audit.needs_action[0]
-        self.assertIsInstance(record, workspace_audit.RemoveAccess)
-        self.assertIsNone(record.data_affiliate_agreement)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, workspace_audit.VerifiedAccess)
+        self.assertEqual(record.data_affiliate_agreement, this_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_primary_inactive_not_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
@@ -1574,7 +1622,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedNoAccess)
         self.assertIsNone(record.data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.INACTIVE_PRIMARY_AGREEMENT)
 
     def test_primary_inactive_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
@@ -1596,7 +1644,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.RemoveAccess)
         self.assertIsNone(record.data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.INVALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.INACTIVE_PRIMARY_AGREEMENT)
 
     def test_component_agreement_not_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1665,7 +1713,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_two_valid_primary_agreements_same_major_version_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1695,7 +1743,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_two_valid_primary_agreements_not_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1720,16 +1768,20 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.GrantAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
-    def test_two_primary_one_valid_one_invalid_in_auth_domain(self):
+    def test_two_primary_one_valid_one_invalid_both_active_in_auth_domain(self):
         study = StudyFactory.create()
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__version__major_version__is_valid=False
+            study=study,
+            signed_agreement__version__major_version__is_valid=True,
+            signed_agreement__version__major_version__version=1,
         )
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__version__major_version__is_valid=True
+            study=study,
+            signed_agreement__version__major_version__is_valid=False,
+            signed_agreement__version__major_version__version=2,
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
@@ -1745,16 +1797,20 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
-    def test_two_primary_one_valid_one_invalid_not_in_auth_domain(self):
+    def test_two_primary_one_valid_one_invalid_both_active_not_in_auth_domain(self):
         study = StudyFactory.create()
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__version__major_version__is_valid=False
+            study=study,
+            signed_agreement__version__major_version__is_valid=True,
+            signed_agreement__version__major_version__version=1,
         )
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__version__major_version__is_valid=True
+            study=study,
+            signed_agreement__version__major_version__is_valid=False,
+            signed_agreement__version__major_version__version=2,
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
@@ -1770,7 +1826,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.GrantAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_two_primary_one_active_one_inactive_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1797,7 +1853,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_two_primary_one_active_one_inactive_not_in_auth_domain(self):
         study = StudyFactory.create()
@@ -1824,7 +1880,65 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.GrantAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
+
+    def test_two_primary_one_active_invalid_one_inactive_valid_in_auth_domain(self):
+        study = StudyFactory.create()
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+            signed_agreement__version__major_version__is_valid=True,
+        )
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            signed_agreement__version__major_version__is_valid=False,
+        )
+        # Add the CDSA group to the auth domain.
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.cdsa_group,
+        )
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit()
+        cdsa_audit._audit_workspace(workspace)
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, workspace_audit.VerifiedAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.workspace, workspace)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
+
+    def test_two_primary_one_active_invalid_one_inactive_valid_not_in_auth_domain(self):
+        study = StudyFactory.create()
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+            signed_agreement__version__major_version__is_valid=True,
+        )
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
+            study=study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            signed_agreement__version__major_version__is_valid=False,
+        )
+        # # Add the CDSA group to the auth domain.
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     child_group=self.cdsa_group,
+        # )
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit()
+        cdsa_audit._audit_workspace(workspace)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, workspace_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.workspace, workspace)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
     def test_no_workspaces(self):
         """Audit works when there are no workspaces."""
@@ -1858,12 +1972,12 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace_1)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
         record = cdsa_audit.verified[1]
         self.assertIsInstance(record, workspace_audit.VerifiedAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.workspace, workspace_2)
-        self.assertEqual(record.note, cdsa_audit.VALID_PRIMARY_AGREEMENT)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 

@@ -128,13 +128,11 @@ class WorkspaceAccessAudit:
     """Audit for CDSA Workspaces."""
 
     # Access verified.
-    VALID_PRIMARY_AGREEMENT = "Valid, active primary CDSA."
+    ACTIVE_PRIMARY_AGREEMENT = "Active primary CDSA."
 
     # Allowed reasons for no access.
     NO_PRIMARY_AGREEMENT = "No primary CDSA for this study."
-    INVALID_PRIMARY_AGREEMENT = (
-        "Primary CDSA for this study is either invalid or inactive."
-    )
+    INACTIVE_PRIMARY_AGREEMENT = "Primary CDSA for this study is inactive."
 
     # Other errors
     ERROR_OTHER_CASE = "Workspace did not match any expected situations."
@@ -167,7 +165,6 @@ class WorkspaceAccessAudit:
         if primary_exists:
             primary_agreement = (
                 primary_qs.filter(
-                    signed_agreement__version__major_version__is_valid=True,
                     signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
                 )
                 .order_by(
@@ -182,7 +179,7 @@ class WorkspaceAccessAudit:
                         VerifiedAccess(
                             workspace=workspace,
                             data_affiliate_agreement=primary_agreement,
-                            note=self.VALID_PRIMARY_AGREEMENT,
+                            note=self.ACTIVE_PRIMARY_AGREEMENT,
                         )
                     )
                     return
@@ -191,7 +188,7 @@ class WorkspaceAccessAudit:
                         GrantAccess(
                             workspace=workspace,
                             data_affiliate_agreement=primary_agreement,
-                            note=self.VALID_PRIMARY_AGREEMENT,
+                            note=self.ACTIVE_PRIMARY_AGREEMENT,
                         )
                     )
                     return
@@ -201,7 +198,7 @@ class WorkspaceAccessAudit:
                         RemoveAccess(
                             workspace=workspace,
                             data_affiliate_agreement=primary_agreement,
-                            note=self.INVALID_PRIMARY_AGREEMENT,
+                            note=self.INACTIVE_PRIMARY_AGREEMENT,
                         )
                     )
                     return
@@ -210,7 +207,7 @@ class WorkspaceAccessAudit:
                         VerifiedNoAccess(
                             workspace=workspace,
                             data_affiliate_agreement=primary_agreement,
-                            note=self.INVALID_PRIMARY_AGREEMENT,
+                            note=self.INACTIVE_PRIMARY_AGREEMENT,
                         )
                     )
                     return
