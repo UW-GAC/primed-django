@@ -103,8 +103,14 @@ class SignedAgreementStatusMixin:
 
     class StatusChoices(models.TextChoices):
         ACTIVE = "active", "Active"
+        """SignedAgreements that are currently active."""
+
         WITHDRAWN = "withdrawn", "Withdrawn"
+        """SignedAgreements that have been withdrawn for some reason (e.g., PI changed institution,
+        study no longer wanted to participate.)"""
+
         LAPSED = "lapsed", "Lapsed"
+        """SignedAgreements from a AgreementMajorVersion that is no longer valid."""
 
     STATUS = StatusChoices.choices
 
