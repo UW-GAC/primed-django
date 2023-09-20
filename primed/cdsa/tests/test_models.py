@@ -295,9 +295,9 @@ class SignedAgreementTest(TestCase):
         instance.full_clean()
         # other choices
         instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.REPLACED
+            status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
-        self.assertEqual(instance.status, instance.StatusChoices.REPLACED)
+        self.assertEqual(instance.status, instance.StatusChoices.WITHDRAWN)
         instance.full_clean()
         # not allowed
         instance = factories.SignedAgreementFactory.create(status="foo")

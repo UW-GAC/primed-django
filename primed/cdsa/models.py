@@ -103,7 +103,7 @@ class SignedAgreementStatusMixin:
 
     class StatusChoices(models.TextChoices):
         ACTIVE = "active", "Active"
-        REPLACED = "replaced", "Replaced"
+        WITHDRAWN = "withdrawn", "Withdrawn"
 
     STATUS = StatusChoices.choices
 

@@ -205,7 +205,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
     def test_member_primary_valid_not_active_in_group(self):
         """Member primary agreement with valid version but isn't active, in CDSA group."""
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -225,7 +225,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
     def test_member_primary_valid_not_active_not_in_group(self):
         """Member primary agreement with valid version but isn't active, not in CDSA group."""
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -293,7 +293,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         this_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__is_primary=False,
             study_site=study_site,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -317,7 +317,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         this_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__is_primary=False,
             study_site=study_site,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -389,7 +389,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(
             study_site=study_site,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__is_primary=False, study_site=study_site
@@ -414,7 +414,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(
             study_site=study_site,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__is_primary=False, study_site=study_site
@@ -697,7 +697,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
     def test_data_affiliate_primary_valid_not_active_in_group(self):
         """Data affiliate primary agreement with valid version but isn't active, in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -717,7 +717,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
     def test_data_affiliate_primary_valid_not_active_not_in_group(self):
         """Data affiliate primary agreement with valid version but isn't active, not in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -831,7 +831,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(
             study=study,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False, study=study
@@ -856,7 +856,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(
             study=study,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__is_primary=False, study=study
@@ -1143,7 +1143,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
     def test_non_data_affiliate_primary_valid_not_active_in_group(self):
         """Non Data affiliate primary agreement with valid version but isn't active, in CDSA group."""
         this_agreement = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -1163,7 +1163,7 @@ class SignedAgreementAccessAuditResultTest(TestCase):
     def test_non_data_affiliate_primary_valid_not_active_not_in_group(self):
         """Non data affiliate primary agreement with valid version but isn't active, not in CDSA group."""
         this_agreement = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -1557,7 +1557,7 @@ class WorkspaceAccessAuditTest(TestCase):
     def test_primary_inactive_not_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
             study=workspace.study,
         )
         # Do not add the CDSA group to the auth domain.
@@ -1579,7 +1579,7 @@ class WorkspaceAccessAuditTest(TestCase):
     def test_primary_inactive_in_auth_domain(self):
         workspace = factories.CDSAWorkspaceFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
             study=workspace.study,
         )
         # Add the CDSA group to the auth domain.
@@ -1777,7 +1777,7 @@ class WorkspaceAccessAuditTest(TestCase):
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         factories.DataAffiliateAgreementFactory.create(
             study=study,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
             study=study,
@@ -1804,7 +1804,7 @@ class WorkspaceAccessAuditTest(TestCase):
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         factories.DataAffiliateAgreementFactory.create(
             study=study,
-            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
             study=study,

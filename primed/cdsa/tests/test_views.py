@@ -628,13 +628,13 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
         )
         self.assertEqual(response.status_code, 302)
         instance.refresh_from_db()
         self.assertEqual(
             instance.signed_agreement.status,
-            models.SignedAgreement.StatusChoices.REPLACED,
+            models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
 
     def test_invalid_status(self):
@@ -666,7 +666,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
             follow=True,
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
@@ -682,7 +682,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
         )
         self.assertRedirects(response, instance.get_absolute_url())
 
@@ -788,13 +788,13 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
         )
         self.assertEqual(response.status_code, 302)
         instance.refresh_from_db()
         self.assertEqual(
             instance.signed_agreement.status,
-            models.SignedAgreement.StatusChoices.REPLACED,
+            models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
 
     def test_invalid_status(self):
@@ -826,7 +826,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
             follow=True,
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
@@ -842,7 +842,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
         )
         self.assertRedirects(response, instance.get_absolute_url())
 
@@ -948,13 +948,13 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
         )
         self.assertEqual(response.status_code, 302)
         instance.refresh_from_db()
         self.assertEqual(
             instance.signed_agreement.status,
-            models.SignedAgreement.StatusChoices.REPLACED,
+            models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
 
     def test_invalid_status(self):
@@ -986,7 +986,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
             follow=True,
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
@@ -1002,7 +1002,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"status": models.SignedAgreement.StatusChoices.REPLACED},
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
         )
         self.assertRedirects(response, instance.get_absolute_url())
 
