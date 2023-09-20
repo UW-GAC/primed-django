@@ -299,6 +299,12 @@ class SignedAgreementTest(TestCase):
         )
         self.assertEqual(instance.status, instance.StatusChoices.WITHDRAWN)
         instance.full_clean()
+        instance = factories.SignedAgreementFactory.create(
+            status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        self.assertEqual(instance.status, instance.StatusChoices.LAPSED)
+        instance.full_clean()
+
         # not allowed
         instance = factories.SignedAgreementFactory.create(status="foo")
         with self.assertRaises(ValidationError):
