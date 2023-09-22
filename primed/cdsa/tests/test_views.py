@@ -4593,6 +4593,23 @@ class RepresentativeRecordsList(TestCase):
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 3)
 
+    def test_only_includes_active_agreements(self):
+        active_agreement = factories.MemberAgreementFactory.create()
+        lapsed_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        withdrawn_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_agreement.signed_agreement, table.data)
+        self.assertNotIn(lapsed_agreement.signed_agreement, table.data)
+        self.assertNotIn(withdrawn_agreement.signed_agreement, table.data)
+
 
 class SignedAgreementAuditTest(TestCase):
     """Tests for the SignedAgreementAudit view."""
@@ -5041,6 +5058,23 @@ class StudyRecordsList(TestCase):
         self.assertIn(primary_agreement, table.data)
         self.assertNotIn(component_agreement, table.data)
 
+    def test_only_includes_active_agreements(self):
+        active_agreement = factories.DataAffiliateAgreementFactory.create()
+        lapsed_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        withdrawn_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_agreement, table.data)
+        self.assertNotIn(lapsed_agreement, table.data)
+        self.assertNotIn(withdrawn_agreement, table.data)
+
 
 class UserAccessRecordsList(TestCase):
     """Tests for the StudyRecordsList view."""
@@ -5200,6 +5234,32 @@ class UserAccessRecordsList(TestCase):
         table = response.context_data["table"]
         self.assertEqual(len(table.rows), 0)
 
+    def test_only_includes_active_agreements(self):
+        active_agreement = factories.MemberAgreementFactory.create()
+        active_member = GroupAccountMembershipFactory.create(
+            group=active_agreement.signed_agreement.anvil_access_group
+        )
+        lapsed_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        lapsed_member = GroupAccountMembershipFactory.create(
+            group=lapsed_agreement.signed_agreement.anvil_access_group
+        )
+        withdrawn_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        withdrawn_member = GroupAccountMembershipFactory.create(
+            group=withdrawn_agreement.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_member, table.data)
+        self.assertNotIn(lapsed_member, table.data)
+        self.assertNotIn(withdrawn_member, table.data)
+
 
 class CDSAWorkspaceRecordsList(TestCase):
     """Tests for the CDSAWorkspaceRecords view."""
@@ -5242,13 +5302,41 @@ class CDSAWorkspaceRecordsList(TestCase):
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 0)
 
-    def test_table_three_rows(self):
+    def test_table_two_rows(self):
         """Three rows are shown if there are three CDSAWorkspaces objects."""
-        factories.CDSAWorkspaceFactory.create_batch(3)
+        active_workspace_1 = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=active_workspace_1.study)
+        active_workspace_2 = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=active_workspace_2.study)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertEqual(len(response.context_data["table"].rows), 3)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 2)
+        self.assertIn(active_workspace_1, table.data)
+        self.assertIn(active_workspace_2, table.data)
+
+    def test_only_includes_workspaces_with_active_agreements(self):
+        active_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=active_workspace.study)
+        lapsed_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            study=lapsed_workspace.study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        withdrawn_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            study=withdrawn_workspace.study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_workspace, table.data)
+        self.assertNotIn(lapsed_workspace, table.data)
+        self.assertNotIn(withdrawn_workspace, table.data)
 
 
 class CDSAWorkspaceDetailTest(TestCase):
