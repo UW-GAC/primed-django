@@ -10,6 +10,15 @@ from primed.primed_anvil.forms import CustomDateInput
 from . import models
 
 
+class AgreementMajorVersionIsValidForm(forms.ModelForm):
+    class Meta:
+        model = models.AgreementMajorVersion
+        fields = ("is_valid",)
+        widgets = {
+            "is_valid": forms.HiddenInput,
+        }
+
+
 class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SignedAgreement object."""
 

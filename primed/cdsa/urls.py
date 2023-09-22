@@ -17,6 +17,11 @@ agreement_version_patterns = (
             name="major_version_detail",
         ),
         path(
+            "v<int:major_version>/invalidate/",
+            views.AgreementMajorVersionInvalidate.as_view(),
+            name="invalidate",
+        ),
+        path(
             "v<int:major_version>.<int:minor_version>/",
             views.AgreementVersionDetail.as_view(),
             name="detail",

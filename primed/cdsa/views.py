@@ -60,6 +60,68 @@ class AgreementMajorVersionDetail(
         return context
 
 
+class AgreementMajorVersionInvalidate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+    """A view to invalidate an AgreementMajorVersion instance.
+
+    This view sets the is_valid field to False. It also sets the status of all associated
+    CDSAs to LAPSED.
+    """
+
+    # Note that this view mimics the DeleteView.
+    model = models.AgreementMajorVersion
+    # form_class = Form
+    form_class = forms.AgreementMajorVersionIsValidForm
+    template_name = "cdsa/agreementmajorversion_confirm_invalidate.html"
+    success_message = "Successfully invalidated major agreement version."
+    ERROR_ALREADY_INVALID = "This version has already been invalidated."
+
+    def get_object(self, queryset=None):
+        queryset = self.model.objects.all()
+        try:
+            major_version = self.kwargs["major_version"]
+            obj = queryset.get(version=major_version)
+        except (KeyError, self.model.DoesNotExist):
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_initial(self):
+        """Set is_valid to False, since this view is invalidating a specific AgreementMajorVersion."""
+        initial = super().get_initial()
+        initial["is_valid"] = False
+        return initial
+
+    def get(self, response, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object.is_valid:
+            messages.error(self.request, self.ERROR_ALREADY_INVALID)
+            return HttpResponseRedirect(self.object.get_absolute_url())
+        return super().get(response, *args, **kwargs)
+
+    def post(self, response, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object.is_valid:
+            messages.error(self.request, self.ERROR_ALREADY_INVALID)
+            return HttpResponseRedirect(self.object.get_absolute_url())
+        return super().post(response, *args, **kwargs)
+
+    def form_valid(self, form):
+        models.SignedAgreement.objects.filter(
+            status=models.SignedAgreement.StatusChoices.ACTIVE,
+            version__major_version=self.object,
+        ).update(status=models.SignedAgreement.StatusChoices.LAPSED)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    # Change status for CDSAs to lapsed when their major version is invalidated.
+
+
 class AgreementVersionDetail(
     AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
 ):

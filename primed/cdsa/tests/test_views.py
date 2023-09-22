@@ -255,6 +255,225 @@ class AgreementMajorVersionDetailTest(TestCase):
         self.assertIn(b"Deprecated", response.content)
 
 
+class AgreementMajorVersionInvalidateTest(TestCase):
+    """Tests for the AgreementMajorVersionInvalidate view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreement_versions:invalidate", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AgreementMajorVersionInvalidate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=1)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has only view permission."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(instance.version))
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=instance.version)
+
+    def test_object_does_not_exist(self):
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, major_version=1)
+
+    def test_has_object_in_context(self):
+        """Response includes a form."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertTrue("object" in response.context_data)
+        self.assertEqual(response.context_data["object"], instance)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertTrue("form" in response.context_data)
+
+    def test_form_class(self):
+        """Form is the expected class."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertIsInstance(
+            response.context_data["form"], forms.AgreementMajorVersionIsValidForm
+        )
+
+    def test_invalidates_instance(self):
+        """Can invalidate the instance."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertFalse(instance.is_valid)
+
+    def test_sets_one_signed_agreement_to_lapsed(self):
+        """Sets SignedAgreements associated with this major version to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        signed_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        signed_agreement.refresh_from_db()
+        self.assertEqual(
+            signed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+
+    def test_sets_two_signed_agreements_to_lapsed(self):
+        """Sets SignedAgreements associated with this major version to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        signed_agreement_1 = factories.SignedAgreementFactory.create(
+            version__major_version=instance
+        )
+        signed_agreement_2 = factories.SignedAgreementFactory.create(
+            version__major_version=instance
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        signed_agreement_1.refresh_from_db()
+        self.assertEqual(
+            signed_agreement_1.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+        signed_agreement_2.refresh_from_db()
+        self.assertEqual(
+            signed_agreement_2.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+
+    def test_only_sets_active_signed_agreements_to_lapsed(self):
+        """Does not set SignedAgreements with a different status to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        withdrawn_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance,
+            status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        lapsed_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance,
+            status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        lapsed_agreement.refresh_from_db()
+        self.assertEqual(
+            lapsed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+        withdrawn_agreement.refresh_from_db()
+        self.assertEqual(
+            withdrawn_agreement.status, models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+
+    def test_only_sets_associated_signed_agreements_to_lapsed(self):
+        """Does not set SignedAgreements associated with a different version to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        signed_agreement = factories.SignedAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        signed_agreement.refresh_from_db()
+        self.assertEqual(
+            signed_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
+        )
+
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertRedirects(response, instance.get_absolute_url())
+
+    def test_success_message(self):
+        """Redirects to successful url."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.AgreementMajorVersionInvalidate.success_message, str(messages[0])
+        )
+
+    def test_version_already_invalid_get(self):
+        instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.AgreementMajorVersionInvalidate.ERROR_ALREADY_INVALID,
+            str(messages[0]),
+        )
+
+    def test_version_already_invalid_post(self):
+        instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version), {})
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.AgreementMajorVersionInvalidate.ERROR_ALREADY_INVALID,
+            str(messages[0]),
+        )
+
+
 class AgreementVersionDetailTest(TestCase):
     """Tests for the AgreementVersionDetail view."""
 
