@@ -254,6 +254,80 @@ class AgreementMajorVersionDetailTest(TestCase):
         self.assertTrue(response.context_data["show_deprecation_message"])
         self.assertIn(b"Deprecated", response.content)
 
+    def test_invalidate_button_valid_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertTrue(response.context_data["show_invalidate_button"])
+        self.assertContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+    def test_invalidate_button_valid_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertFalse(response.context_data["show_invalidate_button"])
+        self.assertNotContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+    def test_invalidate_button_invalid_user_has_edit_perm(self):
+        """Invalidate button does not appear when the user has edit permission and the instance is invalid."""
+        self.obj.is_valid = False
+        self.obj.save()
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertFalse(response.context_data["show_invalidate_button"])
+        self.assertNotContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+    def test_invalidate_button_invalid_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is invalid."""
+        self.obj.is_valid = False
+        self.obj.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertFalse(response.context_data["show_invalidate_button"])
+        self.assertNotContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
 
 class AgreementMajorVersionInvalidateTest(TestCase):
     """Tests for the AgreementMajorVersionInvalidate view."""

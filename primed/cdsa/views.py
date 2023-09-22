@@ -4,6 +4,7 @@ from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
+    AnVILProjectManagerAccess,
 )
 from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
 from django.conf import settings
@@ -57,6 +58,14 @@ class AgreementMajorVersionDetail(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["show_deprecation_message"] = not self.object.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context[
+            "show_invalidate_button"
+        ] = self.object.is_valid and self.request.user.has_perm(
+            edit_permission_codename
+        )
         return context
 
 

@@ -62,3 +62,11 @@
 </div>
 
 {% endblock after_panel %}
+
+
+{% block action_buttons %}
+  {% if show_invalidate_button %}
+  <a href="{% url 'cdsa:agreement_versions:invalidate' major_version=object.version %}" class="btn btn-danger" role="button">Invalidate this version</a>
+  </p>
+  {% endif %}
+{% endblock action_buttons %}
