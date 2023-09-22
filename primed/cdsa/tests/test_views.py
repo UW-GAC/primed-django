@@ -2253,6 +2253,47 @@ class MemberAgreementDetailTest(TestCase):
         self.assertTrue(response.context_data["show_deprecation_message"])
         self.assertIn(b"Deprecated CDSA version", response.content)
 
+    def test_change_status_button_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertTrue(response.context_data["show_update_button"])
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:members:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
+    def test_change_status_button_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertFalse(response.context_data["show_update_button"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:members:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
 
 class MemberAgreementListTest(TestCase):
     """Tests for the MemberAgreementList view."""
@@ -3430,6 +3471,47 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertTrue(response.context_data["show_deprecation_message"])
         self.assertIn(b"Deprecated CDSA version", response.content)
 
+    def test_change_status_button_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertTrue(response.context_data["show_update_button"])
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
+    def test_change_status_button_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertFalse(response.context_data["show_update_button"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
@@ -4433,6 +4515,47 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertIn("show_deprecation_message", response.context_data)
         self.assertTrue(response.context_data["show_deprecation_message"])
         self.assertIn(b"Deprecated CDSA version", response.content)
+
+    def test_change_status_button_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertTrue(response.context_data["show_update_button"])
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
+    def test_change_status_button_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertFalse(response.context_data["show_update_button"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
 
 
 class NonDataAffiliateAgreementListTest(TestCase):

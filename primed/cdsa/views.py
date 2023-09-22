@@ -370,6 +370,12 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
         context[
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context["show_update_button"] = self.request.user.has_perm(
+            edit_permission_codename
+        )
         return context
 
 
@@ -427,6 +433,12 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
         context[
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context["show_update_button"] = self.request.user.has_perm(
+            edit_permission_codename
+        )
         return context
 
 
@@ -476,6 +488,12 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
         context[
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context["show_update_button"] = self.request.user.has_perm(
+            edit_permission_codename
+        )
         return context
 
 

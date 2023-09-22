@@ -40,3 +40,11 @@
 
 </dl>
 {% endblock panel %}
+
+
+{% block action_buttons %}
+  {% if show_update_button %}
+  <a href="{% url 'cdsa:signed_agreements:members:update' cc_id=object.signed_agreement.cc_id %}" class="btn btn-primary" role="button">Update status</a>
+  </p>
+  {% endif %}
+{% endblock action_buttons %}
