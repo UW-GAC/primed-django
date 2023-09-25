@@ -10,6 +10,7 @@ from anvil_consortium_manager.tests.factories import (
 from django.db.models import Count
 from django.test import TestCase
 from django.utils import timezone
+from freezegun import freeze_time
 
 from .. import models, tables
 from . import factories
@@ -49,6 +50,14 @@ class dbGaPStudyAccessionTableTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("number_workspaces"), 0)
         self.assertEqual(table.rows[1].get_cell("number_workspaces"), 1)
         self.assertEqual(table.rows[2].get_cell("number_workspaces"), 2)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_phs."""
+        instance_1 = self.model_factory.create(dbgap_phs=2)
+        instance_2 = self.model_factory.create(dbgap_phs=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class dbGaPWorkspaceTableTest(TestCase):
@@ -380,6 +389,14 @@ class dbGaPApplicationTableTest(TestCase):
             latest_snapshot.get_absolute_url(), table.rows[0].get_cell("last_update")
         )
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_project_id."""
+        instance_1 = self.model_factory.create(dbgap_project_id=2)
+        instance_2 = self.model_factory.create(dbgap_project_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
+
 
 class dbGaPDataAccessSnapshotTableTest(TestCase):
     model = models.dbGaPDataAccessSnapshot
@@ -435,6 +452,16 @@ class dbGaPDataAccessSnapshotTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 1)
         self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), 2)
+
+    def test_ordering(self):
+        """Instances are ordered by decreasing snapshot date."""
+        with freeze_time("2020-01-01"):
+            instance_1 = self.model_factory.create()
+        with freeze_time("2021-12-12"):
+            instance_2 = self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class dbGaPDataAccessRequestTableTest(TestCase):
@@ -507,6 +534,14 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
         self.assertIn(str(workspace_1), value)
         self.assertIn(str(workspace_2), value)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_dar_id."""
+        instance_1 = self.model_factory.create(dbgap_dar_id=2)
+        instance_2 = self.model_factory.create(dbgap_dar_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class dbGaPDataAccessRequestSummaryTable(TestCase):

@@ -27,6 +27,7 @@ class dbGaPStudyAccessionTable(tables.Table):
             "dbgap_phs",
             "studies",
         )
+        order_by = ("dbgap_phs",)
 
     def render_dbgap_phs(self, value):
         return "phs{0:06d}".format(value)
@@ -140,6 +141,7 @@ class dbGaPApplicationTable(tables.Table):
             "dbgap_project_id",
             "principal_investigator",
         )
+        order_by = ("dbgap_project_id",)
 
 
 class dbGaPDataAccessSnapshotTable(tables.Table):
@@ -151,6 +153,7 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
             "pk",
             "created",
         )
+        order_by = ("-created",)
 
     pk = tables.Column(linkify=True, verbose_name="Details", orderable=False)
     number_approved_dars = tables.columns.Column(
@@ -235,6 +238,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
             "dbgap_consent_abbreviation",
             "dbgap_current_status",
         )
+        order_by = ("dbgap_dar_id",)
 
 
 class dbGaPDataAccessRequestSummaryTable(tables.Table):
