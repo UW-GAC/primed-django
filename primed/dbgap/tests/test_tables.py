@@ -531,7 +531,8 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
-        self.assertIn(str(workspace), value)
+        self.assertIn(workspace.workspace.name, value)
+        self.assertNotIn(workspace.workspace.billing_project.name, value)
         self.assertIn("circle-fill", value)
 
     def test_one_matching_workspace_without_access(self):
@@ -542,7 +543,7 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
-        self.assertIn(str(workspace), value)
+        self.assertIn(workspace.workspace.name, value)
         self.assertIn("square-fill", value)
 
     def test_two_matching_workspaces(self):
@@ -568,8 +569,8 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
-        self.assertIn(str(workspace_1), value)
-        self.assertIn(str(workspace_2), value)
+        self.assertIn(workspace_1.workspace.name, value)
+        self.assertIn(workspace_2.workspace.name, value)
 
     def test_ordering(self):
         """Instances are ordered alphabetically by dbgap_dar_id."""

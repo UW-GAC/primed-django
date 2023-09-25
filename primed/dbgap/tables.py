@@ -207,7 +207,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
             )
             this_context = {
                 "has_access": has_access,
-                "workspace": dbgap_workspace,
+                "workspace": dbgap_workspace.workspace.name,
             }
             this = Template(template_code).render(Context(this_context))
             items = items + [this]
