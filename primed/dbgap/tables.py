@@ -206,6 +206,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
             "dbgap_current_status",
         )
         order_by = ("dbgap_dar_id",)
+        attrs = {"class": "table table-sm"}
 
     def render_matching_workspaces(self, value, record):
         template_code = """
