@@ -194,11 +194,9 @@ class dbGaPDataAccessRequestTable(tables.Table):
 
     def render_matching_workspaces(self, value, record):
         template_code = """
-        <li>
-            <a href="{{workspace.get_absolute_url}}">{{workspace}}</a>
-            <i class="bi bi-{% if has_access %}check-circle-fill"
-            style="color: green{% else %}x-square-fill" style="color: red{% endif %};"></i>
-        </li>
+        <i class="bi bi-{% if has_access %}check-circle-fill"
+        style="color: green{% else %}x-square-fill" style="color: red{% endif %};"></i>
+        <a href="{{workspace.get_absolute_url}}">{{workspace}}</a>
         """
         items = []
         for dbgap_workspace in value:
@@ -211,7 +209,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
             }
             this = Template(template_code).render(Context(this_context))
             items = items + [this]
-        html = format_html("<ul>" + " ".join(items) + "</ul>")
+        html = format_html("" + "<br>".join(items))
         return html
 
     def render_dbgap_phs(self, value):
