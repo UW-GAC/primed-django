@@ -80,6 +80,7 @@ class StudyTable(tables.Table):
     class Meta:
         model = models.Study
         fields = ("short_name", "full_name")
+        order_by = ("short_name",)
 
 
 class StudySiteTable(tables.Table):

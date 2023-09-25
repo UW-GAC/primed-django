@@ -30,6 +30,14 @@ class StudyTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_ordering(self):
+        """Studies are ordered alphabetically by short name"""
+        study_foo = self.model_factory.create(short_name="foo", full_name="AAA")
+        study_bar = self.model_factory.create(short_name="bar", full_name="BBB")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], study_bar)
+        self.assertEqual(table.data[1], study_foo)
+
 
 class StudySiteTableTest(TestCase):
     model = models.StudySite
