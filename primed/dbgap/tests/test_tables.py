@@ -500,10 +500,10 @@ class dbGaPDataAccessSnapshotTableTest(TestCase):
         self.assertEqual(table.data[1], instance_1)
 
 
-class dbGaPDataAccessRequestTableTest(TestCase):
+class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
     model = models.dbGaPDataAccessRequest
     model_factory = factories.dbGaPDataAccessRequestFactory
-    table_class = tables.dbGaPDataAccessRequestTable
+    table_class = tables.dbGaPDataAccessRequestBySnapshotTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())

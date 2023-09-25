@@ -3212,7 +3212,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         self.assertIn("data_access_request_table", response.context_data)
         self.assertIsInstance(
             response.context_data["data_access_request_table"],
-            tables.dbGaPDataAccessRequestTable,
+            tables.dbGaPDataAccessRequestBySnapshotTable,
         )
 
     def test_context_dar_table_none(self):

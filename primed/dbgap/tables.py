@@ -181,8 +181,8 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
         return n_dars
 
 
-class dbGaPDataAccessRequestTable(tables.Table):
-    """Class to render a table of dbGaPDataAccessRequest objects."""
+class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
+    """Class to render a table of dbGaPDataAccessRequest objects for a specific dbGaPDataAccessSnapshot."""
 
     dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
     dbgap_dac = tables.columns.Column(verbose_name="DAC")
