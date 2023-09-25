@@ -132,6 +132,14 @@ class AvailableDataTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically name."""
+        foo = self.model_factory.create(name="foo", description="AAA")
+        bar = self.model_factory.create(name="bar", description="BBB")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], bar)
+        self.assertEqual(table.data[1], foo)
+
 
 class DataSummaryTableTest(TestCase):
 

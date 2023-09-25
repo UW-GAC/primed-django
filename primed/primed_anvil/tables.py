@@ -118,6 +118,7 @@ class AvailableDataTable(tables.Table):
     class Meta:
         model = models.AvailableData
         fields = ("name", "description")
+        order_by = ("name",)
 
 
 class DataSummaryTable(tables.Table):
