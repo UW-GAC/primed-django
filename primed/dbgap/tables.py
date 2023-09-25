@@ -233,10 +233,7 @@ class dbGaPDataAccessRequestTable(tables.Table):
 
     def render_dbgap_accession(self, value, record):
         return format_html(
-            """<a href="{}" target="_blank">
-              {}
-              <i class="bi bi-box-arrow-up-right"></i>
-            </a>
+            """<a href="{}" target="_blank">{}<i class="bi bi-box-arrow-up-right ms-2"></i></a>
             """.format(
                 record.get_dbgap_link(), value
             )
