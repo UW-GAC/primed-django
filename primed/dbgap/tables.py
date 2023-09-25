@@ -184,21 +184,35 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
 class dbGaPDataAccessRequestTable(tables.Table):
     """Class to render a table of dbGaPDataAccessRequest objects."""
 
+    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
+    dbgap_dac = tables.columns.Column(verbose_name="DAC")
     dbgap_accession = tables.columns.Column(
-        verbose_name=" dbGaP accession",
+        verbose_name="Accession",
         accessor="get_dbgap_accession",
     )
+    dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
+    dbgap_current_status = tables.columns.Column(verbose_name="Current status")
     matching_workspaces = tables.columns.Column(
         accessor="get_dbgap_workspaces", orderable=False, default=" "
     )
 
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = (
+            "dbgap_dar_id",
+            "dbgap_dac",
+            "dbgap_accession",
+            "dbgap_consent_abbreviation",
+            "dbgap_current_status",
+        )
+        order_by = ("dbgap_dar_id",)
+        attrs = {"class": "table table-sm"}
+
     def render_matching_workspaces(self, value, record):
         template_code = """
-        <li>
-            <a href="{{workspace.get_absolute_url}}">{{workspace}}</a>
-            <i class="bi bi-{% if has_access %}check-circle-fill"
-            style="color: green{% else %}x-square-fill" style="color: red{% endif %};"></i>
-        </li>
+        <i class="bi bi-{% if has_access %}check-circle-fill"
+        style="color: green{% else %}x-square-fill" style="color: red{% endif %};"></i>
+        <a href="{{workspace.get_absolute_url}}">{{workspace}}</a>
         """
         items = []
         for dbgap_workspace in value:
@@ -207,11 +221,11 @@ class dbGaPDataAccessRequestTable(tables.Table):
             )
             this_context = {
                 "has_access": has_access,
-                "workspace": dbgap_workspace,
+                "workspace": dbgap_workspace.workspace.name,
             }
             this = Template(template_code).render(Context(this_context))
             items = items + [this]
-        html = format_html("<ul>" + " ".join(items) + "</ul>")
+        html = format_html("" + "<br>".join(items))
         return html
 
     def render_dbgap_phs(self, value):
@@ -219,26 +233,14 @@ class dbGaPDataAccessRequestTable(tables.Table):
 
     def render_dbgap_accession(self, value, record):
         return format_html(
-            """<a href="{}" target="_blank">
-              {}
-              <i class="bi bi-box-arrow-up-right"></i>
-            </a>
+            """<a href="{}" target="_blank">{}<sup><i class="bi bi-box-arrow-up-right ms-1"></i></sup></a>
             """.format(
                 record.get_dbgap_link(), value
             )
         )
 
-    class Meta:
-        model = models.dbGaPDataAccessRequest
-        fields = (
-            "dbgap_dar_id",
-            "dbgap_dac",
-            "dbgap_accession",
-            "dbgap_consent_code",
-            "dbgap_consent_abbreviation",
-            "dbgap_current_status",
-        )
-        order_by = ("dbgap_dar_id",)
+    # def render_consent(self, record):
+    #     return "{} ({})".format(record.dbgap_consent_abbreviation, record.dbgap_consent_code)
 
 
 class dbGaPDataAccessRequestSummaryTable(tables.Table):
