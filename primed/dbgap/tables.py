@@ -184,13 +184,28 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
 class dbGaPDataAccessRequestTable(tables.Table):
     """Class to render a table of dbGaPDataAccessRequest objects."""
 
+    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
+    dbgap_dac = tables.columns.Column(verbose_name="DAC")
     dbgap_accession = tables.columns.Column(
-        verbose_name=" dbGaP accession",
+        verbose_name="Accession",
         accessor="get_dbgap_accession",
     )
+    dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
+    dbgap_current_status = tables.columns.Column(verbose_name="Current status")
     matching_workspaces = tables.columns.Column(
         accessor="get_dbgap_workspaces", orderable=False, default=" "
     )
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = (
+            "dbgap_dar_id",
+            "dbgap_dac",
+            "dbgap_accession",
+            "dbgap_consent_abbreviation",
+            "dbgap_current_status",
+        )
+        order_by = ("dbgap_dar_id",)
 
     def render_matching_workspaces(self, value, record):
         template_code = """
@@ -226,17 +241,8 @@ class dbGaPDataAccessRequestTable(tables.Table):
             )
         )
 
-    class Meta:
-        model = models.dbGaPDataAccessRequest
-        fields = (
-            "dbgap_dar_id",
-            "dbgap_dac",
-            "dbgap_accession",
-            "dbgap_consent_code",
-            "dbgap_consent_abbreviation",
-            "dbgap_current_status",
-        )
-        order_by = ("dbgap_dar_id",)
+    # def render_consent(self, record):
+    #     return "{} ({})".format(record.dbgap_consent_abbreviation, record.dbgap_consent_code)
 
 
 class dbGaPDataAccessRequestSummaryTable(tables.Table):
