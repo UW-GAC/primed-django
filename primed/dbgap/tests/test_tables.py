@@ -418,40 +418,76 @@ class dbGaPDataAccessSnapshotTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
     def test_number_approved_dars(self):
-        snapshot = self.model_factory.create()
+        snapshot_1 = self.model_factory.create()
         factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
         )
-        other_snapshot = self.model_factory.create()
+        snapshot_2 = self.model_factory.create()
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=other_snapshot,
+            dbgap_data_access_snapshot=snapshot_2,
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 1)
-        self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), 2)
+        self.assertEqual(table.render_number_approved_dars(snapshot_1), 1)
+        self.assertEqual(table.render_number_approved_dars(snapshot_2), 2)
+
+    def test_number_requested_dars(self):
+        snapshot_1 = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        snapshot_2 = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_2,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_requested_dars(snapshot_1), 9)
+        self.assertEqual(table.render_number_requested_dars(snapshot_2), 2)
 
     def test_ordering(self):
         """Instances are ordered by decreasing snapshot date."""
