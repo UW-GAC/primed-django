@@ -80,6 +80,7 @@ class StudyTable(tables.Table):
     class Meta:
         model = models.Study
         fields = ("short_name", "full_name")
+        order_by = ("short_name",)
 
 
 class StudySiteTable(tables.Table):
@@ -90,6 +91,7 @@ class StudySiteTable(tables.Table):
     class Meta:
         model = models.StudySite
         fields = ("short_name", "full_name")
+        order_by = ("short_name",)
 
 
 class AccountTable(tables.Table):
@@ -116,6 +118,7 @@ class AvailableDataTable(tables.Table):
     class Meta:
         model = models.AvailableData
         fields = ("name", "description")
+        order_by = ("name",)
 
 
 class DataSummaryTable(tables.Table):
