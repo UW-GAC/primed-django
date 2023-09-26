@@ -500,6 +500,63 @@ class dbGaPDataAccessSnapshotTableTest(TestCase):
         self.assertEqual(table.data[1], instance_1)
 
 
+class dbGaPDataAccessRequestTableTest(TestCase):
+    model = models.dbGaPDataAccessRequest
+    model_factory = factories.dbGaPDataAccessRequestFactory
+    table_class = tables.dbGaPDataAccessRequestTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+    def test_render_dbgap_accession(self):
+        instance = self.model_factory.create(
+            dbgap_phs=1, original_version=2, original_participant_set=3
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertIn("phs000001.v2.p3", table.render_dbgap_accession(instance))
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_application and dbgap_dar_id."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create(
+            dbgap_project_id=2
+        )
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create(
+            dbgap_project_id=1
+        )
+        instance_1 = self.model_factory.create(
+            dbgap_dar_id=4,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_1,
+        )
+        instance_2 = self.model_factory.create(
+            dbgap_dar_id=3,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_2,
+        )
+        instance_3 = self.model_factory.create(
+            dbgap_dar_id=2,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_1,
+        )
+        instance_4 = self.model_factory.create(
+            dbgap_dar_id=1,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_2,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_4)
+        self.assertEqual(table.data[1], instance_2)
+        self.assertEqual(table.data[2], instance_3)
+        self.assertEqual(table.data[3], instance_1)
+
+
 class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
     model = models.dbGaPDataAccessRequest
     model_factory = factories.dbGaPDataAccessRequestFactory

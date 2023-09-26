@@ -470,6 +470,18 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
         return context
 
 
+class dbGaPDataAccessRequestList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """View to show current DARs."""
+
+    model = models.dbGaPDataAccessRequest
+    table_class = tables.dbGaPDataAccessRequestTable
+
+    def get_table_data(self):
+        return self.get_queryset().filter(
+            dbgap_data_access_snapshot__is_most_recent=True
+        )
+
+
 class dbGaPApplicationAudit(AnVILConsortiumManagerViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 
