@@ -6,6 +6,10 @@
 {% block content %}
 <h1>Current dbGaP data access requests</h1>
 
+<div class="container text-end">
+    <a class="btn btn-secondary" href="{% url 'dbgap:dbgap_applications:dars' %}?_export=tsv" role="button">Export <i class="bi bi-download ms-1"></i></a>
+</div>
+
 {% render_table table %}
 
 {% endblock content %}

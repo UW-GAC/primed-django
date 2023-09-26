@@ -24,6 +24,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2.export.views import ExportMixin
 
 from . import audit, forms, helpers, models, tables
 
@@ -470,11 +471,14 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
         return context
 
 
-class dbGaPDataAccessRequestList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class dbGaPDataAccessRequestList(
+    AnVILConsortiumManagerViewRequired, ExportMixin, SingleTableView
+):
     """View to show current DARs."""
 
     model = models.dbGaPDataAccessRequest
     table_class = tables.dbGaPDataAccessRequestTable
+    export_name = "dars_table"
 
     def get_table_data(self):
         return self.get_queryset().filter(

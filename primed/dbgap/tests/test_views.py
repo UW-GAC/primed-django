@@ -3487,6 +3487,21 @@ class dbGaPDataAccessRequestListTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertNotIn(dar, response.context_data["table"].data)
 
+    def test_context_export_button(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, self.get_url() + "?_export=tsv")
+
+    def test_export(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"_export": "tsv"})
+        self.assertIn("Content-Type", response)
+        self.assertEqual(response["Content-Type"], "text/tsv; charset=utf-8")
+        self.assertIn("Content-Disposition", response)
+        self.assertEqual(
+            response["Content-Disposition"], 'attachment; filename="dars_table.tsv"'
+        )
+
 
 class dbGaPApplicationAuditTest(TestCase):
     """Tests for the dbGaPApplicationAudit view."""

@@ -225,6 +225,9 @@ class dbGaPDataAccessRequestTable(tables.Table):
             )
         )
 
+    def value_dbgap_accession(self, record):
+        return record.get_dbgap_accession()
+
 
 class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
     """Class to render a table of dbGaPDataAccessRequest objects for a specific dbGaPDataAccessSnapshot."""
