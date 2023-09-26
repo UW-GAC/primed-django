@@ -182,7 +182,55 @@ class dbGaPDataAccessSnapshotTable(tables.Table):
 
 
 class dbGaPDataAccessRequestTable(tables.Table):
-    """Class to render a table of dbGaPDataAccessRequest objects."""
+    """Class to render a table of dbGaPDataAccessRequest objects across all applications."""
+
+    dbgap_data_access_snapshot__dbgap_application__dbgap_project_id = tables.columns.Column(
+        verbose_name=" dbGaP application",
+        linkify=lambda record: record.dbgap_data_access_snapshot.dbgap_application.get_absolute_url(),
+    )
+    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
+    dbgap_dac = tables.columns.Column(verbose_name="DAC")
+    dbgap_accession = tables.columns.Column(
+        accessor="pk", verbose_name="Accession", order_by="dbgap_phs"
+    )
+    dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
+    dbgap_current_status = tables.columns.Column(verbose_name="Status")
+    dbgap_data_access_snapshot__created = tables.columns.DateTimeColumn(
+        verbose_name="Snapshot",
+        linkify=lambda record: record.dbgap_data_access_snapshot.get_absolute_url(),
+    )
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = (
+            "dbgap_data_access_snapshot__dbgap_application__dbgap_project_id",
+            "dbgap_dar_id",
+            "dbgap_dac",
+            "dbgap_accession",
+            "dbgap_consent_abbreviation",
+            "dbgap_current_status",
+            "dbgap_data_access_snapshot__created",
+        )
+        order_by = (
+            "dbgap_data_access_snapshot__dbgap_application__dbgap_project_id",
+            "dbgap_dar_id",
+        )
+        attrs = {"class": "table table-sm"}
+
+    def render_dbgap_accession(self, record):
+        return format_html(
+            """<a href="{}" target="_blank">{}<sup><i class="bi bi-box-arrow-up-right ms-1"></i></sup></a>
+            """.format(
+                record.get_dbgap_link(), record.get_dbgap_accession()
+            )
+        )
+
+    def value_dbgap_accession(self, record):
+        return record.get_dbgap_accession()
+
+
+class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
+    """Class to render a table of dbGaPDataAccessRequest objects for a specific dbGaPDataAccessSnapshot."""
 
     dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
     dbgap_dac = tables.columns.Column(verbose_name="DAC")

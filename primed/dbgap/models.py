@@ -220,7 +220,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
 
     def __str__(self):
         """String method."""
-        return "{} - {}".format(self.dbgap_application, self.created)
+        return "{}".format(self.created)
 
     def clean(self):
         """Perform custom model cleaning.
