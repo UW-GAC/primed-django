@@ -2,14 +2,16 @@
 
 from datetime import datetime
 
+from anvil_consortium_manager.models import ManagedGroup
 from anvil_consortium_manager.tests.factories import (
+    GroupGroupMembershipFactory,
     ManagedGroupFactory,
     WorkspaceFactory,
 )
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (
@@ -23,58 +25,99 @@ from .. import models
 from . import factories
 
 
+class AgreementMajorVersionTest(TestCase):
+    """Tests for the AgreementMajorVersion model."""
+
+    def test_model_saving(self):
+        instance = models.AgreementMajorVersion(version=1)
+        instance.save()
+        self.assertIsInstance(instance, models.AgreementMajorVersion)
+
+    def test_is_valid_default(self):
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.assertTrue(instance.is_valid)
+
+    def test_unique(self):
+        factories.AgreementMajorVersionFactory.create(version=1)
+        instance = factories.AgreementMajorVersionFactory.build(version=1)
+        with self.assertRaisesMessage(ValidationError, "already exists"):
+            instance.full_clean()
+        with self.assertRaises(IntegrityError):
+            instance.save()
+
+    def test_version_zero(self):
+        """ValidationError raised when version is zero."""
+        instance = factories.AgreementMajorVersionFactory.build(version=0)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["version"]), 1)
+        self.assertIn(
+            "greater than or equal to", e.exception.message_dict["version"][0]
+        )
+
+    def test_version_negative(self):
+        """ValidationError raised when version is negative."""
+        instance = factories.AgreementMajorVersionFactory.build(version=-1)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("version", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["version"]), 1)
+        self.assertIn(
+            "greater than or equal to", e.exception.message_dict["version"][0]
+        )
+
+    def test_str(self):
+        """__str__ method works as expected."""
+        instance = factories.AgreementMajorVersionFactory.build()
+        self.assertIsInstance(str(instance), str)
+
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
+
+
 class AgreementVersionTest(TestCase):
     """Tests for the AgreementVersion model."""
 
     def test_model_saving(self):
+        major_version = factories.AgreementMajorVersionFactory.create()
         instance = models.AgreementVersion(
-            major_version=1, minor_version=0, date_approved=datetime.today()
+            major_version=major_version, minor_version=0, date_approved=datetime.today()
         )
         instance.save()
         self.assertIsInstance(instance, models.AgreementVersion)
 
     def test_unique(self):
-        factories.AgreementVersionFactory.create(major_version=1, minor_version=0)
+        major_version = factories.AgreementMajorVersionFactory.create()
+        factories.AgreementVersionFactory.create(
+            major_version=major_version, minor_version=0
+        )
         instance = factories.AgreementVersionFactory.build(
-            major_version=1, minor_version=0
+            major_version=major_version, minor_version=0
         )
         with self.assertRaisesMessage(ValidationError, "already exists"):
             instance.full_clean()
         with self.assertRaises(IntegrityError):
             instance.save()
 
-    def test_major_version_zero(self):
-        """ValidationError raised when major_version is zero."""
-        instance = factories.AgreementVersionFactory.build(major_version=0)
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        self.assertEqual(len(e.exception.message_dict), 1)
-        self.assertIn("major_version", e.exception.message_dict)
-        self.assertEqual(len(e.exception.message_dict["major_version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["major_version"][0]
-        )
-
-    def test_major_version_negative(self):
-        """ValidationError raised when major_version is negative."""
-        instance = factories.AgreementVersionFactory.build(major_version=-1)
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        self.assertEqual(len(e.exception.message_dict), 1)
-        self.assertIn("major_version", e.exception.message_dict)
-        self.assertEqual(len(e.exception.message_dict["major_version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["major_version"][0]
-        )
-
     def test_minor_version_zero(self):
         """full_clean raises no exception when minor_version is zero."""
-        instance = factories.AgreementVersionFactory.build(minor_version=0)
+        major_version = factories.AgreementMajorVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(
+            major_version=major_version, minor_version=0
+        )
         instance.full_clean()
 
     def test_minor_version_negative(self):
         """ValidationError raised when minor_version is negative."""
-        instance = factories.AgreementVersionFactory.build(minor_version=-1)
+        major_version = factories.AgreementMajorVersionFactory.create()
+        instance = factories.AgreementVersionFactory.build(
+            major_version=major_version, minor_version=-1
+        )
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertEqual(len(e.exception.message_dict), 1)
@@ -88,25 +131,25 @@ class AgreementVersionTest(TestCase):
         """full_version property works as expected."""
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=1, minor_version=0
+                major_version__version=1, minor_version=0
             ).full_version,
             "v1.0",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=1, minor_version=5
+                major_version__version=1, minor_version=5
             ).full_version,
             "v1.5",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=1, minor_version=10
+                major_version__version=1, minor_version=10
             ).full_version,
             "v1.10",
         )
         self.assertEqual(
             factories.AgreementVersionFactory(
-                major_version=2, minor_version=3
+                major_version__version=2, minor_version=3
             ).full_version,
             "v2.3",
         )
@@ -115,6 +158,11 @@ class AgreementVersionTest(TestCase):
         """__str__ method works as expected."""
         instance = factories.AgreementVersionFactory.build()
         self.assertIsInstance(str(instance), str)
+
+    def test_get_absolute_url(self):
+        """get_absolute_url method works correctly."""
+        instance = factories.AgreementVersionFactory.create()
+        self.assertIsInstance(instance.get_absolute_url(), str)
 
 
 class SignedAgreementTest(TestCase):
@@ -202,7 +250,6 @@ class SignedAgreementTest(TestCase):
         user = UserFactory.create()
         group = ManagedGroupFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(major_version=0)
         instance = factories.SignedAgreementFactory.build(
             cc_id=0,
             representative=user,
@@ -221,7 +268,6 @@ class SignedAgreementTest(TestCase):
         user = UserFactory.create()
         group = ManagedGroupFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(major_version=0)
         instance = factories.SignedAgreementFactory.build(
             cc_id=-1,
             representative=user,
@@ -241,6 +287,28 @@ class SignedAgreementTest(TestCase):
         factories.SignedAgreementFactory.create(version=agreement_version)
         with self.assertRaises(ProtectedError):
             agreement_version.delete()
+
+    def test_status_field(self):
+        # default
+        instance = factories.SignedAgreementFactory.create()
+        self.assertEqual(instance.status, instance.StatusChoices.ACTIVE)
+        instance.full_clean()
+        # other choices
+        instance = factories.SignedAgreementFactory.create(
+            status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        self.assertEqual(instance.status, instance.StatusChoices.WITHDRAWN)
+        instance.full_clean()
+        instance = factories.SignedAgreementFactory.create(
+            status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        self.assertEqual(instance.status, instance.StatusChoices.LAPSED)
+        instance.full_clean()
+
+        # not allowed
+        instance = factories.SignedAgreementFactory.create(status="foo")
+        with self.assertRaises(ValidationError):
+            instance.full_clean()
 
     def test_get_combined_type(self):
         obj = factories.MemberAgreementFactory()
@@ -283,7 +351,6 @@ class SignedAgreementTest(TestCase):
         user = UserFactory.create()
         group = ManagedGroupFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(major_version=0)
         instance = factories.SignedAgreementFactory.build(
             representative=user,
             anvil_access_group=group,
@@ -297,6 +364,37 @@ class SignedAgreementTest(TestCase):
         self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
         self.assertEqual(len(e.exception.message_dict[NON_FIELD_ERRORS]), 1)
         self.assertIn("primary", e.exception.message_dict[NON_FIELD_ERRORS][0])
+
+    def test_is_in_cdsa_group(self):
+        """is_in_cdsa_group works as expected."""
+        obj = factories.SignedAgreementFactory.create()
+        # When group does not exist
+        with self.assertRaises(ManagedGroup.DoesNotExist):
+            obj.is_in_cdsa_group()
+        # Create group, without adding agreement
+        cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
+        self.assertFalse(obj.is_in_cdsa_group())
+        # Add agreement and check again,
+        GroupGroupMembershipFactory.create(
+            parent_group=cdsa_group, child_group=obj.anvil_access_group
+        )
+        self.assertTrue(obj.is_in_cdsa_group())
+
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOO")
+    def test_is_in_cdsa_group_different_group_name(self):
+        """is_in_cdsa_group works as expected."""
+        obj = factories.SignedAgreementFactory.create()
+        # When group does not exist
+        with self.assertRaises(ManagedGroup.DoesNotExist):
+            obj.is_in_cdsa_group()
+        # Create group, without adding agreement
+        cdsa_group = ManagedGroupFactory.create(name="FOO")
+        self.assertFalse(obj.is_in_cdsa_group())
+        # Add agreement and check again,
+        GroupGroupMembershipFactory.create(
+            parent_group=cdsa_group, child_group=obj.anvil_access_group
+        )
+        self.assertTrue(obj.is_in_cdsa_group())
 
 
 class MemberAgreementTest(TestCase):

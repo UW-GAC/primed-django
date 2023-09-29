@@ -38,7 +38,8 @@ django-debug-toolbar==3.4.0  # https://github.com/jazzband/django-debug-toolbar
 django-coverage-plugin==2.0.3  # https://github.com/nedbat/django_coverage_plugin
 pytest-django==4.5.2  # https://github.com/pytest-dev/pytest-django
 
-# My additions
+# Other additions
 # ------------------------------------------------------------------------------
+django-test-migrations==1.3.0
 # For setting time when running tests.
 freezegun==1.2.2  # https://github.com/spulec/freezegun

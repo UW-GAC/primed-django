@@ -40,6 +40,712 @@ from . import factories
 User = get_user_model()
 
 
+class AgreementVersionListTest(TestCase):
+    """Tests for the AgreementVersionList view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreement_versions:list", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AgreementVersionList.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.AgreementVersionTable
+        )
+
+    def test_workspace_table_none(self):
+        """No rows are shown if there are no AgreementVersion objects."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_workspace_table_three(self):
+        """Two rows are shown if there are three AgreementVersion objects."""
+        factories.AgreementVersionFactory.create_batch(3)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 3)
+
+
+class AgreementMajorVersionDetailTest(TestCase):
+    """Tests for the AgreementVersionDetail view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        # Create an object test this with.
+        self.obj = factories.AgreementMajorVersionFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreement_versions:major_version_detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AgreementMajorVersionDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(2))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(2),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(2))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=2)
+
+    def test_view_status_code_with_existing_object(self):
+        """Returns a successful status code for an existing object pk."""
+        # Only clients load the template.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_status_code_with_invalid_version(self):
+        """Raises a 404 error with an invalid major and minor version."""
+        request = self.factory.get(self.get_url(self.obj.version + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version=self.obj.version + 1,
+            )
+
+    def test_context_table_classes(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 2)
+        self.assertIsInstance(
+            response.context_data["tables"][0], tables.AgreementVersionTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][1], tables.SignedAgreementTable
+        )
+
+    def test_response_includes_agreement_version_table(self):
+        """agreement_version_table includes agreement_versions with this major version."""
+        factories.AgreementVersionFactory.create(major_version=self.obj)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 1)
+
+    def test_response_includes_agreement_version_table_other_major_version(self):
+        """agreement_version_table includes only agreement_versions with this major version."""
+        other_agreement = factories.AgreementVersionFactory.create(
+            major_version__version=self.obj.version + 1
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
+        self.assertNotIn(other_agreement, response.context_data["tables"][0].data)
+
+    def test_response_signed_agreement_table_three_agreements(self):
+        """signed_agreement_table includes all types of agreements."""
+        factories.MemberAgreementFactory.create(
+            signed_agreement__version__major_version__version=self.obj.version
+        )
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__version__major_version__version=self.obj.version
+        )
+        factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__version__major_version__version=self.obj.version
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context_data["tables"][1].rows), 3)
+
+    def test_response_signed_agreement_table_other_major_version(self):
+        """signed_agreement_table does not include agreements from other versions."""
+        factories.MemberAgreementFactory.create()
+        factories.DataAffiliateAgreementFactory.create()
+        factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
+
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated", response.content)
+
+    def test_response_show_deprecation_message_not_valid(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is is not valid."""
+        self.obj.is_valid = False
+        self.obj.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated", response.content)
+
+    def test_invalidate_button_valid_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertTrue(response.context_data["show_invalidate_button"])
+        self.assertContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+    def test_invalidate_button_valid_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertFalse(response.context_data["show_invalidate_button"])
+        self.assertNotContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+    def test_invalidate_button_invalid_user_has_edit_perm(self):
+        """Invalidate button does not appear when the user has edit permission and the instance is invalid."""
+        self.obj.is_valid = False
+        self.obj.save()
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertFalse(response.context_data["show_invalidate_button"])
+        self.assertNotContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+    def test_invalidate_button_invalid_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is invalid."""
+        self.obj.is_valid = False
+        self.obj.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.version))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_invalidate_button", response.context_data)
+        self.assertFalse(response.context_data["show_invalidate_button"])
+        self.assertNotContains(
+            response,
+            reverse("cdsa:agreement_versions:invalidate", args=[self.obj.version]),
+        )
+
+
+class AgreementMajorVersionInvalidateTest(TestCase):
+    """Tests for the AgreementMajorVersionInvalidate view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreement_versions:invalidate", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AgreementMajorVersionInvalidate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission_edit(self):
+        """Returns successful response code."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=1)
+
+    def test_access_without_user_permission_view(self):
+        """Raises permission denied if user has only view permission."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        user_view_perm = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        user_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(instance.version))
+        request.user = user_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=instance.version)
+
+    def test_object_does_not_exist(self):
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, major_version=1)
+
+    def test_has_object_in_context(self):
+        """Response includes a form."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertTrue("object" in response.context_data)
+        self.assertEqual(response.context_data["object"], instance)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertTrue("form" in response.context_data)
+
+    def test_form_class(self):
+        """Form is the expected class."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        self.assertIsInstance(
+            response.context_data["form"], forms.AgreementMajorVersionIsValidForm
+        )
+
+    def test_invalidates_instance(self):
+        """Can invalidate the instance."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertFalse(instance.is_valid)
+
+    def test_sets_one_signed_agreement_to_lapsed(self):
+        """Sets SignedAgreements associated with this major version to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        signed_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        signed_agreement.refresh_from_db()
+        self.assertEqual(
+            signed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+
+    def test_sets_two_signed_agreements_to_lapsed(self):
+        """Sets SignedAgreements associated with this major version to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        signed_agreement_1 = factories.SignedAgreementFactory.create(
+            version__major_version=instance
+        )
+        signed_agreement_2 = factories.SignedAgreementFactory.create(
+            version__major_version=instance
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        signed_agreement_1.refresh_from_db()
+        self.assertEqual(
+            signed_agreement_1.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+        signed_agreement_2.refresh_from_db()
+        self.assertEqual(
+            signed_agreement_2.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+
+    def test_only_sets_active_signed_agreements_to_lapsed(self):
+        """Does not set SignedAgreements with a different status to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        withdrawn_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance,
+            status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        lapsed_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance,
+            status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        lapsed_agreement.refresh_from_db()
+        self.assertEqual(
+            lapsed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED
+        )
+        withdrawn_agreement.refresh_from_db()
+        self.assertEqual(
+            withdrawn_agreement.status, models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+
+    def test_only_sets_associated_signed_agreements_to_lapsed(self):
+        """Does not set SignedAgreements associated with a different version to LAPSED."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        signed_agreement = factories.SignedAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertEqual(response.status_code, 302)
+        signed_agreement.refresh_from_db()
+        self.assertEqual(
+            signed_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
+        )
+
+    def test_redirect_url(self):
+        """Redirects to successful url."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        self.assertRedirects(response, instance.get_absolute_url())
+
+    def test_success_message(self):
+        """Redirects to successful url."""
+        instance = factories.AgreementMajorVersionFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.version), {})
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.AgreementMajorVersionInvalidate.success_message, str(messages[0])
+        )
+
+    def test_version_already_invalid_get(self):
+        instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version))
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.AgreementMajorVersionInvalidate.ERROR_ALREADY_INVALID,
+            str(messages[0]),
+        )
+
+    def test_version_already_invalid_post(self):
+        instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.version), {})
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.AgreementMajorVersionInvalidate.ERROR_ALREADY_INVALID,
+            str(messages[0]),
+        )
+
+
+class AgreementVersionDetailTest(TestCase):
+    """Tests for the AgreementVersionDetail view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        # Create an object test this with.
+        self.obj = factories.AgreementVersionFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:agreement_versions:detail", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AgreementVersionDetail.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(2, 5))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(2, 5),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(2, 5))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, major_version=2, minor_version=5)
+
+    def test_view_status_code_with_existing_object(self):
+        """Returns a successful status code for an existing object pk."""
+        # Only clients load the template.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_status_code_with_invalid_version(self):
+        """Raises a 404 error with an invalid major and minor version."""
+        request = self.factory.get(
+            self.get_url(self.obj.major_version.version + 1, self.obj.minor_version + 1)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version=self.obj.major_version.version + 1,
+                minor_version=self.obj.minor_version + 1,
+            )
+
+    def test_view_status_code_with_other_major_version(self):
+        """Raises a 404 error with an invalid object major version."""
+        request = self.factory.get(
+            self.get_url(self.obj.major_version.version + 1, self.obj.minor_version)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version__version=self.obj.major_version.version + 1,
+                minor_version=self.obj.minor_version,
+            )
+
+    def test_view_status_code_with_other_minor_version(self):
+        """Raises a 404 error with an invalid object minor version."""
+        request = self.factory.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version + 1)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                major_version=self.obj.major_version.version,
+                minor_version=self.obj.minor_version + 1,
+            )
+
+    # def test_response_includes_link_to_major_agreement(self):
+    #     """Response includes a link to the user profile page."""
+    #     self.client.force_login(self.user)
+    #     response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+    #     self.assertContains(
+    #         response, self.obj.signed_agreement.representative.get_absolute_url()
+    #     )
+
+    def test_response_includes_signed_agreement_table(self):
+        """Response includes a table of SignedAgreements."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("signed_agreement_table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["signed_agreement_table"], tables.SignedAgreementTable
+        )
+
+    def test_response_signed_agreement_table_three_agreements(self):
+        """signed_agreement_table includes all types of agreements."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__version=self.obj
+        )
+        da_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__version=self.obj
+        )
+        nda_agreement = factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__version=self.obj
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 3)
+        self.assertIn(
+            member_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertIn(
+            da_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertIn(
+            nda_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+
+    def test_response_signed_agreement_table_other_version(self):
+        """signed_agreement_table does not include agreements from other versions."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        da_agreement = factories.DataAffiliateAgreementFactory.create()
+        nda_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 0)
+        self.assertNotIn(
+            member_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertNotIn(
+            da_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+        self.assertNotIn(
+            nda_agreement.signed_agreement,
+            response.context_data["signed_agreement_table"].data,
+        )
+
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated", response.content)
+
+    def test_response_show_deprecation_message_not_valid(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is not valid."""
+        self.obj.major_version.is_valid = False
+        self.obj.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(self.obj.major_version.version, self.obj.minor_version)
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated", response.content)
+
+
 class SignedAgreementListTest(TestCase):
     """Tests for the SignedAgreementList view."""
 
@@ -56,7 +762,7 @@ class SignedAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:list", args=args)
+        return reverse("cdsa:signed_agreements:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -114,6 +820,486 @@ class SignedAgreementListTest(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 3)
 
 
+class SignedAgreementStatusUpdateMemberTest(TestCase):
+    """Tests for the SignedAgreementStatusUpdate view with a MemberAgreement."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:members:update", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementStatusUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(
+            username="test-other", password="test-other"
+        )
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(
+            response.context_data["form"], forms.SignedAgreementStatusForm
+        )
+
+    def test_can_modify_status(self):
+        """Can change the status."""
+        instance = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(
+            instance.signed_agreement.status,
+            models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+
+    def test_invalid_status(self):
+        """Can change the status."""
+        instance = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id), {"status": "foo"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("status", form.errors)
+        self.assertEqual(len(form.errors["status"]), 1)
+        self.assertIn("valid choice", form.errors["status"][0])
+        instance.refresh_from_db()
+        self.assertEqual(
+            instance.signed_agreement.status,
+            models.SignedAgreement.StatusChoices.ACTIVE,
+        )
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.SignedAgreementStatusUpdate.success_message, str(messages[0])
+        )
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        # This needs to use the client because the RequestFactory doesn't handle redirects.
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
+
+
+class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
+    """Tests for the SignedAgreementStatusUpdate view with a DataAffiliateAgreement."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:data_affiliates:update", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementStatusUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(
+            username="test-other", password="test-other"
+        )
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.MemberAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(
+            response.context_data["form"], forms.SignedAgreementStatusForm
+        )
+
+    def test_can_modify_status(self):
+        """Can change the status."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(
+            instance.signed_agreement.status,
+            models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+
+    def test_invalid_status(self):
+        """Can change the status."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id), {"status": "foo"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("status", form.errors)
+        self.assertEqual(len(form.errors["status"]), 1)
+        self.assertIn("valid choice", form.errors["status"][0])
+        instance.refresh_from_db()
+        self.assertEqual(
+            instance.signed_agreement.status,
+            models.SignedAgreement.StatusChoices.ACTIVE,
+        )
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.SignedAgreementStatusUpdate.success_message, str(messages[0])
+        )
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        # This needs to use the client because the RequestFactory doesn't handle redirects.
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
+
+
+class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
+    """Tests for the SignedAgreementStatusUpdate view with a NonDataAffiliateAgreement."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:non_data_affiliates:update", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementStatusUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(
+            username="test-other", password="test-other"
+        )
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.MemberAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(
+            response.context_data["form"], forms.SignedAgreementStatusForm
+        )
+
+    def test_can_modify_status(self):
+        """Can change the status."""
+        instance = factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(
+            instance.signed_agreement.status,
+            models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+
+    def test_invalid_status(self):
+        """Can change the status."""
+        instance = factories.NonDataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id), {"status": "foo"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("status", form.errors)
+        self.assertEqual(len(form.errors["status"]), 1)
+        self.assertIn("valid choice", form.errors["status"][0])
+        instance.refresh_from_db()
+        self.assertEqual(
+            instance.signed_agreement.status,
+            models.SignedAgreement.StatusChoices.ACTIVE,
+        )
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            views.SignedAgreementStatusUpdate.success_message, str(messages[0])
+        )
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        # This needs to use the client because the RequestFactory doesn't handle redirects.
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
+
+
 class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the MemberAgreementCreate view."""
 
@@ -136,7 +1322,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:members:new", args=args)
+        return reverse("cdsa:signed_agreements:members:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -245,6 +1431,9 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.assertEqual(
+            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
         )
         # Check the agreement type.
         self.assertEqual(models.MemberAgreement.objects.count(), 1)
@@ -977,7 +2166,7 @@ class MemberAgreementDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:members:detail", args=args)
+        return reverse("cdsa:signed_agreements:members:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1044,6 +2233,67 @@ class MemberAgreementDetailTest(TestCase):
             response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
         )
 
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated CDSA version", response.content)
+
+    def test_response_show_deprecation_message_not_valid(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is not valid."""
+        self.obj.signed_agreement.version.major_version.is_valid = False
+        self.obj.signed_agreement.version.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated CDSA version", response.content)
+
+    def test_change_status_button_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertTrue(response.context_data["show_update_button"])
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:members:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
+    def test_change_status_button_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertFalse(response.context_data["show_update_button"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:members:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
 
 class MemberAgreementListTest(TestCase):
     """Tests for the MemberAgreementList view."""
@@ -1061,7 +2311,7 @@ class MemberAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:members:list", args=args)
+        return reverse("cdsa:signed_agreements:members:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1139,7 +2389,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:data_affiliates:new", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1255,6 +2505,9 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.assertEqual(
+            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
         )
         # Check the agreement type.
         self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)
@@ -2125,7 +3378,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:data_affiliates:detail", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2198,6 +3451,67 @@ class DataAffiliateAgreementDetailTest(TestCase):
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
         self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
 
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated CDSA version", response.content)
+
+    def test_response_show_deprecation_message_not_valid(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is not valid."""
+        self.obj.signed_agreement.version.major_version.is_valid = False
+        self.obj.signed_agreement.version.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated CDSA version", response.content)
+
+    def test_change_status_button_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertTrue(response.context_data["show_update_button"])
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
+    def test_change_status_button_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertFalse(response.context_data["show_update_button"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
@@ -2215,7 +3529,7 @@ class DataAffiliateAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:data_affiliates:list", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2293,7 +3607,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:non_data_affiliates:new", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:new", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2402,6 +3716,9 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
+        )
+        self.assertEqual(
+            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
         )
         # Check the agreement type.
         self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 1)
@@ -3118,7 +4435,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:non_data_affiliates:detail", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:detail", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -3179,6 +4496,67 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
             response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
         )
 
+    def test_response_show_deprecation_message_valid(self):
+        """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertFalse(response.context_data["show_deprecation_message"])
+        self.assertNotIn(b"Deprecated CDSA version", response.content)
+
+    def test_response_show_deprecation_message_is_not_valid(self):
+        """response context does show a deprecation warning when AgreementMajorVersion is not valid."""
+        self.obj.signed_agreement.version.major_version.is_valid = False
+        self.obj.signed_agreement.version.major_version.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_deprecation_message", response.context_data)
+        self.assertTrue(response.context_data["show_deprecation_message"])
+        self.assertIn(b"Deprecated CDSA version", response.content)
+
+    def test_change_status_button_user_has_edit_perm(self):
+        """Invalidate button appears when the user has edit permission and the instance is valid."""
+        user = User.objects.create_user(username="test_edit", password="test_edit")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertTrue(response.context_data["show_update_button"])
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
+    def test_change_status_button_user_has_view_perm(self):
+        """Invalidate button does not appear when the user has view permission and the instance is valid."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_update_button", response.context_data)
+        self.assertFalse(response.context_data["show_update_button"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update",
+                args=[self.obj.signed_agreement.cc_id],
+            ),
+        )
+
 
 class NonDataAffiliateAgreementListTest(TestCase):
     """Tests for the NonDataAffiliateAgreement view."""
@@ -3196,7 +4574,7 @@ class NonDataAffiliateAgreementListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:agreements:non_data_affiliates:list", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:list", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -3338,6 +4716,23 @@ class RepresentativeRecordsList(TestCase):
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 3)
 
+    def test_only_includes_active_agreements(self):
+        active_agreement = factories.MemberAgreementFactory.create()
+        lapsed_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        withdrawn_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_agreement.signed_agreement, table.data)
+        self.assertNotIn(lapsed_agreement.signed_agreement, table.data)
+        self.assertNotIn(withdrawn_agreement.signed_agreement, table.data)
+
 
 class SignedAgreementAuditTest(TestCase):
     """Tests for the SignedAgreementAudit view."""
@@ -3358,7 +4753,7 @@ class SignedAgreementAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "cdsa:audit:agreements",
+            "cdsa:audit:signed_agreements",
             args=args,
         )
 
@@ -3425,14 +4820,14 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
         member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -3450,7 +4845,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.INACTIVE_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3473,7 +4868,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.VALID_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3501,7 +4896,7 @@ class SignedAgreementAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_CDSA,
+            signed_agreement_audit.SignedAgreementAccessAudit.NO_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3609,7 +5004,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3633,7 +5028,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("data_affiliate_agreement"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3662,7 +5057,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         )
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.VALID_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3686,7 +5081,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("data_affiliate_agreement"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_CDSA,
+            workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3785,6 +5180,23 @@ class StudyRecordsList(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(primary_agreement, table.data)
         self.assertNotIn(component_agreement, table.data)
+
+    def test_only_includes_active_agreements(self):
+        active_agreement = factories.DataAffiliateAgreementFactory.create()
+        lapsed_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        withdrawn_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_agreement, table.data)
+        self.assertNotIn(lapsed_agreement, table.data)
+        self.assertNotIn(withdrawn_agreement, table.data)
 
 
 class UserAccessRecordsList(TestCase):
@@ -3945,6 +5357,32 @@ class UserAccessRecordsList(TestCase):
         table = response.context_data["table"]
         self.assertEqual(len(table.rows), 0)
 
+    def test_only_includes_active_agreements(self):
+        active_agreement = factories.MemberAgreementFactory.create()
+        active_member = GroupAccountMembershipFactory.create(
+            group=active_agreement.signed_agreement.anvil_access_group
+        )
+        lapsed_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
+        )
+        lapsed_member = GroupAccountMembershipFactory.create(
+            group=lapsed_agreement.signed_agreement.anvil_access_group
+        )
+        withdrawn_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        withdrawn_member = GroupAccountMembershipFactory.create(
+            group=withdrawn_agreement.signed_agreement.anvil_access_group
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_member, table.data)
+        self.assertNotIn(lapsed_member, table.data)
+        self.assertNotIn(withdrawn_member, table.data)
+
 
 class CDSAWorkspaceRecordsList(TestCase):
     """Tests for the CDSAWorkspaceRecords view."""
@@ -3987,13 +5425,41 @@ class CDSAWorkspaceRecordsList(TestCase):
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 0)
 
-    def test_table_three_rows(self):
+    def test_table_two_rows(self):
         """Three rows are shown if there are three CDSAWorkspaces objects."""
-        factories.CDSAWorkspaceFactory.create_batch(3)
+        active_workspace_1 = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=active_workspace_1.study)
+        active_workspace_2 = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=active_workspace_2.study)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertEqual(len(response.context_data["table"].rows), 3)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 2)
+        self.assertIn(active_workspace_1, table.data)
+        self.assertIn(active_workspace_2, table.data)
+
+    def test_only_includes_workspaces_with_active_agreements(self):
+        active_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=active_workspace.study)
+        lapsed_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            study=lapsed_workspace.study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        withdrawn_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            study=withdrawn_workspace.study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("table", response.context_data)
+        table = response.context_data["table"]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(active_workspace, table.data)
+        self.assertNotIn(lapsed_workspace, table.data)
+        self.assertNotIn(withdrawn_workspace, table.data)
 
 
 class CDSAWorkspaceDetailTest(TestCase):

@@ -8,11 +8,31 @@ from anvil_consortium_manager.models import (
 )
 
 from primed.primed_anvil.tables import (
-    BooleanCheckColumn,
+    BooleanIconColumn,
     WorkspaceSharedWithConsortiumTable,
 )
 
 from . import models
+
+
+class AgreementVersionTable(tables.Table):
+
+    major_version = tables.Column(linkify=True)
+    full_version = tables.Column(
+        linkify=True, order_by=("major_version", "minor_version")
+    )
+    major_version__is_valid = BooleanIconColumn(
+        verbose_name="Valid?", show_false_icon=True
+    )
+
+    class Meta:
+        model = models.AgreementVersion
+        fields = (
+            "major_version",
+            "full_version",
+            "major_version__is_valid",
+            "date_approved",
+        )
 
 
 class SignedAgreementTable(tables.Table):
@@ -35,6 +55,7 @@ class SignedAgreementTable(tables.Table):
         if hasattr(record.agreement_group, "get_absolute_url")
         else None
     )
+    version = tables.Column(linkify=True)
 
     class Meta:
         model = models.SignedAgreement
@@ -46,6 +67,7 @@ class SignedAgreementTable(tables.Table):
             "agreement_group",
             "agreement_type",
             "version",
+            "status",
             "date_signed",
             "number_accessors",
         )
@@ -57,7 +79,7 @@ class MemberAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
+    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -67,6 +89,7 @@ class MemberAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.MemberAgreement
@@ -78,6 +101,7 @@ class MemberAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
@@ -89,7 +113,7 @@ class DataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
+    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -99,6 +123,7 @@ class DataAffiliateAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.DataAffiliateAgreement
@@ -110,6 +135,7 @@ class DataAffiliateAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
@@ -120,7 +146,6 @@ class NonDataAffiliateAgreementTable(tables.Table):
     """Table to display `DataAffiliateAgreement` objects."""
 
     signed_agreement__cc_id = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn()
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -130,6 +155,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.NonDataAffiliateAgreement
@@ -140,6 +166,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
@@ -162,6 +189,8 @@ class RepresentativeRecordsTable(tables.Table):
             "representative_role",
             "signing_institution",
             "signing_group",
+            "agreement_type",
+            "version",
         )
         order_by = ("representative__name",)
 

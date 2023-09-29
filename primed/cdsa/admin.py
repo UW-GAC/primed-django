@@ -4,17 +4,33 @@ from simple_history.admin import SimpleHistoryAdmin
 from . import models
 
 
+@admin.register(models.AgreementMajorVersion)
+class AgreementMajorVersion(SimpleHistoryAdmin):
+    """Admin class for the `AgreementMajorVersion` model."""
+
+    list_display = (
+        "version",
+        "is_valid",
+    )
+    list_filter = (
+        "version",
+        "is_valid",
+    )
+    sortable_by = ("version",)
+
+
 @admin.register(models.AgreementVersion)
 class AgreementVersion(SimpleHistoryAdmin):
     """Admin class for the `AgreementVersion` model."""
 
     list_display = (
         "full_version",
-        "major_version",
-        "minor_version",
         "date_approved",
     )
-    list_filter = ("major_version",)
+    list_filter = (
+        "major_version",
+        "major_version__is_valid",
+    )
     sortable_by = (
         "major_version",
         "minor_version",
@@ -38,6 +54,7 @@ class SignedAgreement(SimpleHistoryAdmin):
         "type",
         "is_primary",
         "version",
+        "status",
     )
     search_fields = (
         "representative",
@@ -63,6 +80,7 @@ class MemberAgreementAdmin(SimpleHistoryAdmin):
     list_filter = (
         "study_site",
         "signed_agreement__is_primary",
+        "signed_agreement__status",
     )
 
 
@@ -77,6 +95,7 @@ class DataAffiliateAgreementAdmin(SimpleHistoryAdmin):
     list_filter = (
         "study",
         "signed_agreement__is_primary",
+        "signed_agreement__status",
     )
 
 
@@ -88,7 +107,10 @@ class NonDataAffiliateAgreementAdmin(SimpleHistoryAdmin):
         "signed_agreement",
         "affiliation",
     )
-    list_filter = ("signed_agreement__is_primary",)
+    list_filter = (
+        "signed_agreement__is_primary",
+        "signed_agreement__status",
+    )
 
 
 @admin.register(models.CDSAWorkspace)
