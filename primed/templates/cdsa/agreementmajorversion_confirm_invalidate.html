@@ -14,7 +14,7 @@
 
       <p>Are you sure you want to invalidate Agreement <a href="{{ objectget_absolute_url }}">{{ object }}</a>?</p>
 
-      <p>This will change the status of all "Active" agreementes associated with this version to "Lapsed". </p>
+      <p>This will change the status of all "Active" agreements associated with this version to "Lapsed". </p>
 
       <form method="POST">{% csrf_token %}
           {{ form }}
