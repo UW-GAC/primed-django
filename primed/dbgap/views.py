@@ -24,6 +24,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2.export.views import ExportMixin
 
 from . import audit, forms, helpers, models, tables
 
@@ -456,7 +457,9 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["data_access_request_table"] = tables.dbGaPDataAccessRequestTable(
+        context[
+            "data_access_request_table"
+        ] = tables.dbGaPDataAccessRequestBySnapshotTable(
             self.object.dbgapdataaccessrequest_set.all()
         )
         context["summary_table"] = tables.dbGaPDataAccessRequestSummaryTable(
@@ -466,6 +469,21 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
             .annotate(total=Count("pk"))
         )
         return context
+
+
+class dbGaPDataAccessRequestList(
+    AnVILConsortiumManagerViewRequired, ExportMixin, SingleTableView
+):
+    """View to show current DARs."""
+
+    model = models.dbGaPDataAccessRequest
+    table_class = tables.dbGaPDataAccessRequestTable
+    export_name = "dars_table"
+
+    def get_table_data(self):
+        return self.get_queryset().filter(
+            dbgap_data_access_snapshot__is_most_recent=True
+        )
 
 
 class dbGaPApplicationAudit(AnVILConsortiumManagerViewRequired, DetailView):

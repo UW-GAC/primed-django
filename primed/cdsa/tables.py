@@ -71,6 +71,7 @@ class SignedAgreementTable(tables.Table):
             "date_signed",
             "number_accessors",
         )
+        order_by = ("cc_id",)
 
 
 class MemberAgreementTable(tables.Table):
@@ -104,6 +105,7 @@ class MemberAgreementTable(tables.Table):
             "signed_agreement__date_signed",
             "number_accessors",
         )
+        order_by = ("signed_agreement__cc_id",)
 
 
 class DataAffiliateAgreementTable(tables.Table):
@@ -137,6 +139,7 @@ class DataAffiliateAgreementTable(tables.Table):
             "signed_agreement__date_signed",
             "number_accessors",
         )
+        order_by = ("signed_agreement__cc_id",)
 
 
 class NonDataAffiliateAgreementTable(tables.Table):
@@ -167,6 +170,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
             "signed_agreement__date_signed",
             "number_accessors",
         )
+        order_by = ("signed_agreement__cc_id",)
 
 
 class RepresentativeRecordsTable(tables.Table):
@@ -188,6 +192,7 @@ class RepresentativeRecordsTable(tables.Table):
             "agreement_type",
             "version",
         )
+        order_by = ("representative__name",)
 
     def render_signing_group(self, record):
         if hasattr(record, "memberagreement"):
@@ -207,13 +212,16 @@ class StudyRecordsTable(tables.Table):
     signed_agreement__representative__name = tables.Column(
         verbose_name="Representative"
     )
+    # This will only order properly if the order_by value is a column in the table.
+    study__short_name = tables.Column(verbose_name="Study")
 
     class Meta:
         model = models.DataAffiliateAgreement
         fields = (
-            "study",
+            "study__short_name",
             "signed_agreement__representative__name",
         )
+        order_by = ("study__short_name",)
 
 
 class UserAccessRecordsTable(tables.Table):
@@ -235,6 +243,7 @@ class UserAccessRecordsTable(tables.Table):
             "group__signedagreement__signing_institution",
             "group__signedagreement__representative__name",
         )
+        order_by = ("account__user__name",)
 
     def render_signing_group(self, record):
         if hasattr(record.group.signedagreement, "memberagreement"):
@@ -274,6 +283,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             "workspace__created",
             "date_shared",
         )
+        order_by = ("workspace__name",)
 
     def render_date_shared(self, record):
         try:
@@ -310,3 +320,4 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
         )
+        order_by = ("name",)
