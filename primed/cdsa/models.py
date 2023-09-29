@@ -90,10 +90,6 @@ class AgreementVersion(TimeStampedModel, models.Model):
     def full_version(self):
         return "{}.{}".format(str(self.major_version), self.minor_version)
 
-    @property
-    def is_valid(self):
-        return True
-
 
 class SignedAgreementStatusMixin:
     """Mixin to define status choices for SignedAgreements."""
