@@ -1,4 +1,5 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
+from anvil_consortium_manager.forms import WorkspaceForm
 
 from . import forms, models, tables
 
@@ -10,6 +11,7 @@ class dbGaPWorkspaceAdapter(BaseWorkspaceAdapter):
     name = "dbGaP workspace"
     description = "Workspaces containing data from released dbGaP accessions"
     list_table_class = tables.dbGaPWorkspaceTable
+    workspace_form_class = WorkspaceForm
     workspace_data_model = models.dbGaPWorkspace
     workspace_data_form_class = forms.dbGaPWorkspaceForm
     workspace_detail_template_name = "dbgap/dbgapworkspace_detail.html"
