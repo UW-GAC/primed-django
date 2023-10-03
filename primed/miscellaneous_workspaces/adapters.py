@@ -1,6 +1,7 @@
 """Adapters for the `workspaces` app."""
 
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
+from anvil_consortium_manager.forms import WorkspaceForm
 
 from primed.primed_anvil.tables import DefaultWorkspaceTable
 
@@ -14,6 +15,7 @@ class SimulatedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     name = "Simulated Data workspace"
     description = "Workspaces containing simulated data"
     list_table_class = DefaultWorkspaceTable
+    workspace_form_class = WorkspaceForm
     workspace_data_model = models.SimulatedDataWorkspace
     workspace_data_form_class = forms.SimulatedDataWorkspaceForm
     workspace_detail_template_name = (
@@ -28,6 +30,7 @@ class ConsortiumDevelWorkspaceAdapter(BaseWorkspaceAdapter):
     name = "Consortium development workspace"
     description = "Workspaces intended for consortium development of methods"
     list_table_class = DefaultWorkspaceTable
+    workspace_form_class = WorkspaceForm
     workspace_data_model = models.ConsortiumDevelWorkspace
     workspace_data_form_class = forms.ConsortiumDevelWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
@@ -42,6 +45,7 @@ class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
         "Workspaces containing examples of using AnVIL, working with data, etc."
     )
     list_table_class = DefaultWorkspaceTable
+    workspace_form_class = WorkspaceForm
     workspace_data_model = models.ExampleWorkspace
     workspace_data_form_class = forms.ExampleWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
@@ -54,6 +58,7 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     name = "Template workspace"
     description = "Template workspaces that can be cloned to create other workspaces"
     list_table_class = DefaultWorkspaceTable
+    workspace_form_class = WorkspaceForm
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
@@ -66,6 +71,7 @@ class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
     name = "Open access workspace"
     description = "Workspaces containing open access data"
     list_table_class = tables.OpenAccessWorkspaceTable
+    workspace_form_class = WorkspaceForm
     workspace_data_model = models.OpenAccessWorkspace
     workspace_data_form_class = forms.OpenAccessWorkspaceForm
     workspace_detail_template_name = (
