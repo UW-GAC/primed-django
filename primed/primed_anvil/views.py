@@ -1,5 +1,6 @@
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerLimitedViewRequired,
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import Workspace
@@ -52,7 +53,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         return [dbgap_qs, cdsa_qs, agreement_qs, open_access_qs]
 
 
-class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class StudyList(AnVILConsortiumManagerLimitedViewRequired, SingleTableView):
     """View to show a list of `Study`s."""
 
     model = models.Study

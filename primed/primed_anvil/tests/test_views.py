@@ -606,11 +606,23 @@ class StudyListTest(TestCase):
         self.assertContains(response, obj.short_name)
         self.assertTemplateUsed(response, "primed_anvil/study_list.html")
 
-    def test_status_code_with_user_permission(self):
+    def test_status_code_with_view_permission(self):
         """Returns successful response code."""
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_limited_view_permission(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test-2", password="test-2")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
