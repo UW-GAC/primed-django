@@ -28,7 +28,9 @@ from . import helpers, models, tables
 User = get_user_model()
 
 
-class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
+class StudyDetail(
+    AnVILConsortiumManagerLimitedViewRequired, MultiTableMixin, DetailView
+):
     """View to show details about a `Study`."""
 
     model = models.Study

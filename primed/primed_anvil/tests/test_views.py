@@ -127,7 +127,29 @@ class StudyDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
 
-    def test_table_classes(self):
+    def test_status_code_with_limited_view_permission(self):
+        """Returns successful response code with user has limited view permission."""
+        obj = self.model_factory.create()
+        user = User.objects.create_user(username="test-2", password="test-2")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertEqual(response.status_code, 200)
+
+    def test_table_classes_view_permission(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
+        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
+
+    def test_table_classes_limited_view_permission(self):
+        self.fail("update test")
         obj = self.model_factory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
