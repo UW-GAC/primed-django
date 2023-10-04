@@ -9,7 +9,7 @@ from anvil_consortium_manager.models import (
 
 from primed.primed_anvil.tables import (
     BooleanIconColumn,
-    WorkspaceSharedWithConsortiumTable,
+    WorkspaceSharedWithConsortiumColumn,
 )
 
 from . import models
@@ -295,7 +295,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             return "—"
 
 
-class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class CDSAWorkspaceTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column(linkify=True)
@@ -310,6 +310,7 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace

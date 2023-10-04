@@ -5,7 +5,7 @@ from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
 
-from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumTable
+from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumColumn
 
 from . import models
 
@@ -33,7 +33,7 @@ class dbGaPStudyAccessionTable(tables.Table):
         return "phs{0:06d}".format(value)
 
 
-class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class dbGaPWorkspaceTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
@@ -55,11 +55,12 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         verbose_name="Approved DARs",
         orderable=False,
     )
-    is_shared = tables.columns.Column(
-        accessor="pk",
-        verbose_name="Shared with PRIMED?",
-        orderable=False,
-    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+    # is_shared = tables.columns.Column(
+    #     accessor="pk",
+    #     verbose_name="Shared with PRIMED?",
+    #     orderable=False,
+    # )
 
     class Meta:
         model = Workspace

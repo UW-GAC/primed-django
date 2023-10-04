@@ -468,34 +468,6 @@ class CDSAWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 3)
 
-    def test_render_is_shared_not_shared(self):
-        """render_is_shared works correctly when the workspace is not shared with anyone."""
-        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        self.model_factory.create()
-        table = self.table_class(self.model.objects.all())
-        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
-
-    def test_render_is_shared_true(self):
-        """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
-        group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        cdsa_workspace = self.model_factory.create()
-        WorkspaceGroupSharingFactory.create(
-            group=group, workspace=cdsa_workspace.workspace
-        )
-        table = self.table_class(self.model.objects.all())
-        self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
-
-    def test_render_is_shared_shared_with_different_group(self):
-        """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
-        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        group = factories.ManagedGroupFactory.create()
-        cdsa_workspace = self.model_factory.create()
-        WorkspaceGroupSharingFactory.create(
-            group=group, workspace=cdsa_workspace.workspace
-        )
-        table = self.table_class(self.model.objects.all())
-        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
-
     def test_ordering(self):
         """Instances are ordered alphabetically by user name."""
         instance_1 = factories.CDSAWorkspaceFactory.create(workspace__name="zzz")
