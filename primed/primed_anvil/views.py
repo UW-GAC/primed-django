@@ -3,10 +3,11 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerLimitedViewRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import Workspace
+from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
 from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView, TemplateView
@@ -14,13 +15,21 @@ from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
 from primed.cdsa.tables import (
+    CDSAWorkspaceLimitedViewTable,
     CDSAWorkspaceTable,
     DataAffiliateAgreementTable,
     MemberAgreementTable,
 )
 from primed.dbgap.models import dbGaPApplication
-from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceTable
-from primed.miscellaneous_workspaces.tables import OpenAccessWorkspaceTable
+from primed.dbgap.tables import (
+    dbGaPApplicationTable,
+    dbGaPWorkspaceLimitedViewTable,
+    dbGaPWorkspaceTable,
+)
+from primed.miscellaneous_workspaces.tables import (
+    OpenAccessWorkspaceLimitedViewTable,
+    OpenAccessWorkspaceTable,
+)
 from primed.users.tables import UserTable
 
 from . import helpers, models, tables
@@ -43,7 +52,7 @@ class StudyDetail(
     # table_class = dbGaPWorkspaceTable
     # context_table_name = "dbgap_workspace_table"
 
-    def get_tables_data(self):
+    def get_tables(self):
         dbgap_qs = Workspace.objects.filter(
             dbgapworkspace__dbgap_study_accession__studies=self.object
         )
@@ -52,7 +61,24 @@ class StudyDetail(
         open_access_qs = Workspace.objects.filter(
             openaccessworkspace__studies=self.object
         )
-        return [dbgap_qs, cdsa_qs, agreement_qs, open_access_qs]
+        # Check permissions to determine table type.
+        apm_content_type = ContentType.objects.get_for_model(AnVILProjectManagerAccess)
+        full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME}"
+        if self.request.user.has_perm(full_view_perm):
+            return (
+                dbGaPWorkspaceTable(dbgap_qs),
+                CDSAWorkspaceTable(cdsa_qs),
+                DataAffiliateAgreementTable(agreement_qs),
+                OpenAccessWorkspaceTable(open_access_qs),
+            )
+        else:
+            # Assume they have limited view due to auth mixin.
+            return (
+                dbGaPWorkspaceLimitedViewTable(dbgap_qs),
+                CDSAWorkspaceLimitedViewTable(cdsa_qs),
+                DataAffiliateAgreementTable(agreement_qs),
+                OpenAccessWorkspaceLimitedViewTable(open_access_qs),
+            )
 
 
 class StudyList(AnVILConsortiumManagerLimitedViewRequired, SingleTableView):

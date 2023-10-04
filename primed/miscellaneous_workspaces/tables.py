@@ -22,3 +22,21 @@ class OpenAccessWorkspaceTable(tables.Table):
             "is_shared",
         )
         order_by = ("name",)
+
+
+class OpenAccessWorkspaceLimitedViewTable(tables.Table):
+    """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
+
+    name = tables.columns.Column()
+    billing_project = tables.Column()
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "openaccessworkspace__studies",
+            "is_shared",
+        )
+        order_by = ("name",)

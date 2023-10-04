@@ -475,3 +475,33 @@ class CDSAWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.data[0], instance_2.workspace)
         self.assertEqual(table.data[1], instance_1.workspace)
+
+
+class CDSAWorkspaceLimitedViewTableTest(TestCase):
+    """Tests for the CDSAWorkspaceLimitedViewTable class."""
+
+    model = Workspace
+    model_factory = factories.CDSAWorkspaceFactory
+    table_class = tables.CDSAWorkspaceLimitedViewTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_three_objects(self):
+        self.model_factory.create_batch(3)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 3)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by user name."""
+        instance_1 = factories.CDSAWorkspaceFactory.create(workspace__name="zzz")
+        instance_2 = factories.CDSAWorkspaceFactory.create(workspace__name="aaa")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2.workspace)
+        self.assertEqual(table.data[1], instance_1.workspace)

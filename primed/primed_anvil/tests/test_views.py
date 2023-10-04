@@ -12,17 +12,21 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from primed.cdsa.tables import CDSAWorkspaceTable
+from primed.cdsa.tables import CDSAWorkspaceLimitedViewTable, CDSAWorkspaceTable
 from primed.cdsa.tests.factories import (
     CDSAWorkspaceFactory,
     DataAffiliateAgreementFactory,
     MemberAgreementFactory,
 )
-from primed.dbgap.tables import dbGaPWorkspaceTable
+from primed.dbgap.tables import dbGaPWorkspaceLimitedViewTable, dbGaPWorkspaceTable
 from primed.dbgap.tests.factories import (
     dbGaPApplicationFactory,
     dbGaPStudyAccessionFactory,
     dbGaPWorkspaceFactory,
+)
+from primed.miscellaneous_workspaces.tables import (
+    OpenAccessWorkspaceLimitedViewTable,
+    OpenAccessWorkspaceTable,
 )
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
@@ -147,15 +151,31 @@ class StudyDetailTest(TestCase):
         self.assertIn("tables", response.context_data)
         self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
         self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["tables"][3], OpenAccessWorkspaceTable
+        )
 
     def test_table_classes_limited_view_permission(self):
-        self.fail("update test")
+        """Table classes are correct when the user has limited view permission."""
+        user = User.objects.create_user(username="test-2", password="test-2")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+            )
+        )
         obj = self.model_factory.create()
-        self.client.force_login(self.user)
+        self.client.force_login(user)
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
-        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
-        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["tables"][0], dbGaPWorkspaceLimitedViewTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][1], CDSAWorkspaceLimitedViewTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][3], OpenAccessWorkspaceLimitedViewTable
+        )
 
     def test_dbgap_workspace_table(self):
         """Contains a table of dbGaPWorkspaces with the correct studies."""

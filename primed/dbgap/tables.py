@@ -116,6 +116,37 @@ class dbGaPWorkspaceTable(tables.Table):
         return n
 
 
+class dbGaPWorkspaceLimitedViewTable(tables.Table):
+    """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
+
+    name = tables.columns.Column()
+    billing_project = tables.Column()
+    dbgap_accession = dbGaPAccessionColumn(
+        accessor="dbgapworkspace__get_dbgap_accession",
+        dbgap_link_accessor="dbgapworkspace__get_dbgap_link",
+        order_by=(
+            "dbgapworkspace__dbgap_study_accession__dbgap_phs",
+            "dbgapworkspace__dbgap_version",
+            "dbgapworkspace__dbgap_participant_set",
+        ),
+    )
+    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
+        verbose_name="Consent"
+    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "dbgap_accession",
+            "dbgapworkspace__dbgap_consent_abbreviation",
+            "is_shared",
+        )
+        order_by = ("name",)
+
+
 class dbGaPApplicationTable(tables.Table):
     """Class to render a table of dbGaPApplication objects."""
 

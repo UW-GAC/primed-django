@@ -322,3 +322,30 @@ class CDSAWorkspaceTable(tables.Table):
             "cdsaworkspace__data_use_modifiers",
         )
         order_by = ("name",)
+
+
+class CDSAWorkspaceLimitedViewTable(tables.Table):
+    """A table for the CDSAWorkspace model."""
+
+    name = tables.Column()
+    billing_project = tables.Column()
+    cdsaworkspace__data_use_permission__abbreviation = tables.Column(
+        verbose_name="DUO permission",
+    )
+    cdsaworkspace__study = tables.Column()
+    cdsaworkspace__data_use_modifiers = tables.ManyToManyColumn(
+        transform=lambda x: x.abbreviation,
+        verbose_name="DUO modifiers",
+    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "cdsaworkspace__study",
+            "cdsaworkspace__data_use_permission__abbreviation",
+            "cdsaworkspace__data_use_modifiers",
+        )
+        order_by = ("name",)
