@@ -73,6 +73,19 @@ class HomeTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
 
+    def test_user_has_linked_account(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("anvil_consortium_manager:accounts:link"))
+
+    def test_user_has_not_linked_account(self):
+        self.client.force_login(self.user)
+        AccountFactory.create(user=self.user, verified=True)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(
+            response, reverse("anvil_consortium_manager:accounts:link")
+        )
+
 
 class StudyDetailTest(TestCase):
     """Tests for the StudyDetail view."""
