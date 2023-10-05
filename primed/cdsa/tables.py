@@ -9,7 +9,7 @@ from anvil_consortium_manager.models import (
 
 from primed.primed_anvil.tables import (
     BooleanIconColumn,
-    WorkspaceSharedWithConsortiumTable,
+    WorkspaceSharedWithConsortiumColumn,
 )
 
 from . import models
@@ -295,7 +295,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             return "—"
 
 
-class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class CDSAWorkspaceTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column(linkify=True)
@@ -310,6 +310,34 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "cdsaworkspace__study",
+            "cdsaworkspace__data_use_permission__abbreviation",
+            "cdsaworkspace__data_use_modifiers",
+        )
+        order_by = ("name",)
+
+
+class CDSAWorkspaceLimitedViewTable(tables.Table):
+    """A table for the CDSAWorkspace model."""
+
+    name = tables.Column()
+    billing_project = tables.Column()
+    cdsaworkspace__data_use_permission__abbreviation = tables.Column(
+        verbose_name="DUO permission",
+    )
+    cdsaworkspace__study = tables.Column()
+    cdsaworkspace__data_use_modifiers = tables.ManyToManyColumn(
+        transform=lambda x: x.abbreviation,
+        verbose_name="DUO modifiers",
+    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace

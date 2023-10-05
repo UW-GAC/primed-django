@@ -5,9 +5,47 @@ from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
 
-from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumTable
+from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumColumn
 
 from . import models
+
+
+class dbGaPAccessionColumn(tables.Column):
+    def __init__(
+        self,
+        accessor="get_dbgap_accession",
+        dbgap_link_accessor="get_dbgap_link",
+        verbose_name="dbGaP accession",
+        **kwargs
+    ):
+        self.dbgap_link_accessor = dbgap_link_accessor
+        super().__init__(accessor=accessor, verbose_name=verbose_name, **kwargs)
+
+    def render(self, record):
+        value = tables.A(self.accessor).resolve(record)
+        if self.dbgap_link_accessor:
+            url = tables.A(self.dbgap_link_accessor).resolve(record)
+            return format_html(
+                """<a href="{}" target="_blank">{} <i class="bi bi-box-arrow-up-right"></i></a>""".format(
+                    url, value
+                )
+            )
+        else:
+            return value
+
+    def value(self, record):
+        return tables.A(self.accessor).resolve(record)
+
+
+class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
+    """A django-tables2 column to render a many-to-many date time column using human-readable date time formatting."""
+
+    def transform(self, obj):
+        context = Context()
+        context.update({"value": obj.created, "default": self.default})
+        return Template(
+            """{{ value|date:"DATETIME_FORMAT"|default:default }}"""
+        ).render(context)
 
 
 class dbGaPStudyAccessionTable(tables.Table):
@@ -33,14 +71,14 @@ class dbGaPStudyAccessionTable(tables.Table):
         return "phs{0:06d}".format(value)
 
 
-class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class dbGaPWorkspaceTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
     billing_project = tables.Column(linkify=True)
-    dbgap_accession = tables.columns.Column(
-        verbose_name="dbGaP accession",
-        accessor="dbgapworkspace",
+    dbgap_accession = dbGaPAccessionColumn(
+        accessor="dbgapworkspace__get_dbgap_accession",
+        dbgap_link_accessor="dbgapworkspace__get_dbgap_link",
         order_by=(
             "dbgapworkspace__dbgap_study_accession__dbgap_phs",
             "dbgapworkspace__dbgap_version",
@@ -55,11 +93,7 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         verbose_name="Approved DARs",
         orderable=False,
     )
-    is_shared = tables.columns.Column(
-        accessor="pk",
-        verbose_name="Shared with PRIMED?",
-        orderable=False,
-    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace
@@ -73,18 +107,6 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         )
         order_by = ("name",)
 
-    def render_dbgap_accession(self, record):
-        return format_html(
-            """<a href="{}" target="_blank">
-              {}
-              <i class="bi bi-box-arrow-up-right"></i>
-            </a>
-            """.format(
-                record.dbgapworkspace.get_dbgap_link(),
-                record.dbgapworkspace.get_dbgap_accession(),
-            )
-        )
-
     def render_number_approved_dars(self, record):
         n = (
             record.dbgapworkspace.get_data_access_requests(most_recent=True)
@@ -94,15 +116,35 @@ class dbGaPWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         return n
 
 
-class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
-    """A django-tables2 column to render a many-to-many date time column using human-readable date time formatting."""
+class dbGaPWorkspaceLimitedViewTable(tables.Table):
+    """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
-    def transform(self, obj):
-        context = Context()
-        context.update({"value": obj.created, "default": self.default})
-        return Template(
-            """{{ value|date:"DATETIME_FORMAT"|default:default }}"""
-        ).render(context)
+    name = tables.columns.Column()
+    billing_project = tables.Column()
+    dbgap_accession = dbGaPAccessionColumn(
+        accessor="dbgapworkspace__get_dbgap_accession",
+        dbgap_link_accessor="dbgapworkspace__get_dbgap_link",
+        order_by=(
+            "dbgapworkspace__dbgap_study_accession__dbgap_phs",
+            "dbgapworkspace__dbgap_version",
+            "dbgapworkspace__dbgap_participant_set",
+        ),
+    )
+    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
+        verbose_name="Consent"
+    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "dbgap_accession",
+            "dbgapworkspace__dbgap_consent_abbreviation",
+            "is_shared",
+        )
+        order_by = ("name",)
 
 
 class dbGaPApplicationTable(tables.Table):
@@ -190,8 +232,14 @@ class dbGaPDataAccessRequestTable(tables.Table):
     )
     dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
     dbgap_dac = tables.columns.Column(verbose_name="DAC")
-    dbgap_accession = tables.columns.Column(
-        accessor="pk", verbose_name="Accession", order_by="dbgap_phs"
+    dbgap_accession = dbGaPAccessionColumn(
+        accessor="get_dbgap_accession",
+        verbose_name="Accession",
+        order_by=(
+            "dbgap_phs",
+            "original_version",
+            "original_participant_set",
+        ),
     )
     dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
     dbgap_current_status = tables.columns.Column(verbose_name="Status")
@@ -217,26 +265,20 @@ class dbGaPDataAccessRequestTable(tables.Table):
         )
         attrs = {"class": "table table-sm"}
 
-    def render_dbgap_accession(self, record):
-        return format_html(
-            """<a href="{}" target="_blank">{}<sup><i class="bi bi-box-arrow-up-right ms-1"></i></sup></a>
-            """.format(
-                record.get_dbgap_link(), record.get_dbgap_accession()
-            )
-        )
-
-    def value_dbgap_accession(self, record):
-        return record.get_dbgap_accession()
-
 
 class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
     """Class to render a table of dbGaPDataAccessRequest objects for a specific dbGaPDataAccessSnapshot."""
 
     dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
     dbgap_dac = tables.columns.Column(verbose_name="DAC")
-    dbgap_accession = tables.columns.Column(
-        verbose_name="Accession",
+    dbgap_accession = dbGaPAccessionColumn(
         accessor="get_dbgap_accession",
+        verbose_name="Accession",
+        order_by=(
+            "dbgap_phs",
+            "original_version",
+            "original_participant_set",
+        ),
     )
     dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
     dbgap_current_status = tables.columns.Column(verbose_name="Current status")
@@ -275,20 +317,6 @@ class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
             items = items + [this]
         html = format_html("" + "<br>".join(items))
         return html
-
-    def render_dbgap_phs(self, value):
-        return "phs{0:06d}".format(value)
-
-    def render_dbgap_accession(self, value, record):
-        return format_html(
-            """<a href="{}" target="_blank">{}<sup><i class="bi bi-box-arrow-up-right ms-1"></i></sup></a>
-            """.format(
-                record.get_dbgap_link(), value
-            )
-        )
-
-    # def render_consent(self, record):
-    #     return "{} ({})".format(record.dbgap_consent_abbreviation, record.dbgap_consent_code)
 
 
 class dbGaPDataAccessRequestSummaryTable(tables.Table):

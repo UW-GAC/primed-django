@@ -1,5 +1,6 @@
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account, Workspace
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
 
 from . import models
@@ -30,31 +31,47 @@ class BooleanIconColumn(tables.BooleanColumn):
         return rendered_value
 
 
-class WorkspaceSharedWithConsortiumTable(tables.Table):
-    """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
+class WorkspaceSharedWithConsortiumColumn(BooleanIconColumn):
+    """Column that adds a check box if the workspace is shared with PRIMED_ALL."""
 
-    is_shared = tables.columns.Column(
-        accessor="pk",
-        verbose_name="Shared with PRIMED?",
-        orderable=False,
-    )
+    def __init__(self, verbose_name="Shared with PRIMED?", orderable=False, **kwargs):
+        super().__init__(verbose_name=verbose_name, orderable=orderable, **kwargs)
 
-    def render_is_shared(self, record):
+    def _get_bool_value(self, record, value, bound_column):
+        # Check if it is a workspace
+        if not isinstance(record, Workspace):
+            raise ImproperlyConfigured("record must be a Workspace")
         is_shared = record.workspacegroupsharing_set.filter(
             group__name="PRIMED_ALL"
         ).exists()
-        if is_shared:
-            icon = "check-circle-fill"
-            color = "green"
-            value = format_html(
-                """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
-            )
-        else:
-            value = ""
-        return value
+        return is_shared
 
 
-class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+# class WorkspaceSharedWithConsortiumTable(tables.Table):
+#     """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
+
+#     is_shared = tables.columns.Column(
+#         accessor="pk",
+#         verbose_name="Shared with PRIMED?",
+#         orderable=False,
+#     )
+
+#     def render_is_shared(self, record):
+#         is_shared = record.workspacegroupsharing_set.filter(
+#             group__name="PRIMED_ALL"
+#         ).exists()
+#         if is_shared:
+#             icon = "check-circle-fill"
+#             color = "green"
+#             value = format_html(
+#                 """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
+#             )
+#         else:
+#             value = ""
+#         return value
+
+
+class DefaultWorkspaceTable(tables.Table):
     """Class to use for default workspace tables in PRIMED."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
@@ -65,6 +82,7 @@ class DefaultWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         orderable=False,
         accessor="workspacegroupsharing_set__count",
     )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace

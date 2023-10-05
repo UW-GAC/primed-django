@@ -2,7 +2,10 @@ from anvil_consortium_manager.models import Account
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
+    WorkspaceFactory,
+    WorkspaceGroupSharingFactory,
 )
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
 from primed.users.tests.factories import UserFactory
@@ -183,3 +186,35 @@ class BooleanIconColumnTest(TestCase):
         value = column.render(False, None, None)
         self.assertIn("bi-x-circle-fill", value)
         self.assertIn("red", value)
+
+
+class WorkspaceSharedWithConsortiumColumnTest(TestCase):
+    """Tests for the WorkspaceSharedWithConsortiumColumn class."""
+
+    def test_render_is_not_shared(self):
+        workspace = WorkspaceFactory.create()
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        value = column.render(None, workspace, None)
+        self.assertEqual("", value)
+
+    def test_render_is_shared(self):
+        workspace = WorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace, group__name="PRIMED_ALL"
+        )
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        value = column.render(None, workspace, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+
+    def test_render_is_shared_with_different_group(self):
+        workspace = WorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group__name="other")
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        value = column.render(None, workspace, None)
+        self.assertEqual("", value)
+
+    def test_render_not_workspace(self):
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        with self.assertRaises(ImproperlyConfigured):
+            column.render(None, "foo", None)
