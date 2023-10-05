@@ -10,6 +10,15 @@ from primed.primed_anvil.forms import CustomDateInput
 from . import models
 
 
+class AgreementMajorVersionIsValidForm(forms.ModelForm):
+    class Meta:
+        model = models.AgreementMajorVersion
+        fields = ("is_valid",)
+        widgets = {
+            "is_valid": forms.HiddenInput,
+        }
+
+
 class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SignedAgreement object."""
 
@@ -18,6 +27,9 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         choices=((True, "Primary"), (False, "Component")),
         widget=forms.RadioSelect,
         label="Agreement type",
+    )
+    version = forms.ModelChoiceField(
+        queryset=models.AgreementVersion.objects.filter(major_version__is_valid=True)
     )
 
     class Meta:
@@ -38,6 +50,16 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             ),
             "date_signed": CustomDateInput(),
         }
+
+
+class SignedAgreementStatusForm(forms.ModelForm):
+    """Form to update the status of a SignedAgreement."""
+
+    class Meta:
+        model = models.SignedAgreement
+        fields = ("status",)
+        help_texts = {"status": """The status of this Signed Agreement."""}
+        widgets = {"status": forms.RadioSelect}
 
 
 class MemberAgreementForm(forms.ModelForm):

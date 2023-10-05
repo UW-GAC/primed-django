@@ -74,7 +74,8 @@ class CDSARecordsTest(TestCase):
         self.assertEqual(len(lines), 1)
 
     def test_cdsa_workspace_records_one(self):
-        factories.CDSAWorkspaceFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        factories.CDSAWorkspaceFactory.create(study=agreement.study)
         out = StringIO()
         call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "workspace_records.tsv")) as f:

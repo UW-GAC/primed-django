@@ -3,39 +3,45 @@
     CDSA
   </a>
   <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-    <li class="dropdown-item"><b>List agreements</b></li>
+
     <li>
-      <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:list' %}">All</a>
+      <a class="dropdown-item" href="{% url 'cdsa:agreement_versions:list'%}">List agreement versions</a>
+    </li>
+    <li><hr class="dropdown-divider"></li>
+
+    <li class="dropdown-item"><b>List signed agreements</b></li>
+    <li>
+      <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:list' %}">All</a>
     </li>
     <li>
-      <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:members:list' %}">Members</a>
+      <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:members:list' %}">Members</a>
     </li>
     <li>
-      <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:data_affiliates:list' %}">Data affiliates</a>
+      <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:data_affiliates:list' %}">Data affiliates</a>
     </li>
     <li>
-      <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:non_data_affiliates:list' %}">Non-data affiliates</a>
+      <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:non_data_affiliates:list' %}">Non-data affiliates</a>
     </li>
 
     <li><hr class="dropdown-divider"></li>
 
     {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
-      <li class="dropdown-item"><b>Add a new agreement</b></li>
+      <li class="dropdown-item"><b>Add a new signed agreement</b></li>
       <li>
-        <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:members:new' %}">Member</a>
+        <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:members:new' %}">Member</a>
       </li>
       <li>
-        <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:data_affiliates:new' %}">Data affiliate</a>
+        <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:data_affiliates:new' %}">Data affiliate</a>
       </li>
       <li>
-        <a class="dropdown-item mx-3" href="{% url 'cdsa:agreements:non_data_affiliates:new' %}">Non-data affiliate</a>
+        <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:non_data_affiliates:new' %}">Non-data affiliate</a>
       </li>
 
       <li><hr class="dropdown-divider"></li>
     {% endif %}
 
     <li>
-      <a class="dropdown-item" href="{% url 'cdsa:audit:agreements'%}">Audit agreements</a>
+      <a class="dropdown-item" href="{% url 'cdsa:audit:signed_agreements'%}">Audit signed agreements</a>
     </li>
     <li>
       <a class="dropdown-item" href="{% url 'cdsa:audit:workspaces'%}">Audit workspaces</a>

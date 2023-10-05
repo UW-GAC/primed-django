@@ -1,14 +1,45 @@
 from django.urls import include, path
 
-from . import views
+from . import models, views
 
 app_name = "cdsa"
 
+agreement_version_patterns = (
+    [
+        path(
+            "",
+            views.AgreementVersionList.as_view(),
+            name="list",
+        ),
+        path(
+            "v<int:major_version>/",
+            views.AgreementMajorVersionDetail.as_view(),
+            name="major_version_detail",
+        ),
+        path(
+            "v<int:major_version>/invalidate/",
+            views.AgreementMajorVersionInvalidate.as_view(),
+            name="invalidate",
+        ),
+        path(
+            "v<int:major_version>.<int:minor_version>/",
+            views.AgreementVersionDetail.as_view(),
+            name="detail",
+        ),
+    ],
+    "agreement_versions",
+)
 member_agreement_patterns = (
     [
         path("", views.MemberAgreementList.as_view(), name="list"),
         path("new/", views.MemberAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.MemberAgreementDetail.as_view(), name="detail"),
+        path(
+            "<int:cc_id>/update/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.MEMBER},
+            name="update",
+        ),
     ],
     "members",
 )
@@ -19,6 +50,12 @@ data_affiliate_agreement_patterns = (
         path("new/", views.DataAffiliateAgreementCreate.as_view(), name="new"),
         path(
             "<int:cc_id>/", views.DataAffiliateAgreementDetail.as_view(), name="detail"
+        ),
+        path(
+            "<int:cc_id>/update/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
+            name="update",
         ),
     ],
     "data_affiliates",
@@ -33,23 +70,33 @@ non_data_affiliate_agreement_patterns = (
             views.NonDataAffiliateAgreementDetail.as_view(),
             name="detail",
         ),
+        path(
+            "<int:cc_id>/update/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
+            name="update",
+        ),
     ],
     "non_data_affiliates",
 )
 
-agreement_patterns = (
+signed_agreement_patterns = (
     [
         path("", views.SignedAgreementList.as_view(), name="list"),
         path("members/", include(member_agreement_patterns)),
         path("data_affiliates/", include(data_affiliate_agreement_patterns)),
         path("non_data_affiliates/", include(non_data_affiliate_agreement_patterns)),
     ],
-    "agreements",
+    "signed_agreements",
 )
 
 audit_patterns = (
     [
-        path("agreements/", views.SignedAgreementAudit.as_view(), name="agreements"),
+        path(
+            "signed_agreements/",
+            views.SignedAgreementAudit.as_view(),
+            name="signed_agreements",
+        ),
         path("workspaces/", views.CDSAWorkspaceAudit.as_view(), name="workspaces"),
     ],
     "audit",
@@ -83,7 +130,8 @@ records_patterns = (
 
 
 urlpatterns = [
-    path("agreements/", include(agreement_patterns)),
+    path("agreement_versions/", include(agreement_version_patterns)),
+    path("signed_agreements/", include(signed_agreement_patterns)),
     path("records/", include(records_patterns)),
     path("audit/", include(audit_patterns)),
 ]

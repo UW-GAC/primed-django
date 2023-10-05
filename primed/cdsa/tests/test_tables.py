@@ -8,9 +8,30 @@ from anvil_consortium_manager.tests.factories import (
 from django.test import TestCase
 
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.users.tests.factories import UserFactory
 
 from .. import models, tables
 from . import factories
+
+
+class AgreementVersionTableTest(TestCase):
+    model = models.AgreementVersion
+    model_factory = factories.AgreementVersionFactory
+    table_class = tables.AgreementVersionTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_three_objects(self):
+        self.model_factory.create_batch(3)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 3)
 
 
 class SignedAgreementTableTest(TestCase):
@@ -49,6 +70,14 @@ class SignedAgreementTableTest(TestCase):
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
         self.assertEqual(table.rows[2].get_cell("number_accessors"), 2)
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by cc_id."""
+        instance_1 = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2)
+        instance_2 = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2.signed_agreement)
+        self.assertEqual(table.data[1], instance_1.signed_agreement)
+
 
 class MemberAgreementTableTest(TestCase):
     model = models.MemberAgreement
@@ -84,6 +113,14 @@ class MemberAgreementTableTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("number_accessors"), 0)
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
         self.assertEqual(table.rows[2].get_cell("number_accessors"), 2)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by cc_id."""
+        instance_1 = self.model_factory.create(signed_agreement__cc_id=2)
+        instance_2 = self.model_factory.create(signed_agreement__cc_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class DataAffiliateAgreementTableTest(TestCase):
@@ -121,6 +158,14 @@ class DataAffiliateAgreementTableTest(TestCase):
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
         self.assertEqual(table.rows[2].get_cell("number_accessors"), 2)
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by cc_id."""
+        instance_1 = self.model_factory.create(signed_agreement__cc_id=2)
+        instance_2 = self.model_factory.create(signed_agreement__cc_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
+
 
 class NonDataAffiliateAgreementTableTest(TestCase):
     model = models.NonDataAffiliateAgreement
@@ -156,6 +201,14 @@ class NonDataAffiliateAgreementTableTest(TestCase):
         self.assertEqual(table.rows[0].get_cell("number_accessors"), 0)
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
         self.assertEqual(table.rows[2].get_cell("number_accessors"), 2)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by cc_id."""
+        instance_1 = self.model_factory.create(signed_agreement__cc_id=2)
+        instance_2 = self.model_factory.create(signed_agreement__cc_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class RepresentativeRecordsTableTest(TestCase):
@@ -203,6 +256,18 @@ class RepresentativeRecordsTableTest(TestCase):
         record = factories.SignedAgreementFactory()
         self.assertIsNone(table.render_signing_group(record))
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by representative name."""
+        instance_1 = factories.MemberAgreementFactory.create(
+            signed_agreement__representative__name="zzz"
+        )
+        instance_2 = factories.MemberAgreementFactory.create(
+            signed_agreement__representative__name="aaa"
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2.signed_agreement)
+        self.assertEqual(table.data[1], instance_1.signed_agreement)
+
 
 class StudyRecordsTableTest(TestCase):
     """Tests for the StudyRecordsTable class."""
@@ -224,6 +289,14 @@ class StudyRecordsTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by study short name."""
+        instance_1 = self.model_factory.create(study__short_name="zzz")
+        instance_2 = self.model_factory.create(study__short_name="aaa")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class UserAccessRecordsTableTest(TestCase):
@@ -308,6 +381,23 @@ class UserAccessRecordsTableTest(TestCase):
         record = GroupAccountMembershipFactory.create(group__signedagreement=agreement)
         self.assertIsNone(table.render_signing_group(record))
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by user name."""
+        agreement = factories.MemberAgreementFactory.create()
+        user_1 = UserFactory.create(name="zzz")
+        instance_1 = GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement.signed_agreement,
+            account__user=user_1,
+        )
+        user_2 = UserFactory.create(name="aaa")
+        instance_2 = GroupAccountMembershipFactory.create(
+            group__signedagreement=agreement.signed_agreement,
+            account__user=user_2,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
+
 
 class CDSAWorkspaceRecordsTableTest(TestCase):
     """Tests for the CDSAWorkspaceRecordsTable class."""
@@ -343,6 +433,19 @@ class CDSAWorkspaceRecordsTableTest(TestCase):
         )
         self.assertNotEqual(table.render_date_shared(cdsa_workspace), "—")
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by user name."""
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        instance_1 = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study, workspace__name="zzz"
+        )
+        instance_2 = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study, workspace__name="aaa"
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
+
 
 class CDSAWorkspaceTableTest(TestCase):
     """Tests for the CDSAWorkspaceTable class."""
@@ -365,30 +468,40 @@ class CDSAWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 3)
 
-    def test_render_is_shared_not_shared(self):
-        """render_is_shared works correctly when the workspace is not shared with anyone."""
-        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+    def test_ordering(self):
+        """Instances are ordered alphabetically by user name."""
+        instance_1 = factories.CDSAWorkspaceFactory.create(workspace__name="zzz")
+        instance_2 = factories.CDSAWorkspaceFactory.create(workspace__name="aaa")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2.workspace)
+        self.assertEqual(table.data[1], instance_1.workspace)
+
+
+class CDSAWorkspaceLimitedViewTableTest(TestCase):
+    """Tests for the CDSAWorkspaceLimitedViewTable class."""
+
+    model = Workspace
+    model_factory = factories.CDSAWorkspaceFactory
+    table_class = tables.CDSAWorkspaceLimitedViewTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
         self.model_factory.create()
         table = self.table_class(self.model.objects.all())
-        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+        self.assertEqual(len(table.rows), 1)
 
-    def test_render_is_shared_true(self):
-        """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
-        group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        cdsa_workspace = self.model_factory.create()
-        WorkspaceGroupSharingFactory.create(
-            group=group, workspace=cdsa_workspace.workspace
-        )
+    def test_row_count_with_three_objects(self):
+        self.model_factory.create_batch(3)
         table = self.table_class(self.model.objects.all())
-        self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
+        self.assertEqual(len(table.rows), 3)
 
-    def test_render_is_shared_shared_with_different_group(self):
-        """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
-        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        group = factories.ManagedGroupFactory.create()
-        cdsa_workspace = self.model_factory.create()
-        WorkspaceGroupSharingFactory.create(
-            group=group, workspace=cdsa_workspace.workspace
-        )
+    def test_ordering(self):
+        """Instances are ordered alphabetically by user name."""
+        instance_1 = factories.CDSAWorkspaceFactory.create(workspace__name="zzz")
+        instance_2 = factories.CDSAWorkspaceFactory.create(workspace__name="aaa")
         table = self.table_class(self.model.objects.all())
-        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+        self.assertEqual(table.data[0], instance_2.workspace)
+        self.assertEqual(table.data[1], instance_1.workspace)

@@ -2,7 +2,10 @@ from anvil_consortium_manager.models import Account
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
+    WorkspaceFactory,
+    WorkspaceGroupSharingFactory,
 )
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
 from primed.users.tests.factories import UserFactory
@@ -30,6 +33,14 @@ class StudyTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_ordering(self):
+        """Studies are ordered alphabetically by short name"""
+        study_foo = self.model_factory.create(short_name="foo", full_name="AAA")
+        study_bar = self.model_factory.create(short_name="bar", full_name="BBB")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], study_bar)
+        self.assertEqual(table.data[1], study_foo)
+
 
 class StudySiteTableTest(TestCase):
     model = models.StudySite
@@ -49,6 +60,14 @@ class StudySiteTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
+
+    def test_ordering(self):
+        """Studies are ordered alphabetically by short name"""
+        foo = self.model_factory.create(short_name="foo", full_name="AAA")
+        bar = self.model_factory.create(short_name="bar", full_name="BBB")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], bar)
+        self.assertEqual(table.data[1], foo)
 
 
 class AccountTableTest(TestCase):
@@ -116,6 +135,14 @@ class AvailableDataTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically name."""
+        foo = self.model_factory.create(name="foo", description="AAA")
+        bar = self.model_factory.create(name="bar", description="BBB")
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], bar)
+        self.assertEqual(table.data[1], foo)
+
 
 class DataSummaryTableTest(TestCase):
 
@@ -138,10 +165,56 @@ class DataSummaryTableTest(TestCase):
         self.assertEqual(table.columns[4].name, "Foo")
 
 
-class BooleanCheckColumnTest(TestCase):
-    def test_render_available_data(self):
-        factories.AvailableDataFactory.create(name="Foo")
-        self.assertIn(
-            "bi-check-circle-fill", tables.BooleanCheckColumn().render(True, None, None)
+class BooleanIconColumnTest(TestCase):
+    """Tests for the BooleanIconColumn class."""
+
+    def test_render_default(self):
+        """render method with defaults."""
+        column = tables.BooleanIconColumn()
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+        value = column.render(False, None, None)
+        self.assertEqual(value, "")
+
+    def test_render_show_false_icon(self):
+        """render method with defaults."""
+        column = tables.BooleanIconColumn(show_false_icon=True)
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+        value = column.render(False, None, None)
+        self.assertIn("bi-x-circle-fill", value)
+        self.assertIn("red", value)
+
+
+class WorkspaceSharedWithConsortiumColumnTest(TestCase):
+    """Tests for the WorkspaceSharedWithConsortiumColumn class."""
+
+    def test_render_is_not_shared(self):
+        workspace = WorkspaceFactory.create()
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        value = column.render(None, workspace, None)
+        self.assertEqual("", value)
+
+    def test_render_is_shared(self):
+        workspace = WorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace, group__name="PRIMED_ALL"
         )
-        self.assertEqual(tables.BooleanCheckColumn().render(False, None, None), "")
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        value = column.render(None, workspace, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+
+    def test_render_is_shared_with_different_group(self):
+        workspace = WorkspaceFactory.create()
+        WorkspaceGroupSharingFactory.create(workspace=workspace, group__name="other")
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        value = column.render(None, workspace, None)
+        self.assertEqual("", value)
+
+    def test_render_not_workspace(self):
+        column = tables.WorkspaceSharedWithConsortiumColumn()
+        with self.assertRaises(ImproperlyConfigured):
+            column.render(None, "foo", None)
