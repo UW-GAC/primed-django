@@ -2,25 +2,57 @@
 
 from datetime import date
 
-from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
+from anvil_consortium_manager.models import (
+    BaseWorkspaceData,
+    GroupGroupMembership,
+    ManagedGroup,
+)
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from model_utils.models import StatusModel
 from simple_history.models import HistoricalRecords
 
 from primed.duo.models import DataUseOntologyModel
 from primed.primed_anvil.models import AvailableData, RequesterModel, Study, StudySite
 
 
+class AgreementMajorVersion(TimeStampedModel, models.Model):
+    """A model for a major agreement version."""
+
+    version = models.IntegerField(
+        help_text="Major version of the CDSA. Changes to the major version require resigning.",
+        validators=[MinValueValidator(1)],
+        unique=True,
+    )
+    is_valid = models.BooleanField(
+        default=True, help_text="Boolean indicator of whether this version is valid."
+    )
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return "v{}".format(self.version)
+
+    def get_absolute_url(self):
+        return reverse(
+            "cdsa:agreement_versions:major_version_detail",
+            kwargs={
+                "major_version": self.version,
+            },
+        )
+
+
 class AgreementVersion(TimeStampedModel, models.Model):
     """Model to track approved CDSA versions."""
 
-    major_version = models.IntegerField(
+    major_version = models.ForeignKey(
+        AgreementMajorVersion,
         help_text="Major version of the CDSA. Changes to the major version require resigning.",
-        validators=[MinValueValidator(1)],
+        on_delete=models.CASCADE,
     )
     minor_version = models.IntegerField(
         help_text="Minor version of the CDSA. Changes to the minor version do not require resigning.",
@@ -37,7 +69,7 @@ class AgreementVersion(TimeStampedModel, models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["major_version", "minor_version"],
-                name="unique_agreement_version",
+                name="unique_agreement_version_2",
             )
         ]
         ordering = ["major_version", "minor_version"]
@@ -45,12 +77,43 @@ class AgreementVersion(TimeStampedModel, models.Model):
     def __str__(self):
         return self.full_version
 
+    def get_absolute_url(self):
+        return reverse(
+            "cdsa:agreement_versions:detail",
+            kwargs={
+                "major_version": self.major_version.version,
+                "minor_version": self.minor_version,
+            },
+        )
+
     @property
     def full_version(self):
-        return "v{}.{}".format(self.major_version, self.minor_version)
+        return "{}.{}".format(str(self.major_version), self.minor_version)
 
 
-class SignedAgreement(TimeStampedModel, models.Model):
+class SignedAgreementStatusMixin:
+    """Mixin to define status choices for SignedAgreements."""
+
+    # This is required because we are using django-model-util's StatusModel with django-simple-history:
+    # See GitHub issue: https://github.com/jazzband/django-simple-history/issues/190
+
+    class StatusChoices(models.TextChoices):
+        ACTIVE = "active", "Active"
+        """SignedAgreements that are currently active."""
+
+        WITHDRAWN = "withdrawn", "Withdrawn"
+        """SignedAgreements that have been withdrawn for some reason (e.g., PI changed institution,
+        study no longer wanted to participate.)"""
+
+        LAPSED = "lapsed", "Lapsed"
+        """SignedAgreements from a AgreementMajorVersion that is no longer valid."""
+
+    STATUS = StatusChoices.choices
+
+
+class SignedAgreement(
+    TimeStampedModel, SignedAgreementStatusMixin, StatusModel, models.Model
+):
     """Model to track verified, signed consortium data sharing agreements."""
 
     MEMBER = "member"
@@ -107,7 +170,7 @@ class SignedAgreement(TimeStampedModel, models.Model):
         on_delete=models.PROTECT,
     )
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(bases=[SignedAgreementStatusMixin, models.Model])
 
     def __str__(self):
         return "{}".format(self.cc_id)
@@ -139,6 +202,13 @@ class SignedAgreement(TimeStampedModel, models.Model):
     @property
     def agreement_group(self):
         return self.get_agreement_type().get_agreement_group()
+
+    def is_in_cdsa_group(self):
+        anvil_cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
+        return GroupGroupMembership.objects.filter(
+            parent_group=anvil_cdsa_group,
+            child_group=self.anvil_access_group,
+        ).exists()
 
 
 class AgreementTypeModel(models.Model):
@@ -185,7 +255,7 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            "cdsa:agreements:members:detail",
+            "cdsa:signed_agreements:members:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 
@@ -207,7 +277,7 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     def get_absolute_url(self):
         return reverse(
-            "cdsa:agreements:data_affiliates:detail",
+            "cdsa:signed_agreements:data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 
@@ -226,7 +296,7 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
 
     def get_absolute_url(self):
         return reverse(
-            "cdsa:agreements:non_data_affiliates:detail",
+            "cdsa:signed_agreements:non_data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
 

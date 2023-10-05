@@ -202,6 +202,68 @@ class SignedAgreementFormTest(TestCase):
         self.assertEqual(len(form.errors["cc_id"]), 1)
         self.assertIn("already exists", form.errors["cc_id"][0])
 
+    def test_invalid_version(self):
+        """Cannot select an AgreementVersion that is not valid."""
+        self.agreement_version.major_version.is_valid = False
+        self.agreement_version.major_version.save()
+        form_data = {
+            "cc_id": 1234,
+            "representative": self.representative,
+            "representative_role": "Test role",
+            "signing_institution": "Test insitution",
+            "version": self.agreement_version,
+            "date_signed": "2023-01-01",
+            "is_primary": True,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("version", form.errors)
+        self.assertEqual(len(form.errors["version"]), 1)
+        self.assertIn("valid choice", form.errors["version"][0])
+
+
+class SignedAgreementStatusFormTest(TestCase):
+    """Tests for the SignedAgreementStatusForm class."""
+
+    form_class = forms.SignedAgreementStatusForm
+
+    def setUp(self):
+        """Create related objects for use in the form."""
+        self.representative = UserFactory.create()
+        self.agreement_version = factories.AgreementVersionFactory.create()
+        self.signed_agreement = factories.SignedAgreementFactory.create()
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "status": models.SignedAgreement.StatusChoices.ACTIVE,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_missing_status(self):
+        """Form is invalid when missing status."""
+        form_data = {}
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("status", form.errors)
+        self.assertEqual(len(form.errors["status"]), 1)
+        self.assertIn("required", form.errors["status"][0])
+
+    def test_invalid_status(self):
+        """Cannot select a status that doesn't exist."""
+        self.agreement_version.major_version.is_valid = False
+        self.agreement_version.major_version.save()
+        form_data = {"status": "foo"}
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("status", form.errors)
+        self.assertEqual(len(form.errors["status"]), 1)
+        self.assertIn("valid choice", form.errors["status"][0])
+
 
 class MemberAgreementFormTest(TestCase):
     """Tests for the MemberAgreementForm class."""

@@ -8,11 +8,31 @@ from anvil_consortium_manager.models import (
 )
 
 from primed.primed_anvil.tables import (
-    BooleanCheckColumn,
-    WorkspaceSharedWithConsortiumTable,
+    BooleanIconColumn,
+    WorkspaceSharedWithConsortiumColumn,
 )
 
 from . import models
+
+
+class AgreementVersionTable(tables.Table):
+
+    major_version = tables.Column(linkify=True)
+    full_version = tables.Column(
+        linkify=True, order_by=("major_version", "minor_version")
+    )
+    major_version__is_valid = BooleanIconColumn(
+        verbose_name="Valid?", show_false_icon=True
+    )
+
+    class Meta:
+        model = models.AgreementVersion
+        fields = (
+            "major_version",
+            "full_version",
+            "major_version__is_valid",
+            "date_approved",
+        )
 
 
 class SignedAgreementTable(tables.Table):
@@ -35,6 +55,7 @@ class SignedAgreementTable(tables.Table):
         if hasattr(record.agreement_group, "get_absolute_url")
         else None
     )
+    version = tables.Column(linkify=True)
 
     class Meta:
         model = models.SignedAgreement
@@ -46,9 +67,11 @@ class SignedAgreementTable(tables.Table):
             "agreement_group",
             "agreement_type",
             "version",
+            "status",
             "date_signed",
             "number_accessors",
         )
+        order_by = ("cc_id",)
 
 
 class MemberAgreementTable(tables.Table):
@@ -56,7 +79,7 @@ class MemberAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
+    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -66,6 +89,7 @@ class MemberAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.MemberAgreement
@@ -77,9 +101,11 @@ class MemberAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
+        order_by = ("signed_agreement__cc_id",)
 
 
 class DataAffiliateAgreementTable(tables.Table):
@@ -87,7 +113,7 @@ class DataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn(verbose_name="Primary?")
+    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -97,6 +123,7 @@ class DataAffiliateAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.DataAffiliateAgreement
@@ -108,16 +135,17 @@ class DataAffiliateAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
+        order_by = ("signed_agreement__cc_id",)
 
 
 class NonDataAffiliateAgreementTable(tables.Table):
     """Table to display `DataAffiliateAgreement` objects."""
 
     signed_agreement__cc_id = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanCheckColumn()
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -127,6 +155,7 @@ class NonDataAffiliateAgreementTable(tables.Table):
         verbose_name="Number of accessors",
         accessor="signed_agreement__anvil_access_group__groupaccountmembership_set__count",
     )
+    signed_agreement__version = tables.Column(linkify=True)
 
     class Meta:
         model = models.NonDataAffiliateAgreement
@@ -137,9 +166,11 @@ class NonDataAffiliateAgreementTable(tables.Table):
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
             "signed_agreement__version",
+            "signed_agreement__status",
             "signed_agreement__date_signed",
             "number_accessors",
         )
+        order_by = ("signed_agreement__cc_id",)
 
 
 class RepresentativeRecordsTable(tables.Table):
@@ -154,12 +185,14 @@ class RepresentativeRecordsTable(tables.Table):
     class Meta:
         model = models.SignedAgreement
         fields = (
-            "cc_id",
             "representative__name",
             "representative_role",
             "signing_institution",
             "signing_group",
+            "agreement_type",
+            "version",
         )
+        order_by = ("representative__name",)
 
     def render_signing_group(self, record):
         if hasattr(record, "memberagreement"):
@@ -179,13 +212,16 @@ class StudyRecordsTable(tables.Table):
     signed_agreement__representative__name = tables.Column(
         verbose_name="Representative"
     )
+    # This will only order properly if the order_by value is a column in the table.
+    study__short_name = tables.Column(verbose_name="Study")
 
     class Meta:
         model = models.DataAffiliateAgreement
         fields = (
-            "study",
+            "study__short_name",
             "signed_agreement__representative__name",
         )
+        order_by = ("study__short_name",)
 
 
 class UserAccessRecordsTable(tables.Table):
@@ -207,6 +243,7 @@ class UserAccessRecordsTable(tables.Table):
             "group__signedagreement__signing_institution",
             "group__signedagreement__representative__name",
         )
+        order_by = ("account__user__name",)
 
     def render_signing_group(self, record):
         if hasattr(record.group.signedagreement, "memberagreement"):
@@ -246,6 +283,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             "workspace__created",
             "date_shared",
         )
+        order_by = ("workspace__name",)
 
     def render_date_shared(self, record):
         try:
@@ -257,7 +295,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             return "—"
 
 
-class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
+class CDSAWorkspaceTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column(linkify=True)
@@ -272,6 +310,7 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace
@@ -282,3 +321,31 @@ class CDSAWorkspaceTable(WorkspaceSharedWithConsortiumTable, tables.Table):
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
         )
+        order_by = ("name",)
+
+
+class CDSAWorkspaceLimitedViewTable(tables.Table):
+    """A table for the CDSAWorkspace model."""
+
+    name = tables.Column()
+    billing_project = tables.Column()
+    cdsaworkspace__data_use_permission__abbreviation = tables.Column(
+        verbose_name="DUO permission",
+    )
+    cdsaworkspace__study = tables.Column()
+    cdsaworkspace__data_use_modifiers = tables.ManyToManyColumn(
+        transform=lambda x: x.abbreviation,
+        verbose_name="DUO modifiers",
+    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
+            "cdsaworkspace__study",
+            "cdsaworkspace__data_use_permission__abbreviation",
+            "cdsaworkspace__data_use_modifiers",
+        )
+        order_by = ("name",)

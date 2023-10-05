@@ -8,34 +8,31 @@
   <dl class="row">
     <dt class="col-sm-2">Short name</dt> <dd class="col-sm-10">{{ object.short_name }}</dd>
     <dt class="col-sm-2">Full name</dt> <dd class="col-sm-10">{{ object.full_name }}</dd>
+    {% if perms.anvil_consortium_manager.anvil_project_manager_view %}
     <dt class="col-sm-2">Date created</dt> <dd class="col-sm-10">{{ object.created }}</dd>
     <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-10">{{ object.modified }}</dd>
+    {% endif %}
   </dl>
 {% endblock panel %}
 
 {% block after_panel %}
 
-<h3>Data access mechanisms</h3>
+<h3>Workspaces on AnVIL</h3>
 
-<div class="accordion my-3" id="accordionDataAccess">
-  <div class="accordion-item">
-    <h2 class="accordion-header" id="data-access-heading-CDSA">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#data-access-collapse-CDSA" aria-expanded="false" aria-controls="data-access-collapse-CDSA">
-        <span class="fa-solid fa-computer mx-2"></span>
-        CDSAs
-        <span class="badge bg-{% if tables.2.rows|length %}primary{% else %}secondary{% endif %} mx-3"> {{tables.2.rows|length}} </span>
-      </button>
-    </h2>
-    <div id="data-access-collapse-CDSA" class="accordion-collapse collapse" aria-labelledby="data-access-heading-CDSA">
-      <div class="accordion-body">
-        {% render_table tables.2 %}
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<h3>Workspaces</h3>
+<p>
+  The following dropdowns show PRIMED data storage workspaces associated with this study that exist on AnVIL.
+  While data in a workspace is being prepared, the workspace will appear in the tables below, but only users who are actively preparing data can access it on AnVIL.
+  Once data preparation for a workspace is complete, the workspace is shared with the Consortium.
+  Workspaces that have been shared with the Consortium can be identified by a green check box in the "Shared with PRIMED?" column of the tables below.
+</p>
+<p>
+  To access a workspace on AnVIL after it has been shared with the consortium, investigators must:
+  <ol>
+    <li>link their AnVIL account in this app, and</li>
+    <li>have approval via the correct PRIMED data access mechanism for data in the workspace.</li>
+  </ol>
+  More information can be found on the <a href="https://primedconsortium.org/members/research/getting-started-with-data">Getting Started with Data page</a>.
+</p>
 
 <div class="accordion" id="accordionWorkspaces">
   <div class="accordion-item">
@@ -48,6 +45,10 @@
     </h2>
     <div id="workspaces-collapse-dbGaP" class="accordion-collapse collapse" aria-labelledby="workspaces-heading-dbGaP">
       <div class="accordion-body">
+        <p>
+          These workspaces contain data from a dbGaP accession.
+          Investigators must be covered under an approved PRIMED coordinated dbGaP application to access these workspaces, even if they have been shared with PRIMED.
+        </p>
         {% render_table tables.0 %}
       </div>
     </div>
@@ -62,6 +63,10 @@
     </h2>
     <div id="workspaces-collapse-CDSA" class="accordion-collapse collapse" aria-labelledby="workspaces-heading-CDSA">
       <div class="accordion-body">
+        <p>
+          These workspaces contain data brought under the Consortium Data Sharing Agreement (CDSA).
+          Investigators must be covered under a fully-executed CDSA to access these workspaces, even if they have been shared with the consortium.
+        </p>
         {% render_table tables.1 %}
       </div>
     </div>
@@ -76,11 +81,16 @@
     </h2>
     <div id="workspaces-collapse-openaccess" class="accordion-collapse collapse" aria-labelledby="workspaces-heading-openaccess">
       <div class="accordion-body">
+        <p>
+          These workspaces contain open access data.
+          Any PRIMED investigator can access these workspaces once they have been shared with the consortium.
+        </p>
         {% render_table tables.3 %}
       </div>
     </div>
   </div>
 </div>
+
 
 
 {% endblock after_panel %}

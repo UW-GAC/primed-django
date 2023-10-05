@@ -1,0 +1,47 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load django_tables2 %}
+
+{% block title %}Agreement version {{ object }}{% endblock %}
+
+{% block pills %}
+  {% if show_deprecation_message %}
+<span class="badge bg-danger">
+  <span class="fa-solid fa-skull-crossbones me-1"></span>
+  Deprecated
+</span>
+  {% endif %}
+{% endblock pills %}
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-2">Full version</dt> <dd class="col-sm-9">{{ object.full_version }}</dd>
+  <dt class="col-sm-2">Major version</dt> <dd class="col-sm-9">
+    <a href="{{ object.major_version.get_absolute_url }}">{{ object.major_version }}</a>
+  </dd>
+
+  <dt class="col-sm-2">Date approved</dt> <dd class="col-sm-9">{{ object.date_approved }}</dd>
+</dl>
+{% endblock panel %}
+
+{% block after_panel %}
+
+<h3>Signed agreements</h3>
+
+<div class="accordion my-3" id="accordionSignedAgreements">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="signed-agreements-heading">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#signed-agreements-collapse" aria-expanded="false" aria-controls="signed-agreements-collapse">
+        <span class="fa-solid fa-computer mx-2"></span>
+        Signed agreements with this version
+        <span class="badge bg-{% if signed_agreement_table.rows|length %}primary{% else %}secondary{% endif %} mx-3"> {{signed_agreement_table.rows|length}} </span>
+      </button>
+    </h2>
+    <div id="signed-agreements-collapse" class="accordion-collapse collapse" aria-labelledby="signed-agreements-heading">
+      <div class="accordion-body">
+        {% render_table signed_agreement_table %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock after_panel %}

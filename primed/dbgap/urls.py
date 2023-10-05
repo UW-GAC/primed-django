@@ -25,7 +25,7 @@ dbgap_study_accession_patterns = (
     "dbgap_study_accessions",
 )
 
-data_access_request_patterns = (
+data_access_snapshot_patterns = (
     [
         path(
             "new/",
@@ -50,12 +50,13 @@ dbgap_application_patterns = (
             views.dbGaPDataAccessSnapshotCreateMultiple.as_view(),
             name="update_dars",
         ),
+        path("dars/", views.dbGaPDataAccessRequestList.as_view(), name="dars"),
         path(
             "<int:dbgap_project_id>/",
             views.dbGaPApplicationDetail.as_view(),
             name="detail",
         ),
-        path("<int:dbgap_project_id>/dars/", include(data_access_request_patterns)),
+        path("<int:dbgap_project_id>/dars/", include(data_access_snapshot_patterns)),
         path(
             "<int:dbgap_project_id>/audit/",
             views.dbGaPApplicationAudit.as_view(),

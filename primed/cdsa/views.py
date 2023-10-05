@@ -4,6 +4,7 @@ from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerViewRequired,
+    AnVILProjectManagerAccess,
 )
 from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
 from django.conf import settings
@@ -14,13 +15,163 @@ from django.db import transaction
 from django.forms import inlineformset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
-from django.views.generic import DetailView, FormView, TemplateView
-from django_tables2 import SingleTableView
+from django.utils.translation import ugettext_lazy as _
+from django.views.generic import DetailView, FormView, TemplateView, UpdateView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from . import forms, helpers, models, tables
 from .audit import signed_agreement_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
+
+
+class AgreementMajorVersionDetail(
+    AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView
+):
+    """Display a "detail" page for an agreement major version (e.g., 1.x)."""
+
+    model = models.AgreementMajorVersion
+    template_name = "cdsa/agreementmajorversion_detail.html"
+    tables = (tables.AgreementVersionTable, tables.SignedAgreementTable)
+
+    def get_object(self, queryset=None):
+        queryset = self.model.objects.all()
+        try:
+            major_version = self.kwargs["major_version"]
+            obj = queryset.get(version=major_version)
+        except (KeyError, self.model.DoesNotExist):
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_tables_data(self):
+        agreement_version_qs = models.AgreementVersion.objects.filter(
+            major_version=self.object
+        )
+        signed_agreement_qs = models.SignedAgreement.objects.filter(
+            version__major_version=self.object
+        )
+        return [agreement_version_qs, signed_agreement_qs]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = not self.object.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context[
+            "show_invalidate_button"
+        ] = self.object.is_valid and self.request.user.has_perm(
+            edit_permission_codename
+        )
+        return context
+
+
+class AgreementMajorVersionInvalidate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+    """A view to invalidate an AgreementMajorVersion instance.
+
+    This view sets the is_valid field to False. It also sets the status of all associated
+    CDSAs to LAPSED.
+    """
+
+    # Note that this view mimics the DeleteView.
+    model = models.AgreementMajorVersion
+    # form_class = Form
+    form_class = forms.AgreementMajorVersionIsValidForm
+    template_name = "cdsa/agreementmajorversion_confirm_invalidate.html"
+    success_message = "Successfully invalidated major agreement version."
+    ERROR_ALREADY_INVALID = "This version has already been invalidated."
+
+    def get_object(self, queryset=None):
+        queryset = self.model.objects.all()
+        try:
+            major_version = self.kwargs["major_version"]
+            obj = queryset.get(version=major_version)
+        except (KeyError, self.model.DoesNotExist):
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_initial(self):
+        """Set is_valid to False, since this view is invalidating a specific AgreementMajorVersion."""
+        initial = super().get_initial()
+        initial["is_valid"] = False
+        return initial
+
+    def get(self, response, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object.is_valid:
+            messages.error(self.request, self.ERROR_ALREADY_INVALID)
+            return HttpResponseRedirect(self.object.get_absolute_url())
+        return super().get(response, *args, **kwargs)
+
+    def post(self, response, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object.is_valid:
+            messages.error(self.request, self.ERROR_ALREADY_INVALID)
+            return HttpResponseRedirect(self.object.get_absolute_url())
+        return super().post(response, *args, **kwargs)
+
+    def form_valid(self, form):
+        models.SignedAgreement.objects.filter(
+            status=models.SignedAgreement.StatusChoices.ACTIVE,
+            version__major_version=self.object,
+        ).update(status=models.SignedAgreement.StatusChoices.LAPSED)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    # Change status for CDSAs to lapsed when their major version is invalidated.
+
+
+class AgreementVersionDetail(
+    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+):
+    """Display a "detail" page for an agreement major/minor version (e.g., 1.3)."""
+
+    model = models.AgreementVersion
+    table_class = tables.SignedAgreementTable
+    context_table_name = "signed_agreement_table"
+
+    def get_table_data(self):
+        qs = models.SignedAgreement.objects.filter(version=self.object)
+        # import ipdb; ipdb.set_trace()
+        print(qs)
+        return qs
+
+    def get_object(self, queryset=None):
+        queryset = self.model.objects.all()
+        try:
+            major_version = self.kwargs["major_version"]
+            minor_version = self.kwargs["minor_version"]
+            obj = queryset.get(
+                major_version__version=major_version, minor_version=minor_version
+            )
+        except (KeyError, self.model.DoesNotExist):
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["show_deprecation_message"] = not self.object.major_version.is_valid
+        return context
+
+
+class AgreementVersionList(AnVILConsortiumManagerViewRequired, SingleTableView):
+    """Display a list of AgreementVersions."""
+
+    model = models.AgreementVersion
+    table_class = tables.AgreementVersionTable
 
 
 class SignedAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
@@ -214,12 +365,50 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
             )
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context[
+            "show_deprecation_message"
+        ] = not self.object.signed_agreement.version.major_version.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context["show_update_button"] = self.request.user.has_perm(
+            edit_permission_codename
+        )
+        return context
+
 
 class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """Display a list of MemberAgreement objects."""
 
     model = models.MemberAgreement
     table_class = tables.MemberAgreementTable
+
+
+class SignedAgreementStatusUpdate(
+    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+):
+
+    model = models.SignedAgreement
+    form_class = forms.SignedAgreementStatusForm
+    template_name = "cdsa/signedagreement_status_update.html"
+    agreement_type = None
+    success_message = "Successfully updated Signed Agreement status."
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(
+                cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type")
+            )
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
@@ -238,6 +427,19 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context[
+            "show_deprecation_message"
+        ] = not self.object.signed_agreement.version.major_version.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context["show_update_button"] = self.request.user.has_perm(
+            edit_permission_codename
+        )
+        return context
 
 
 class DataAffiliateAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
@@ -281,6 +483,19 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
             )
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context[
+            "show_deprecation_message"
+        ] = not self.object.signed_agreement.version.major_version.is_valid
+        edit_permission_codename = "anvil_consortium_manager." + (
+            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        )
+        context["show_update_button"] = self.request.user.has_perm(
+            edit_permission_codename
+        )
+        return context
+
 
 class NonDataAffiliateAgreementList(
     AnVILConsortiumManagerViewRequired, SingleTableView
@@ -300,9 +515,9 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
     )
 
     def get(self, request, *args, **kwargs):
-        try:
-            self.audit = signed_agreement_audit.SignedAgreementAccessAudit()
-        except models.ManagedGroup.DoesNotExist:
+        if not models.ManagedGroup.objects.filter(
+            name=settings.ANVIL_CDSA_GROUP_NAME
+        ).exists():
             messages.error(
                 self.request,
                 self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(
@@ -314,12 +529,12 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Run the audit on all SignedAgreements.
-        self.audit.run_audit()
-        context["verified_table"] = self.audit.get_verified_table()
-        context["errors_table"] = self.audit.get_errors_table()
-        context["needs_action_table"] = self.audit.get_needs_action_table()
-        context["audit"] = self.audit
+        audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
         return context
 
 

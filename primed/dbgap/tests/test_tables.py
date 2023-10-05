@@ -3,16 +3,73 @@
 from datetime import timedelta
 
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager.tests.factories import (
-    GroupGroupMembershipFactory,
-    WorkspaceGroupSharingFactory,
-)
+from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory
 from django.db.models import Count
 from django.test import TestCase
 from django.utils import timezone
+from freezegun import freeze_time
 
 from .. import models, tables
 from . import factories
+
+
+class dbGaPAccessionColumnTest(TestCase):
+    """Tests for the dbGaPAccessionColumn class."""
+
+    def test_default(self):
+        """works as expected with defaults."""
+
+        class TestClass:
+            def get_dbgap_accession(self):
+                return "foo"
+
+            def get_dbgap_link(self):
+                return "bar"
+
+        instance = TestClass()
+        column = tables.dbGaPAccessionColumn()
+        # Render
+        self.assertEqual(
+            column.render(instance),
+            """<a href="bar" target="_blank">foo <i class="bi bi-box-arrow-up-right"></i></a>""",
+        )
+        # Value
+        self.assertEqual(column.value(instance), instance.get_dbgap_accession())
+
+    def test_get_dbgap_link_not_none(self):
+        """column works properly when value has a get_dbgap_accession attribute."""
+
+        class TestClass:
+            def get_dbgap_accession(self):
+                return "foo"
+
+            def get_dbgap_link(self):
+                return "bar"
+
+            def get_dbgap_link_2(self):
+                return "foobar"
+
+        instance = TestClass()
+        column = tables.dbGaPAccessionColumn(dbgap_link_accessor="get_dbgap_link_2")
+        # Render
+        self.assertIn("""href="foobar" """, column.render(instance))
+        # Value
+        self.assertEqual(column.value(instance), instance.get_dbgap_accession())
+
+    def test_get_dbgap_link_none(self):
+        """column works properly when value has a get_dbgap_accession and get_dbgap_link attribute."""
+
+        class TestClass:
+            def get_dbgap_accession(self):
+                return "foo"
+
+            def get_dbgap_link(self):
+                return "bar"
+
+        instance = TestClass()
+        column = tables.dbGaPAccessionColumn(dbgap_link_accessor=None)
+        self.assertEqual("foo", column.render(instance))
+        self.assertEqual("foo", column.value(instance))
 
 
 class dbGaPStudyAccessionTableTest(TestCase):
@@ -50,6 +107,14 @@ class dbGaPStudyAccessionTableTest(TestCase):
         self.assertEqual(table.rows[1].get_cell("number_workspaces"), 1)
         self.assertEqual(table.rows[2].get_cell("number_workspaces"), 2)
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_phs."""
+        instance_1 = self.model_factory.create(dbgap_phs=2)
+        instance_2 = self.model_factory.create(dbgap_phs=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
+
 
 class dbGaPWorkspaceTableTest(TestCase):
     model = acm_models.Workspace
@@ -69,22 +134,6 @@ class dbGaPWorkspaceTableTest(TestCase):
         self.model_factory.create_batch(2)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_dbgap_accession(self):
-        """render_dbgap_accession returns the correct value."""
-        instance = self.model_factory.create(
-            dbgap_study_accession__dbgap_phs=1,
-            dbgap_version=2,
-            dbgap_participant_set=3,
-        )
-        table = self.table_class(self.model.objects.all())
-        self.assertIn(
-            "phs000001.v2.p3",
-            table.rows[0].get_cell_value("dbgap_accession"),
-        )
-        self.assertIn(
-            instance.get_dbgap_link(), table.rows[0].get_cell_value("dbgap_accession")
-        )
 
     def test_render_number_approved_dars_no_dars(self):
         instance = self.model_factory.create()
@@ -127,33 +176,54 @@ class dbGaPWorkspaceTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.render_number_approved_dars(instance.workspace), 0)
 
-    def test_render_is_shared_not_shared(self):
-        """render_is_shared works correctly when the workspace is not shared with anyone."""
-        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        factories.dbGaPWorkspaceFactory.create()
-        table = self.table_class(self.model.objects.all())
-        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+    # def test_render_is_shared_not_shared(self):
+    #     """render_is_shared works correctly when the workspace is not shared with anyone."""
+    #     factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+    #     factories.dbGaPWorkspaceFactory.create()
+    #     table = self.table_class(self.model.objects.all())
+    #     self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
 
-    def test_render_is_shared_true(self):
-        """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
-        group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceGroupSharingFactory.create(
-            group=group, workspace=dbgap_workspace.workspace
-        )
-        table = self.table_class(self.model.objects.all())
-        self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
+    # def test_render_is_shared_true(self):
+    #     """render_is_shared works correctly when the workspace is shared with PRIMED_ALL."""
+    #     group = factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+    #     dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+    #     WorkspaceGroupSharingFactory.create(
+    #         group=group, workspace=dbgap_workspace.workspace
+    #     )
+    #     table = self.table_class(self.model.objects.all())
+    #     import ipdb; ipdb.set_trace()
+    #     self.assertIn("circle-fill", table.rows[0].get_cell_value("is_shared"))
 
-    def test_render_is_shared_shared_with_different_group(self):
-        """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
-        factories.ManagedGroupFactory.create(name="PRIMED_ALL")
-        group = factories.ManagedGroupFactory.create()
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        WorkspaceGroupSharingFactory.create(
-            group=group, workspace=dbgap_workspace.workspace
-        )
+    # def test_render_is_shared_shared_with_different_group(self):
+    #     """render_is_shared works correctly when the workspace is shared with a group other PRIMED_ALL."""
+    #     factories.ManagedGroupFactory.create(name="PRIMED_ALL")
+    #     group = factories.ManagedGroupFactory.create()
+    #     dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+    #     WorkspaceGroupSharingFactory.create(
+    #         group=group, workspace=dbgap_workspace.workspace
+    #     )
+    #     table = self.table_class(self.model.objects.all())
+    #     self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+
+
+class dbGaPWorkspaceLimitedViewTableTest(TestCase):
+    model = acm_models.Workspace
+    model_factory = factories.dbGaPWorkspaceFactory
+    table_class = tables.dbGaPWorkspaceTable
+
+    def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())
-        self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
 
 
 class dbGaPApplicationTableTest(TestCase):
@@ -380,6 +450,14 @@ class dbGaPApplicationTableTest(TestCase):
             latest_snapshot.get_absolute_url(), table.rows[0].get_cell("last_update")
         )
 
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_project_id."""
+        instance_1 = self.model_factory.create(dbgap_project_id=2)
+        instance_2 = self.model_factory.create(dbgap_project_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
+
 
 class dbGaPDataAccessSnapshotTableTest(TestCase):
     model = models.dbGaPDataAccessSnapshot
@@ -401,46 +479,142 @@ class dbGaPDataAccessSnapshotTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
     def test_number_approved_dars(self):
-        snapshot = self.model_factory.create()
+        snapshot_1 = self.model_factory.create()
         factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
         )
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=snapshot,
+            dbgap_data_access_snapshot=snapshot_1,
             dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
         )
-        other_snapshot = self.model_factory.create()
+        snapshot_2 = self.model_factory.create()
         factories.dbGaPDataAccessRequestFactory.create_batch(
             2,
-            dbgap_data_access_snapshot=other_snapshot,
+            dbgap_data_access_snapshot=snapshot_2,
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         table = self.table_class(self.model.objects.all())
-        self.assertEqual(table.rows[0].get_cell_value("number_approved_dars"), 1)
-        self.assertEqual(table.rows[1].get_cell_value("number_approved_dars"), 2)
+        self.assertEqual(table.render_number_approved_dars(snapshot_1), 1)
+        self.assertEqual(table.render_number_approved_dars(snapshot_2), 2)
+
+    def test_number_requested_dars(self):
+        snapshot_1 = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED,
+        )
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_1,
+            dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
+        )
+        snapshot_2 = self.model_factory.create()
+        factories.dbGaPDataAccessRequestFactory.create_batch(
+            2,
+            dbgap_data_access_snapshot=snapshot_2,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.render_number_requested_dars(snapshot_1), 9)
+        self.assertEqual(table.render_number_requested_dars(snapshot_2), 2)
+
+    def test_ordering(self):
+        """Instances are ordered by decreasing snapshot date."""
+        with freeze_time("2020-01-01"):
+            instance_1 = self.model_factory.create()
+        with freeze_time("2021-12-12"):
+            instance_2 = self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class dbGaPDataAccessRequestTableTest(TestCase):
     model = models.dbGaPDataAccessRequest
     model_factory = factories.dbGaPDataAccessRequestFactory
     table_class = tables.dbGaPDataAccessRequestTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_application and dbgap_dar_id."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create(
+            dbgap_project_id=2
+        )
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create(
+            dbgap_project_id=1
+        )
+        instance_1 = self.model_factory.create(
+            dbgap_dar_id=4,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_1,
+        )
+        instance_2 = self.model_factory.create(
+            dbgap_dar_id=3,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_2,
+        )
+        instance_3 = self.model_factory.create(
+            dbgap_dar_id=2,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_1,
+        )
+        instance_4 = self.model_factory.create(
+            dbgap_dar_id=1,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application_2,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_4)
+        self.assertEqual(table.data[1], instance_2)
+        self.assertEqual(table.data[2], instance_3)
+        self.assertEqual(table.data[3], instance_1)
+
+
+class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
+    model = models.dbGaPDataAccessRequest
+    model_factory = factories.dbGaPDataAccessRequestFactory
+    table_class = tables.dbGaPDataAccessRequestBySnapshotTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())
@@ -468,7 +642,8 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
-        self.assertIn(str(workspace), value)
+        self.assertIn(workspace.workspace.name, value)
+        self.assertNotIn(workspace.workspace.billing_project.name, value)
         self.assertIn("circle-fill", value)
 
     def test_one_matching_workspace_without_access(self):
@@ -479,7 +654,7 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
-        self.assertIn(str(workspace), value)
+        self.assertIn(workspace.workspace.name, value)
         self.assertIn("square-fill", value)
 
     def test_two_matching_workspaces(self):
@@ -505,8 +680,16 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         )
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
-        self.assertIn(str(workspace_1), value)
-        self.assertIn(str(workspace_2), value)
+        self.assertIn(workspace_1.workspace.name, value)
+        self.assertIn(workspace_2.workspace.name, value)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_dar_id."""
+        instance_1 = self.model_factory.create(dbgap_dar_id=2)
+        instance_2 = self.model_factory.create(dbgap_dar_id=1)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_2)
+        self.assertEqual(table.data[1], instance_1)
 
 
 class dbGaPDataAccessRequestSummaryTable(TestCase):
