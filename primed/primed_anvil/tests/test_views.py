@@ -968,6 +968,21 @@ class AccountListTest(TestCase):
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
 
+    def test_filter_by_name(self):
+        """Filtering by name works as expected."""
+        user = UserFactory.create(name="First Last")
+        account = AccountFactory.create(user=user)
+        other_account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("anvil_consortium_manager:accounts:list"),
+            {"user__name__icontains": "First"},
+        )
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        self.assertIn(account, response.context_data["table"].data)
+        self.assertNotIn(other_account, response.context_data["table"].data)
+
 
 class AvailableDataTest(TestCase):
     """Tests for the StudyDetail view."""

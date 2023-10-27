@@ -1,7 +1,7 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
-from anvil_consortium_manager.filters import AccountListFilter
 from django.db.models import Q
 
+from .filters import AccountListFilter
 from .tables import AccountTable
 
 
