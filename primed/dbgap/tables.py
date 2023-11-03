@@ -330,3 +330,40 @@ class dbGaPDataAccessRequestSummaryTable(tables.Table):
         model = models.dbGaPDataAccessRequest
         fields = ("dbgap_dac", "dbgap_current_status", "total")
         attrs = {"class": "table table-sm"}
+
+
+class dbGaPApplicationRecordsTable(tables.Table):
+    """Class to render a publicly-viewable table of dbGaPApplication objects."""
+
+    dbgap_project_id = tables.columns.Column()
+    principal_investigator = tables.columns.Column(
+        verbose_name="Application PI",
+        accessor="principal_investigator__name",
+    )
+    principal_investigator__study_sites = tables.columns.ManyToManyColumn(
+        verbose_name="Study site(s)",
+    )
+    number_approved_dars = tables.columns.ManyToManyColumn(
+        accessor="dbgapdataaccesssnapshot_set",
+        filter=lambda qs: qs.filter(is_most_recent=True),
+        verbose_name="Number of approved DARs",
+        transform=lambda obj: obj.dbgapdataaccessrequest_set.approved().count(),
+    )
+    number_requested_dars = tables.columns.ManyToManyColumn(
+        accessor="dbgapdataaccesssnapshot_set",
+        filter=lambda qs: qs.filter(is_most_recent=True),
+        verbose_name="Number of requested DARs",
+        transform=lambda obj: obj.dbgapdataaccessrequest_set.count(),
+    )
+    last_update = ManyToManyDateTimeColumn(
+        accessor="dbgapdataaccesssnapshot_set",
+        filter=lambda qs: qs.filter(is_most_recent=True),
+    )
+
+    class Meta:
+        model = models.dbGaPApplication
+        fields = (
+            "dbgap_project_id",
+            "principal_investigator",
+        )
+        order_by = ("dbgap_project_id",)
