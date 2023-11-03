@@ -80,6 +80,11 @@ dbgap_workspace_patterns = (
 records_patterns = (
     [
         path("", views.dbGaPRecordsIndex.as_view(), name="index"),
+        path(
+            "applications/",
+            views.dbGaPApplicationRecords.as_view(),
+            name="applications",
+        ),
     ],
     "records",
 )

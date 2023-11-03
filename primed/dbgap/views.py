@@ -582,3 +582,11 @@ class dbGaPRecordsIndex(TemplateView):
     """Index page for dbGaP records."""
 
     template_name = "dbgap/records_index.html"
+
+
+class dbGaPApplicationRecords(SingleTableView):
+    """Display a public list of dbGaP applications."""
+
+    model = models.dbGaPApplication
+    template_name = "dbgap/dbgapapplication_records.html"
+    table_class = tables.dbGaPApplicationRecordsTable
