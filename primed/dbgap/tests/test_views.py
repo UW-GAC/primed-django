@@ -4216,3 +4216,36 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPWorkspaceAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+
+class dbGaPRecordsIndexTest(TestCase):
+    """Tests for the dbGaPRecordsIndex view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("dbgap:records:index", args=args)
+
+    def test_status_code_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_user_logged_in(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_links(self):
+        """response includes the correct links."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("dbgap:records:applications"))
+        # self.assertContains(response, reverse("cdsa:records:user_access"))
+        # self.assertContains(response, reverse("cdsa:records:workspaces"))

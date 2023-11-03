@@ -22,7 +22,13 @@ from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import CreateView, DetailView, FormView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    FormView,
+    TemplateView,
+    UpdateView,
+)
 from django_tables2 import SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
 
@@ -570,3 +576,9 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerViewRequired, DetailView):
         context["needs_action_table"] = data_access_audit.get_needs_action_table()
         context["data_access_audit"] = data_access_audit
         return context
+
+
+class dbGaPRecordsIndex(TemplateView):
+    """Index page for dbGaP records."""
+
+    template_name = "dbgap/records_index.html"
