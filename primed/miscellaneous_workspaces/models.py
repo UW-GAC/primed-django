@@ -1,7 +1,7 @@
 """Model definitions for the `miscellaneous_workspaces` app."""
 
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
-from anvil_consortium_manager.models import BaseWorkspaceData
+from anvil_consortium_manager.models import BaseWorkspaceData, Workspace
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
@@ -62,3 +62,31 @@ class OpenAccessWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
         help_text="The types of data available in this workspace.",
         blank=True,
     )
+
+
+class DataPrepWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
+    """A model to track workspaces that are used to update data in another workspace."""
+
+    target_workspace = models.ForeignKey(
+        Workspace,
+        on_delete=models.PROTECT,
+        related_name="data_prep_workspaces",
+        help_text="The workspace for which data is being prepared or updated.",
+    )
+
+    def clean(self):
+        if self.target_workspace:
+            if self.target_workspace.workspace_type == "data_prep":
+                raise ValidationError(
+                    {
+                        "target_workspace": "target_workspace cannot be a DataPrepWorkspace."
+                    }
+                )
+
+        if self.target_workspace and self.workspace:
+            if self.target_workspace == self.workspace:
+                raise ValidationError(
+                    {
+                        "target_workspace": "target_workspace must be different than workspace."
+                    }
+                )

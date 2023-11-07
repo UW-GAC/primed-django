@@ -223,3 +223,75 @@ class OpenAccessWorkspaceTest(TestCase):
             workspace=workspace, requested_by=user, data_url="http://www.example.com"
         )
         self.assertEqual(instance.data_url, "http://www.example.com")
+
+
+class DataPrepWorkspaceTest(TestCase):
+    """Tests for the DataPrepWorkspace model."""
+
+    def test_model_saving(self):
+        """Creation using the model constructor and .save() works."""
+        workspace = WorkspaceFactory.create()
+        target_workspace = WorkspaceFactory.create()
+        user = UserFactory.create()
+        instance = models.DataPrepWorkspace(
+            workspace=workspace, target_workspace=target_workspace, requested_by=user
+        )
+        instance.save()
+        self.assertIsInstance(instance, models.DataPrepWorkspace)
+
+    def test_str_method(self):
+        workspace = WorkspaceFactory.create(
+            billing_project__name="test-bp", name="test-ws"
+        )
+        instance = factories.DataPrepWorkspaceFactory.create(workspace=workspace)
+        self.assertIsInstance(str(instance), str)
+        self.assertEqual(str(instance), "test-bp/test-ws")
+
+    def test_two_update_workspaces_for_same_final_workspace(self):
+        target_workspace = WorkspaceFactory.create()
+        instance_1 = factories.DataPrepWorkspaceFactory.create(
+            target_workspace=target_workspace
+        )
+        instance_2 = factories.DataPrepWorkspaceFactory.create(
+            target_workspace=target_workspace
+        )
+        self.assertEqual(target_workspace.data_prep_workspaces.count(), 2)
+        self.assertIn(instance_1, target_workspace.data_prep_workspaces.all())
+        self.assertIn(instance_2, target_workspace.data_prep_workspaces.all())
+
+    def test_clean_original_workspace_different_than_workspace(self):
+        """Clean method raises ValidationError when workspace is the same as original_workspace."""
+        workspace = WorkspaceFactory.create()
+        user = UserFactory.create()
+        instance = models.DataPrepWorkspace(
+            requested_by=user, workspace=workspace, target_workspace=workspace
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("target_workspace", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["target_workspace"]), 1)
+        self.assertIn(
+            "target_workspace must be different",
+            e.exception.message_dict["target_workspace"][0],
+        )
+
+    def test_clean_target_workspace_cannot_be_a_data_prep_workspace(self):
+        """Clean method raises ValidationError when the original_workspace is a data prep workspace."""
+        workspace = WorkspaceFactory.create()
+        target_workspace = factories.DataPrepWorkspaceFactory.create()
+        user = UserFactory.create()
+        instance = models.DataPrepWorkspace(
+            requested_by=user,
+            workspace=workspace,
+            target_workspace=target_workspace.workspace,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("target_workspace", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["target_workspace"]), 1)
+        self.assertIn(
+            "cannot be a DataPrepWorkspace",
+            e.exception.message_dict["target_workspace"][0],
+        )
