@@ -106,3 +106,26 @@ class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             ),
             "available_data": forms.CheckboxSelectMultiple,
         }
+
+
+class DataPrepWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a DataPrepWorkspace object."""
+
+    class Meta:
+        model = models.DataPrepWorkspace
+        fields = (
+            "workspace",
+            "target_workspace",
+            "requested_by",
+        )
+        # widgets = {
+        #     "studies": autocomplete.ModelSelect2Multiple(
+        #         url="primed_anvil:studies:autocomplete",
+        #         attrs={"data-theme": "bootstrap-5"},
+        #     ),
+        #     "requested_by": autocomplete.ModelSelect2(
+        #         url="users:autocomplete",
+        #         attrs={"data-theme": "bootstrap-5"},
+        #     ),
+        #     "available_data": forms.CheckboxSelectMultiple,
+        # }

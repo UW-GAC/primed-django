@@ -75,7 +75,7 @@ class DataPrepWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     )
 
     def clean(self):
-        if self.target_workspace:
+        if hasattr(self, "target_workspace"):
             if self.target_workspace.workspace_type == "data_prep":
                 raise ValidationError(
                     {
@@ -83,7 +83,7 @@ class DataPrepWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
                     }
                 )
 
-        if self.target_workspace and self.workspace:
+        if hasattr(self, "target_workspace") and hasattr(self, "workspace"):
             if self.target_workspace == self.workspace:
                 raise ValidationError(
                     {

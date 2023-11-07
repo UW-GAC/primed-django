@@ -40,3 +40,18 @@ class OpenAccessWorkspaceLimitedViewTable(tables.Table):
             "is_shared",
         )
         order_by = ("name",)
+
+
+class DataPrepWorkspaceTable(tables.Table):
+    """Class to render a table of Workspace objects with DataPrepWorkspace workspace data."""
+
+    name = tables.columns.Column(linkify=True)
+    target_workspace = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "target_workspace",
+        )
+        order_by = ("name",)

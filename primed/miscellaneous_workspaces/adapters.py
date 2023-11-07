@@ -77,3 +77,18 @@ class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = (
         "miscellaneous_workspaces/openaccessworkspace_detail.html"
     )
+
+
+class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for DataPrepWorkspace."""
+
+    type = "data_prep"
+    name = "Data prep workspace"
+    description = "Workspaces used to prepare data."
+    list_table_class = tables.DataPrepWorkspaceTable
+    workspace_form_class = WorkspaceForm
+    workspace_data_model = models.DataPrepWorkspace
+    workspace_data_form_class = forms.DataPrepWorkspaceForm
+    workspace_detail_template_name = (
+        "miscellaneous_workspaces/dataprpeworkspace_detail.html"
+    )
