@@ -2,7 +2,7 @@ import logging
 
 from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerViewRequired,
     AnVILProjectManagerAccess,
 )
@@ -70,7 +70,7 @@ class AgreementMajorVersionDetail(
 
 
 class AgreementMajorVersionInvalidate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
 ):
     """A view to invalidate an AgreementMajorVersion instance.
 
@@ -294,7 +294,7 @@ class AgreementTypeCreateMixin:
 
 
 class MemberAgreementCreate(
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
     SuccessMessageMixin,
     FormView,
@@ -311,7 +311,7 @@ class MemberAgreementCreate(
 
 
 class DataAffiliateAgreementCreate(
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
     SuccessMessageMixin,
     FormView,
@@ -387,7 +387,7 @@ class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class SignedAgreementStatusUpdate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
 ):
 
     model = models.SignedAgreement
@@ -450,7 +450,7 @@ class DataAffiliateAgreementList(AnVILConsortiumManagerViewRequired, SingleTable
 
 
 class NonDataAffiliateAgreementCreate(
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
     SuccessMessageMixin,
     FormView,

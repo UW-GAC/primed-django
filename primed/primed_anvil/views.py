@@ -1,6 +1,6 @@
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
     AnVILConsortiumManagerLimitedViewRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
@@ -88,7 +88,9 @@ class StudyList(AnVILConsortiumManagerLimitedViewRequired, SingleTableView):
     table_class = tables.StudyTable
 
 
-class StudyCreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView):
+class StudyCreate(
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
+):
     """View to create a new `Study`."""
 
     model = models.Study

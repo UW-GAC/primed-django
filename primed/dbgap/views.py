@@ -3,7 +3,7 @@ import logging
 import requests
 from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import (
@@ -83,7 +83,7 @@ class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableVie
 
 
 class dbGaPStudyAccessionCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
 ):
     """View to create a new dbGaPStudyAccession."""
 
@@ -94,7 +94,7 @@ class dbGaPStudyAccessionCreate(
 
 
 class dbGaPStudyAccessionUpdate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
 ):
     """View to update a dbGaPStudyAccession."""
 
@@ -193,7 +193,7 @@ class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class dbGaPApplicationCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
 ):
     """View to create a new dbGaPApplication."""
 
@@ -233,7 +233,7 @@ class dbGaPApplicationCreate(
 
 
 class dbGaPDataAccessSnapshotCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView
 ):
 
     form_class = forms.dbGaPDataAccessSnapshotForm
@@ -321,7 +321,7 @@ class dbGaPDataAccessSnapshotCreate(
 
 
 class dbGaPDataAccessSnapshotCreateMultiple(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView
 ):
 
     form_class = forms.dbGaPDataAccessSnapshotMultipleForm
