@@ -1,7 +1,7 @@
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerLimitedViewRequired,
     AnVILConsortiumManagerStaffEditRequired,
-    AnVILConsortiumManagerViewRequired,
+    AnVILConsortiumManagerStaffViewRequired,
 )
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
 from dal import autocomplete
@@ -102,7 +102,7 @@ class StudyCreate(
 
 
 class StudyAutocomplete(
-    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+    AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView
 ):
     """View to provide autocompletion for `Study`s. Match either the `short_name` or `full_name`."""
 
@@ -126,7 +126,9 @@ class StudyAutocomplete(
         return qs
 
 
-class StudySiteDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
+class StudySiteDetail(
+    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
+):
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
@@ -147,14 +149,14 @@ class StudySiteDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Detai
         return [user_qs, dbgap_qs, cdsa_qs]
 
 
-class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class StudySiteList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `StudySite`s."""
 
     model = models.StudySite
     table_class = tables.StudySiteTable
 
 
-class AvailableDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class AvailableDataList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `AvailableData`."""
 
     model = models.AvailableData
@@ -162,7 +164,7 @@ class AvailableDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class AvailableDataDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """View to show details about a `AvailableData`."""
 
