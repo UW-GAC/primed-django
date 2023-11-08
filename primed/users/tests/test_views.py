@@ -174,6 +174,32 @@ class TestUserDetailView:
         assert response.status_code == 302
         assert response["Location"] == f"{login_url}?next=/fake-url/"
 
+    def test_staff_view_links(self, client, user: User, rf: RequestFactory):
+        """Link to ACM account page is in response for users with STAFF_VIEW permission."""
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        client.force_login(user)
+        account = AccountFactory.create(email="foo@bar.com", user=user, verified=True)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
+        assert account.get_absolute_url() in str(response.content)
+
+    def test_view_links(self, client, user: User, rf: RequestFactory):
+        """Link to ACM account page is not in response for users with VIEW permission."""
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        client.force_login(user)
+        account = AccountFactory.create(email="foo@bar.com", user=user, verified=True)
+        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        response = client.get(user_detail_url)
+        assert account.get_absolute_url() not in str(response.content)
+
 
 class UserAutocompleteTest(TestCase):
     def setUp(self):
