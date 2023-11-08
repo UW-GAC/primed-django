@@ -90,5 +90,5 @@ class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.DataPrepWorkspace
     workspace_data_form_class = forms.DataPrepWorkspaceForm
     workspace_detail_template_name = (
-        "miscellaneous_workspaces/dataprpeworkspace_detail.html"
+        "miscellaneous_workspaces/dataprepworkspace_detail.html"
     )
