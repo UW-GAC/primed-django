@@ -1,7 +1,7 @@
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerLimitedViewRequired,
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
+    AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
 from dal import autocomplete
@@ -37,9 +37,7 @@ from . import helpers, models, tables
 User = get_user_model()
 
 
-class StudyDetail(
-    AnVILConsortiumManagerLimitedViewRequired, MultiTableMixin, DetailView
-):
+class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `Study`."""
 
     model = models.Study
@@ -81,7 +79,7 @@ class StudyDetail(
             )
 
 
-class StudyList(AnVILConsortiumManagerLimitedViewRequired, SingleTableView):
+class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `Study`s."""
 
     model = models.Study
