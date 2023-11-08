@@ -119,7 +119,7 @@ class TestUserDetailView:
         client.force_login(user)
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         AccountFactory.create(email="foo@bar.com", user=user, verified=True)
@@ -134,7 +134,7 @@ class TestUserDetailView:
         client.force_login(user)
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         UserEmailEntryFactory.create(email="foo@bar.com", user=user)

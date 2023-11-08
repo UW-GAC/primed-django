@@ -27,7 +27,7 @@ class SimulatedDataWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -52,7 +52,7 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -128,7 +128,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -250,7 +250,7 @@ class ConsortiumDevelWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -275,7 +275,7 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -351,7 +351,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -473,7 +473,7 @@ class ExampleWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -498,7 +498,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -574,7 +574,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -696,7 +696,7 @@ class TemplateWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -721,7 +721,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -797,7 +797,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -919,7 +919,7 @@ class OpenAccessWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -948,7 +948,7 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -1031,7 +1031,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(

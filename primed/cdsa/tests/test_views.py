@@ -50,7 +50,7 @@ class AgreementVersionListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -122,7 +122,7 @@ class AgreementMajorVersionDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -259,7 +259,7 @@ class AgreementMajorVersionDetailTest(TestCase):
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         user.user_permissions.add(
@@ -296,7 +296,7 @@ class AgreementMajorVersionDetailTest(TestCase):
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         user.user_permissions.add(
@@ -340,7 +340,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -390,7 +390,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url(instance.version))
@@ -558,7 +558,7 @@ class AgreementVersionDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -756,7 +756,7 @@ class SignedAgreementListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -831,7 +831,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -870,7 +870,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         )
         user_with_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url(1))
@@ -991,7 +991,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -1030,7 +1030,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         )
         user_with_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url(1))
@@ -1151,7 +1151,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -1190,7 +1190,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         )
         user_with_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url(1))
@@ -1311,7 +1311,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -1359,7 +1359,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -2158,7 +2158,7 @@ class MemberAgreementDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -2258,7 +2258,7 @@ class MemberAgreementDetailTest(TestCase):
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         user.user_permissions.add(
@@ -2305,7 +2305,7 @@ class MemberAgreementListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -2378,7 +2378,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -2426,7 +2426,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -3370,7 +3370,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -3476,7 +3476,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         user.user_permissions.add(
@@ -3523,7 +3523,7 @@ class DataAffiliateAgreementListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -3596,7 +3596,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -3644,7 +3644,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -4427,7 +4427,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -4521,7 +4521,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         user.user_permissions.add(
@@ -4568,7 +4568,7 @@ class NonDataAffiliateAgreementListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -4744,7 +4744,7 @@ class SignedAgreementAuditTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create the test group.
@@ -4923,7 +4923,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
@@ -5471,7 +5471,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -5540,7 +5540,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(

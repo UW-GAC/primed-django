@@ -51,7 +51,7 @@ class HomeTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -98,7 +98,7 @@ class StudyDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -251,7 +251,7 @@ class StudyAutocompleteTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -455,7 +455,7 @@ class StudyCreateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
@@ -504,7 +504,7 @@ class StudyCreateTest(TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -633,7 +633,7 @@ class StudyListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -739,7 +739,7 @@ class StudySiteDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -844,7 +844,7 @@ class StudySiteListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -938,7 +938,7 @@ class AccountListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -995,7 +995,7 @@ class AvailableDataTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 

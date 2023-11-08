@@ -61,7 +61,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         )
         # Check permissions to determine table type.
         apm_content_type = ContentType.objects.get_for_model(AnVILProjectManagerAccess)
-        full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME}"
+        full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME}"
         if self.request.user.has_perm(full_view_perm):
             return (
                 dbGaPWorkspaceTable(dbgap_qs),
