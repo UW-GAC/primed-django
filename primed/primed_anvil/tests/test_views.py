@@ -150,7 +150,7 @@ class StudyDetailTest(TestCase):
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -173,7 +173,7 @@ class StudyDetailTest(TestCase):
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         obj = self.model_factory.create()
@@ -673,7 +673,7 @@ class StudyListTest(TestCase):
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
