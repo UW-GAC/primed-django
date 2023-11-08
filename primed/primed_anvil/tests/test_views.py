@@ -460,7 +460,7 @@ class StudyCreateTest(TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
 

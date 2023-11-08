@@ -57,7 +57,7 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -133,7 +133,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -280,7 +280,7 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -356,7 +356,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -503,7 +503,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -579,7 +579,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -726,7 +726,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "template"
@@ -802,7 +802,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "template"
@@ -953,7 +953,7 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "open_access"
@@ -1036,7 +1036,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "open_access"

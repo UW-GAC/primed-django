@@ -59,7 +59,7 @@ class AgreementMajorVersionDetail(
         context = super().get_context_data(**kwargs)
         context["show_deprecation_message"] = not self.object.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context[
             "show_invalidate_button"
@@ -371,7 +371,7 @@ class MemberAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView)
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context["show_update_button"] = self.request.user.has_perm(
             edit_permission_codename
@@ -434,7 +434,7 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, Deta
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context["show_update_button"] = self.request.user.has_perm(
             edit_permission_codename
@@ -493,7 +493,7 @@ class NonDataAffiliateAgreementDetail(
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context["show_update_button"] = self.request.user.has_perm(
             edit_permission_codename
