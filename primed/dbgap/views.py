@@ -3,8 +3,8 @@ import logging
 import requests
 from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
-    AnVILConsortiumManagerViewRequired,
+    AnVILConsortiumManagerStaffEditRequired,
+    AnVILConsortiumManagerStaffViewRequired,
 )
 from anvil_consortium_manager.models import (
     AnVILProjectManagerAccess,
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 class dbGaPStudyAccessionDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """View to show details about a `dbGaPStudyAccession`."""
 
@@ -68,14 +68,16 @@ class dbGaPStudyAccessionDetail(
     def get_context_data(self, **kwargs):
         """Add show_edit_links to context data."""
         context = super().get_context_data(**kwargs)
-        edit_permission_codename = AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+        edit_permission_codename = (
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+        )
         context["show_edit_links"] = self.request.user.has_perm(
             "anvil_consortium_manager." + edit_permission_codename
         )
         return context
 
 
-class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class dbGaPStudyAccessionList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of dbGaPStudyAccession objects."""
 
     model = models.dbGaPStudyAccession
@@ -83,7 +85,7 @@ class dbGaPStudyAccessionList(AnVILConsortiumManagerViewRequired, SingleTableVie
 
 
 class dbGaPStudyAccessionCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
 ):
     """View to create a new dbGaPStudyAccession."""
 
@@ -94,7 +96,7 @@ class dbGaPStudyAccessionCreate(
 
 
 class dbGaPStudyAccessionUpdate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
 ):
     """View to update a dbGaPStudyAccession."""
 
@@ -116,7 +118,7 @@ class dbGaPStudyAccessionUpdate(
 
 
 class dbGaPStudyAccessionAutocomplete(
-    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+    AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView
 ):
     """View to provide autocompletion for dbGaPStudyAccessions."""
 
@@ -135,7 +137,7 @@ class dbGaPStudyAccessionAutocomplete(
 
 
 class dbGaPApplicationDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """View to show details about a `dbGaPApplication`."""
 
@@ -185,7 +187,7 @@ class dbGaPApplicationDetail(
         return context
 
 
-class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class dbGaPApplicationList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of dbGaPApplication objects."""
 
     model = models.dbGaPApplication
@@ -193,7 +195,7 @@ class dbGaPApplicationList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class dbGaPApplicationCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
 ):
     """View to create a new dbGaPApplication."""
 
@@ -233,7 +235,7 @@ class dbGaPApplicationCreate(
 
 
 class dbGaPDataAccessSnapshotCreate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView
 ):
 
     form_class = forms.dbGaPDataAccessSnapshotForm
@@ -321,7 +323,7 @@ class dbGaPDataAccessSnapshotCreate(
 
 
 class dbGaPDataAccessSnapshotCreateMultiple(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, FormView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView
 ):
 
     form_class = forms.dbGaPDataAccessSnapshotMultipleForm
@@ -431,7 +433,9 @@ class dbGaPDataAccessSnapshotCreateMultiple(
         return super().form_valid(form)
 
 
-class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class dbGaPDataAccessSnapshotDetail(
+    AnVILConsortiumManagerStaffViewRequired, DetailView
+):
     """View to show details about a `dbGaPDataAccessSnapshot`."""
 
     model = models.dbGaPDataAccessSnapshot
@@ -478,7 +482,7 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerViewRequired, DetailVi
 
 
 class dbGaPDataAccessRequestList(
-    AnVILConsortiumManagerViewRequired, ExportMixin, SingleTableView
+    AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView
 ):
     """View to show current DARs."""
 
@@ -492,7 +496,7 @@ class dbGaPDataAccessRequestList(
         )
 
 
-class dbGaPApplicationAudit(AnVILConsortiumManagerViewRequired, DetailView):
+class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
@@ -536,7 +540,7 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerViewRequired, DetailView):
         return context
 
 
-class dbGaPWorkspaceAudit(AnVILConsortiumManagerViewRequired, DetailView):
+class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPWorkspace`."""
 
     model = models.dbGaPWorkspace

@@ -1,6 +1,6 @@
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
-    AnVILConsortiumManagerLimitedViewRequired,
+    AnVILConsortiumManagerStaffEditRequired,
+    AnVILConsortiumManagerStaffViewRequired,
     AnVILConsortiumManagerViewRequired,
 )
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
@@ -37,9 +37,7 @@ from . import helpers, models, tables
 User = get_user_model()
 
 
-class StudyDetail(
-    AnVILConsortiumManagerLimitedViewRequired, MultiTableMixin, DetailView
-):
+class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `Study`."""
 
     model = models.Study
@@ -63,7 +61,7 @@ class StudyDetail(
         )
         # Check permissions to determine table type.
         apm_content_type = ContentType.objects.get_for_model(AnVILProjectManagerAccess)
-        full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME}"
+        full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME}"
         if self.request.user.has_perm(full_view_perm):
             return (
                 dbGaPWorkspaceTable(dbgap_qs),
@@ -81,14 +79,16 @@ class StudyDetail(
             )
 
 
-class StudyList(AnVILConsortiumManagerLimitedViewRequired, SingleTableView):
+class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
     """View to show a list of `Study`s."""
 
     model = models.Study
     table_class = tables.StudyTable
 
 
-class StudyCreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, CreateView):
+class StudyCreate(
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
+):
     """View to create a new `Study`."""
 
     model = models.Study
@@ -100,7 +100,7 @@ class StudyCreate(AnVILConsortiumManagerEditRequired, SuccessMessageMixin, Creat
 
 
 class StudyAutocomplete(
-    AnVILConsortiumManagerViewRequired, autocomplete.Select2QuerySetView
+    AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView
 ):
     """View to provide autocompletion for `Study`s. Match either the `short_name` or `full_name`."""
 
@@ -124,7 +124,9 @@ class StudyAutocomplete(
         return qs
 
 
-class StudySiteDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView):
+class StudySiteDetail(
+    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
+):
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
@@ -145,14 +147,14 @@ class StudySiteDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, Detai
         return [user_qs, dbgap_qs, cdsa_qs]
 
 
-class StudySiteList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class StudySiteList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `StudySite`s."""
 
     model = models.StudySite
     table_class = tables.StudySiteTable
 
 
-class AvailableDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class AvailableDataList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """View to show a list of `AvailableData`."""
 
     model = models.AvailableData
@@ -160,7 +162,7 @@ class AvailableDataList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class AvailableDataDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """View to show details about a `AvailableData`."""
 

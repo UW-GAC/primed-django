@@ -40,6 +40,53 @@ from . import factories
 User = get_user_model()
 
 
+class ACMNavbarTest(TestCase):
+    """Tests for the ACM navbar."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:index", args=args)
+
+    def test_staff_view_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(response, reverse("primed_anvil:studies:new"))
+
+    def test_staff_edit_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("primed_anvil:studies:new"))
+
+
 class HomeTest(TestCase):
     """Tests of the home page. This is maybe not the best place to put this test?"""
 
@@ -51,7 +98,7 @@ class HomeTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -86,6 +133,36 @@ class HomeTest(TestCase):
             response, reverse("anvil_consortium_manager:accounts:link")
         )
 
+    def test_staff_view_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        # Note: we need quotes around the link because anvil/accounts/link does appear in the response,
+        # so we can't test if "anvil/" is in the response. We need to test if '"anvil/"' is in the response.
+        self.assertContains(
+            response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
+        )
+
+    def test_view_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        # Note: we need quotes around the link because anvil/accounts/link does appear in the response,
+        # so we can't test if "anvil/" is in the response. We need to test if '"anvil/"' is in the response.
+        self.assertNotContains(
+            response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
+        )
+
 
 class StudyDetailTest(TestCase):
     """Tests for the StudyDetail view."""
@@ -98,7 +175,7 @@ class StudyDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -150,12 +227,30 @@ class StudyDetailTest(TestCase):
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(obj.pk))
         self.assertEqual(response.status_code, 200)
+
+    def test_content_staff_view_permission(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, "Date created")
+
+    def test_content_view_permission(self):
+        obj = self.model_factory.create()
+        user = User.objects.create_user(username="test-2", password="test-2")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertNotContains(response, "Date created")
 
     def test_table_classes_view_permission(self):
         obj = self.model_factory.create()
@@ -173,7 +268,7 @@ class StudyDetailTest(TestCase):
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         obj = self.model_factory.create()
@@ -251,7 +346,7 @@ class StudyAutocompleteTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -455,12 +550,12 @@ class StudyCreateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
 
@@ -504,7 +599,7 @@ class StudyCreateTest(TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -633,7 +728,7 @@ class StudyListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -673,7 +768,7 @@ class StudyListTest(TestCase):
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.LIMITED_VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
         self.client.force_login(user)
@@ -739,7 +834,7 @@ class StudySiteDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -844,7 +939,7 @@ class StudySiteListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -938,7 +1033,7 @@ class AccountListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -995,7 +1090,7 @@ class AvailableDataTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
