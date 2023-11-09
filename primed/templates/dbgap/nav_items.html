@@ -6,7 +6,7 @@
     <li>
       <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:list' %}">List dbGaP study accessions</a>
     </li>
-    {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
       <li>
         <a class="dropdown-item" href="{% url 'dbgap:dbgap_study_accessions:new' %}">Add a new dbGaP study accession</a>
       </li>
@@ -17,7 +17,7 @@
     <li>
       <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:list' %}">List dbGaP applications</a>
     </li>
-    {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
       <li>
         <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
       </li>

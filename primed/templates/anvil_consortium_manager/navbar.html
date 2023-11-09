@@ -15,7 +15,7 @@
       <li>
         <a class="dropdown-item" href="{% url 'primed_anvil:studies:list' %}">List studies</a>
       </li>
-      {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+      {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
         <li>
           <a class="dropdown-item" href="{% url 'primed_anvil:studies:new' %}">Add a new study</a>
         </li>

@@ -57,6 +57,60 @@ class dbGaPResponseTestMixin:
         self.dbgap_response_mock.reset()
 
 
+class NavbarTest(TestCase):
+    """Tests for the navbar involving CDSA links."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:index", args=args)
+
+    def test_links_for_staff_view(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("dbgap:dbgap_study_accessions:list"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:list"))
+        # Links to add dbGaP info.
+        self.assertNotContains(response, reverse("dbgap:dbgap_study_accessions:new"))
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:new"))
+        self.assertNotContains(
+            response, reverse("dbgap:dbgap_applications:update_dars")
+        )
+
+    def test_links_for_staff_edit(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("dbgap:dbgap_study_accessions:list"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:list"))
+        # Links to add dbGaP info.
+        self.assertContains(response, reverse("dbgap:dbgap_study_accessions:new"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:new"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:update_dars"))
+
+
 class dbGaPStudyAccessionListTest(TestCase):
     """Tests for the dbGaPStudyAccessionList view."""
 
@@ -67,7 +121,7 @@ class dbGaPStudyAccessionListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -150,7 +204,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -258,10 +312,10 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         edit_user = User.objects.create_user(username="edit", password="test")
         edit_user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             ),
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             ),
         )
         self.client.force_login(edit_user)
@@ -281,7 +335,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         view_user = User.objects.create_user(username="edit", password="test")
         view_user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             ),
         )
         self.client.force_login(view_user)
@@ -309,12 +363,12 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
 
@@ -358,7 +412,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -506,12 +560,12 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
 
@@ -545,7 +599,7 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
         )
         user_with_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url(instance.dbgap_phs))
@@ -645,7 +699,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -782,7 +836,7 @@ class dbGaPWorkspaceListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.workspace_type = "dbgap"
@@ -815,7 +869,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -871,12 +925,12 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -1021,12 +1075,12 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -1250,7 +1304,7 @@ class dbGaPApplicationListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -1307,7 +1361,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         # Create an object test this with.
@@ -1362,6 +1416,43 @@ class dbGaPApplicationDetailTest(TestCase):
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.dbgap_project_id + 1)
+
+    def test_staff_edit_links(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertContains(
+            response,
+            reverse(
+                "dbgap:dbgap_applications:dbgap_data_access_snapshots:new",
+                args=[self.obj.dbgap_project_id],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse("dbgap:dbgap_applications:audit", args=[self.obj.dbgap_project_id]),
+        )
+        "dbgap:dbgap_applications:dbgap_data_access_snapshots:new"
+
+    def test_staff_view_links(self):
+        """No edit links if staff user only has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:dbgap_applications:dbgap_data_access_snapshots:new",
+                args=[self.obj.dbgap_project_id],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse("dbgap:dbgap_applications:audit", args=[self.obj.dbgap_project_id]),
+        )
 
     def test_context_snapshot_table(self):
         """The data_access_snapshot_table exists in the context."""
@@ -1488,12 +1579,12 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
 
@@ -1537,7 +1628,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -1824,12 +1915,12 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.dbgap_application = factories.dbGaPApplicationFactory.create()
@@ -1891,7 +1982,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(
@@ -2550,12 +2641,12 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
 
@@ -2606,7 +2697,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         )
         user_view_perm.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         request = self.factory.get(self.get_url())
@@ -3097,7 +3188,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.application = factories.dbGaPApplicationFactory.create()
@@ -3416,7 +3507,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -3513,7 +3604,7 @@ class dbGaPApplicationAuditTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.application = factories.dbGaPApplicationFactory.create()
@@ -3777,7 +3868,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
