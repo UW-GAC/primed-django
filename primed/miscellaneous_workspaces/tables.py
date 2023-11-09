@@ -46,12 +46,15 @@ class DataPrepWorkspaceTable(tables.Table):
     """Class to render a table of Workspace objects with DataPrepWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    target_workspace = tables.columns.Column(linkify=True)
+    # TODO: Figure out why this is not showing up
+    dataprepworkspace__target_workspace__name = tables.columns.Column(
+        linkify=True, verbose_name="Target workspace"
+    )
 
     class Meta:
         model = Workspace
         fields = (
             "name",
-            "target_workspace",
+            "dataprepworkspace__target_workspace__name",
         )
         order_by = ("name",)
