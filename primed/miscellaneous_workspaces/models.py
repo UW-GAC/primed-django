@@ -73,6 +73,10 @@ class DataPrepWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
         related_name="data_prep_workspaces",
         help_text="The workspace for which data is being prepared or updated.",
     )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Indicator of whether this workspace is currently being used to prepare data.",
+    )
 
     def clean(self):
         if hasattr(self, "target_workspace"):

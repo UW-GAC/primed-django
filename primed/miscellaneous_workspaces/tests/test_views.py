@@ -1126,6 +1126,22 @@ class DataPrepWorkspaceDetailTest(TestCase):
         # Includes link to target workspace.
         self.assertContains(response, obj.target_workspace.get_absolute_url())
 
+    def test_template_active(self):
+        """Returns successful response code."""
+        obj = factories.DataPrepWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Active")
+
+    def test_template_inactive(self):
+        """Returns successful response code."""
+        obj = factories.DataPrepWorkspaceFactory.create(is_active=False)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Inactive")
+
 
 class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's DataPrepWorkspace model."""

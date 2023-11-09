@@ -3,7 +3,10 @@
 import django_tables2 as tables
 from anvil_consortium_manager.models import Workspace
 
-from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumColumn
+from primed.primed_anvil.tables import (
+    BooleanIconColumn,
+    WorkspaceSharedWithConsortiumColumn,
+)
 
 
 class OpenAccessWorkspaceTable(tables.Table):
@@ -50,11 +53,15 @@ class DataPrepWorkspaceTable(tables.Table):
     dataprepworkspace__target_workspace__name = tables.columns.Column(
         linkify=True, verbose_name="Target workspace"
     )
+    dataprepworkspace__is_active = BooleanIconColumn(
+        verbose_name="Active?", show_false_icon=True
+    )
 
     class Meta:
         model = Workspace
         fields = (
             "name",
             "dataprepworkspace__target_workspace__name",
+            "dataprepworkspace__is_active",
         )
         order_by = ("name",)

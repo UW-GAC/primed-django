@@ -9,5 +9,12 @@
     <dt class="col-sm-2">Target type</dt><dd class="col-sm-10">
       {{ object.dataprepworkspace.target_workspace.workspace_type }}
     </dd>
+    <dt class="col-sm-2">Status</dt><dd class="col-sm-10">
+      {% if object.dataprepworkspace.is_active %}
+        Active <i class="bi bi-check-circle-fill bi-align-center px-2" style="color: green;"></i>
+      {% else %}
+        Inactive <i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>
+      {% endif %}
+    </dd>
 </dl>
 {% endblock workspace_data %}

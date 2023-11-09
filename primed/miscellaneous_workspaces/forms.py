@@ -117,6 +117,7 @@ class DataPrepWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "workspace",
             "target_workspace",
             "requested_by",
+            "is_active",
         )
         # widgets = {
         #     "studies": autocomplete.ModelSelect2Multiple(
