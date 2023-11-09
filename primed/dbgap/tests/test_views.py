@@ -1363,6 +1363,43 @@ class dbGaPApplicationDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.dbgap_project_id + 1)
 
+    def test_staff_edit_links(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertContains(
+            response,
+            reverse(
+                "dbgap:dbgap_applications:dbgap_data_access_snapshots:new",
+                args=[self.obj.dbgap_project_id],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse("dbgap:dbgap_applications:audit", args=[self.obj.dbgap_project_id]),
+        )
+        "dbgap:dbgap_applications:dbgap_data_access_snapshots:new"
+
+    def test_staff_view_links(self):
+        """No edit links if staff user only has view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:dbgap_applications:dbgap_data_access_snapshots:new",
+                args=[self.obj.dbgap_project_id],
+            ),
+        )
+        self.assertContains(
+            response,
+            reverse("dbgap:dbgap_applications:audit", args=[self.obj.dbgap_project_id]),
+        )
+
     def test_context_snapshot_table(self):
         """The data_access_snapshot_table exists in the context."""
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
