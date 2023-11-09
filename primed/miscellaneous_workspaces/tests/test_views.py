@@ -1163,7 +1163,7 @@ class DataPrepWorkspaceDetailTest(TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -1190,12 +1190,12 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
@@ -1268,12 +1268,12 @@ class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
             )
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
         self.requester = UserFactory.create()
