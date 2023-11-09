@@ -1200,7 +1200,7 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.requester = UserFactory.create()
         self.target_workspace = WorkspaceFactory.create()
-        self.workspace_type = "simulated_data"
+        self.workspace_type = "data_prep"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1250,8 +1250,8 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # The workspace is created.
         new_workspace = Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.DataPrepWorkspaceFactory.objects.count(), 1)
-        new_workspace_data = models.DataPrepWorkspaceFactory.objects.latest("pk")
+        self.assertEqual(models.DataPrepWorkspace.objects.count(), 1)
+        new_workspace_data = models.DataPrepWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
 
 
@@ -1378,6 +1378,6 @@ class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # The workspace is created.
         new_workspace = Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.DataPrepWorkspaceFactory.objects.count(), 1)
-        new_workspace_data = models.DataPrepWorkspaceFactory.objects.latest("pk")
+        self.assertEqual(models.DataPrepWorkspace.objects.count(), 1)
+        new_workspace_data = models.DataPrepWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
