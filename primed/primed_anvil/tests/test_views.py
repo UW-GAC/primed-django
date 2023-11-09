@@ -40,6 +40,53 @@ from . import factories
 User = get_user_model()
 
 
+class ACMNavbarTest(TestCase):
+    """Tests for the ACM navbar."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        self.model_factory = factories.StudyFactory
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:index", args=args)
+
+    def test_staff_view_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(response, reverse("primed_anvil:studies:new"))
+
+    def test_staff_edit_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("primed_anvil:studies:new"))
+
+
 class HomeTest(TestCase):
     """Tests of the home page. This is maybe not the best place to put this test?"""
 
