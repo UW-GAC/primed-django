@@ -86,6 +86,36 @@ class HomeTest(TestCase):
             response, reverse("anvil_consortium_manager:accounts:link")
         )
 
+    def test_staff_view_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        # Note: we need quotes around the link because anvil/accounts/link does appear in the response,
+        # so we can't test if "anvil/" is in the response. We need to test if '"anvil/"' is in the response.
+        self.assertContains(
+            response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
+        )
+
+    def test_view_links(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        # Note: we need quotes around the link because anvil/accounts/link does appear in the response,
+        # so we can't test if "anvil/" is in the response. We need to test if '"anvil/"' is in the response.
+        self.assertNotContains(
+            response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
+        )
+
 
 class StudyDetailTest(TestCase):
     """Tests for the StudyDetail view."""
