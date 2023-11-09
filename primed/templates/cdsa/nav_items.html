@@ -25,7 +25,7 @@
 
     <li><hr class="dropdown-divider"></li>
 
-    {% if perms.anvil_consortium_manager.anvil_project_manager_edit %}
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
       <li class="dropdown-item"><b>Add a new signed agreement</b></li>
       <li>
         <a class="dropdown-item mx-3" href="{% url 'cdsa:signed_agreements:members:new' %}">Member</a>

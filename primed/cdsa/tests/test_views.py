@@ -40,6 +40,70 @@ from . import factories
 User = get_user_model()
 
 
+class NavbarTest(TestCase):
+    """Tests for the navbar involving CDSA links."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:index", args=args)
+
+    def test_links_for_staff_view(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("cdsa:agreement_versions:list"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements"))
+        self.assertContains(response, reverse("cdsa:audit:workspaces"))
+        self.assertContains(response, reverse("cdsa:records:index"))
+        # Links to add CDSAs.
+        self.assertNotContains(response, reverse("cdsa:signed_agreements:members:new"))
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:data_affiliates:new")
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:non_data_affiliates:new")
+        )
+
+    def test_links_for_staff_edit(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("cdsa:agreement_versions:list"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements"))
+        self.assertContains(response, reverse("cdsa:audit:workspaces"))
+        self.assertContains(response, reverse("cdsa:records:index"))
+        # Links to add CDSAs.
+        self.assertContains(response, reverse("cdsa:signed_agreements:members:new"))
+        self.assertContains(
+            response, reverse("cdsa:signed_agreements:data_affiliates:new")
+        )
+        self.assertContains(
+            response, reverse("cdsa:signed_agreements:non_data_affiliates:new")
+        )
+
+
 class AgreementVersionListTest(TestCase):
     """Tests for the AgreementVersionList view."""
 
