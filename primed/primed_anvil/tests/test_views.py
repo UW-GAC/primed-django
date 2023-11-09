@@ -157,6 +157,24 @@ class StudyDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.pk))
         self.assertEqual(response.status_code, 200)
 
+    def test_content_staff_view_permission(self):
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, "Date created")
+
+    def test_content_view_permission(self):
+        obj = self.model_factory.create()
+        user = User.objects.create_user(username="test-2", password="test-2")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertNotContains(response, "Date created")
+
     def test_table_classes_view_permission(self):
         obj = self.model_factory.create()
         self.client.force_login(self.user)
