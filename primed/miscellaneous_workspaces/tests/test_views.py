@@ -293,16 +293,6 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
@@ -516,16 +506,6 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
@@ -737,16 +717,6 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -966,16 +936,6 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -1205,16 +1165,6 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
