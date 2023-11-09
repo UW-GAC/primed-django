@@ -366,7 +366,6 @@ class OpenAccessWorkspaceFormTest(TestCase):
 
     def test_invalid_data_url_is_not_url(self):
         """Form is invalid if data_url is not a valid url."""
-        """Form is invalid when missing data_source."""
         form_data = {
             "workspace": self.workspace,
             "requested_by": self.requester,
