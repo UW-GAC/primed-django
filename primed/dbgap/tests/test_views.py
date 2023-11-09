@@ -57,6 +57,60 @@ class dbGaPResponseTestMixin:
         self.dbgap_response_mock.reset()
 
 
+class NavbarTest(TestCase):
+    """Tests for the navbar involving CDSA links."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:index", args=args)
+
+    def test_links_for_staff_view(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("dbgap:dbgap_study_accessions:list"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:list"))
+        # Links to add dbGaP info.
+        self.assertNotContains(response, reverse("dbgap:dbgap_study_accessions:new"))
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:new"))
+        self.assertNotContains(
+            response, reverse("dbgap:dbgap_applications:update_dars")
+        )
+
+    def test_links_for_staff_edit(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, reverse("dbgap:dbgap_study_accessions:list"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:list"))
+        # Links to add dbGaP info.
+        self.assertContains(response, reverse("dbgap:dbgap_study_accessions:new"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:new"))
+        self.assertContains(response, reverse("dbgap:dbgap_applications:update_dars"))
+
+
 class dbGaPStudyAccessionListTest(TestCase):
     """Tests for the dbGaPStudyAccessionList view."""
 
