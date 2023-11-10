@@ -76,3 +76,14 @@ class OpenAccessWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.OpenAccessWorkspace
+
+
+class DataPrepWorkspaceFactory(DjangoModelFactory):
+    """A factory for the DataPrepWorkspace model."""
+
+    workspace = SubFactory(WorkspaceFactory, workspace_type="data_prep")
+    target_workspace = SubFactory(WorkspaceFactory)
+    requested_by = SubFactory(UserFactory)
+
+    class Meta:
+        model = models.DataPrepWorkspace

@@ -76,8 +76,23 @@ dbgap_workspace_patterns = (
     ],
     "workspaces",
 )
+
+records_patterns = (
+    [
+        path("", views.dbGaPRecordsIndex.as_view(), name="index"),
+        path(
+            "applications/",
+            views.dbGaPApplicationRecords.as_view(),
+            name="applications",
+        ),
+    ],
+    "records",
+)
+
+
 urlpatterns = [
     path("studies/", include(dbgap_study_accession_patterns)),
     path("applications/", include(dbgap_application_patterns)),
     path("workspaces/", include(dbgap_workspace_patterns)),
+    path("records/", include(records_patterns)),
 ]

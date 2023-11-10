@@ -59,7 +59,7 @@
             <ul class='list-group'>
               <li class='list-group-item'>
                 <h5>Account Email</h5>
-                {% if perms.anvil_consortium_manager.anvil_project_manager_view %}
+                {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
                 <a href="{{ object.account.get_absolute_url }}">{{ object.account.email }}</a>
                 {% else %}
                 {{ object.account.email }}

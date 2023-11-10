@@ -1,11 +1,11 @@
-from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
+from anvil_consortium_manager.auth import AnVILConsortiumManagerStaffViewRequired
 from django.http import Http404
 from django.views.generic import DetailView, ListView
 
 from . import models
 
 
-class DataUsePermissionList(AnVILConsortiumManagerViewRequired, ListView):
+class DataUsePermissionList(AnVILConsortiumManagerStaffViewRequired, ListView):
 
     model = models.DataUsePermission
 
@@ -18,7 +18,7 @@ class DataUsePermissionList(AnVILConsortiumManagerViewRequired, ListView):
         return context
 
 
-class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class DataUsePermissionDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
 
     model = models.DataUsePermission
 
@@ -38,7 +38,7 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
         return context
 
 
-class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
+class DataUseModifierList(AnVILConsortiumManagerStaffViewRequired, ListView):
 
     model = models.DataUseModifier
 
@@ -51,7 +51,7 @@ class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
         return context
 
 
-class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class DataUseModifierDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
 
     model = models.DataUseModifier
 
