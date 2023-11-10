@@ -2,8 +2,8 @@ import logging
 
 from anvil_consortium_manager.anvil_api import AnVILAPIError
 from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerEditRequired,
-    AnVILConsortiumManagerViewRequired,
+    AnVILConsortiumManagerStaffEditRequired,
+    AnVILConsortiumManagerStaffViewRequired,
     AnVILProjectManagerAccess,
 )
 from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class AgreementMajorVersionDetail(
-    AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
 ):
     """Display a "detail" page for an agreement major version (e.g., 1.x)."""
 
@@ -59,7 +59,7 @@ class AgreementMajorVersionDetail(
         context = super().get_context_data(**kwargs)
         context["show_deprecation_message"] = not self.object.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context[
             "show_invalidate_button"
@@ -70,7 +70,7 @@ class AgreementMajorVersionDetail(
 
 
 class AgreementMajorVersionInvalidate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
 ):
     """A view to invalidate an AgreementMajorVersion instance.
 
@@ -132,7 +132,7 @@ class AgreementMajorVersionInvalidate(
 
 
 class AgreementVersionDetail(
-    AnVILConsortiumManagerViewRequired, SingleTableMixin, DetailView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
 ):
     """Display a "detail" page for an agreement major/minor version (e.g., 1.3)."""
 
@@ -167,14 +167,14 @@ class AgreementVersionDetail(
         return context
 
 
-class AgreementVersionList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class AgreementVersionList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """Display a list of AgreementVersions."""
 
     model = models.AgreementVersion
     table_class = tables.AgreementVersionTable
 
 
-class SignedAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class SignedAgreementList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """Display a list of SignedAgreement objects."""
 
     model = models.SignedAgreement
@@ -294,7 +294,7 @@ class AgreementTypeCreateMixin:
 
 
 class MemberAgreementCreate(
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
     SuccessMessageMixin,
     FormView,
@@ -311,7 +311,7 @@ class MemberAgreementCreate(
 
 
 class DataAffiliateAgreementCreate(
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
     SuccessMessageMixin,
     FormView,
@@ -348,7 +348,7 @@ class DataAffiliateAgreementCreate(
         return agreement_type
 
 
-class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class MemberAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show details about a `MemberAgreement`."""
 
     model = models.MemberAgreement
@@ -371,7 +371,7 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context["show_update_button"] = self.request.user.has_perm(
             edit_permission_codename
@@ -379,7 +379,7 @@ class MemberAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
         return context
 
 
-class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class MemberAgreementList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """Display a list of MemberAgreement objects."""
 
     model = models.MemberAgreement
@@ -387,7 +387,7 @@ class MemberAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
 
 
 class SignedAgreementStatusUpdate(
-    AnVILConsortiumManagerEditRequired, SuccessMessageMixin, UpdateView
+    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
 ):
 
     model = models.SignedAgreement
@@ -411,7 +411,7 @@ class SignedAgreementStatusUpdate(
         return obj
 
 
-class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class DataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show details about a `DataAffiliateAgreement`."""
 
     model = models.DataAffiliateAgreement
@@ -434,7 +434,7 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context["show_update_button"] = self.request.user.has_perm(
             edit_permission_codename
@@ -442,7 +442,9 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailVie
         return context
 
 
-class DataAffiliateAgreementList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class DataAffiliateAgreementList(
+    AnVILConsortiumManagerStaffViewRequired, SingleTableView
+):
     """Display a list of DataAffiliateAgreement objects."""
 
     model = models.DataAffiliateAgreement
@@ -450,7 +452,7 @@ class DataAffiliateAgreementList(AnVILConsortiumManagerViewRequired, SingleTable
 
 
 class NonDataAffiliateAgreementCreate(
-    AnVILConsortiumManagerEditRequired,
+    AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
     SuccessMessageMixin,
     FormView,
@@ -466,7 +468,9 @@ class NonDataAffiliateAgreementCreate(
     ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
 
 
-class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, DetailView):
+class NonDataAffiliateAgreementDetail(
+    AnVILConsortiumManagerStaffViewRequired, DetailView
+):
     """View to show details about a `NonDataAffiliateAgreement`."""
 
     model = models.NonDataAffiliateAgreement
@@ -489,7 +493,7 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
             "show_deprecation_message"
         ] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
-            AnVILProjectManagerAccess.EDIT_PERMISSION_CODENAME
+            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
         context["show_update_button"] = self.request.user.has_perm(
             edit_permission_codename
@@ -498,7 +502,7 @@ class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerViewRequired, Detail
 
 
 class NonDataAffiliateAgreementList(
-    AnVILConsortiumManagerViewRequired, SingleTableView
+    AnVILConsortiumManagerStaffViewRequired, SingleTableView
 ):
     """Display a list of NonDataAffiliateAgreement objects."""
 
@@ -506,7 +510,7 @@ class NonDataAffiliateAgreementList(
     table_class = tables.NonDataAffiliateAgreementTable
 
 
-class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
+class SignedAgreementAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show audit results for `SignedAgreements`."""
 
     template_name = "cdsa/signedagreement_audit.html"
@@ -538,7 +542,7 @@ class SignedAgreementAudit(AnVILConsortiumManagerViewRequired, TemplateView):
         return context
 
 
-class CDSAWorkspaceAudit(AnVILConsortiumManagerViewRequired, TemplateView):
+class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show audit results for `CDSAWorkspaces`."""
 
     template_name = "cdsa/cdsaworkspace_audit.html"

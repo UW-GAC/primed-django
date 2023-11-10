@@ -308,6 +308,8 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "cdsa:records:studies",
     "cdsa:records:workspaces",
     "cdsa:records:user_access",
+    "dbgap:records:index",
+    "dbgap:records:applications",
 ]
 
 # django-dbbackup
@@ -372,6 +374,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
     "primed.cdsa.adapters.CDSAWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.OpenAccessWorkspaceAdapter",
