@@ -2,7 +2,10 @@
 
 import responses
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
-from anvil_consortium_manager.tests.factories import BillingProjectFactory
+from anvil_consortium_manager.tests.factories import (
+    BillingProjectFactory,
+    WorkspaceFactory,
+)
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -66,16 +69,6 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -290,16 +283,6 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
@@ -513,16 +496,6 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
@@ -734,16 +707,6 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
-
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
 
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -964,16 +927,6 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Get the url for the view being tested."""
         return reverse("anvil_consortium_manager:workspaces:new", args=args)
 
-    def get_api_url(self, billing_project_name, workspace_name):
-        """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
-
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
@@ -1149,3 +1102,238 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.studies.count(), 1)
         self.assertIn(self.study, new_workspace_data.studies.all())
         self.assertEqual(new_workspace_data.data_source, "test source")
+
+
+class DataPrepWorkspaceDetailTest(TestCase):
+    """Tests of the WorkspaceDetail view from ACM with this app's DataPrepWorkspace model."""
+
+    def setUp(self):
+        """Set up test class."""
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        obj = factories.DataPrepWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        # Includes link to target workspace.
+        self.assertContains(response, obj.target_workspace.get_absolute_url())
+
+    def test_template_active(self):
+        """Returns successful response code."""
+        obj = factories.DataPrepWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Active")
+
+    def test_template_inactive(self):
+        """Returns successful response code."""
+        obj = factories.DataPrepWorkspaceFactory.create(is_active=False)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Inactive")
+
+
+class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with this app's DataPrepWorkspace model."""
+
+    api_success_code = 201
+
+    def setUp(self):
+        """Set up test class."""
+        # The superclass uses the responses package to mock API responses.
+        super().setUp()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.requester = UserFactory.create()
+        self.target_workspace = WorkspaceFactory.create()
+        self.workspace_type = "data_prep"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:new", args=args)
+
+    def test_creates_workspace(self):
+        """Posting valid data to the form creates a workspace data object when using a custom adapter."""
+        billing_project = BillingProjectFactory.create(name="test-billing-project")
+        url = self.api_client.rawls_entry_point + "/api/workspaces"
+        json_data = {
+            "namespace": "test-billing-project",
+            "name": "test-workspace",
+            "attributes": {},
+        }
+        self.anvil_response_mock.add(
+            responses.POST,
+            url,
+            status=self.api_success_code,
+            match=[responses.matchers.json_params_matcher(json_data)],
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "billing_project": billing_project.pk,
+                "name": "test-workspace",
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-target_workspace": self.target_workspace.pk,
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # The workspace is created.
+        new_workspace = Workspace.objects.latest("pk")
+        # Workspace data is added.
+        self.assertEqual(models.DataPrepWorkspace.objects.count(), 1)
+        new_workspace_data = models.DataPrepWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.workspace, new_workspace)
+
+
+class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceImport view from ACM with this app's DataPrepWorkspace model."""
+
+    api_success_code = 200
+
+    def setUp(self):
+        """Set up test class."""
+        # The superclass uses the responses package to mock API responses.
+        super().setUp()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        self.requester = UserFactory.create()
+        self.target_workspace = WorkspaceFactory.create()
+        self.workspace_type = "data_prep"
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:import", args=args)
+
+    def get_api_url(self, billing_project_name, workspace_name):
+        """Return the Terra API url for a given billing project and workspace."""
+        return (
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/"
+            + billing_project_name
+            + "/"
+            + workspace_name
+        )
+
+    def get_api_json_response(
+        self, billing_project, workspace, authorization_domains=[], access="OWNER"
+    ):
+        """Return a pared down version of the json response from the AnVIL API with only fields we need."""
+        json_data = {
+            "accessLevel": access,
+            "owners": [],
+            "workspace": {
+                "authorizationDomain": [
+                    {"membersGroupName": x} for x in authorization_domains
+                ],
+                "name": workspace,
+                "namespace": billing_project,
+                "isLocked": False,
+            },
+        }
+        return json_data
+
+    def test_creates_workspace(self):
+        """Posting valid data to the form creates an UploadWorkspace object."""
+        billing_project = BillingProjectFactory.create(name="billing-project")
+        workspace_name = "workspace"
+        # Available workspaces API call.
+        workspace_list_url = self.api_client.rawls_entry_point + "/api/workspaces"
+        self.anvil_response_mock.add(
+            responses.GET,
+            workspace_list_url,
+            match=[
+                responses.matchers.query_param_matcher(
+                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
+                )
+            ],
+            status=200,
+            json=[self.get_api_json_response(billing_project.name, workspace_name)],
+        )
+        url = self.get_api_url(billing_project.name, workspace_name)
+        self.anvil_response_mock.add(
+            responses.GET,
+            url,
+            status=self.api_success_code,
+            json=self.get_api_json_response(billing_project.name, workspace_name),
+        )
+        # ACL API call.
+        api_url_acl = (
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/"
+            + billing_project.name
+            + "/"
+            + workspace_name
+            + "/acl"
+        )
+        self.anvil_response_mock.add(
+            responses.GET,
+            api_url_acl,
+            status=200,
+            json={
+                "acl": {
+                    self.service_account_email: {
+                        "accessLevel": "OWNER",
+                        "canCompute": True,
+                        "canShare": True,
+                        "pending": False,
+                    }
+                }
+            },
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(self.workspace_type),
+            {
+                "workspace": billing_project.name + "/" + workspace_name,
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 0,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-target_workspace": self.target_workspace.pk,
+                "workspacedata-0-requested_by": self.requester.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # The workspace is created.
+        new_workspace = Workspace.objects.latest("pk")
+        # Workspace data is added.
+        self.assertEqual(models.DataPrepWorkspace.objects.count(), 1)
+        new_workspace_data = models.DataPrepWorkspace.objects.latest("pk")
+        self.assertEqual(new_workspace_data.workspace, new_workspace)
