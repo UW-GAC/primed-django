@@ -36,7 +36,7 @@ class ConsortiumDevelWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
 
 
-class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
+class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"

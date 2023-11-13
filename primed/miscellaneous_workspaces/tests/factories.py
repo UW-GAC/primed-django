@@ -38,7 +38,7 @@ class ResourceWorkspaceFactory(DjangoModelFactory):
 
     workspace = SubFactory(
         WorkspaceFactory,
-        workspace_type=adapters.ExampleWorkspaceAdapter().get_type(),
+        workspace_type=adapters.ResourceWorkspaceAdapter().get_type(),
     )
     requested_by = SubFactory(UserFactory)
 
