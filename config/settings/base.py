@@ -375,7 +375,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "primed.cdsa.adapters.CDSAWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
-    "primed.miscellaneous_workspaces.adapters.ExampleWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.ResourceWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.OpenAccessWorkspaceAdapter",
 ]
