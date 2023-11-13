@@ -152,7 +152,7 @@ class TemplateWorkspaceFormTest(TestCase):
         """Form is valid with necessary input."""
         form_data = {
             "workspace": self.workspace,
-            "intended_workspace_type": "example",
+            "intended_workspace_type": "resource",
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -160,7 +160,7 @@ class TemplateWorkspaceFormTest(TestCase):
     def test_invalid_missing_workspace(self):
         """Form is invalid when missing workspace."""
         form_data = {
-            "intended_workspace_type": "example",
+            "intended_workspace_type": "resource",
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())

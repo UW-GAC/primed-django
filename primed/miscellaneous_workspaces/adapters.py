@@ -39,7 +39,7 @@ class ConsortiumDevelWorkspaceAdapter(BaseWorkspaceAdapter):
 class ExampleWorkspaceAdapter(BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
-    type = "example"
+    type = "resource"
     name = "Resource workspace"
     description = "Workspaces containing consortium resources (e.g., examples of using AnVIL, data inventories)"
     list_table_class = DefaultWorkspaceTable
