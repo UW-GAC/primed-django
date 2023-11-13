@@ -33,8 +33,8 @@ class ConsortiumDevelWorkspaceFactory(DjangoModelFactory):
         model = models.ConsortiumDevelWorkspace
 
 
-class ExampleWorkspaceFactory(DjangoModelFactory):
-    """A factory for the ExampleWorkspace model."""
+class ResourceWorkspaceFactory(DjangoModelFactory):
+    """A factory for the ResourceWorkspace model."""
 
     workspace = SubFactory(
         WorkspaceFactory,
@@ -43,7 +43,7 @@ class ExampleWorkspaceFactory(DjangoModelFactory):
     requested_by = SubFactory(UserFactory)
 
     class Meta:
-        model = models.ExampleWorkspace
+        model = models.ResourceWorkspace
 
 
 class TemplateWorkspaceFactory(DjangoModelFactory):

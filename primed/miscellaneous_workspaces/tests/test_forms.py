@@ -97,9 +97,9 @@ class ConsortiumDevelWorkspaceFormTest(TestCase):
         self.assertIn("required", form.errors["requested_by"][0])
 
 
-class ExampleWorkspaceFormTest(TestCase):
+class ResourceWorkspaceFormTest(TestCase):
 
-    form_class = forms.ExampleWorkspaceForm
+    form_class = forms.ResourceWorkspaceForm
 
     def setUp(self):
         """Create a workspace for use in the form."""

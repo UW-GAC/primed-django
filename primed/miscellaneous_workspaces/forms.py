@@ -42,11 +42,11 @@ class ConsortiumDevelWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         }
 
 
-class ExampleWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
-    """Form for a ExampleWorkspace object."""
+class ResourceWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a ResourceWorkspace object."""
 
     class Meta:
-        model = models.ExampleWorkspace
+        model = models.ResourceWorkspace
         fields = (
             "workspace",
             "requested_by",
