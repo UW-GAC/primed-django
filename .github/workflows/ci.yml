@@ -50,7 +50,7 @@ jobs:
         # ahead of planned upgrades we can add versions as
         # needed
         python-version: [3.8]
-        mariadb-version: ["10.3", "10.4"]
+        mariadb-version: ["10.4"]
 
     services:
       mysql:
@@ -88,16 +88,16 @@ jobs:
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-      
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
           path: .coverage.*
-  
+
   pytest-sqlite:
     runs-on: ubuntu-latest
-   
+
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v3.1.0
@@ -121,13 +121,13 @@ jobs:
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
-      
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
           path: .coverage.*
-  
+
   coverage:
     needs:
       - pytest-mariadb
@@ -159,4 +159,3 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          
