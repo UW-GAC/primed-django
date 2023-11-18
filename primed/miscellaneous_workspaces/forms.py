@@ -42,11 +42,11 @@ class ConsortiumDevelWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         }
 
 
-class ExampleWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
-    """Form for a ExampleWorkspace object."""
+class ResourceWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a ResourceWorkspace object."""
 
     class Meta:
-        model = models.ExampleWorkspace
+        model = models.ResourceWorkspace
         fields = (
             "workspace",
             "requested_by",
@@ -119,14 +119,13 @@ class DataPrepWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "requested_by",
             "is_active",
         )
-        # widgets = {
-        #     "studies": autocomplete.ModelSelect2Multiple(
-        #         url="primed_anvil:studies:autocomplete",
-        #         attrs={"data-theme": "bootstrap-5"},
-        #     ),
-        #     "requested_by": autocomplete.ModelSelect2(
-        #         url="users:autocomplete",
-        #         attrs={"data-theme": "bootstrap-5"},
-        #     ),
-        #     "available_data": forms.CheckboxSelectMultiple,
-        # }
+        widgets = {
+            "target_workspace": autocomplete.ModelSelect2(
+                url="anvil_consortium_manager:workspaces:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "requested_by": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
