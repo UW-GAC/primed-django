@@ -16,7 +16,8 @@
     -   activate virtualenv: source venv/bin/activate
 -   clone repository
 -   cd into project root dir
--   python -m pip install -r requirements/local.txt
+-   python -m pip install pip-tools
+-   pip-sync requirements/requirements.txt requirements/test-requirements.txt requirements/dev-requirements.txt
 -   python manage.py migrate
 -   python manage.py createsuperuser
 -   python manage.py runserver_plus
@@ -86,19 +87,31 @@ Running tests with pytest and unittest
 
 1.  git checkout -b \<feature_branch_name\> (Create and switch to
     feature branch)
-2.  make changes, test changes, document changes, commit often
-3.  run tests: pytest, python manage.py test
-4.  test coverage: (see above)
-5.  type checks: mypy primed
-6.  git add your changes
-7.  manually run pre-commit if you did not install
-8.  git commit your changes
-9.  repeat steps 3-8
-10. merge in any changes to main
+2.  sync requirements: `pip-sync requirements/requirements.txt test-requirements.txt dev-requirements.txt`
+3.  make changes, test changes, document changes, commit often
+4.  run tests: pytest, python manage.py test
+5.  test coverage: (see above)
+6.  type checks: mypy primed
+7.  git add your changes
+8.  manually run pre-commit if you did not install
+9.  git commit your changes
+10.  repeat steps 3-8
+11. merge in any changes to main
     1. git checkout main
     2. git pull
     3. git checkout \<feature_branch_name\>
     4. git rebase main
-10. git push origin \<feature_branch_name\>
-11. review or request review of changes in github
-12. submit pull request in github
+12. git push origin \<feature_branch_name\>
+13. review or request review of changes in github
+14. submit pull request in github
+
+
+### Compiling requirements files
+
+Requriements files must be compiled in the correct order to handle layering.
+
+```
+pip-compile requirements/requirements.in
+pip-compile requirements/test-requirements.in
+pip-compile requirements/dev-requirements.in
+```
