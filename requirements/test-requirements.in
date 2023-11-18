@@ -1,0 +1,14 @@
+-c requirements.txt
+
+pytest  # https://github.com/pytest-dev/pytest
+pytest-sugar  # https://github.com/Frozenball/pytest-sugar
+responses  # https://github.com/getsentry/responses - for mocking HTTP responses
+factory-boy  # https://github.com/FactoryBoy/factory_boy
+pytest-django  # https://github.com/pytest-dev/pytest-django
+# For testing migrations
+django-test-migrations
+# For freezing time in tests
+freezegun  # https://github.com/spulec/freezegun
+# Coverage of django templates
+django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
+coverage
