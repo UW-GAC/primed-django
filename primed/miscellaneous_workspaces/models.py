@@ -17,8 +17,8 @@ class ConsortiumDevelWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceDa
     """A model to track shared consortium development workspaces."""
 
 
-class ExampleWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
-    """A model to track example workspaces."""
+class ResourceWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
+    """A model to track resource workspaces."""
 
 
 class TemplateWorkspace(TimeStampedModel, BaseWorkspaceData):

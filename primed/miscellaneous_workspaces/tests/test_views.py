@@ -447,8 +447,8 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.workspace, new_workspace)
 
 
-class ExampleWorkspaceDetailTest(TestCase):
-    """Tests of the WorkspaceDetail view from ACM with this app's ExampleWorkspace model."""
+class ResourceWorkspaceDetailTest(TestCase):
+    """Tests of the WorkspaceDetail view from ACM with this app's ResourceWorkspace model."""
 
     def setUp(self):
         """Set up test class."""
@@ -462,14 +462,14 @@ class ExampleWorkspaceDetailTest(TestCase):
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
-        obj = factories.ExampleWorkspaceFactory.create()
+        obj = factories.ResourceWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertEqual(response.status_code, 200)
 
 
-class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests of the WorkspaceCreate view from ACM with this app's ExampleWorkspace model."""
+class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceCreate view from ACM with this app's ResourceWorkspace model."""
 
     api_success_code = 201
 
@@ -490,7 +490,7 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             )
         )
         self.requester = UserFactory.create()
-        self.workspace_type = "example"
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -529,13 +529,13 @@ class ExampleWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # The workspace is created.
         new_workspace = Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
-        new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
+        self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
+        new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
 
 
-class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests of the WorkspaceImport view from ACM with this app's ExampleWorkspace model."""
+class ResourceWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceImport view from ACM with this app's ResourceWorkspace model."""
 
     api_success_code = 200
 
@@ -556,7 +556,7 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             )
         )
         self.requester = UserFactory.create()
-        self.workspace_type = "example"
+        self.workspace_type = "resource"
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -655,8 +655,8 @@ class ExampleWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # The workspace is created.
         new_workspace = Workspace.objects.latest("pk")
         # Workspace data is added.
-        self.assertEqual(models.ExampleWorkspace.objects.count(), 1)
-        new_workspace_data = models.ExampleWorkspace.objects.latest("pk")
+        self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
+        new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
 
 
@@ -734,7 +734,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-intended_workspace_type": "example",
+                "workspacedata-0-intended_workspace_type": "resource",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -744,7 +744,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.TemplateWorkspace.objects.count(), 1)
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.intended_workspace_type, "example")
+        self.assertEqual(new_workspace_data.intended_workspace_type, "resource")
 
 
 class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -860,7 +860,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-intended_workspace_type": "example",
+                "workspacedata-0-intended_workspace_type": "resource",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -870,7 +870,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.TemplateWorkspace.objects.count(), 1)
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.intended_workspace_type, "example")
+        self.assertEqual(new_workspace_data.intended_workspace_type, "resource")
 
 
 class OpenAccessWorkspaceDetailTest(TestCase):
