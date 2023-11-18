@@ -12,7 +12,7 @@ oauthlib  # https://github.com/oauthlib/oauthlib
 
 # Django
 # ------------------------------------------------------------------------------
-django>=3.2,<4.0  # pyup: < 3.3  # https://www.djangoproject.com/
+django>=3.2,<5.0  # pyup: < 3.3  # https://www.djangoproject.com/
 django-environ  # https://github.com/joke2k/django-environ
 django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
 django-model-utils  # https://github.com/jazzband/django-model-utils
