@@ -199,8 +199,10 @@ tomli==2.0.1
     #   build
     #   pip-tools
     #   pyproject-hooks
-urllib3==1.26.9
-    # via requests
+urllib3==2.1.0
+    # via
+    #   -r requirements.in
+    #   requests
 wheel==0.41.3
     # via pip-tools
 whitenoise==6.0.0
