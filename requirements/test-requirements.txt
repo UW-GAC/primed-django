@@ -6,84 +6,84 @@
 #
 attrs==22.1.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   pytest
 certifi==2023.11.17
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 charset-normalizer==2.0.12
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 coverage==6.3.2
     # via
-    #   -r test-requirements.in
+    #   -r requirements/test-requirements.in
     #   django-coverage-plugin
 django-coverage-plugin==2.0.3
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 django-test-migrations==1.3.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 exceptiongroup==1.0.4
     # via pytest
-factory-boy==3.2.1
-    # via -r test-requirements.in
+factory-boy==3.3.0
+    # via -r requirements/test-requirements.in
 faker==13.15.1
     # via factory-boy
 freezegun==1.2.2
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 idna==3.3
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
 iniconfig==1.1.1
     # via pytest
 packaging==21.3
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   pytest
     #   pytest-sugar
 pluggy==1.0.0
     # via pytest
 pyparsing==3.0.9
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   packaging
 pytest==7.2.0
     # via
-    #   -r test-requirements.in
+    #   -r requirements/test-requirements.in
     #   pytest-django
     #   pytest-sugar
 pytest-django==4.5.2
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 pytest-sugar==0.9.6
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   faker
     #   freezegun
 requests==2.31.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   responses
 responses==0.21.0
-    # via -r test-requirements.in
+    # via -r requirements/test-requirements.in
 six==1.16.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   django-coverage-plugin
     #   python-dateutil
 termcolor==1.1.0
     # via pytest-sugar
 tomli==2.0.1
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   pytest
 typing-extensions==4.3.0
     # via django-test-migrations
 urllib3==2.1.0
     # via
-    #   -c requirements.txt
+    #   -c requirements/requirements.txt
     #   requests
     #   responses
