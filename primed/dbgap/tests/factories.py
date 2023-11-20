@@ -61,6 +61,7 @@ class dbGaPStudyAccessionFactory(DjangoModelFactory):
 
     class Meta:
         model = models.dbGaPStudyAccession
+        skip_postgeneration_save = True
 
 
 class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
@@ -78,6 +79,7 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
 
     class Meta:
         model = models.dbGaPWorkspace
+        skip_postgeneration_save = True
 
     @post_generation
     def authorization_domains(self, create, extracted, **kwargs):
