@@ -113,7 +113,7 @@ numpy==1.24.2
     # via
     #   django-anvil-consortium-manager
     #   pandas
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via
     #   -r requirements.in
     #   requests-oauthlib
