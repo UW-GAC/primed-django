@@ -186,8 +186,10 @@ six==1.16.0
     #   django-autocomplete-light
     #   google-auth
     #   python-dateutil
-sqlparse==0.4.2
-    # via django
+sqlparse==0.4.4
+    # via
+    #   -r requirements.in
+    #   django
 tablib==3.4.0
     # via -r requirements.in
 tenacity==8.2.1
@@ -199,8 +201,10 @@ tomli==2.0.1
     #   build
     #   pip-tools
     #   pyproject-hooks
-urllib3==1.26.9
-    # via requests
+urllib3==2.1.0
+    # via
+    #   -r requirements.in
+    #   requests
 wheel==0.41.3
     # via pip-tools
 whitenoise==6.0.0
