@@ -1,7 +1,6 @@
 # For dependency management
 pip-tools
 
-python-slugify  # https://github.com/un33k/python-slugify
 # Middleware for whitenoise/static files.
 whitenoise  # https://github.com/evansd/whitenoise
 oauthlib  # https://github.com/oauthlib/oauthlib
