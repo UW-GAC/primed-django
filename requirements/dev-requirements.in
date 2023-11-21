@@ -1,7 +1,7 @@
 -c requirements.txt
 -c test-requirements.txt
 
-Werkzeug # https://github.com/pallets/werkzeug
+# Interactive debugging.
 ipdb  # https://github.com/gotcha/ipdb
 
 # Testing
