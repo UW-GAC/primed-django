@@ -23,10 +23,6 @@ black  # https://github.com/psf/black
 pylint-django  # https://github.com/PyCQA/pylint-django
 pre-commit  # https://github.com/pre-commit/pre-commit
 
-# Security
-# ------------------------------------------------------------------------------
-safety  # https://github.com/pyupio/safety
-
 # Django
 # ------------------------------------------------------------------------------
 django-debug-toolbar  # https://github.com/jazzband/django-debug-toolbar
