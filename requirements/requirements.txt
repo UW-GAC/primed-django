@@ -10,8 +10,6 @@ argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 asgiref==3.7.2
     # via django
-async-timeout==4.0.2
-    # via redis
 attrs==22.1.0
     # via jsonschema
 backports-zoneinfo==0.2.1
@@ -50,7 +48,6 @@ django==4.2.7
     #   django-extensions
     #   django-filter
     #   django-model-utils
-    #   django-redis
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
@@ -79,8 +76,6 @@ django-maintenance-mode==0.16.3
     # via -r requirements/requirements.in
 django-model-utils==4.2.0
     # via -r requirements/requirements.in
-django-redis==5.2.0
-    # via -r requirements/requirements.in
 django-simple-history==3.4.0
     # via
     #   -r requirements/requirements.in
@@ -97,8 +92,6 @@ google-auth[requests]==2.14.1
     # via
     #   django-anvil-consortium-manager
     #   google-auth
-hiredis==2.0.0
-    # via -r requirements/requirements.in
 idna==3.3
     # via requests
 importlib-metadata==5.2.0
@@ -169,10 +162,6 @@ pytz==2023.3.post1
     #   django-anvil-consortium-manager
     #   django-dbbackup
     #   pandas
-redis==4.5.4
-    # via
-    #   -r requirements/requirements.in
-    #   django-redis
 requests==2.31.0
     # via
     #   -r requirements/requirements.in

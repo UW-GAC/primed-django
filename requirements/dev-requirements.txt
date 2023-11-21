@@ -178,7 +178,9 @@ pytz==2023.3.post1
     #   -c requirements/requirements.txt
     #   babel
 pyyaml==6.0.1
-    # via pre-commit
+    # via
+    #   -c requirements/test-requirements.txt
+    #   pre-commit
 requests==2.31.0
     # via
     #   -c requirements/requirements.txt
