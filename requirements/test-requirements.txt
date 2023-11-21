@@ -63,11 +63,13 @@ python-dateutil==2.8.2
     #   -c requirements/requirements.txt
     #   faker
     #   freezegun
+pyyaml==6.0.1
+    # via responses
 requests==2.31.0
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.21.0
+responses==0.24.1
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
