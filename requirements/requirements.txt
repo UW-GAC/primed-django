@@ -191,7 +191,7 @@ sqlparse==0.4.4
     # via
     #   -r requirements/requirements.in
     #   django
-tablib==3.4.0
+tablib==3.5.0
     # via -r requirements/requirements.in
 tenacity==8.2.1
     # via plotly
