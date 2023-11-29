@@ -1,14 +1,20 @@
 -c requirements.txt
 
+# Pytest
 pytest  # https://github.com/pytest-dev/pytest
+# Pytest improvements - progress bar, etc.
 pytest-sugar  # https://github.com/Frozenball/pytest-sugar
-responses  # https://github.com/getsentry/responses - for mocking HTTP responses
+# Mock HTTP responses
+responses  # https://github.com/getsentry/responses
+# Factories to create Django objects.
 factory-boy  # https://github.com/FactoryBoy/factory_boy
+# Django plugin for pytest.
 pytest-django  # https://github.com/pytest-dev/pytest-django
-# For testing migrations
+# Test migrations.
 django-test-migrations
-# For freezing time in tests
+# Freeze time in tests.
 freezegun  # https://github.com/spulec/freezegun
 # Coverage of django templates
 django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
+# Test coverage.
 coverage

@@ -1,25 +1,26 @@
 # For dependency management
 pip-tools
 
-pytz  # https://github.com/stub42/pytz
-python-slugify  # https://github.com/un33k/python-slugify
-Pillow  # https://github.com/python-pillow/Pillow
-argon2-cffi  # https://github.com/hynek/argon2_cffi
+# Middleware for whitenoise/static files.
 whitenoise  # https://github.com/evansd/whitenoise
-redis  # https://github.com/andymccurdy/redis-py
-hiredis  # https://github.com/redis/hiredis-py
 oauthlib  # https://github.com/oauthlib/oauthlib
 
 # Django
 # ------------------------------------------------------------------------------
 django>=4.2,<5.0  # https://www.djangoproject.com/
+# Read from .env files
 django-environ  # https://github.com/joke2k/django-environ
+# Turn on and off maintenance mode.
 django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
+# Model utilities
 django-model-utils  # https://github.com/jazzband/django-model-utils
+# login/auth using Drupal or other SocialApplications.
 django-allauth  # https://github.com/pennersr/django-allauth
+# Nicer forms.
 django-crispy-forms  # https://github.com/django-crispy-forms/django-crispy-forms
-django-redis  # https://github.com/jazzband/django-redis
+# Protect all views behind LoginRequired by default.
 django-login-required-middleware # https://github.com/CleitonDeLima/django-login-required-middleware
+# Back up the database before migrations/updates.
 django-dbbackup # https://github.com/jazzband/django-dbbackup
 # For time stamped models.
 django-extensions  # https://github.com/django-extensions/django-extensions
