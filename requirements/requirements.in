@@ -9,7 +9,8 @@ oauthlib  # https://github.com/oauthlib/oauthlib
 # ------------------------------------------------------------------------------
 django>=4.2,<5.0  # https://www.djangoproject.com/
 # Read from .env files
-django-environ  # https://github.com/joke2k/django-environ
+# Pin to <= 0.10.0 because 0.11+ introduces a bug with reading environment variables with # characters.
+django-environ<=0.10.0  # https://github.com/joke2k/django-environ
 # Turn on and off maintenance mode.
 django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
 # Model utilities
