@@ -28,7 +28,7 @@ click==8.1.3
     # via pip-tools
 crispy-bootstrap5==0.7
     # via django-anvil-consortium-manager
-cryptography==41.0.4
+cryptography==41.0.6
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
@@ -76,7 +76,7 @@ django-simple-history==3.4.0
     #   django-anvil-consortium-manager
 django-tables2==2.4.1
     # via django-anvil-consortium-manager
-django-tree-queries==0.13.0
+django-tree-queries==0.15.0
     # via -r requirements/requirements.in
 fastobo==0.12.2
     # via pronto
@@ -110,7 +110,7 @@ oauthlib==3.2.2
     #   requests-oauthlib
 packaging==21.3
     # via build
-pandas==1.5.2
+pandas==2.0.3
     # via -r requirements/requirements.in
 pip-tools==7.3.0
     # via -r requirements/requirements.in
@@ -169,7 +169,7 @@ sqlparse==0.4.4
     # via
     #   -r requirements/requirements.in
     #   django
-tablib==3.4.0
+tablib==3.5.0
     # via -r requirements/requirements.in
 tenacity==8.2.1
     # via plotly
@@ -180,6 +180,8 @@ tomli==2.0.1
     #   pyproject-hooks
 typing-extensions==4.8.0
     # via asgiref
+tzdata==2023.3
+    # via pandas
 urllib3==2.1.0
     # via
     #   -r requirements/requirements.in
