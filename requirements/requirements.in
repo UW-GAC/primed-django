@@ -5,6 +5,9 @@ pip-tools
 whitenoise  # https://github.com/evansd/whitenoise
 oauthlib  # https://github.com/oauthlib/oauthlib
 
+# Password hashing
+argon2-cffi # https://github.com/hynek/argon2_cffi
+
 # Django
 # ------------------------------------------------------------------------------
 django>=4.2,<5.0  # https://www.djangoproject.com/
