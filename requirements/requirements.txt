@@ -78,7 +78,7 @@ django-simple-history==3.4.0
     #   django-anvil-consortium-manager
 django-tables2==2.4.1
     # via django-anvil-consortium-manager
-django-tree-queries==0.15.0
+django-tree-queries==0.16.1
     # via -r requirements/requirements.in
 fastobo==0.12.2
     # via pronto
