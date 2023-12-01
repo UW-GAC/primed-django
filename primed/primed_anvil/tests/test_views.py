@@ -25,8 +25,8 @@ from primed.dbgap.tests.factories import (
     dbGaPWorkspaceFactory,
 )
 from primed.miscellaneous_workspaces.tables import (
-    OpenAccessWorkspaceLimitedViewTable,
-    OpenAccessWorkspaceTable,
+    OpenAccessWorkspaceStaffTable,
+    OpenAccessWorkspaceUserTable,
 )
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
@@ -260,7 +260,7 @@ class StudyDetailTest(TestCase):
         self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
         self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
         self.assertIsInstance(
-            response.context_data["tables"][3], OpenAccessWorkspaceTable
+            response.context_data["tables"][3], OpenAccessWorkspaceStaffTable
         )
 
     def test_table_classes_limited_view_permission(self):
@@ -282,7 +282,7 @@ class StudyDetailTest(TestCase):
             response.context_data["tables"][1], CDSAWorkspaceLimitedViewTable
         )
         self.assertIsInstance(
-            response.context_data["tables"][3], OpenAccessWorkspaceLimitedViewTable
+            response.context_data["tables"][3], OpenAccessWorkspaceUserTable
         )
 
     def test_dbgap_workspace_table(self):

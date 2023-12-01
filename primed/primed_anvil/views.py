@@ -27,8 +27,8 @@ from primed.dbgap.tables import (
     dbGaPWorkspaceTable,
 )
 from primed.miscellaneous_workspaces.tables import (
-    OpenAccessWorkspaceLimitedViewTable,
-    OpenAccessWorkspaceTable,
+    OpenAccessWorkspaceStaffTable,
+    OpenAccessWorkspaceUserTable,
 )
 from primed.users.tables import UserTable
 
@@ -45,7 +45,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         dbGaPWorkspaceTable,
         CDSAWorkspaceTable,
         DataAffiliateAgreementTable,
-        OpenAccessWorkspaceTable,
+        OpenAccessWorkspaceStaffTable,
     ]
     # table_class = dbGaPWorkspaceTable
     # context_table_name = "dbgap_workspace_table"
@@ -67,7 +67,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
                 dbGaPWorkspaceTable(dbgap_qs),
                 CDSAWorkspaceTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
-                OpenAccessWorkspaceTable(open_access_qs),
+                OpenAccessWorkspaceStaffTable(open_access_qs),
             )
         else:
             # Assume they have limited view due to auth mixin.
@@ -75,7 +75,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
                 dbGaPWorkspaceLimitedViewTable(dbgap_qs),
                 CDSAWorkspaceLimitedViewTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
-                OpenAccessWorkspaceLimitedViewTable(open_access_qs),
+                OpenAccessWorkspaceUserTable(open_access_qs),
             )
 
 

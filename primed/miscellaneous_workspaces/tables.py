@@ -9,7 +9,7 @@ from primed.primed_anvil.tables import (
 )
 
 
-class OpenAccessWorkspaceTable(tables.Table):
+class OpenAccessWorkspaceStaffTable(tables.Table):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
@@ -27,7 +27,7 @@ class OpenAccessWorkspaceTable(tables.Table):
         order_by = ("name",)
 
 
-class OpenAccessWorkspaceLimitedViewTable(tables.Table):
+class OpenAccessWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
     name = tables.columns.Column()

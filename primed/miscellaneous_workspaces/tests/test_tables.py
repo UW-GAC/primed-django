@@ -7,11 +7,11 @@ from .. import tables
 from . import factories
 
 
-class OpenAccessWorkspaceTableTest(TestCase):
-    """Tests for the OpenAccessWorkspaceTable table."""
+class OpenAccessWorkspaceStaffTableTest(TestCase):
+    """Tests for the OpenAccessWorkspaceStaffTable table."""
 
     model_factory = factories.OpenAccessWorkspaceFactory
-    table_class = tables.OpenAccessWorkspaceTable
+    table_class = tables.OpenAccessWorkspaceStaffTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(Workspace.objects.all())
@@ -28,11 +28,11 @@ class OpenAccessWorkspaceTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
 
-class OpenAccessWorkspaceLimitedViewTableTest(TestCase):
-    """Tests for the OpenAccessWorkspaceTable table."""
+class OpenAccessWorkspaceUserTableTest(TestCase):
+    """Tests for the OpenAccessWorkspaceStaffTable table."""
 
     model_factory = factories.OpenAccessWorkspaceFactory
-    table_class = tables.OpenAccessWorkspaceLimitedViewTable
+    table_class = tables.OpenAccessWorkspaceUserTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(Workspace.objects.all())
