@@ -19,6 +19,8 @@ django-model-utils  # https://github.com/jazzband/django-model-utils
 django-allauth  # https://github.com/pennersr/django-allauth
 # Nicer forms.
 django-crispy-forms  # https://github.com/django-crispy-forms/django-crispy-forms
+# Bootstrap5 templates for crispy-forms
+crispy-bootstrap5  # https://github.com/django-crispy-forms/crispy-bootstrap5
 # Protect all views behind LoginRequired by default.
 django-login-required-middleware # https://github.com/CleitonDeLima/django-login-required-middleware
 # Back up the database before migrations/updates.
