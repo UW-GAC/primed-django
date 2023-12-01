@@ -12,7 +12,8 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
     description = (
         "Workspaces containing data from the Consortium Data Sharing Agreement."
     )
-    list_table_class = tables.CDSAWorkspaceTable
+    list_table_class_staff_view = tables.CDSAWorkspaceTable
+    list_table_class_view = tables.CDSAWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.CDSAWorkspace
     workspace_data_form_class = forms.CDSAWorkspaceForm

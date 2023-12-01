@@ -14,7 +14,8 @@ class SimulatedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "simulated_data"
     name = "Simulated Data workspace"
     description = "Workspaces containing simulated data"
-    list_table_class = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceTable
+    list_table_class_view = DefaultWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.SimulatedDataWorkspace
     workspace_data_form_class = forms.SimulatedDataWorkspaceForm
@@ -29,7 +30,8 @@ class ConsortiumDevelWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "devel"
     name = "Consortium development workspace"
     description = "Workspaces intended for consortium development of methods"
-    list_table_class = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceTable
+    list_table_class_view = DefaultWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.ConsortiumDevelWorkspace
     workspace_data_form_class = forms.ConsortiumDevelWorkspaceForm
@@ -42,7 +44,8 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "resource"
     name = "Resource workspace"
     description = "Workspaces containing consortium resources (e.g., examples of using AnVIL, data inventories)"
-    list_table_class = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceTable
+    list_table_class_view = DefaultWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
@@ -55,7 +58,8 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "template"
     name = "Template workspace"
     description = "Template workspaces that can be cloned to create other workspaces"
-    list_table_class = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceTable
+    list_table_class_view = DefaultWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
@@ -68,7 +72,8 @@ class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "open_access"
     name = "Open access workspace"
     description = "Workspaces containing open access data"
-    list_table_class = tables.OpenAccessWorkspaceTable
+    list_table_class_staff_view = tables.OpenAccessWorkspaceTable
+    list_table_class_view = tables.OpenAccessWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.OpenAccessWorkspace
     workspace_data_form_class = forms.OpenAccessWorkspaceForm
@@ -83,7 +88,8 @@ class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "data_prep"
     name = "Data prep workspace"
     description = "Workspaces used to prepare data."
-    list_table_class = tables.DataPrepWorkspaceTable
+    list_table_class_staff_view = tables.DataPrepWorkspaceTable
+    list_table_class_view = tables.DataPrepWorkspaceTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.DataPrepWorkspace
     workspace_data_form_class = forms.DataPrepWorkspaceForm
