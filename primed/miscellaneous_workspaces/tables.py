@@ -30,7 +30,7 @@ class OpenAccessWorkspaceStaffTable(tables.Table):
 class OpenAccessWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
-    name = tables.columns.Column()
+    name = tables.columns.Column(linkify=True)
     billing_project = tables.Column()
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
