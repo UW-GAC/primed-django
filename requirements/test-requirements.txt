@@ -16,7 +16,7 @@ coverage==7.3.2
     # via
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
-django-coverage-plugin==2.0.3
+django-coverage-plugin==3.1.0
     # via -r requirements/test-requirements.in
 django-test-migrations==1.3.0
     # via -r requirements/test-requirements.in
@@ -70,7 +70,6 @@ responses==0.24.1
 six==1.16.0
     # via
     #   -c requirements/requirements.txt
-    #   django-coverage-plugin
     #   python-dateutil
 termcolor==1.1.0
     # via pytest-sugar
