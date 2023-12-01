@@ -73,7 +73,7 @@ class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
     name = "Open access workspace"
     description = "Workspaces containing open access data"
     list_table_class_staff_view = tables.OpenAccessWorkspaceStaffTable
-    list_table_class_view = tables.OpenAccessWorkspaceStaffTable
+    list_table_class_view = tables.OpenAccessWorkspaceUserTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.OpenAccessWorkspace
     workspace_data_form_class = forms.OpenAccessWorkspaceForm
