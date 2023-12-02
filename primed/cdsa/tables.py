@@ -327,7 +327,7 @@ class CDSAWorkspaceStaffTable(tables.Table):
 class CDSAWorkspaceUserTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
-    name = tables.Column()
+    name = tables.Column(linkify=True)
     billing_project = tables.Column()
     cdsaworkspace__data_use_permission__abbreviation = tables.Column(
         verbose_name="DUO permission",
