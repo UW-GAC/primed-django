@@ -47,7 +47,7 @@ class WorkspaceSharedWithConsortiumColumn(BooleanIconColumn):
         return is_shared
 
 
-class DefaultWorkspaceTable(tables.Table):
+class DefaultWorkspaceStaffTable(tables.Table):
     """Class to use for default workspace tables in PRIMED."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
@@ -66,6 +66,23 @@ class DefaultWorkspaceTable(tables.Table):
             "name",
             "billing_project",
             "number_groups",
+            "is_shared",
+        )
+        order_by = ("name",)
+
+
+class DefaultWorkspaceUserTable(tables.Table):
+    """Class to use for default workspace tables in PRIMED."""
+
+    name = tables.Column(linkify=True, verbose_name="Workspace")
+    billing_project = tables.Column()
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
             "is_shared",
         )
         order_by = ("name",)

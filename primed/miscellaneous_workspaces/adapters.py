@@ -3,7 +3,10 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 
-from primed.primed_anvil.tables import DefaultWorkspaceTable
+from primed.primed_anvil.tables import (
+    DefaultWorkspaceStaffTable,
+    DefaultWorkspaceUserTable,
+)
 
 from . import forms, models, tables
 
@@ -14,8 +17,8 @@ class SimulatedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "simulated_data"
     name = "Simulated Data workspace"
     description = "Workspaces containing simulated data"
-    list_table_class_staff_view = DefaultWorkspaceTable
-    list_table_class_view = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceStaffTable
+    list_table_class_view = DefaultWorkspaceUserTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.SimulatedDataWorkspace
     workspace_data_form_class = forms.SimulatedDataWorkspaceForm
@@ -30,8 +33,8 @@ class ConsortiumDevelWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "devel"
     name = "Consortium development workspace"
     description = "Workspaces intended for consortium development of methods"
-    list_table_class_staff_view = DefaultWorkspaceTable
-    list_table_class_view = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceStaffTable
+    list_table_class_view = DefaultWorkspaceUserTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.ConsortiumDevelWorkspace
     workspace_data_form_class = forms.ConsortiumDevelWorkspaceForm
@@ -44,8 +47,8 @@ class ResourceWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "resource"
     name = "Resource workspace"
     description = "Workspaces containing consortium resources (e.g., examples of using AnVIL, data inventories)"
-    list_table_class_staff_view = DefaultWorkspaceTable
-    list_table_class_view = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceStaffTable
+    list_table_class_view = DefaultWorkspaceUserTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
@@ -58,8 +61,8 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "template"
     name = "Template workspace"
     description = "Template workspaces that can be cloned to create other workspaces"
-    list_table_class_staff_view = DefaultWorkspaceTable
-    list_table_class_view = DefaultWorkspaceTable
+    list_table_class_staff_view = DefaultWorkspaceStaffTable
+    list_table_class_view = DefaultWorkspaceUserTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
