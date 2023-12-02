@@ -12,7 +12,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from primed.cdsa.tables import CDSAWorkspaceLimitedViewTable, CDSAWorkspaceTable
+from primed.cdsa.tables import CDSAWorkspaceStaffTable, CDSAWorkspaceUserTable
 from primed.cdsa.tests.factories import (
     CDSAWorkspaceFactory,
     DataAffiliateAgreementFactory,
@@ -258,7 +258,9 @@ class StudyDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
         self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
-        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["tables"][1], CDSAWorkspaceStaffTable
+        )
         self.assertIsInstance(
             response.context_data["tables"][3], OpenAccessWorkspaceStaffTable
         )
@@ -279,7 +281,7 @@ class StudyDetailTest(TestCase):
             response.context_data["tables"][0], dbGaPWorkspaceLimitedViewTable
         )
         self.assertIsInstance(
-            response.context_data["tables"][1], CDSAWorkspaceLimitedViewTable
+            response.context_data["tables"][1], CDSAWorkspaceUserTable
         )
         self.assertIsInstance(
             response.context_data["tables"][3], OpenAccessWorkspaceUserTable

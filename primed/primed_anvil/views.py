@@ -15,8 +15,8 @@ from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
 from primed.cdsa.tables import (
-    CDSAWorkspaceLimitedViewTable,
-    CDSAWorkspaceTable,
+    CDSAWorkspaceStaffTable,
+    CDSAWorkspaceUserTable,
     DataAffiliateAgreementTable,
     MemberAgreementTable,
 )
@@ -43,7 +43,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
     model = models.Study
     tables = [
         dbGaPWorkspaceTable,
-        CDSAWorkspaceTable,
+        CDSAWorkspaceStaffTable,
         DataAffiliateAgreementTable,
         OpenAccessWorkspaceStaffTable,
     ]
@@ -65,7 +65,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         if self.request.user.has_perm(full_view_perm):
             return (
                 dbGaPWorkspaceTable(dbgap_qs),
-                CDSAWorkspaceTable(cdsa_qs),
+                CDSAWorkspaceStaffTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
                 OpenAccessWorkspaceStaffTable(open_access_qs),
             )
@@ -73,7 +73,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
             # Assume they have limited view due to auth mixin.
             return (
                 dbGaPWorkspaceLimitedViewTable(dbgap_qs),
-                CDSAWorkspaceLimitedViewTable(cdsa_qs),
+                CDSAWorkspaceUserTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
                 OpenAccessWorkspaceUserTable(open_access_qs),
             )

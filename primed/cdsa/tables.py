@@ -295,7 +295,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             return "—"
 
 
-class CDSAWorkspaceTable(tables.Table):
+class CDSAWorkspaceStaffTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column(linkify=True)
@@ -324,7 +324,7 @@ class CDSAWorkspaceTable(tables.Table):
         order_by = ("name",)
 
 
-class CDSAWorkspaceLimitedViewTable(tables.Table):
+class CDSAWorkspaceUserTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column()
