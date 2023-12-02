@@ -116,10 +116,10 @@ class dbGaPStudyAccessionTableTest(TestCase):
         self.assertEqual(table.data[1], instance_1)
 
 
-class dbGaPWorkspaceTableTest(TestCase):
+class dbGaPWorkspaceStaffTableTest(TestCase):
     model = acm_models.Workspace
     model_factory = factories.dbGaPWorkspaceFactory
-    table_class = tables.dbGaPWorkspaceTable
+    table_class = tables.dbGaPWorkspaceStaffTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())
@@ -206,10 +206,10 @@ class dbGaPWorkspaceTableTest(TestCase):
     #     self.assertEqual("", table.rows[0].get_cell_value("is_shared"))
 
 
-class dbGaPWorkspaceLimitedViewTableTest(TestCase):
+class dbGaPWorkspaceUserTableTest(TestCase):
     model = acm_models.Workspace
     model_factory = factories.dbGaPWorkspaceFactory
-    table_class = tables.dbGaPWorkspaceTable
+    table_class = tables.dbGaPWorkspaceStaffTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())

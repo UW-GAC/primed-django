@@ -57,7 +57,7 @@ class dbGaPStudyAccessionDetail(
         return obj
 
     def get_table(self):
-        return tables.dbGaPWorkspaceTable(
+        return tables.dbGaPWorkspaceStaffTable(
             Workspace.objects.filter(dbgapworkspace__dbgap_study_accession=self.object),
             exclude=(
                 "dbgapworkspace__dbgap_study_accession__study",

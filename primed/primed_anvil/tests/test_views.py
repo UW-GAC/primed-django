@@ -18,7 +18,7 @@ from primed.cdsa.tests.factories import (
     DataAffiliateAgreementFactory,
     MemberAgreementFactory,
 )
-from primed.dbgap.tables import dbGaPWorkspaceLimitedViewTable, dbGaPWorkspaceTable
+from primed.dbgap.tables import dbGaPWorkspaceStaffTable, dbGaPWorkspaceUserTable
 from primed.dbgap.tests.factories import (
     dbGaPApplicationFactory,
     dbGaPStudyAccessionFactory,
@@ -257,7 +257,9 @@ class StudyDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
-        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["tables"][0], dbGaPWorkspaceStaffTable
+        )
         self.assertIsInstance(
             response.context_data["tables"][1], CDSAWorkspaceStaffTable
         )
@@ -278,7 +280,7 @@ class StudyDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
         self.assertIsInstance(
-            response.context_data["tables"][0], dbGaPWorkspaceLimitedViewTable
+            response.context_data["tables"][0], dbGaPWorkspaceUserTable
         )
         self.assertIsInstance(
             response.context_data["tables"][1], CDSAWorkspaceUserTable

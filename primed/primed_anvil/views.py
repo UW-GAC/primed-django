@@ -23,8 +23,8 @@ from primed.cdsa.tables import (
 from primed.dbgap.models import dbGaPApplication
 from primed.dbgap.tables import (
     dbGaPApplicationTable,
-    dbGaPWorkspaceLimitedViewTable,
-    dbGaPWorkspaceTable,
+    dbGaPWorkspaceStaffTable,
+    dbGaPWorkspaceUserTable,
 )
 from primed.miscellaneous_workspaces.tables import (
     OpenAccessWorkspaceStaffTable,
@@ -42,12 +42,12 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
 
     model = models.Study
     tables = [
-        dbGaPWorkspaceTable,
+        dbGaPWorkspaceStaffTable,
         CDSAWorkspaceStaffTable,
         DataAffiliateAgreementTable,
         OpenAccessWorkspaceStaffTable,
     ]
-    # table_class = dbGaPWorkspaceTable
+    # table_class = dbGaPWorkspaceStaffTable
     # context_table_name = "dbgap_workspace_table"
 
     def get_tables(self):
@@ -64,7 +64,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME}"
         if self.request.user.has_perm(full_view_perm):
             return (
-                dbGaPWorkspaceTable(dbgap_qs),
+                dbGaPWorkspaceStaffTable(dbgap_qs),
                 CDSAWorkspaceStaffTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
                 OpenAccessWorkspaceStaffTable(open_access_qs),
@@ -72,7 +72,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         else:
             # Assume they have limited view due to auth mixin.
             return (
-                dbGaPWorkspaceLimitedViewTable(dbgap_qs),
+                dbGaPWorkspaceUserTable(dbgap_qs),
                 CDSAWorkspaceUserTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
                 OpenAccessWorkspaceUserTable(open_access_qs),
@@ -168,7 +168,7 @@ class AvailableDataDetail(
 
     model = models.AvailableData
     context_table_name = "dbgap_workspace_table"
-    table_class = dbGaPWorkspaceTable
+    table_class = dbGaPWorkspaceStaffTable
     context_table_name = "dbgap_workspace_table"
 
     def get_table_data(self):

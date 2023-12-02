@@ -267,7 +267,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
         self.assertIsInstance(
-            response.context_data["workspace_table"], tables.dbGaPWorkspaceTable
+            response.context_data["workspace_table"], tables.dbGaPWorkspaceStaffTable
         )
 
     def test_workspace_table_none(self):
@@ -856,7 +856,7 @@ class dbGaPWorkspaceListTest(TestCase):
         response = self.get_view()(request, workspace_type=self.workspace_type)
         self.assertIn("table", response.context_data)
         self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPWorkspaceTable
+            response.context_data["table"], tables.dbGaPWorkspaceStaffTable
         )
 
 

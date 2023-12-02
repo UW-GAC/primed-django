@@ -10,8 +10,8 @@ class dbGaPWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "dbgap"
     name = "dbGaP workspace"
     description = "Workspaces containing data from released dbGaP accessions"
-    list_table_class_staff_view = tables.dbGaPWorkspaceTable
-    list_table_class_view = tables.dbGaPWorkspaceTable
+    list_table_class_staff_view = tables.dbGaPWorkspaceStaffTable
+    list_table_class_view = tables.dbGaPWorkspaceStaffTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.dbGaPWorkspace
     workspace_data_form_class = forms.dbGaPWorkspaceForm
