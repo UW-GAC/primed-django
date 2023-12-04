@@ -16,10 +16,8 @@
   </header>
 
   <main>
-    <!--
-      <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-      -->
-  <div class="row">
+
+    <div class="row">
       <div class="col d-flex align-items-stretch">
         <div class="card mb-4 rounded-3 shadow-sm">
           <div class="card-header py-3">
@@ -48,25 +46,8 @@
         </div>
       </div>
 
-      {% if not request.user.account %}
-      <div class="col d-flex align-items-stretch">
-        <div class="card mb-4 rounded-3 shadow-sm">
-          <div class="card-header py-3">
-            <h4 class="my-0 fw-normal"><i class="fa-solid fa-wand-magic-sparkles pe-2"></i>AnVIL account</h4>
-          </div>
-          <div class="card-body pb-0">
-            <p>
-              If you have not linked your AnVIL account, you must do so before you can access any data on AnVIL.
-            </p>
-          </div>
-          <div class="card-footer bg-transparent border-top-0 text-center pb-3">
-            <a type="button" class="btn btn-secondary" href="{% url 'anvil_consortium_manager:accounts:link' %}">Link your AnVIL account</a>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
     </div>
+
   </main>
 
 {% endblock content %}
