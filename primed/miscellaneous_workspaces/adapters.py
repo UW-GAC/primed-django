@@ -60,7 +60,9 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "template"
     name = "Template workspace"
-    description = "Template workspaces that can be cloned to create other workspaces"
+    description = (
+        "Template workspaces that will be cloned by the CC to create other workspaces"
+    )
     list_table_class_staff_view = DefaultWorkspaceStaffTable
     list_table_class_view = DefaultWorkspaceUserTable
     workspace_form_class = WorkspaceForm
@@ -90,7 +92,7 @@ class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "data_prep"
     name = "Data prep workspace"
-    description = "Workspaces used to prepare data."
+    description = "Workspaces used to prepare data for sharing or update data that is already shared"
     list_table_class_staff_view = tables.DataPrepWorkspaceTable
     list_table_class_view = tables.DataPrepWorkspaceTable
     workspace_form_class = WorkspaceForm
