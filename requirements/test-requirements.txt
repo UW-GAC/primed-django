@@ -52,7 +52,7 @@ pytest==7.4.3
     #   pytest-sugar
 pytest-django==4.7.0
     # via -r requirements/test-requirements.in
-pytest-sugar==0.9.6
+pytest-sugar==0.9.7
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via
@@ -71,7 +71,7 @@ six==1.16.0
     # via
     #   -c requirements/requirements.txt
     #   python-dateutil
-termcolor==1.1.0
+termcolor==2.4.0
     # via pytest-sugar
 tomli==2.0.1
     # via
