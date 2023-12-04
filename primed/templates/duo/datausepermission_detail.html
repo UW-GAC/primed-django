@@ -3,17 +3,14 @@
 
 {% block title %}DUO permission {{ object }}{% endblock title %}
 
-{% block after_title %}
-  <a class="btn btn-light" href="{{ object.get_ols_url }}" role="button" target="_blank">
-    <span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
-    View on OLS
-  </a>
-{% endblock after_title %}
-
 {% block panel %}
 <dl class="row">
-  <dt class="col-sm-2">Identifier</dt> <dd class="col-sm-10">{{ object.identifier }}</dd>
-  <dt class="col-sm-2">Term</dt> <dd class="col-sm-10">{{ object.term }}</dd>
+  <dt class="col-sm-2">Identifier</dt> <dd class="col-sm-10">
+    <a href="{{ object.get_ols_url }}" target="_blank">
+      {{ object.identifier }}<span class="fa-solid fa-arrow-up-right-from-square mx-1"></span>
+    </a>
+  </dd>
+<dt class="col-sm-2">Term</dt> <dd class="col-sm-10">{{ object.term }}</dd>
   <dt class="col-sm-2">Abbreviation</dt> <dd class="col-sm-10">{{ object.abbreviation }}</dd>
   <dt class="col-sm-2">Definition</dt> <dd class="col-sm-10">{{ object.definition }}</dd>
   <dt class="col-sm-2">Comment</dt> <dd class="col-sm-10">{{ object.comment }}</dd>

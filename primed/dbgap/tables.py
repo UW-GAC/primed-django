@@ -71,7 +71,7 @@ class dbGaPStudyAccessionTable(tables.Table):
         return "phs{0:06d}".format(value)
 
 
-class dbGaPWorkspaceTable(tables.Table):
+class dbGaPWorkspaceStaffTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
@@ -116,10 +116,10 @@ class dbGaPWorkspaceTable(tables.Table):
         return n
 
 
-class dbGaPWorkspaceLimitedViewTable(tables.Table):
+class dbGaPWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
-    name = tables.columns.Column()
+    name = tables.columns.Column(linkify=True)
     billing_project = tables.Column()
     dbgap_accession = dbGaPAccessionColumn(
         accessor="dbgapworkspace__get_dbgap_accession",
