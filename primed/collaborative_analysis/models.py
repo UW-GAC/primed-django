@@ -11,11 +11,6 @@ class CollaborativeAnalysisWorkspace(TimeStampedModel, BaseWorkspaceData):
         help_text="The intended purpose for this workspace.",
         blank=True,
     )
-    source_workspaces = models.ManyToManyField(
-        Workspace,
-        related_name="collaborative_analysis_workspaces",
-        help_text="Workspaces contributing data to this workspace.",
-    )
     proposal_id = models.IntegerField(
         help_text="The ID of the proposal that this workspace is associated with.",
         blank=True,
@@ -28,4 +23,9 @@ class CollaborativeAnalysisWorkspace(TimeStampedModel, BaseWorkspaceData):
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         help_text="The custodian for this workspace.",
+    )
+    source_workspaces = models.ManyToManyField(
+        Workspace,
+        related_name="collaborative_analysis_workspaces",
+        help_text="Workspaces contributing data to this workspace.",
     )
