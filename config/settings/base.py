@@ -96,6 +96,7 @@ LOCAL_APPS = [
     "primed.miscellaneous_workspaces",
     "primed.duo",
     "primed.cdsa",
+    "primed.collaborative_analysis",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
