@@ -23,6 +23,10 @@ class CollaborativeAnalysisWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelFo
                 url="anvil_consortium_manager:workspaces:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
+            "custodian": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
         }
         #     "data_use_modifiers": forms.CheckboxSelectMultiple,
         #     "requested_by": autocomplete.ModelSelect2(
