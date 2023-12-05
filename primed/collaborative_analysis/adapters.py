@@ -20,4 +20,6 @@ class CollaborativeAnalysisWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.CollaborativeAnalysisWorkspace
     workspace_data_form_class = forms.CollaborativeAnalysisWorkspaceForm
-    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    workspace_detail_template_name = (
+        "collaborative_analysis/collaborativeanalysisworkspace_detail.html"
+    )
