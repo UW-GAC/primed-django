@@ -7,6 +7,10 @@ from django_extensions.db.models import TimeStampedModel
 # Note that "RequesterModel" is not included, because we have the "custodian" tracked instead.
 class CollaborativeAnalysisWorkspace(TimeStampedModel, BaseWorkspaceData):
 
+    purpose = models.TextField(
+        help_text="The intended purpose for this workspace.",
+        blank=True,
+    )
     source_workspaces = models.ManyToManyField(
         Workspace,
         related_name="collaborative_analysis_workspaces",
