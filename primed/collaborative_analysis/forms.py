@@ -19,8 +19,8 @@ class CollaborativeAnalysisWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelFo
             "workspace",
         )
         widgets = {
-            "dbgap_study_accession": autocomplete.ModelSelect2Multiple(
-                url="anvil:workspaces:autocomplete",
+            "source_workspaces": autocomplete.ModelSelect2Multiple(
+                url="anvil_consortium_manager:workspaces:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }
