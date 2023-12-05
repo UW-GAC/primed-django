@@ -1,0 +1,23 @@
+from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
+from anvil_consortium_manager.forms import WorkspaceForm
+
+from primed.primed_anvil.tables import (
+    DefaultWorkspaceStaffTable,
+    DefaultWorkspaceUserTable,
+)
+
+from . import forms, models
+
+
+class CollaborativeAnalysisWorkspaceAdapter(BaseWorkspaceAdapter):
+    """Adapter for CollaborativeAnalysisWorkspace."""
+
+    type = "collab_analysis"
+    name = "Collaborative Analysis workspace"
+    description = "Workspaces used for collaborative analyses"
+    list_table_class_staff_view = DefaultWorkspaceStaffTable
+    list_table_class_view = DefaultWorkspaceUserTable
+    workspace_form_class = WorkspaceForm
+    workspace_data_model = models.CollaborativeAnalysisWorkspace
+    workspace_data_form_class = forms.CollaborativeAnalysisWorkspaceForm
+    workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
