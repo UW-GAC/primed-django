@@ -9,7 +9,6 @@ class CollaborativeAnalysisWorkspace(TimeStampedModel, BaseWorkspaceData):
 
     purpose = models.TextField(
         help_text="The intended purpose for this workspace.",
-        blank=True,
     )
     proposal_id = models.IntegerField(
         help_text="The ID of the proposal that this workspace is associated with.",
