@@ -28,17 +28,6 @@ class CollaborativeAnalysisWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelFo
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }
-        #     "data_use_modifiers": forms.CheckboxSelectMultiple,
-        #     "requested_by": autocomplete.ModelSelect2(
-        #         url="users:autocomplete",
-        #         attrs={"data-theme": "bootstrap-5"},
-        #     ),
-        #     "available_data": forms.CheckboxSelectMultiple,
-        # }
-        # help_texts = {
-        #     "data_use_modifiers": """The DataUseModifiers associated with this study-consent group.
-        #     --- represents a child modifier."""
-        # }
 
     def clean(self):
         """Custom checks:
