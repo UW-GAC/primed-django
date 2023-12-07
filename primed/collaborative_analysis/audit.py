@@ -70,13 +70,26 @@ class RemoveAccess(AccessAuditResult):
 class CollaborativeAnalysisWorkspaceAccessAudit:
     """Class to audit access to a CollaborativeAnalysisWorkspace."""
 
+    # Allowed reasons for access.
+    IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains for this workspace."
+
+    # Allowed reasons for no access.
+    NOT_IN_SOURCE_AUTH_DOMAINS = (
+        "Account is not in all source auth domains for this workspace."
+    )
+
     def __init__(self):
         self.verified = []
         self.needs_action = []
         self.errors = []
+        self.completed = False
 
     def _audit_workspace(self, workspace):
         """Audit access to a single CollaborativeAnalysisWorkspace."""
+        pass
+
+    def _audit_workspace_and_account(self, collaborative_analysis_workspace, account):
+        """Audit access for a specific CollaborativeAnalysisWorkspace and account."""
         # Cases to consider:
         # - analyst is in all relevant source auth domains, and is in the workspace auth domain.
         # - analyst is in some but not all relevant source auth domains, and is in the workspace auth domain..
@@ -85,6 +98,55 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         # - analyst is in some but not all relevant source auth domains, and is not in the workspace auth domain.
         # - analyst is in none of the relevant source auth domains, and is not in the workspace auth domain.
         # - an account is in the workspace auth domain, but is not in the analyst group.
+
+        # Check whether access is allowed. Start by assuming yes; set to false if the account should not have access.
+        access_allowed = True
+        account_groups = account.get_all_groups()
+        source_workspace = collaborative_analysis_workspace.source_workspaces.first()
+        for source_auth_domain in source_workspace.authorization_domains.all():
+            if source_auth_domain not in account_groups:
+                access_allowed = False
+                break
+        # Check whether the account is in the auth domain of the collab workspace.
+        in_auth_domain = (
+            collaborative_analysis_workspace.workspace.authorization_domains.first()
+            in account_groups
+        )
+        # Determine the audit result.
+        print(access_allowed)
+        print(in_auth_domain)
+        if access_allowed and in_auth_domain:
+            self.verified.append(
+                VerifiedAccess(
+                    workspace=collaborative_analysis_workspace,
+                    account=account,
+                    note=self.IN_SOURCE_AUTH_DOMAINS,
+                )
+            )
+        elif access_allowed and not in_auth_domain:
+            self.needs_action.append(
+                GrantAccess(
+                    workspace=collaborative_analysis_workspace,
+                    account=account,
+                    note=self.IN_SOURCE_AUTH_DOMAINS,
+                )
+            )
+        elif not access_allowed and in_auth_domain:
+            self.needs_action.append(
+                RemoveAccess(
+                    workspace=collaborative_analysis_workspace,
+                    account=account,
+                    note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
+                )
+            )
+        else:
+            self.verified.append(
+                VerifiedNoAccess(
+                    workspace=collaborative_analysis_workspace,
+                    account=account,
+                    note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
+                )
+            )
 
     def run_audit(self):
         """Run an audit on all CollaborativeAnalysisWorkspaces."""

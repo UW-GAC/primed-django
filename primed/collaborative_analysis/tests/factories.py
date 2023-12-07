@@ -28,13 +28,11 @@ class CollaborativeAnalysisWorkspaceFactory(DjangoModelFactory):
 
         # Create an authorization domain.
         auth_domain = ManagedGroupFactory.create()
+        print(auth_domain)
         self.workspace.authorization_domains.add(auth_domain)
 
     @post_generation
     def source_workspaces(self, create, extracted, **kwargs):
-        # Make sure at least one is added.
-        print(create)
-        print(extracted)
         if not create or not extracted:
             # Simple build, do nothing.
             return
