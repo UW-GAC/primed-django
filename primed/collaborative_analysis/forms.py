@@ -12,10 +12,11 @@ class CollaborativeAnalysisWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelFo
     class Meta:
         model = models.CollaborativeAnalysisWorkspace
         fields = (
+            "custodian",
             "purpose",
             "proposal_id",
             "source_workspaces",
-            "custodian",
+            "analyst_group",
             "workspace",
         )
         widgets = {
@@ -25,6 +26,10 @@ class CollaborativeAnalysisWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelFo
             ),
             "custodian": autocomplete.ModelSelect2(
                 url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "analyst_group": autocomplete.ModelSelect2(
+                url="anvil_consortium_manager:managed_groups:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }

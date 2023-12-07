@@ -1,4 +1,7 @@
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceFactory,
+)
 from django.test import TestCase
 
 from primed.users.tests.factories import UserFactory
@@ -14,9 +17,11 @@ class CollaborativeAnalysisWorkspaceTest(TestCase):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
         user = UserFactory.create()
+        group = ManagedGroupFactory.create()
         instance = models.CollaborativeAnalysisWorkspace(
             workspace=workspace,
             custodian=user,
+            analyst_group=group,
         )
         instance.save()
         self.assertIsInstance(instance, models.CollaborativeAnalysisWorkspace)

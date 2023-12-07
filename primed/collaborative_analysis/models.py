@@ -1,4 +1,4 @@
-from anvil_consortium_manager.models import BaseWorkspaceData, Workspace
+from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup, Workspace
 from django.conf import settings
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
@@ -27,4 +27,9 @@ class CollaborativeAnalysisWorkspace(TimeStampedModel, BaseWorkspaceData):
         Workspace,
         related_name="collaborative_analysis_workspaces",
         help_text="Workspaces contributing data to this workspace.",
+    )
+    analyst_group = models.ForeignKey(
+        ManagedGroup,
+        on_delete=models.PROTECT,
+        help_text="The AnVIL group containing analysts for this workspace.",
     )

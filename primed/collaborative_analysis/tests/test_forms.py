@@ -1,4 +1,7 @@
-from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceFactory,
+)
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.test import TestCase
 
@@ -17,12 +20,14 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
         self.custodian = UserFactory.create()
         self.workspace = WorkspaceFactory.create()
         self.source_workspace = WorkspaceFactory.create()
+        self.analyst_group = ManagedGroupFactory.create()
 
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
             "purpose": "test",
             "source_workspaces": [self.source_workspace],
+            "analyst_group": self.analyst_group,
             "custodian": self.custodian,
             "workspace": self.workspace,
         }
@@ -34,17 +39,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
             "purpose": "test",
             "proposal_id": 1,
             "source_workspaces": [self.source_workspace],
-            "custodian": self.custodian,
-            "workspace": self.workspace,
-        }
-        form = self.form_class(data=form_data)
-        self.assertTrue(form.is_valid())
-
-    def test_invalid_with_proposal_id_blank(self):
-        form_data = {
-            "purpose": "test",
-            "proposal_id": 1,
-            "source_workspaces": [self.source_workspace],
+            "analyst_group": self.analyst_group,
             "custodian": self.custodian,
             "workspace": self.workspace,
         }
@@ -55,6 +50,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
         form_data = {
             "purpose": "test",
             "proposal_id": "a",
+            "analyst_group": self.analyst_group,
             "source_workspaces": [self.source_workspace],
             "custodian": self.custodian,
             "workspace": self.workspace,
@@ -73,6 +69,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
             "purpose": "test",
             "source_workspaces": [self.source_workspace, source_workspace_2],
             "custodian": self.custodian,
+            "analyst_group": self.analyst_group,
             "workspace": self.workspace,
         }
         form = self.form_class(data=form_data)
@@ -84,6 +81,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
             # "purpose": "test",
             "source_workspaces": [self.source_workspace],
             "custodian": self.custodian,
+            "analyst_group": self.analyst_group,
             "workspace": self.workspace,
         }
         form = self.form_class(data=form_data)
@@ -99,6 +97,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
             "purpose": "test",
             # "source_workspaces": [self.source_workspace],
             "custodian": self.custodian,
+            "analyst_group": self.analyst_group,
             "workspace": self.workspace,
         }
         form = self.form_class(data=form_data)
@@ -114,6 +113,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
             "purpose": "test",
             "source_workspaces": [self.workspace],
             "custodian": self.custodian,
+            "analyst_group": self.analyst_group,
             "workspace": self.workspace,
         }
         form = self.form_class(data=form_data)
@@ -129,6 +129,7 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
             "purpose": "test",
             "source_workspaces": [self.source_workspace],
             # "custodian": self.custodian,
+            "analyst_group": self.analyst_group,
             "workspace": self.workspace,
         }
         form = self.form_class(data=form_data)
@@ -138,12 +139,29 @@ class CollaborativeAnalysisWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["custodian"]), 1)
         self.assertIn("required", form.errors["custodian"][0])
 
+    def test_invalid_analyst_group(self):
+        """Form is invalid when missing custodian."""
+        form_data = {
+            "purpose": "test",
+            "source_workspaces": [self.source_workspace],
+            "custodian": self.custodian,
+            # "analyst_group": self.analyst_group,
+            "workspace": self.workspace,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("analyst_group", form.errors)
+        self.assertEqual(len(form.errors["analyst_group"]), 1)
+        self.assertIn("required", form.errors["analyst_group"][0])
+
     def test_invalid_workspace(self):
         """Form is invalid when missing workspace."""
         form_data = {
             "purpose": "test",
             "source_workspaces": [self.source_workspace],
             "custodian": self.custodian,
+            "analyst_group": self.analyst_group,
             # "workspace": self.workspace,
         }
         form = self.form_class(data=form_data)

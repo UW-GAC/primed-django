@@ -2,7 +2,10 @@
 
 import responses
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
-from anvil_consortium_manager.tests.factories import BillingProjectFactory
+from anvil_consortium_manager.tests.factories import (
+    BillingProjectFactory,
+    ManagedGroupFactory,
+)
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -25,11 +28,10 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
 
     def setUp(self):
         """Set up test class."""
-        # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -62,7 +64,6 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
 
     def test_link_to_custodian(self):
         """Links to the custodian's user profile appear on the detail page."""
-        # TODO: Move this to a table in the context data when ACM allows.
         custodian = UserFactory.create()
         obj = factories.CollaborativeAnalysisWorkspaceFactory.create(
             custodian=custodian
@@ -70,6 +71,32 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertIn(custodian.get_absolute_url(), response.content.decode())
+
+    def test_link_to_analyst_group_staff_view(self):
+        """Links to the analyst group's detail page appear on the detail page for staff_viewers."""
+        user = User.objects.create_user(
+            username="test-staff-view", password="test-staff-view"
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        self.client.force_login(user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertIn(obj.analyst_group.get_absolute_url(), response.content.decode())
+        self.assertIn(obj.analyst_group.name, response.content.decode())
+
+    def test_link_to_analyst_group_view(self):
+        """Links to the analyst group's detail page do not appear on the detail page for viewers."""
+        obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertNotIn(
+            obj.analyst_group.get_absolute_url(), response.content.decode()
+        )
+        self.assertNotIn(obj.analyst_group.name, response.content.decode())
 
 
 class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -96,6 +123,7 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.workspace_type = "collab_analysis"
         self.custodian = UserFactory.create()
         self.source_workspace = dbGaPWorkspaceFactory.create()
+        self.analyst_group = ManagedGroupFactory.create()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -130,6 +158,7 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-custodian": self.custodian.pk,
                 "workspacedata-0-source_workspaces": [self.source_workspace.pk],
                 "workspacedata-0-purpose": "test",
+                "workspacedata-0-analyst_group": self.analyst_group.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -165,6 +194,7 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.custodian = UserFactory.create()
         self.source_workspace = dbGaPWorkspaceFactory.create()
         self.workspace_type = "collab_analysis"
+        self.analyst_group = ManagedGroupFactory.create()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -259,6 +289,7 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-custodian": self.custodian.pk,
                 "workspacedata-0-source_workspaces": [self.source_workspace.pk],
                 "workspacedata-0-purpose": "test",
+                "workspacedata-0-analyst_group": self.analyst_group.pk,
             },
         )
         self.assertEqual(response.status_code, 302)

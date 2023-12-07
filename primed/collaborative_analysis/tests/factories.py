@@ -17,6 +17,7 @@ class CollaborativeAnalysisWorkspaceFactory(DjangoModelFactory):
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="collab_analysis")
     custodian = SubFactory(UserFactory)
+    analyst_group = SubFactory(ManagedGroupFactory)
 
     @post_generation
     def authorization_domains(self, create, extracted, **kwargs):
