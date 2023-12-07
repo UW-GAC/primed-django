@@ -386,3 +386,6 @@ ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
 ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
+
+DRUPAL_API_CLIENT_ID = env("DRUPAL_API_CLIENT_ID", default="")
+DRUPAL_API_CLIENT_SECRET = env("DRUPAL_API_CLIENT_SECRET", default="")
