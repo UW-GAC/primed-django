@@ -65,3 +65,29 @@ class RemoveAccess(AccessAuditResult):
                 self.account,
             ],
         )
+
+
+class CollaborativeAnalysisWorkspaceAccessAudit:
+    """Class to audit access to a CollaborativeAnalysisWorkspace."""
+
+    def __init__(self):
+        self.verified = []
+        self.needs_action = []
+        self.errors = []
+
+    def _audit_workspace(self, workspace):
+        """Audit access to a single CollaborativeAnalysisWorkspace."""
+        # Cases to consider:
+        # - analyst is in all relevant source auth domains, and is in the workspace auth domain.
+        # - analyst is in some but not all relevant source auth domains, and is in the workspace auth domain..
+        # - analyst is in none of the relevant source auth domains, and is in the workspace auth domain..
+        # - analyst is in all relevant source auth domains, and is not in the workspace auth domain.
+        # - analyst is in some but not all relevant source auth domains, and is not in the workspace auth domain.
+        # - analyst is in none of the relevant source auth domains, and is not in the workspace auth domain.
+        # - an account is in the workspace auth domain, but is not in the analyst group.
+
+    def run_audit(self):
+        """Run an audit on all CollaborativeAnalysisWorkspaces."""
+        for workspace in models.CollaborativeAnalysisWorkspace.objects.all():
+            self._audit_workspace(workspace)
+        self.completed = True

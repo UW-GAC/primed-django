@@ -47,3 +47,34 @@ class WorkspaceAccessAuditResultTest(TestCase):
             args=[workspace.analyst_group, account],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
+
+
+class CollaborativeAnalysisWorkspaceAccessAudit:
+    """Tests for the CollaborativeAnalysisWorkspaceAccessAudit class."""
+
+    def test_completed(self):
+        """completed is updated properly."""
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        self.assertFalse(collab_audit.completed)
+        collab_audit.run_audit()
+        self.assertTrue(collab_audit.completed)
+
+    def test_no_workspaces(self):
+        """Audit works if there are no source workspaces."""
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    def test_one_workspaces_no_analysts(self):
+        """Audit works if there are analysts workspaces in the analyst group for a workspace."""
+        factories.CollaborativeAnalysisWorkspaceFactory.create()
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    # def test_one(self):
+    #     self.fail()
