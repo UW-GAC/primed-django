@@ -106,7 +106,15 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
     # Errors.
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
 
-    def __init__(self):
+    def __init__(self, queryset=None):
+        """Initialize the audit.
+
+        Args:
+            queryset: A queryset of CollaborativeAnalysisWorkspaces to audit.
+        """
+        if queryset is None:
+            queryset = models.CollaborativeAnalysisWorkspace.objects.all()
+        self.queryset = queryset
         self.verified = []
         self.needs_action = []
         self.errors = []
@@ -228,7 +236,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             )
 
     def run_audit(self):
-        """Run an audit on all CollaborativeAnalysisWorkspaces."""
-        for workspace in models.CollaborativeAnalysisWorkspace.objects.all():
+        """Run the audit on the set of workspaces."""
+        for workspace in self.queryset:
             self._audit_workspace(workspace)
         self.completed = True

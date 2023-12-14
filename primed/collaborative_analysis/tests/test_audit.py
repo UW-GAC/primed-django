@@ -926,3 +926,45 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace_1)
         self.assertEqual(record.member, analyst_1)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset of workspaces."""
+        # Create a workspace with an analyst that needs access.
+        workspace_1 = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        analyst_1 = AccountFactory.create()
+        GroupAccountMembershipFactory.create(
+            group=workspace_1.analyst_group, account=analyst_1
+        )
+        # Create a workspace with an analyst that has access.
+        workspace_2 = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        analyst_2 = AccountFactory.create()
+        GroupAccountMembershipFactory.create(
+            group=workspace_2.analyst_group, account=analyst_2
+        )
+        GroupAccountMembershipFactory.create(
+            group=workspace_2.workspace.authorization_domains.first(), account=analyst_2
+        )
+        collab_audit_1 = audit.CollaborativeAnalysisWorkspaceAccessAudit(
+            queryset=[workspace_1]
+        )
+        collab_audit_1.run_audit()
+        self.assertEqual(len(collab_audit_1.verified), 0)
+        self.assertEqual(len(collab_audit_1.needs_action), 1)
+        self.assertEqual(len(collab_audit_1.errors), 0)
+        record = collab_audit_1.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace_1)
+        self.assertEqual(record.member, analyst_1)
+        self.assertEqual(record.note, collab_audit_1.IN_SOURCE_AUTH_DOMAINS)
+        collab_audit_2 = audit.CollaborativeAnalysisWorkspaceAccessAudit(
+            queryset=[workspace_2]
+        )
+        collab_audit_2.run_audit()
+        self.assertEqual(len(collab_audit_2.verified), 1)
+        self.assertEqual(len(collab_audit_2.needs_action), 0)
+        self.assertEqual(len(collab_audit_2.errors), 0)
+        record = collab_audit_2.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace_2)
+        self.assertEqual(record.member, analyst_2)
+        self.assertEqual(record.note, collab_audit_2.IN_SOURCE_AUTH_DOMAINS)
