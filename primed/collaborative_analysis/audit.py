@@ -10,7 +10,7 @@ from . import models
 class AccessAuditResult:
     """Base class to hold the result of an access audit for a CollaborativeAnalysisWorkspace."""
 
-    workspace: models.CollaborativeAnalysisWorkspace
+    collaborative_analysis_workspace: models.CollaborativeAnalysisWorkspace
     account: Account
     note: str
 
@@ -44,8 +44,8 @@ class GrantAccess(AccessAuditResult):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_accounts:new_by_account",
             args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.account,
+                self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
+                self.account.uuid,
             ],
         )
 
@@ -61,8 +61,8 @@ class RemoveAccess(AccessAuditResult):
         return reverse(
             "anvil_consortium_manager:managed_groups:member_accounts:delete",
             args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.account,
+                self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
+                self.account.uuid,
             ],
         )
 
@@ -102,11 +102,19 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         # Check whether access is allowed. Start by assuming yes; set to false if the account should not have access.
         access_allowed = True
         account_groups = account.get_all_groups()
-        source_workspace = collaborative_analysis_workspace.source_workspaces.first()
-        for source_auth_domain in source_workspace.authorization_domains.all():
-            if source_auth_domain not in account_groups:
-                access_allowed = False
-                break
+        # Loop over all source workspaces.
+        for (
+            source_workspace
+        ) in collaborative_analysis_workspace.source_workspaces.all():
+            # Loop over all auth domains for that source workspace.
+            for source_auth_domain in source_workspace.authorization_domains.all():
+                # If the user is not in the auth domain, they are not allowed to have access to the collab workspace.
+                # If so, break out of the loop - it is not necessary to check membership of the remaining auth domains.
+                # Note that this only breaks out of the inner loop.
+                # It would be more efficient to break out of the outer loop as well.
+                if source_auth_domain not in account_groups:
+                    access_allowed = False
+                    break
         # Check whether the account is in the auth domain of the collab workspace.
         in_auth_domain = (
             collaborative_analysis_workspace.workspace.authorization_domains.first()
@@ -118,7 +126,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         if access_allowed and in_auth_domain:
             self.verified.append(
                 VerifiedAccess(
-                    workspace=collaborative_analysis_workspace,
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
                     account=account,
                     note=self.IN_SOURCE_AUTH_DOMAINS,
                 )
@@ -126,7 +134,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         elif access_allowed and not in_auth_domain:
             self.needs_action.append(
                 GrantAccess(
-                    workspace=collaborative_analysis_workspace,
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
                     account=account,
                     note=self.IN_SOURCE_AUTH_DOMAINS,
                 )
@@ -134,7 +142,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         elif not access_allowed and in_auth_domain:
             self.needs_action.append(
                 RemoveAccess(
-                    workspace=collaborative_analysis_workspace,
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
                     account=account,
                     note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
                 )
@@ -142,7 +150,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         else:
             self.verified.append(
                 VerifiedNoAccess(
-                    workspace=collaborative_analysis_workspace,
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
                     account=account,
                     note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
                 )
