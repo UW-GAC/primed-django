@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from anvil_consortium_manager.models import Account
+from anvil_consortium_manager.models import Account, GroupAccountMembership
 from django.urls import reverse
 
 from . import models
@@ -77,6 +77,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
     NOT_IN_SOURCE_AUTH_DOMAINS = (
         "Account is not in all source auth domains for this workspace."
     )
+    NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
 
     def __init__(self):
         self.verified = []
@@ -86,7 +87,35 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
 
     def _audit_workspace(self, workspace):
         """Audit access to a single CollaborativeAnalysisWorkspace."""
-        pass
+        # Loop over analyst accounts for this workspace.
+        # In the loop, run the _audit_workspace_and_account method.
+        # Any remainig accounts in the auth domain that are not in the analyst group should be *errors*.
+        analyst_group = workspace.analyst_group
+        analyst_memberships = GroupAccountMembership.objects.filter(group=analyst_group)
+        # Get a list of accounts in the auth domain.
+        auth_domain_membership = [
+            x.account
+            for x in GroupAccountMembership.objects.filter(
+                group=workspace.workspace.authorization_domains.first()
+            )
+        ]
+        for membership in analyst_memberships:
+            self._audit_workspace_and_account(workspace, membership.account)
+            try:
+                auth_domain_membership.remove(membership.account)
+            except ValueError:
+                # This is fine - this happens if the account is not in the auth domain.
+                pass
+
+        # Loop over remaining accounts in the auth domain.
+        for account in auth_domain_membership:
+            self.errors.append(
+                RemoveAccess(
+                    collaborative_analysis_workspace=workspace,
+                    account=account,
+                    note=self.NOT_IN_ANALYST_GROUP,
+                )
+            )
 
     def _audit_workspace_and_account(self, collaborative_analysis_workspace, account):
         """Audit access for a specific CollaborativeAnalysisWorkspace and account."""
