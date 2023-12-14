@@ -1,6 +1,12 @@
 from dataclasses import dataclass
+from typing import Union
 
-from anvil_consortium_manager.models import Account, GroupAccountMembership
+from anvil_consortium_manager.models import (
+    Account,
+    GroupAccountMembership,
+    GroupGroupMembership,
+    ManagedGroup,
+)
 from django.urls import reverse
 
 from . import models
@@ -11,7 +17,7 @@ class AccessAuditResult:
     """Base class to hold the result of an access audit for a CollaborativeAnalysisWorkspace."""
 
     collaborative_analysis_workspace: models.CollaborativeAnalysisWorkspace
-    account: Account
+    member: Union[Account, ManagedGroup]
     note: str
 
     def get_action_url(self):
@@ -41,13 +47,22 @@ class GrantAccess(AccessAuditResult):
         return "Grant access"
 
     def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_accounts:new_by_account",
-            args=[
-                self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
-                self.account.uuid,
-            ],
-        )
+        if isinstance(self.member, Account):
+            return reverse(
+                "anvil_consortium_manager:managed_groups:member_accounts:new_by_account",
+                args=[
+                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
+                    self.member.uuid,
+                ],
+            )
+        else:
+            return reverse(
+                "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+                args=[
+                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
+                    self.member.name,
+                ],
+            )
 
 
 @dataclass
@@ -58,13 +73,22 @@ class RemoveAccess(AccessAuditResult):
         return "Remove access"
 
     def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_accounts:delete",
-            args=[
-                self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
-                self.account.uuid,
-            ],
-        )
+        if isinstance(self.member, Account):
+            return reverse(
+                "anvil_consortium_manager:managed_groups:member_accounts:delete",
+                args=[
+                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
+                    self.member.uuid,
+                ],
+            )
+        else:
+            return reverse(
+                "anvil_consortium_manager:managed_groups:member_groups:delete",
+                args=[
+                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
+                    self.member.name,
+                ],
+            )
 
 
 class CollaborativeAnalysisWorkspaceAccessAudit:
@@ -78,6 +102,9 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         "Account is not in all source auth domains for this workspace."
     )
     NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
+
+    # Errors.
+    UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
 
     def __init__(self):
         self.verified = []
@@ -112,10 +139,25 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             self.errors.append(
                 RemoveAccess(
                     collaborative_analysis_workspace=workspace,
-                    account=account,
+                    member=account,
                     note=self.NOT_IN_ANALYST_GROUP,
                 )
             )
+
+        # Check that no groups have access.
+        group_memberships = GroupGroupMembership.objects.filter(
+            parent_group=workspace.workspace.authorization_domains.first()
+        )
+        for membership in group_memberships:
+            # Ignore PRIMED admins group.
+            if membership.child_group.name != "PRIMED_CC_ADMINS":
+                self.errors.append(
+                    RemoveAccess(
+                        collaborative_analysis_workspace=workspace,
+                        member=membership.child_group,
+                        note=self.UNEXPECTED_GROUP_ACCESS,
+                    )
+                )
 
     def _audit_workspace_and_account(self, collaborative_analysis_workspace, account):
         """Audit access for a specific CollaborativeAnalysisWorkspace and account."""
@@ -156,7 +198,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             self.verified.append(
                 VerifiedAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    account=account,
+                    member=account,
                     note=self.IN_SOURCE_AUTH_DOMAINS,
                 )
             )
@@ -164,7 +206,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             self.needs_action.append(
                 GrantAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    account=account,
+                    member=account,
                     note=self.IN_SOURCE_AUTH_DOMAINS,
                 )
             )
@@ -172,7 +214,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             self.needs_action.append(
                 RemoveAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    account=account,
+                    member=account,
                     note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
                 )
             )
@@ -180,7 +222,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             self.verified.append(
                 VerifiedNoAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    account=account,
+                    member=account,
                     note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
                 )
             )

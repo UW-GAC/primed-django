@@ -1,6 +1,8 @@
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
+    ManagedGroupFactory,
     WorkspaceAuthorizationDomainFactory,
     WorkspaceFactory,
 )
@@ -18,27 +20,27 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def setUp(self):
         super().setUp()
 
-    def test_verified_access(self):
+    def test_account_verified_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
         instance = audit.VerifiedAccess(
-            collaborative_analysis_workspace=workspace, account=account, note="test"
+            collaborative_analysis_workspace=workspace, member=account, note="test"
         )
         self.assertIsNone(instance.get_action_url())
 
-    def test_verified_no_access(self):
+    def test_account_verified_no_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
         instance = audit.VerifiedNoAccess(
-            collaborative_analysis_workspace=workspace, account=account, note="test"
+            collaborative_analysis_workspace=workspace, member=account, note="test"
         )
         self.assertIsNone(instance.get_action_url())
 
-    def test_grant_access(self):
+    def test_account_grant_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
         instance = audit.GrantAccess(
-            collaborative_analysis_workspace=workspace, account=account, note="test"
+            collaborative_analysis_workspace=workspace, member=account, note="test"
         )
         expected_url = reverse(
             "anvil_consortium_manager:managed_groups:member_accounts:new_by_account",
@@ -46,15 +48,55 @@ class WorkspaceAccessAuditResultTest(TestCase):
         )
         self.assertEqual(instance.get_action_url(), expected_url)
 
-    def test_remove_access(self):
+    def test_account_remove_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
         instance = audit.RemoveAccess(
-            collaborative_analysis_workspace=workspace, account=account, note="test"
+            collaborative_analysis_workspace=workspace, member=account, note="test"
         )
         expected_url = reverse(
             "anvil_consortium_manager:managed_groups:member_accounts:delete",
             args=[workspace.workspace.authorization_domains.first().name, account.uuid],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
+
+    def test_group_verified_access(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        group = ManagedGroupFactory.create()
+        instance = audit.VerifiedAccess(
+            collaborative_analysis_workspace=workspace, member=group, note="test"
+        )
+        self.assertIsNone(instance.get_action_url())
+
+    def test_group_verified_no_access(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        group = ManagedGroupFactory.create()
+        instance = audit.VerifiedNoAccess(
+            collaborative_analysis_workspace=workspace, member=group, note="test"
+        )
+        self.assertIsNone(instance.get_action_url())
+
+    def test_group_grant_access(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        group = ManagedGroupFactory.create()
+        instance = audit.GrantAccess(
+            collaborative_analysis_workspace=workspace, member=group, note="test"
+        )
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            args=[workspace.workspace.authorization_domains.first().name, group.name],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
+
+    def test_group_remove_access(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        group = ManagedGroupFactory.create()
+        instance = audit.RemoveAccess(
+            collaborative_analysis_workspace=workspace, member=group, note="test"
+        )
+        expected_url = reverse(
+            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            args=[workspace.workspace.authorization_domains.first().name, group.name],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
 
@@ -117,7 +159,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_in_collab_auth_domain_not_in_source_auth_domain(self):
@@ -150,7 +192,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_in_source_auth_domain(self):
@@ -184,7 +226,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_not_in_source_auth_domain(self):
@@ -217,7 +259,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_in_collab_auth_domain_two_source_auth_domains_in_both(self):
@@ -258,7 +300,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_in_collab_auth_domain_two_source_auth_domains_in_one(self):
@@ -299,7 +341,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_in_collab_auth_domain_two_source_auth_domains_in_neither(self):
@@ -340,7 +382,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_in_both(self):
@@ -382,7 +424,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_in_one(self):
@@ -423,7 +465,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_in_neither(self):
@@ -462,7 +504,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_in_collab_auth_domain_no_source_workspaces(self):
@@ -492,7 +534,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_not_in_collab_auth_domain_no_source_workspaces(self):
@@ -522,7 +564,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
@@ -562,7 +604,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
@@ -602,7 +644,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(self):
@@ -642,7 +684,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_not_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
@@ -682,7 +724,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_not_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
@@ -722,7 +764,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_not_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(
@@ -764,8 +806,94 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedNoAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, account)
+        self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_two_analysts(self):
+        # Create an analyst that needs access.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        analyst_1 = AccountFactory.create()
+        GroupAccountMembershipFactory.create(
+            group=workspace.analyst_group, account=analyst_1
+        )
+        # Create an analyst that has access.
+        analyst_2 = AccountFactory.create()
+        GroupAccountMembershipFactory.create(
+            group=workspace.analyst_group, account=analyst_2
+        )
+        GroupAccountMembershipFactory.create(
+            group=workspace.workspace.authorization_domains.first(), account=analyst_2
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, analyst_2)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, analyst_1)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_not_in_analyst_group(self):
+        # Create an analyst that needs access.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Create an analyst that has access but is not in the analyst group.
+        analyst = AccountFactory.create()
+        GroupAccountMembershipFactory.create(
+            group=workspace.workspace.authorization_domains.first(), account=analyst
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 1)
+        record = collab_audit.errors[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, analyst)
+        self.assertEqual(record.note, collab_audit.NOT_IN_ANALYST_GROUP)
+
+    def test_unexpected_group_in_auth_domain(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 1)
+        record = collab_audit.errors[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collab_audit.UNEXPECTED_GROUP_ACCESS)
+
+    def test_no_errors_for_primed_admins_group(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create(name="PRIMED_CC_ADMINS")
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    def test_dcc_access(self):
+        self.fail("How do we handle DCC member access?")
 
     def test_two_workspaces(self):
         # Create a workspace with an analyst that needs access.
@@ -791,60 +919,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, audit.VerifiedAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace_2)
-        self.assertEqual(record.account, analyst_2)
+        self.assertEqual(record.member, analyst_2)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, audit.GrantAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace_1)
-        self.assertEqual(record.account, analyst_1)
+        self.assertEqual(record.member, analyst_1)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
-
-    def test_two_analysts(self):
-        # Create an analyst that needs access.
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        analyst_1 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=analyst_1
-        )
-        # Create an analyst that has access.
-        analyst_2 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=analyst_2
-        )
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=analyst_2
-        )
-        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
-        collab_audit.run_audit()
-        self.assertEqual(len(collab_audit.verified), 1)
-        self.assertEqual(len(collab_audit.needs_action), 1)
-        self.assertEqual(len(collab_audit.errors), 0)
-        record = collab_audit.verified[0]
-        self.assertIsInstance(record, audit.VerifiedAccess)
-        self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, analyst_2)
-        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
-        record = collab_audit.needs_action[0]
-        self.assertIsInstance(record, audit.GrantAccess)
-        self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, analyst_1)
-        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
-
-    def test_not_in_analyst_group(self):
-        # Create an analyst that needs access.
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        # Create an analyst that has access but is not in the analyst group.
-        analyst = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=analyst
-        )
-        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
-        collab_audit.run_audit()
-        self.assertEqual(len(collab_audit.verified), 0)
-        self.assertEqual(len(collab_audit.needs_action), 0)
-        self.assertEqual(len(collab_audit.errors), 1)
-        record = collab_audit.errors[0]
-        self.assertIsInstance(record, audit.RemoveAccess)
-        self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.account, analyst)
-        self.assertEqual(record.note, collab_audit.NOT_IN_ANALYST_GROUP)
