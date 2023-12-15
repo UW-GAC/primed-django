@@ -150,9 +150,11 @@ jobs:
           pip install --upgrade coverage "django<4" django-coverage-plugin
       - name: Download coverage data
         uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts/
 
       - name: List downloaded files
-        run: ls -R
+        run: ls -R ./artifacts
 
       - name: Combine coverage data
         run: |
