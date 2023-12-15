@@ -158,9 +158,10 @@ jobs:
 
       - name: Combine coverage data
         run: |
+          ls -l ./artifacts/coverage*
           python -m coverage combine --data-file=./artifacts/coverage*
-          ls -la
           ls -R ./artifacts
+          ls -la
           python -m coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
