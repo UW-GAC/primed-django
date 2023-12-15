@@ -93,7 +93,7 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-mysql-${{ strategy.job-index }}
           path: .coverage.*
 
   pytest-sqlite:
@@ -127,7 +127,7 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-sqlite-${{ strategy.job-index }}
           path: .coverage.*
 
   coverage:
@@ -151,7 +151,7 @@ jobs:
       - name: Download coverage data
         uses: actions/download-artifact@v3
         with:
-          name: coverage-data
+          name: coverage-data-*
 
       - name: Combine coverage data
         run: |
