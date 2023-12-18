@@ -151,7 +151,7 @@ jobs:
       - name: Download coverage data
         uses: actions/download-artifact@v4
         with:
-          path: all
+          path: ./artifacts/
 
       - name: List downloaded files
         run: ls -R ./artifacts
