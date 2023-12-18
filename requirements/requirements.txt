@@ -107,7 +107,7 @@ jsonschema==4.20.0
     # via -r requirements/requirements.in
 jsonschema-specifications==2023.11.1
     # via jsonschema
-mysqlclient==2.1.0
+mysqlclient==2.2.1
     # via -r requirements/requirements.in
 networkx==2.8.8
     # via
