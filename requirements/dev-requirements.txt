@@ -259,7 +259,7 @@ wcwidth==0.2.10
     # via prompt-toolkit
 werkzeug==3.0.1
     # via -r requirements/dev-requirements.in
-zipp==3.10.0
+zipp==3.17.0
     # via
     #   -c requirements/requirements.txt
     #   importlib-metadata
