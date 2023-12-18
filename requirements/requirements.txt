@@ -97,7 +97,7 @@ google-auth==2.14.1
     # via django-anvil-consortium-manager
 idna==3.3
     # via requests
-importlib-metadata==5.2.0
+importlib-metadata==7.0.0
     # via build
 importlib-resources==5.10.0
     # via
