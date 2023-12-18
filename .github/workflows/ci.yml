@@ -159,12 +159,16 @@ jobs:
       - name: List downloaded files
         run: ls -Ral ./artifacts
 
+      - name: Merge coverage files
+        run: |
+          ls -Rla ./artifacts
+          mv ./artifacts/.coverage.* .
+          ls -la .coverage*
+          ls -Rla ./artifacts
+
       - name: Combine coverage data
         run: |
-          ls -la ./artifacts/.coverage*
-          python -m coverage combine --data-file=./artifacts/.coverage*
-          ls -Ral ./artifacts
-          ls -la
+          python -m coverage combine
           python -m coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
