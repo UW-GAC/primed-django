@@ -95,7 +95,7 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: .coverage-data-mysql-${{ strategy.job-index }}
+          name: coverage-data-mysql-${{ strategy.job-index }}
           path: .coverage.*
 
   pytest-sqlite:
@@ -129,7 +129,7 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: .coverage-data-sqlite-${{ strategy.job-index }}
+          name: coverage-data-sqlite-${{ strategy.job-index }}
           path: .coverage.*
 
   coverage:
@@ -162,7 +162,7 @@ jobs:
       - name: Merge coverage files
         run: |
           ls -Rla ./artifacts
-          mv ./artifacts/.coverage.* .
+          mv ./artifacts/coverage-data*/.coverage* .
           ls -la .coverage*
           ls -Rla ./artifacts
 
