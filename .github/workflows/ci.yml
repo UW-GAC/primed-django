@@ -91,7 +91,8 @@ jobs:
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
       - name: list files
-        run: ls -la
+        run:  ls -la .coverage.*
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
@@ -125,6 +126,9 @@ jobs:
         env:
           # We can set this to an empty string, since we'll never make an API call.
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+
+      - name: list files
+        run:  ls -la .coverage.*
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
