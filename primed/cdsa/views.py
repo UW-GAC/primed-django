@@ -6,7 +6,11 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffViewRequired,
     AnVILProjectManagerAccess,
 )
-from anvil_consortium_manager.models import GroupAccountMembership, ManagedGroup
+from anvil_consortium_manager.models import (
+    GroupAccountMembership,
+    GroupGroupMembership,
+    ManagedGroup,
+)
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
@@ -238,6 +242,18 @@ class AgreementTypeCreateMixin:
         # Make sure the group doesn't exist already.
         access_group.full_clean()
         access_group.save()
+        # Add the cc admins group as a member.
+        cc_admins_group = ManagedGroup.objects.get(
+            name=settings.ANVIL_CC_ADMINS_GROUP_NAME
+        )
+        self.admin_access_membership = GroupGroupMembership(
+            parent_group=access_group,
+            child_group=cc_admins_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        self.admin_access_membership.full_clean()
+        self.admin_access_membership.save()
+        # Now finally save the agreement.
         agreement = form.save(commit=False)
         agreement.anvil_access_group = access_group
         agreement.type = self.agreement_type_model.AGREEMENT_TYPE
@@ -254,6 +270,7 @@ class AgreementTypeCreateMixin:
         """Create resources on ANVIL."""
         # Create AnVIL groups.
         self.object.anvil_access_group.anvil_create()
+        self.admin_access_membership.anvil_create()
 
     def form_valid(self, form):
         formset = self.get_formset()
@@ -330,6 +347,7 @@ class DataAffiliateAgreementCreate(
         """Create resources on ANVIL."""
         super().anvil_create()
         self.object.dataaffiliateagreement.anvil_upload_group.anvil_create()
+        self.admin_upload_membership.anvil_create()
 
     def get_agreement_type(self, form, formset):
         agreement_type = super().get_agreement_type(form, formset)
@@ -344,6 +362,17 @@ class DataAffiliateAgreementCreate(
         # Make sure the group doesn't exist already.
         upload_group.full_clean()
         upload_group.save()
+        # Add the cc admins group as a member.
+        cc_admins_group = ManagedGroup.objects.get(
+            name=settings.ANVIL_CC_ADMINS_GROUP_NAME
+        )
+        self.admin_upload_membership = GroupGroupMembership(
+            parent_group=upload_group,
+            child_group=cc_admins_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        self.admin_upload_membership.full_clean()
+        self.admin_upload_membership.save()
         agreement_type.anvil_upload_group = upload_group
         return agreement_type
 

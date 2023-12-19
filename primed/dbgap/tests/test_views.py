@@ -7,6 +7,7 @@ import responses
 from anvil_consortium_manager import views as acm_views
 from anvil_consortium_manager.models import (
     AnVILProjectManagerAccess,
+    GroupGroupMembership,
     ManagedGroup,
     Workspace,
 )
@@ -1587,6 +1588,8 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
+        # Create the admin group.
+        self.cc_admin_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1662,6 +1665,13 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
@@ -1684,6 +1694,12 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
         )
@@ -1701,6 +1717,12 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         response = self.client.post(
             self.get_url(),
@@ -1817,26 +1839,45 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.dbGaPApplication.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 1)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "TEST_PRIMED_DBGAP_ACCESS_12498")
         self.assertTrue(new_group.is_managed_by_app)
+        # Also creates the CC admins group membership
+        membership = GroupGroupMembership.objects.get(
+            parent_group=new_group,
+            child_group=self.cc_admin_group,
+        )
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
-    def test_creates_anvil_access_group_different_setting(self):
+    def test_creates_anvil_access_group_different_setting_data_access_group_prefix(
+        self,
+    ):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
         api_url = (
             self.api_client.sam_entry_point + "/api/groups/v1/foo_DBGAP_ACCESS_12498"
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
@@ -1846,12 +1887,54 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.dbGaPApplication.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 1)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "foo_DBGAP_ACCESS_12498")
         self.assertTrue(new_group.is_managed_by_app)
+        # Also creates the CC admins group membership
+        membership = GroupGroupMembership.objects.get(
+            parent_group=new_group,
+            child_group=self.cc_admin_group,
+        )
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foo")
+    def test_creates_anvil_access_group_different_setting_cc_admin_group(self):
+        """View creates a managed group upon when form is valid."""
+        admin_group = ManagedGroupFactory.create(name="foo", email="foo@firecloud.org")
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        # API response to create the associated anvil_access_group.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/foo@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.dbGaPApplication.objects.latest("pk")
+        # A new group was created.
+        new_group = ManagedGroup.objects.latest("pk")
+        self.assertEqual(new_object.anvil_access_group, new_group)
+        self.assertEqual(new_group.name, "TEST_PRIMED_DBGAP_ACCESS_12498")
+        self.assertTrue(new_group.is_managed_by_app)
+        # Also creates the CC admins group membership
+        membership = GroupGroupMembership.objects.get(
+            parent_group=new_group,
+            child_group=admin_group,
+        )
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -1878,7 +1961,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual("AnVIL API Error: other error", str(messages[0]))
         # No objects were created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
-        self.assertEqual(ManagedGroup.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admin group.
 
     def test_managed_group_already_exists_in_app(self):
         """No objects are created if the managed group already exists in the app."""
@@ -1901,6 +1984,40 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         # No dbGaPApplication was created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+
+    def test_admin_group_membership_api_error(self):
+        """Nothing is created when the form is valid but there is an API error when creating admin group membership."""
+        self.client.force_login(self.user)
+        pi = UserFactory.create()
+        # API response to create the associated anvil_access_group.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "other error"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=404,
+            json={"message": "other error"},
+        )
+        response = self.client.post(
+            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        # ...but there was some error from the API.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual("AnVIL API Error: other error", str(messages[0]))
+        # No objects were created.
+        self.assertEqual(models.dbGaPApplication.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admin group.
 
 
 class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):

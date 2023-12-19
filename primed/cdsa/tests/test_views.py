@@ -5,6 +5,7 @@ from datetime import date
 import responses
 from anvil_consortium_manager.models import (
     AnVILProjectManagerAccess,
+    GroupGroupMembership,
     ManagedGroup,
     Workspace,
 )
@@ -1383,6 +1384,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
+        # Create the admins group.
+        self.cc_admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1462,6 +1465,13 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -1519,6 +1529,13 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -1552,6 +1569,13 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         response = self.client.post(
             self.get_url(),
@@ -2063,6 +2087,13 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -2082,15 +2113,20 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 1)
+        self.assertEqual(ManagedGroup.objects.count(), 2)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "TEST_PRIMED_CDSA_ACCESS_2345")
         self.assertTrue(new_group.is_managed_by_app)
+        # A group-group membership was created with PRIMED_CC_ADMINS as an admin of the access group.
+        new_membership = GroupGroupMembership.objects.get(
+            parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
+        )
+        self.assertEqual(new_membership.role, GroupGroupMembership.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
-    def test_creates_anvil_groups_different_setting(self):
+    def test_creates_anvil_groups_different_setting_access_group_prefix(self):
         """View creates a managed group upon when form is valid."""
         self.client.force_login(self.user)
         representative = UserFactory.create()
@@ -2102,6 +2138,13 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/foo_CDSA_ACCESS_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -2121,12 +2164,59 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 1)
+        self.assertEqual(ManagedGroup.objects.count(), 2)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "foo_CDSA_ACCESS_2345")
         self.assertTrue(new_group.is_managed_by_app)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foo")
+    def test_creates_anvil_groups_different_setting_cc_admins_group_name(self):
+        """View creates a managed group upon when form is valid."""
+        admin_group = ManagedGroupFactory.create(name="foo", email="foo@firecloud.org")
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study_site = StudySiteFactory.create()
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 2345,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.SignedAgreement.objects.latest("pk")
+        membership = GroupGroupMembership.objects.get(
+            parent_group=new_object.anvil_access_group,
+            child_group=admin_group,
+        )
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -2171,7 +2261,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # No objects were created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
         self.assertEqual(models.MemberAgreement.objects.count(), 0)
-        self.assertEqual(ManagedGroup.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admins group.
 
     def test_managed_group_already_exists_in_app(self):
         """No objects are created if the managed group already exists in the app."""
@@ -2210,6 +2300,57 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         # No dbGaPApplication was created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
+
+    def test_admin_group_membership_api_error(self):
+        """Nothing is created when the form is valid but there is an API error when creating admin group membership."""
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study_site = StudySiteFactory.create()
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=400,
+            json={"message": "other error"},
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 2345,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        formset = response.context["formset"]
+        self.assertTrue(formset.is_valid())
+        # ...but there was some error from the API.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual("AnVIL API Error: other error", str(messages[0]))
+        # No objects were created.
+        self.assertEqual(models.MemberAgreement.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admin group.
 
 
 class MemberAgreementDetailTest(TestCase):
@@ -2450,6 +2591,8 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
+        # Create the admins group.
+        self.cc_admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -2535,6 +2678,19 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=201,
             json={"message": "mock message"},
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -2565,7 +2721,6 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Type was set correctly.
         self.assertEqual(new_agreement.type, new_agreement.DATA_AFFILIATE)
         # AnVIL group was set correctly.
-        self.assertEqual(ManagedGroup.objects.count(), 2)
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
@@ -2603,6 +2758,19 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         response = self.client.post(
             self.get_url(),
@@ -2644,6 +2812,19 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         response = self.client.post(
             self.get_url(),
@@ -3164,6 +3345,18 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=201,
             json={"message": "mock message"},
         )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -3183,8 +3376,6 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
-        # An upload group and an access group
-        self.assertEqual(ManagedGroup.objects.count(), 2)
         # An access group was created.
         self.assertEqual(
             new_object.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_2345"
@@ -3198,6 +3389,16 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertTrue(
             new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app
         )
+        # Group-group memberships was created with PRIMED_CC_ADMINS as an admin of the access/uploader group.
+        new_membership_1 = GroupGroupMembership.objects.get(
+            parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
+        )
+        self.assertEqual(new_membership_1.role, GroupGroupMembership.ADMIN)
+        new_membership_2 = GroupGroupMembership.objects.get(
+            parent_group=new_object.dataaffiliateagreement.anvil_upload_group,
+            child_group=self.cc_admins_group,
+        )
+        self.assertEqual(new_membership_2.role, GroupGroupMembership.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_access_group_different_setting(self):
@@ -3218,6 +3419,19 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=201,
             json={"message": "mock message"},
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/foo_CDSA_ACCESS_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/foo_CDSA_UPLOAD_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -3237,7 +3451,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 2)
+        self.assertEqual(ManagedGroup.objects.count(), 3)
         # A new group was created.
         self.assertEqual(new_object.anvil_access_group.name, "foo_CDSA_ACCESS_2345")
         self.assertTrue(new_object.anvil_access_group.is_managed_by_app)
@@ -3249,6 +3463,71 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertTrue(
             new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app
         )
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foo")
+    def test_creates_anvil_groups_different_setting_cc_admins_group_name(self):
+        """View creates a managed group upon when form is valid."""
+        admin_group = ManagedGroup.objects.create(name="foo", email="foo@firecloud.org")
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345",
+            status=201,
+            json={"message": "mock message"},
+        )
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345/admin/foo@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 2345,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.SignedAgreement.objects.latest("pk")
+        membership_1 = GroupGroupMembership.objects.get(
+            parent_group=new_object.anvil_access_group,
+            child_group=admin_group,
+        )
+        self.assertEqual(membership_1.role, GroupGroupMembership.ADMIN)
+        membership_2 = GroupGroupMembership.objects.get(
+            parent_group=new_object.dataaffiliateagreement.anvil_upload_group,
+            child_group=admin_group,
+        )
+        self.assertEqual(membership_2.role, GroupGroupMembership.ADMIN)
 
     def test_access_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -3294,7 +3573,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # No objects were created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
         self.assertEqual(models.DataAffiliateAgreement.objects.count(), 0)
-        self.assertEqual(ManagedGroup.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admins group.
 
     def test_upload_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -3309,6 +3588,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1",
             status=201,
             json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         self.anvil_response_mock.add(
             responses.POST,
@@ -3347,7 +3633,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # No objects were created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
         self.assertEqual(models.DataAffiliateAgreement.objects.count(), 0)
-        self.assertEqual(ManagedGroup.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admins group.
 
     def test_access_group_already_exists_in_app(self):
         """No objects are created if the managed group already exists in the app."""
@@ -3422,6 +3708,138 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             views.DataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0])
         )
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
+
+    def test_admin_group_membership_access_api_error(self):
+        """Nothing is created when the form is valid but there is an API error when creating admin group membership."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # self.anvil_response_mock.add(
+        #     responses.POST,
+        #     self.api_client.sam_entry_point
+        #     + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+        #     status=201,
+        #     json={"message": "mock message"},
+        # )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=400,
+        )
+        # self.anvil_response_mock.add(
+        #     responses.PUT,
+        #     self.api_client.sam_entry_point
+        #     + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+        #     status=204,
+        # )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        formset = response.context["formset"]
+        self.assertTrue(formset.is_valid())
+        # ...but there was some error from the API.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual("AnVIL API Error: other error", str(messages[0]))
+        # No objects were created.
+        self.assertEqual(models.DataAffiliateAgreement.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admin group.
+
+    def test_admin_group_membership_upload_api_error(self):
+        """Nothing is created when the form is valid but there is an API error when creating admin group membership."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=404,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # The form is valid...
+        form = response.context["form"]
+        self.assertTrue(form.is_valid())
+        formset = response.context["formset"]
+        self.assertTrue(formset.is_valid())
+        # ...but there was some error from the API.
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual("AnVIL API Error: other error", str(messages[0]))
+        # No objects were created.
+        self.assertEqual(models.DataAffiliateAgreement.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admin group.
 
 
 class DataAffiliateAgreementDetailTest(TestCase):
@@ -3668,6 +4086,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
             )
         )
+        # Create the admins group.
+        self.cc_admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -3746,6 +4166,13 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=201,
             json={"message": "mock message"},
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -3776,7 +4203,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Type was set correctly.
         self.assertEqual(new_agreement.type, new_agreement.NON_DATA_AFFILIATE)
         # AnVIL group was set correctly.
-        self.assertEqual(ManagedGroup.objects.count(), 1)
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
         self.assertEqual(
             new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
@@ -3802,6 +4228,13 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         response = self.client.post(
             self.get_url(),
@@ -3835,6 +4268,13 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
         )
         response = self.client.post(
             self.get_url(),
@@ -4335,6 +4775,13 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -4354,12 +4801,17 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 1)
+        self.assertEqual(ManagedGroup.objects.count(), 2)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "TEST_PRIMED_CDSA_ACCESS_2345")
         self.assertTrue(new_group.is_managed_by_app)
+        # A group-group membership was created with PRIMED_CC_ADMINS as an admin of the access group.
+        new_membership = GroupGroupMembership.objects.get(
+            parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
+        )
+        self.assertEqual(new_membership.role, GroupGroupMembership.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_groups_different_setting(self):
@@ -4373,6 +4825,13 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.anvil_response_mock.add(
             responses.POST, api_url, status=201, json={"message": "mock message"}
         )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/foo_CDSA_ACCESS_2345/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
         response = self.client.post(
             self.get_url(),
             {
@@ -4392,12 +4851,58 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
-        self.assertEqual(ManagedGroup.objects.count(), 1)
+        self.assertEqual(ManagedGroup.objects.count(), 2)
         # A new group was created.
         new_group = ManagedGroup.objects.latest("pk")
         self.assertEqual(new_object.anvil_access_group, new_group)
         self.assertEqual(new_group.name, "foo_CDSA_ACCESS_2345")
         self.assertTrue(new_group.is_managed_by_app)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foo")
+    def test_creates_anvil_groups_different_setting_cc_admins_group_name(self):
+        """View creates a managed group upon when form is valid."""
+        admin_group = ManagedGroupFactory.create(name="foo", email="foo@firecloud.org")
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        )
+        self.anvil_response_mock.add(
+            responses.POST, api_url, status=201, json={"message": "mock message"}
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 2345,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        new_object = models.SignedAgreement.objects.latest("pk")
+        membership = GroupGroupMembership.objects.get(
+            parent_group=new_object.anvil_access_group,
+            child_group=admin_group,
+        )
+        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -4441,7 +4946,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # No objects were created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
         self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 0)
-        self.assertEqual(ManagedGroup.objects.count(), 0)
+        self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admins group.
 
     def test_managed_group_already_exists_in_app(self):
         """No objects are created if the managed group already exists in the app."""

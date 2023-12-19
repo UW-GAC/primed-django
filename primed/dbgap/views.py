@@ -8,6 +8,7 @@ from anvil_consortium_manager.auth import (
 )
 from anvil_consortium_manager.models import (
     AnVILProjectManagerAccess,
+    GroupGroupMembership,
     ManagedGroup,
     Workspace,
 )
@@ -205,7 +206,6 @@ class dbGaPApplicationCreate(
     anvil_access_group_pattern = "PRIMED_DBGAP_ACCESS_{project_id}"
     ERROR_CREATING_GROUP = "Error creating Managed Group in app."
 
-    # @transaction.atomic
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
         project_id = form.cleaned_data["dbgap_project_id"]
@@ -229,7 +229,28 @@ class dbGaPApplicationCreate(
                 self.request, messages.ERROR, "AnVIL API Error: " + str(e)
             )
             return self.render_to_response(self.get_context_data(form=form))
-        managed_group.save()
+        # Need to wrap this entire block in a transaction because we are creating multiple objects, and don't want
+        # any of them to be saved if the API call fails.
+        try:
+            with transaction.atomic():
+                managed_group.save()
+                # Create the dbgap access group.
+                cc_admins_group = ManagedGroup.objects.get(
+                    name=settings.ANVIL_CC_ADMINS_GROUP_NAME
+                )
+                membership = GroupGroupMembership.objects.create(
+                    parent_group=managed_group,
+                    child_group=cc_admins_group,
+                    role=GroupGroupMembership.ADMIN,
+                )
+                membership.full_clean()
+                membership.anvil_create()
+                membership.save()
+        except AnVILAPIError as e:
+            messages.add_message(
+                self.request, messages.ERROR, "AnVIL API Error: " + str(e)
+            )
+            return self.render_to_response(self.get_context_data(form=form))
         form.instance.anvil_access_group = managed_group
         return super().form_valid(form)
 
