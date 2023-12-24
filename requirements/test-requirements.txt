@@ -39,7 +39,7 @@ packaging==21.3
     #   -c requirements/requirements.txt
     #   pytest
     #   pytest-sugar
-pluggy==1.0.0
+pluggy==1.3.0
     # via pytest
 pyparsing==3.0.9
     # via
