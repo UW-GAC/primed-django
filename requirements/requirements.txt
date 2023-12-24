@@ -91,7 +91,7 @@ django-tree-queries==0.16.1
     # via -r requirements/requirements.in
 fastobo==0.12.2
     # via pronto
-fontawesomefree==6.2.1
+fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
 google-auth==2.25.2
     # via django-anvil-consortium-manager
