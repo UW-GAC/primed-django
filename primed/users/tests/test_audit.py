@@ -10,6 +10,8 @@ from primed.users.audit import (
     audit_drupal_study_sites,
     get_drupal_json_api,
     get_study_sites,
+    drupal_data_study_site_audit,
+    drupal_data_user_audit,
 )
 from primed.users.models import StudySite
 
@@ -26,6 +28,8 @@ class StudySiteSchema(Schema):
 
 
 class UserSchema(Schema):
+    id = fields.Str(dump_only=True)
+    display_name = fields.Str()
     drupal_internal__uid = fields.Str()
     name = fields.Str()
     mail = fields.Str()
@@ -65,6 +69,19 @@ TEST_STUDY_SITE_DATA = [
     },
 ]
 
+TEST_USER_DATA = [
+    {
+        "id": "usr1",
+        "display_name": "dnusr1",
+        "drupal_internal__uid": "usr1",
+        "name": "testuser1",
+        "mail": "testuser1@test.com",
+        "field_given_first_name_s_": "test1",
+        "field_examples_family_last_name_": "user1",
+        "field_study_site_or_center": [TEST_STUDY_SITE_DATA[0]],
+    }
+]
+
 
 class TestStudySiteAudit(TestCase):
     """General tests of the user audit"""
@@ -88,9 +105,19 @@ class TestStudySiteAudit(TestCase):
             body=json.dumps(StudySiteSchema(many=True).dump(TEST_STUDY_SITE_DATA)),
         )
 
-    def get_fake_json_api(self):
+    def add_fake_users_response(self):
+        url_path = f"{settings.DRUPAL_SITE_URL}/jsonapi/user/user/"
+        responses.get(
+            url=url_path,
+            body=json.dumps(UserSchema(many=True).dump(TEST_USER_DATA)),
+        )
+
+    def add_fake_token_response(self):
         token_url = f"{settings.DRUPAL_SITE_URL}/oauth/token"
         responses.post(url=token_url, body=json.dumps(self.token))
+
+    def get_fake_json_api(self):
+        self.add_fake_token_response()
         return get_drupal_json_api()
 
     @responses.activate
@@ -133,6 +160,12 @@ class TestStudySiteAudit(TestCase):
         )
         assert audit_results.encountered_issues() is False
         assert StudySite.objects.all().count() == 0
+
+    @responses.activate
+    def test_full_site_audit(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        results = drupal_data_study_site_audit()
 
     @responses.activate
     def test_audit_study_sites_with_new_sites(self):
@@ -184,3 +217,10 @@ class TestStudySiteAudit(TestCase):
             study_sites=study_sites, should_update=True
         )
         assert audit_results.encountered_issues() is True
+
+    @responses.activate
+    def test_full_user_audit(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        results = drupal_data_user_audit()
