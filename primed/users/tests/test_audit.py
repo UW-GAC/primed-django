@@ -3,15 +3,16 @@ import time
 
 import responses
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from marshmallow_jsonapi import Schema, fields
 
 from primed.users.audit import (
     audit_drupal_study_sites,
-    get_drupal_json_api,
-    get_study_sites,
     drupal_data_study_site_audit,
     drupal_data_user_audit,
+    get_drupal_json_api,
+    get_study_sites,
 )
 from primed.users.models import StudySite
 
@@ -78,12 +79,13 @@ TEST_USER_DATA = [
         "mail": "testuser1@test.com",
         "field_given_first_name_s_": "test1",
         "field_examples_family_last_name_": "user1",
+        "full_name": "test1 user1",
         "field_study_site_or_center": [TEST_STUDY_SITE_DATA[0]],
     }
 ]
 
 
-class TestStudySiteAudit(TestCase):
+class TestUserDataAudit(TestCase):
     """General tests of the user audit"""
 
     def setUp(self):
@@ -99,14 +101,16 @@ class TestStudySiteAudit(TestCase):
         }
 
     def add_fake_study_sites_response(self):
-        url_path = f"{settings.DRUPAL_SITE_URL}/jsonapi/node/study_site_or_center/"
+        url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/node/study_site_or_center/"
         responses.get(
             url=url_path,
             body=json.dumps(StudySiteSchema(many=True).dump(TEST_STUDY_SITE_DATA)),
         )
 
     def add_fake_users_response(self):
-        url_path = f"{settings.DRUPAL_SITE_URL}/jsonapi/user/user/"
+        url_path = (
+            f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/user/user/"
+        )
         responses.get(
             url=url_path,
             body=json.dumps(UserSchema(many=True).dump(TEST_USER_DATA)),
@@ -123,7 +127,6 @@ class TestStudySiteAudit(TestCase):
     @responses.activate
     def test_get_json_api(self):
         json_api = self.get_fake_json_api()
-        # print(f"JSONAPI: {json_api.requests.config.AUTH._client.token}")
         assert (
             json_api.requests.config.AUTH._client.token["access_token"]
             == self.token["access_token"]
@@ -156,7 +159,7 @@ class TestStudySiteAudit(TestCase):
         self.add_fake_study_sites_response()
         study_sites = get_study_sites(json_api=json_api)
         audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, should_update=False
+            study_sites=study_sites, apply_changes=False
         )
         assert audit_results.encountered_issues() is False
         assert StudySite.objects.all().count() == 0
@@ -166,6 +169,7 @@ class TestStudySiteAudit(TestCase):
         self.add_fake_token_response()
         self.add_fake_study_sites_response()
         results = drupal_data_study_site_audit()
+        assert results.encountered_issues() is False
 
     @responses.activate
     def test_audit_study_sites_with_new_sites(self):
@@ -173,7 +177,7 @@ class TestStudySiteAudit(TestCase):
         self.add_fake_study_sites_response()
         study_sites = get_study_sites(json_api=json_api)
         audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, should_update=True
+            study_sites=study_sites, apply_changes=True
         )
         assert audit_results.encountered_issues() is False
         assert audit_results.count_new_rows() == 2
@@ -193,7 +197,7 @@ class TestStudySiteAudit(TestCase):
         self.add_fake_study_sites_response()
         study_sites = get_study_sites(json_api=json_api)
         audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, should_update=True
+            study_sites=study_sites, apply_changes=True
         )
         assert audit_results.encountered_issues() is False
         assert audit_results.count_new_rows() == 1
@@ -214,7 +218,7 @@ class TestStudySiteAudit(TestCase):
         self.add_fake_study_sites_response()
         study_sites = get_study_sites(json_api=json_api)
         audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, should_update=True
+            study_sites=study_sites, apply_changes=True
         )
         assert audit_results.encountered_issues() is True
 
@@ -224,3 +228,13 @@ class TestStudySiteAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         results = drupal_data_user_audit()
+        assert results.encountered_issues() is False
+        assert results.count_new_rows() == 1
+        assert results.count_update_rows() == 0
+        assert results.count_removal_rows() == 0
+
+        users = get_user_model().objects.all()
+        assert users.count() == 1
+        assert users.first().name == TEST_USER_DATA[0]["full_name"]
+        assert users.first().email == TEST_USER_DATA[0]["mail"]
+        assert users.first().username == TEST_USER_DATA[0]["name"]

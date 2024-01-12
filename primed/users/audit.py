@@ -11,33 +11,101 @@ from primed.primed_anvil.models import StudySite
 from primed.users.adapters import SocialAccountAdapter
 
 
-class UserDataAuditResults:
-    def __init__(self, results):
-        self.results = results
+class AuditResults:
+    def __init__(self):
+        self.results = []
+        self.data_type = None
 
-    ISSUE_RESULT_TYPE = "issue"
-    NEW_RESULT_TYPE = "new"
-    UPDATE_RESULT_TYPE = "update"
+    # Data from api was not able to be handled
+    RESULT_TYPE_ISSUE = "issue"
+    # A new record was created during audit
+    RESULT_TYPE_NEW = "new"
+    # An existing record was updated
+    RESULT_TYPE_UPDATE = "update"
+    # A record was removed or deactivated
+    RESULT_TYPE_REMOVAL = "removed"
 
-    def encountered_issues(self):
+    def add_new(self, data):
+        self.results.append(
+            {
+                "data_type": self.data_type,
+                "result_type": self.RESULT_TYPE_NEW,
+                "data": data,
+            }
+        )
+
+    def add_update(self, data):
+        self.results.append(
+            {
+                "data_type": self.data_type,
+                "result_type": self.RESULT_TYPE_UPDATE,
+                "data": data,
+            }
+        )
+
+    def add_issue(self, data):
+        self.results.append(
+            {
+                "data_type": self.data_type,
+                "result_type": self.RESULT_TYPE_ISSUE,
+                "data": data,
+            }
+        )
+
+    def add_removal(self, data):
+        self.results.append(
+            {
+                "data_type": self.data_type,
+                "result_type": self.RESULT_TYPE_REMOVAL,
+                "data": data,
+            }
+        )
+
+    def rows_by_result_type(self, result_type):
+        found = []
         for row in self.results:
-            if row["result_type"] == self.ISSUE_RESULT_TYPE:
-                return True
-        return False
+            if row["result_type"] == result_type:
+                found.append(row)
+        return found
+
+    def row_count_by_result_type(self, result_type):
+        return len(self.rows_by_result_type(result_type))
 
     def count_new_rows(self):
-        new_count = 0
-        for row in self.results:
-            if row["result_type"] == self.NEW_RESULT_TYPE:
-                new_count += 1
-        return new_count
+        return self.row_count_by_result_type(self.RESULT_TYPE_NEW)
 
     def count_update_rows(self):
-        update_count = 0
-        for row in self.results:
-            if row["result_type"] == self.UPDATE_RESULT_TYPE:
-                update_count += 1
-        return update_count
+        return self.row_count_by_result_type(self.RESULT_TYPE_UPDATE)
+
+    def count_removal_rows(self):
+        return self.row_count_by_result_type(self.RESULT_TYPE_REMOVAL)
+
+    def count_issue_rows(self):
+        return self.row_count_by_result_type(self.RESULT_TYPE_ISSUE)
+
+    def encountered_issues(self):
+        return self.count_issue_rows() > 0
+
+    def __str__(self) -> str:
+        return (
+            f"Audit for {self.data_type} "
+            f"Issues: {self.count_issue_rows()} "
+            f"New: {self.count_new_rows()} "
+            f"Updates: {self.count_update_rows()} "
+            f"Removals: {self.count_removal_rows()}"
+        )
+
+
+class UserAuditResults(AuditResults):
+    def __init__(self):
+        super().__init__()
+        self.data_type = "user"
+
+
+class SiteAuditResults(AuditResults):
+    def __init__(self):
+        super().__init__()
+        self.data_type = "site"
 
 
 def get_drupal_json_api():
@@ -48,6 +116,8 @@ def get_drupal_json_api():
     token_url = f"{settings.DRUPAL_SITE_URL}/oauth/token"
     client = BackendApplicationClient(client_id=json_api_client_id)
     oauth = OAuth2Session(client=client)
+    api_root = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}"
+
     token = oauth.fetch_token(
         token_url=token_url,
         client_id=json_api_client_id,
@@ -56,7 +126,7 @@ def get_drupal_json_api():
 
     drupal_api = jsonapi_requests.Api.config(
         {
-            "API_ROOT": f"{settings.DRUPAL_SITE_URL}/jsonapi",
+            "API_ROOT": api_root,
             "AUTH": OAuth2(client=client, client_id=json_api_client_id, token=token),
             "VALIDATE_SSL": True,
         }
@@ -64,37 +134,37 @@ def get_drupal_json_api():
     return drupal_api
 
 
-def drupal_data_study_site_audit(should_update=False):
+def drupal_data_study_site_audit(apply_changes=False):
     json_api = get_drupal_json_api()
     study_sites = get_study_sites(json_api)
     status = audit_drupal_study_sites(
-        study_sites=study_sites, should_update=should_update
+        study_sites=study_sites, apply_changes=apply_changes
     )
-    # audit_drupal_users(study_sites=study_sites, should_update=should_update)
+
     return status
 
 
-def drupal_data_user_audit(should_update=False):
+def drupal_data_user_audit(apply_changes=False):
     json_api = get_drupal_json_api()
     study_sites = get_study_sites(json_api=json_api)
     status = audit_drupal_users(
-        study_sites=study_sites, should_update=should_update, json_api=json_api
+        study_sites=study_sites, apply_changes=apply_changes, json_api=json_api
     )
     return status
 
 
-def audit_drupal_users(study_sites, json_api, should_update=False):
+def audit_drupal_users(study_sites, json_api, apply_changes=False):
 
-    issues = []
+    audit_results = UserAuditResults()
 
     user_endpoint_url = "user/user"
     drupal_uids = set()
 
     drupal_adapter = SocialAccountAdapter()
-    max_users = 3
+
     user_count = 0
     while user_endpoint_url is not None:
-        print(f"GETTING {user_endpoint_url}")
+
         users_endpoint = json_api.endpoint(user_endpoint_url)
         users_endpoint_response = users_endpoint.get()
 
@@ -111,6 +181,9 @@ def audit_drupal_users(study_sites, json_api, should_update=False):
             drupal_email = user.attributes.get("mail")
             drupal_firstname = user.attributes.get("field_given_first_name_s_")
             drupal_lastname = user.attributes.get("field_examples_family_last_name_")
+            drupal_full_name = " ".join(
+                part for part in (drupal_firstname, drupal_lastname) if part
+            )
             drupal_study_sites_rel = user.relationships.get(
                 "field_study_site_or_center"
             )
@@ -123,15 +196,10 @@ def audit_drupal_users(study_sites, json_api, should_update=False):
                     drupal_user_study_site_shortnames.append(
                         study_site_info["short_name"]
                     )
-            else:
-                print(f"No study sites for user {user.attributes['display_name']}")
-
+            is_new_user = False
             # no uid is blocked or anonymous
             if not drupal_uid:
-                print(
-                    f"Skipping blocked or anonymous user {user.attributes['display_name']} {user}"
-                )
-                # FIXME DEACTIVATE if exists in our system
+                # FIXME - deactivate if not anonymous and present locally
                 continue
 
             try:
@@ -140,53 +208,45 @@ def audit_drupal_users(study_sites, json_api, should_update=False):
                     provider=CustomProvider.id,
                 )
             except ObjectDoesNotExist:
-                print(
-                    f"NO SA found for user {user.attributes['drupal_internal__uid']} {user}"
-                )
                 drupal_user = get_user_model()()
                 drupal_user.username = drupal_username
+                drupal_user.name = drupal_full_name
                 drupal_user.email = drupal_email
                 drupal_user.save()
+                is_new_user = True
                 sa = SocialAccount.objects.create(
                     user=drupal_user,
                     uid=user.attributes["drupal_internal__uid"],
                     provider=CustomProvider.id,
                 )
-            else:
-                print(f"Found {sa} for {user}")
-                user_changed = drupal_adapter.update_user_info(
-                    user=sa.user,
-                    extra_data={
-                        "preferred_username": drupal_username,
-                        "first_name": drupal_firstname,
-                        "last_name": drupal_lastname,
-                        "email": drupal_email,
-                    },
-                    apply_update=should_update,
-                )
-                if user_changed:
-                    pass
-                user_sites_changed = drupal_adapter.update_user_study_sites(
-                    user=sa.user,
-                    extra_data={
-                        "study_site_or_center": drupal_user_study_site_shortnames
-                    },
-                )
-                if user_sites_changed:
-                    pass
+                audit_results.add_new(data=user)
 
-                drupal_uids.add(sa.user.id)
+            user_changed = drupal_adapter.update_user_info(
+                user=sa.user,
+                extra_data={
+                    "preferred_username": drupal_username,
+                    "first_name": drupal_firstname,
+                    "last_name": drupal_lastname,
+                    "email": drupal_email,
+                },
+                apply_update=apply_changes,
+            )
+
+            user_sites_changed = drupal_adapter.update_user_study_sites(
+                user=sa.user,
+                extra_data={"study_site_or_center": drupal_user_study_site_shortnames},
+            )
+            if user_changed or user_sites_changed and not is_new_user:
+                audit_results.add_update(data=user)
+
+            drupal_uids.add(sa.user.id)
             user_count += 1
-            if user_count > max_users:
-                break
-        if user_count > max_users:
-            break
 
     # find active drupal users that we did not account before
     # unaudited_drupal_accounts = SocialAccount.objects.filter(
     #     provider=CustomProvider.id, user__is_active=True
     # ).exclude(uid__in=drupal_uids)
-    return issues
+    return audit_results
 
 
 def get_study_sites(json_api):
@@ -207,10 +267,10 @@ def get_study_sites(json_api):
     return study_sites_info
 
 
-def audit_drupal_study_sites(study_sites, should_update=False):
+def audit_drupal_study_sites(study_sites, apply_changes=False):
 
     valid_nodes = set()
-    results = []
+    audit_results = SiteAuditResults()
 
     for study_site_info in study_sites.values():
 
@@ -222,41 +282,22 @@ def audit_drupal_study_sites(study_sites, should_update=False):
         try:
             study_site = StudySite.objects.get(drupal_node_id=node_id)
         except ObjectDoesNotExist:
-            if should_update is True:
+            if apply_changes is True:
                 study_site = StudySite.objects.create(
                     drupal_node_id=node_id, short_name=short_name, full_name=full_name
                 )
-            results.append(
-                {
-                    "result_type": "new",
-                    "data_type": "study_site",
-                    "data": study_site_info,
-                }
-            )
+            audit_results.add_new(data=study_site_info)
         else:
             if study_site.full_name != full_name or study_site.short_name != short_name:
                 study_site.full_name = full_name
                 study_site.short_name = short_name
-                if should_update is True:
+                if apply_changes is True:
                     study_site.save()
-                results.append(
-                    {
-                        "result_type": "update",
-                        "data_type": "study_site",
-                        "data": study_site_info,
-                    }
-                )
+                audit_results.add_update(data=study_site_info)
 
     invalid_study_sites = StudySite.objects.exclude(drupal_node_id__in=valid_nodes)
 
     for iss in invalid_study_sites:
-        results.append(
-            {
-                "result_type": "issue",
-                "issue_type": "invalid_site",
-                "data_type": "study_site",
-                "data": iss,
-            }
-        )
+        audit_results.add_issue(data=iss)
 
-    return UserDataAuditResults(results)
+    return audit_results

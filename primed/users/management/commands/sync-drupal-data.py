@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from primed.users.audit import drupal_data_user_audit
+from primed.users.audit import drupal_data_study_site_audit, drupal_data_user_audit
 
 logger = logging.getLogger(__name__)
 
@@ -21,5 +21,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         should_update = options.get("update")
 
-        status = drupal_data_user_audit(should_update=should_update)
-        print(f"Issues {status}")
+        user_audit_results = drupal_data_user_audit(apply_changes=should_update)
+        print(f"User Audit Results {user_audit_results}")
+
+        site_audit_results = drupal_data_study_site_audit(apply_changes=should_update)
+        print(f"Site Audit Results {site_audit_results}")
