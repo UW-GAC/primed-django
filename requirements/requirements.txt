@@ -99,7 +99,7 @@ idna==3.3
     # via requests
 importlib-metadata==7.0.0
     # via build
-importlib-resources==5.10.0
+importlib-resources==6.1.1
     # via
     #   jsonschema
     #   jsonschema-specifications
