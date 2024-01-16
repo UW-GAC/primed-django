@@ -28,7 +28,7 @@ cffi==1.16.0
     # via
     #   argon2-cffi-bindings
     #   cryptography
-chardet==5.1.0
+chardet==5.2.0
     # via pronto
 charset-normalizer==2.0.12
     # via requests
