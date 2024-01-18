@@ -209,21 +209,6 @@ class SignedAgreementTest(TestCase):
             instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
         )
 
-    def test_statuses(self):
-        """All allowed statuses."""
-        instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.ACTIVE
-        )
-        instance.full_clean()
-        instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.WITHDRAWN
-        )
-        instance.full_clean()
-        instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.LAPSED
-        )
-        instance.full_clean()
-
     def test_member_choices(self):
         """Can create instances with all of the member choices."""
         instance = factories.SignedAgreementFactory.create(
@@ -318,6 +303,11 @@ class SignedAgreementTest(TestCase):
             status=models.SignedAgreement.StatusChoices.LAPSED
         )
         self.assertEqual(instance.status, instance.StatusChoices.LAPSED)
+        instance.full_clean()
+        instance = factories.SignedAgreementFactory.create(
+            status=models.SignedAgreement.StatusChoices.REPLACED
+        )
+        self.assertEqual(instance.status, instance.StatusChoices.REPLACED)
         instance.full_clean()
 
         # not allowed

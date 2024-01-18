@@ -108,6 +108,9 @@ class SignedAgreementStatusMixin:
         LAPSED = "lapsed", "Lapsed"
         """SignedAgreements from a AgreementMajorVersion that is no longer valid."""
 
+        REPLACED = "replaced", "Replaced"
+        """SignedAgreements that have been replaced by a newer version."""
+
     STATUS = StatusChoices.choices
 
 
