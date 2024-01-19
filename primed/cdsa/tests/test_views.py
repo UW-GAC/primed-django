@@ -548,6 +548,10 @@ class AgreementMajorVersionInvalidateTest(TestCase):
             version__major_version=instance,
             status=models.SignedAgreement.StatusChoices.LAPSED,
         )
+        replaced_agreement = factories.SignedAgreementFactory.create(
+            version__major_version=instance,
+            status=models.SignedAgreement.StatusChoices.REPLACED,
+        )
         self.client.force_login(self.user)
         response = self.client.post(self.get_url(instance.version), {})
         self.assertEqual(response.status_code, 302)
@@ -558,6 +562,10 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         withdrawn_agreement.refresh_from_db()
         self.assertEqual(
             withdrawn_agreement.status, models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        replaced_agreement.refresh_from_db()
+        self.assertEqual(
+            replaced_agreement.status, models.SignedAgreement.StatusChoices.REPLACED
         )
 
     def test_only_sets_associated_signed_agreements_to_lapsed(self):
@@ -5293,6 +5301,9 @@ class RepresentativeRecordsList(TestCase):
         withdrawn_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
+        replaced_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+        )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -5301,6 +5312,7 @@ class RepresentativeRecordsList(TestCase):
         self.assertIn(active_agreement.signed_agreement, table.data)
         self.assertNotIn(lapsed_agreement.signed_agreement, table.data)
         self.assertNotIn(withdrawn_agreement.signed_agreement, table.data)
+        self.assertNotIn(replaced_agreement.signed_agreement, table.data)
 
 
 class SignedAgreementAuditTest(TestCase):
@@ -5758,6 +5770,9 @@ class StudyRecordsList(TestCase):
         withdrawn_agreement = factories.DataAffiliateAgreementFactory.create(
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
+        replaced_agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+        )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -5766,6 +5781,7 @@ class StudyRecordsList(TestCase):
         self.assertIn(active_agreement, table.data)
         self.assertNotIn(lapsed_agreement, table.data)
         self.assertNotIn(withdrawn_agreement, table.data)
+        self.assertNotIn(replaced_agreement, table.data)
 
 
 class UserAccessRecordsList(TestCase):
@@ -5943,6 +5959,12 @@ class UserAccessRecordsList(TestCase):
         withdrawn_member = GroupAccountMembershipFactory.create(
             group=withdrawn_agreement.signed_agreement.anvil_access_group
         )
+        replaced_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED
+        )
+        replaced_member = GroupAccountMembershipFactory.create(
+            group=replaced_agreement.signed_agreement.anvil_access_group
+        )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -5951,6 +5973,7 @@ class UserAccessRecordsList(TestCase):
         self.assertIn(active_member, table.data)
         self.assertNotIn(lapsed_member, table.data)
         self.assertNotIn(withdrawn_member, table.data)
+        self.assertNotIn(replaced_member, table.data)
 
 
 class CDSAWorkspaceRecordsList(TestCase):
@@ -6021,6 +6044,11 @@ class CDSAWorkspaceRecordsList(TestCase):
             study=withdrawn_workspace.study,
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
+        replaced_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            study=replaced_workspace.study,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.REPLACED,
+        )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -6029,6 +6057,7 @@ class CDSAWorkspaceRecordsList(TestCase):
         self.assertIn(active_workspace, table.data)
         self.assertNotIn(lapsed_workspace, table.data)
         self.assertNotIn(withdrawn_workspace, table.data)
+        self.assertNotIn(replaced_workspace, table.data)
 
 
 class CDSAWorkspaceDetailTest(TestCase):
