@@ -99,17 +99,17 @@ class SignedAgreementStatusMixin:
 
     class StatusChoices(models.TextChoices):
         ACTIVE = "active", "Active"
-        """SignedAgreements that are currently active."""
+        """SignedAgreements that are currently active."""  # pragma: no cover
 
         WITHDRAWN = "withdrawn", "Withdrawn"
         """SignedAgreements that have been withdrawn for some reason (e.g., PI changed institution,
         study no longer wanted to participate.)"""
 
         LAPSED = "lapsed", "Lapsed"
-        """SignedAgreements from a AgreementMajorVersion that is no longer valid."""
+        """SignedAgreements from a AgreementMajorVersion that is no longer valid."""  # pragma: no cover
 
         REPLACED = "replaced", "Replaced"
-        """SignedAgreements that have been replaced by a newer version."""
+        """SignedAgreements that have been replaced by a newer version."""  # pragma: no cover
 
     STATUS = StatusChoices.choices
 
