@@ -15,20 +15,20 @@ from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
 from primed.cdsa.tables import (
-    CDSAWorkspaceLimitedViewTable,
-    CDSAWorkspaceTable,
+    CDSAWorkspaceStaffTable,
+    CDSAWorkspaceUserTable,
     DataAffiliateAgreementTable,
     MemberAgreementTable,
 )
 from primed.dbgap.models import dbGaPApplication
 from primed.dbgap.tables import (
     dbGaPApplicationTable,
-    dbGaPWorkspaceLimitedViewTable,
-    dbGaPWorkspaceTable,
+    dbGaPWorkspaceStaffTable,
+    dbGaPWorkspaceUserTable,
 )
 from primed.miscellaneous_workspaces.tables import (
-    OpenAccessWorkspaceLimitedViewTable,
-    OpenAccessWorkspaceTable,
+    OpenAccessWorkspaceStaffTable,
+    OpenAccessWorkspaceUserTable,
 )
 from primed.users.tables import UserTable
 
@@ -42,12 +42,12 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
 
     model = models.Study
     tables = [
-        dbGaPWorkspaceTable,
-        CDSAWorkspaceTable,
+        dbGaPWorkspaceStaffTable,
+        CDSAWorkspaceStaffTable,
         DataAffiliateAgreementTable,
-        OpenAccessWorkspaceTable,
+        OpenAccessWorkspaceStaffTable,
     ]
-    # table_class = dbGaPWorkspaceTable
+    # table_class = dbGaPWorkspaceStaffTable
     # context_table_name = "dbgap_workspace_table"
 
     def get_tables(self):
@@ -64,18 +64,18 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
         full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME}"
         if self.request.user.has_perm(full_view_perm):
             return (
-                dbGaPWorkspaceTable(dbgap_qs),
-                CDSAWorkspaceTable(cdsa_qs),
+                dbGaPWorkspaceStaffTable(dbgap_qs),
+                CDSAWorkspaceStaffTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
-                OpenAccessWorkspaceTable(open_access_qs),
+                OpenAccessWorkspaceStaffTable(open_access_qs),
             )
         else:
             # Assume they have limited view due to auth mixin.
             return (
-                dbGaPWorkspaceLimitedViewTable(dbgap_qs),
-                CDSAWorkspaceLimitedViewTable(cdsa_qs),
+                dbGaPWorkspaceUserTable(dbgap_qs),
+                CDSAWorkspaceUserTable(cdsa_qs),
                 DataAffiliateAgreementTable(agreement_qs),
-                OpenAccessWorkspaceLimitedViewTable(open_access_qs),
+                OpenAccessWorkspaceUserTable(open_access_qs),
             )
 
 
@@ -168,7 +168,7 @@ class AvailableDataDetail(
 
     model = models.AvailableData
     context_table_name = "dbgap_workspace_table"
-    table_class = dbGaPWorkspaceTable
+    table_class = dbGaPWorkspaceStaffTable
     context_table_name = "dbgap_workspace_table"
 
     def get_table_data(self):

@@ -17,14 +17,23 @@
     <li>
       <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:list' %}">List dbGaP applications</a>
     </li>
-    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
+    <li>
+      <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:dars' %}">List all current DARs</a>
+    </li>
+  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
       <li>
         <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
       </li>
       <li>
         <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:update_dars' %}">Update DARs for all applications</a>
       </li>
-    {% endif %}
+      {% endif %}
+
+    <li><hr class="dropdown-divider"></li>
+
+    <li>
+      <a class="dropdown-item" href="{% url 'dbgap:records:index' %}">dbGaP records</a>
+    </li>
 
     </ul>
   </li>

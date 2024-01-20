@@ -12,21 +12,21 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from primed.cdsa.tables import CDSAWorkspaceLimitedViewTable, CDSAWorkspaceTable
+from primed.cdsa.tables import CDSAWorkspaceStaffTable, CDSAWorkspaceUserTable
 from primed.cdsa.tests.factories import (
     CDSAWorkspaceFactory,
     DataAffiliateAgreementFactory,
     MemberAgreementFactory,
 )
-from primed.dbgap.tables import dbGaPWorkspaceLimitedViewTable, dbGaPWorkspaceTable
+from primed.dbgap.tables import dbGaPWorkspaceStaffTable, dbGaPWorkspaceUserTable
 from primed.dbgap.tests.factories import (
     dbGaPApplicationFactory,
     dbGaPStudyAccessionFactory,
     dbGaPWorkspaceFactory,
 )
 from primed.miscellaneous_workspaces.tables import (
-    OpenAccessWorkspaceLimitedViewTable,
-    OpenAccessWorkspaceTable,
+    OpenAccessWorkspaceStaffTable,
+    OpenAccessWorkspaceUserTable,
 )
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
@@ -257,10 +257,14 @@ class StudyDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
-        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceTable)
-        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceTable)
         self.assertIsInstance(
-            response.context_data["tables"][3], OpenAccessWorkspaceTable
+            response.context_data["tables"][0], dbGaPWorkspaceStaffTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][1], CDSAWorkspaceStaffTable
+        )
+        self.assertIsInstance(
+            response.context_data["tables"][3], OpenAccessWorkspaceStaffTable
         )
 
     def test_table_classes_limited_view_permission(self):
@@ -276,13 +280,13 @@ class StudyDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
         self.assertIsInstance(
-            response.context_data["tables"][0], dbGaPWorkspaceLimitedViewTable
+            response.context_data["tables"][0], dbGaPWorkspaceUserTable
         )
         self.assertIsInstance(
-            response.context_data["tables"][1], CDSAWorkspaceLimitedViewTable
+            response.context_data["tables"][1], CDSAWorkspaceUserTable
         )
         self.assertIsInstance(
-            response.context_data["tables"][3], OpenAccessWorkspaceLimitedViewTable
+            response.context_data["tables"][3], OpenAccessWorkspaceUserTable
         )
 
     def test_dbgap_workspace_table(self):

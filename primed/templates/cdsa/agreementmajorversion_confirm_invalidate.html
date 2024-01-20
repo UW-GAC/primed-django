@@ -17,7 +17,7 @@
       <p>This will change the status of all "Active" agreements associated with this version to "Lapsed". </p>
 
       <form method="POST">{% csrf_token %}
-          {{ form }}
+          {{ form.as_div }}
           <input type="submit" class="btn btn-danger" value="Yes, invalidate"/>
           <a href="{{ object.get_absolute_url }}" class="btn btn-secondary" role="button">
           No, cancel</a>

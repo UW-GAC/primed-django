@@ -447,12 +447,12 @@ class CDSAWorkspaceRecordsTableTest(TestCase):
         self.assertEqual(table.data[1], instance_1)
 
 
-class CDSAWorkspaceTableTest(TestCase):
-    """Tests for the CDSAWorkspaceTable class."""
+class CDSAWorkspaceStaffTableTest(TestCase):
+    """Tests for the CDSAWorkspaceStaffTable class."""
 
     model = Workspace
     model_factory = factories.CDSAWorkspaceFactory
-    table_class = tables.CDSAWorkspaceTable
+    table_class = tables.CDSAWorkspaceStaffTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())
@@ -477,12 +477,12 @@ class CDSAWorkspaceTableTest(TestCase):
         self.assertEqual(table.data[1], instance_1.workspace)
 
 
-class CDSAWorkspaceLimitedViewTableTest(TestCase):
-    """Tests for the CDSAWorkspaceLimitedViewTable class."""
+class CDSAWorkspaceUserTableTest(TestCase):
+    """Tests for the CDSAWorkspaceUserTable class."""
 
     model = Workspace
     model_factory = factories.CDSAWorkspaceFactory
-    table_class = tables.CDSAWorkspaceLimitedViewTable
+    table_class = tables.CDSAWorkspaceUserTable
 
     def test_row_count_with_no_objects(self):
         table = self.table_class(self.model.objects.all())
