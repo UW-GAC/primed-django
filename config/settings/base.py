@@ -32,8 +32,6 @@ SITE_ID = 1
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
 USE_I18N = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#use-l10n
-USE_L10N = True
-# https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
 LOCALE_PATHS = [str(ROOT_DIR / "locale")]
@@ -214,7 +212,9 @@ TEMPLATES = [
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 # http://django-crispy-forms.readthedocs.io/en/latest/install.html#template-packs
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+# https://github.com/django-crispy-forms/crispy-bootstrap5
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # FIXTURES
 # ------------------------------------------------------------------------------
@@ -370,14 +370,14 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
-    "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",
     "primed.cdsa.adapters.CDSAWorkspaceAdapter",
-    "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
-    "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
-    "primed.miscellaneous_workspaces.adapters.ResourceWorkspaceAdapter",
-    "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.OpenAccessWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.ResourceWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
+    "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
 ]
 ANVIL_ACCOUNT_ADAPTER = "primed.primed_anvil.adapters.AccountAdapter"
 
@@ -386,4 +386,3 @@ ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
 ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
-ANVIL_CDSA_GROUP_NAME = "PRIMED_CDSA"

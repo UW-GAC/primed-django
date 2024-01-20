@@ -24,10 +24,10 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.9
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
           cache: pip
@@ -67,10 +67,10 @@ jobs:
     steps:
 
       - name: Checkout Code Repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -91,9 +91,9 @@ jobs:
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-mysql-${{ strategy.job-index }}
           path: .coverage.*
 
   pytest-sqlite:
@@ -101,10 +101,10 @@ jobs:
 
     steps:
       - name: Checkout Code Repository
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
           cache: pip
@@ -125,9 +125,9 @@ jobs:
           ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-sqlite-${{ strategy.job-index }}
           path: .coverage.*
 
   coverage:
@@ -137,10 +137,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -148,10 +148,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade coverage "django<4" django-coverage-plugin
+
       - name: Download coverage data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          path: ./artifacts/
+
+      - name: Merge coverage files
+        run: |
+          mv ./artifacts/coverage-data*/.coverage* .
+          ls -la .coverage*
 
       - name: Combine coverage data
         run: |

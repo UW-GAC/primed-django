@@ -19,7 +19,7 @@ class DataUsePermissionListTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
-        # Create a user with both view and edit permission.
+        # Create a user with staff view permission.
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
@@ -122,11 +122,11 @@ class DataUsePermissionDetailTest(TestCase):
     def setUp(self):
         """Set up test class."""
         self.factory = RequestFactory()
-        # Create a user with both view and edit permission.
+        # Create a user with view permission.
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -282,7 +282,7 @@ class DataUseModifierDetailTest(TestCase):
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
 

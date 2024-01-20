@@ -126,3 +126,4 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
 
     class Meta:
         model = models.CDSAWorkspace
+        skip_postgeneration_save = True

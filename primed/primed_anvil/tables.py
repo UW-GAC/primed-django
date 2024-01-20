@@ -47,31 +47,7 @@ class WorkspaceSharedWithConsortiumColumn(BooleanIconColumn):
         return is_shared
 
 
-# class WorkspaceSharedWithConsortiumTable(tables.Table):
-#     """Table including a column to indicate if a workspace is shared with PRIMED_ALL."""
-
-#     is_shared = tables.columns.Column(
-#         accessor="pk",
-#         verbose_name="Shared with PRIMED?",
-#         orderable=False,
-#     )
-
-#     def render_is_shared(self, record):
-#         is_shared = record.workspacegroupsharing_set.filter(
-#             group__name="PRIMED_ALL"
-#         ).exists()
-#         if is_shared:
-#             icon = "check-circle-fill"
-#             color = "green"
-#             value = format_html(
-#                 """<i class="bi bi-{}" style="color: {};"></i>""".format(icon, color)
-#             )
-#         else:
-#             value = ""
-#         return value
-
-
-class DefaultWorkspaceTable(tables.Table):
+class DefaultWorkspaceStaffTable(tables.Table):
     """Class to use for default workspace tables in PRIMED."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
@@ -90,6 +66,23 @@ class DefaultWorkspaceTable(tables.Table):
             "name",
             "billing_project",
             "number_groups",
+            "is_shared",
+        )
+        order_by = ("name",)
+
+
+class DefaultWorkspaceUserTable(tables.Table):
+    """Class to use for default workspace tables in PRIMED."""
+
+    name = tables.Column(linkify=True, verbose_name="Workspace")
+    billing_project = tables.Column()
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
             "is_shared",
         )
         order_by = ("name",)
