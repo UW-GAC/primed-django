@@ -162,7 +162,7 @@ pytz==2023.3.post1
     #   django-anvil-consortium-manager
     #   django-dbbackup
     #   pandas
-referencing==0.31.1
+referencing==0.32.1
     # via
     #   jsonschema
     #   jsonschema-specifications
