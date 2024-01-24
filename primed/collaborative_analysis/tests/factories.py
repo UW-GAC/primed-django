@@ -2,7 +2,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from factory import SubFactory, post_generation
+from factory import LazyAttribute, SubFactory, post_generation
 from factory.django import DjangoModelFactory
 
 from primed.users.tests.factories import UserFactory
@@ -17,7 +17,12 @@ class CollaborativeAnalysisWorkspaceFactory(DjangoModelFactory):
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="collab_analysis")
     custodian = SubFactory(UserFactory)
-    analyst_group = SubFactory(ManagedGroupFactory)
+    analyst_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(
+            lambda o: "analysts_{}".format(o.factory_parent.workspace.name)
+        ),
+    )
 
     @post_generation
     def authorization_domains(self, create, extracted, **kwargs):
@@ -27,7 +32,9 @@ class CollaborativeAnalysisWorkspaceFactory(DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create()
+        auth_domain = ManagedGroupFactory.create(
+            name="auth_{}".format(self.workspace.name)
+        )
         print(auth_domain)
         self.workspace.authorization_domains.add(auth_domain)
 
