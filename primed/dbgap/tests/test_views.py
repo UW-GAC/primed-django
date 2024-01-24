@@ -912,6 +912,42 @@ class dbGaPWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertContains(response, obj.get_dbgap_link())
 
+    def test_links_audit_access_staff_view(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertContains(
+            response,
+            reverse(
+                "dbgap:workspaces:audit",
+                args=[obj.workspace.billing_project.name, obj.workspace.name],
+            ),
+        )
+
+    def test_links_audit_access_view_permission(self):
+        user = UserFactory.create()
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:workspaces:audit",
+                args=[obj.workspace.billing_project.name, obj.workspace.name],
+            ),
+        )
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""
