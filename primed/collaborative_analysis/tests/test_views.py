@@ -3,13 +3,20 @@
 import responses
 from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
 from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
     BillingProjectFactory,
+    GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
     ManagedGroupFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
-from django.test import TestCase
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
+from django.shortcuts import resolve_url
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from primed.cdsa.tests.factories import CDSAWorkspaceFactory
@@ -17,7 +24,7 @@ from primed.dbgap.tests.factories import dbGaPWorkspaceFactory
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.users.tests.factories import UserFactory
 
-from .. import models
+from .. import audit, models, views
 from . import factories
 
 User = get_user_model()
@@ -299,3 +306,349 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.CollaborativeAnalysisWorkspace.objects.count(), 1)
         new_workspace_data = models.CollaborativeAnalysisWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+
+
+class CollaborativeAnalysisWorkspaceAuditTest(TestCase):
+    """Tests for the CollaborativeAnalysisWorkspaceAuditTest view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.collaborative_analysis_workspace = (
+            factories.CollaborativeAnalysisWorkspaceFactory.create()
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "collaborative_analysis:workspaces:audit",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.WorkspaceAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        request = self.factory.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        request.user = self.user
+        response = self.get_view()(
+            request,
+            billing_project_slug=self.collaborative_analysis_workspace.workspace.billing_project.name,
+            workspace_slug=self.collaborative_analysis_workspace.workspace.name,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                billing_project_slug=self.collaborative_analysis_workspace.workspace.billing_project.name,
+                workspace_slug=self.collaborative_analysis_workspace.workspace.name,
+            )
+
+    def test_invalid_billing_project_name(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        request = self.factory.get(
+            self.get_url("foo", self.collaborative_analysis_workspace.workspace.name)
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug="foo",
+                workspace_slug=self.collaborative_analysis_workspace.workspace.name,
+            )
+
+    def test_invalid_workspace_name(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
+        request = self.factory.get(
+            self.get_url(self.collaborative_analysis_workspace.workspace.name, "foo")
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(
+                request,
+                billing_project_slug=self.collaborative_analysis_workspace.workspace.billing_project.name,
+                workspace_slug="foo",
+            )
+
+    def test_context_data_access_audit(self):
+        """The data_access_audit exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        self.assertIn("data_access_audit", response.context_data)
+        self.assertIsInstance(
+            response.context_data["data_access_audit"],
+            audit.CollaborativeAnalysisWorkspaceAccessAudit,
+        )
+        self.assertTrue(response.context_data["data_access_audit"].completed)
+        qs = response.context_data["data_access_audit"].queryset
+        self.assertEqual(len(qs), 1)
+        self.assertIn(self.collaborative_analysis_workspace, qs)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has one account with verified access."""
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        self.collaborative_analysis_workspace.source_workspaces.add(
+            source_workspace.workspace
+        )
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(
+            group=self.collaborative_analysis_workspace.analyst_group, account=account
+        )
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace.workspace.authorization_domains.first(),
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(
+            group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(),
+            account=account,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            audit.AccessAuditResultsTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("workspace"),
+            self.collaborative_analysis_workspace,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.IN_SOURCE_AUTH_DOMAINS,
+        )
+        self.assertIsNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has one account with verified no access."""
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        self.collaborative_analysis_workspace.source_workspaces.add(
+            source_workspace.workspace
+        )
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(
+            group=self.collaborative_analysis_workspace.analyst_group, account=account
+        )
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace.workspace.authorization_domains.first(),
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(), account=account
+        # )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            audit.AccessAuditResultsTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("workspace"),
+            self.collaborative_analysis_workspace,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_SOURCE_AUTH_DOMAINS,
+        )
+        self.assertIsNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_needs_action_table_grant(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        self.collaborative_analysis_workspace.source_workspaces.add(
+            source_workspace.workspace
+        )
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(
+            group=self.collaborative_analysis_workspace.analyst_group, account=account
+        )
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace.workspace.authorization_domains.first(),
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(), account=account
+        # )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            audit.AccessAuditResultsTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("workspace"),
+            self.collaborative_analysis_workspace,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.IN_SOURCE_AUTH_DOMAINS,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_needs_action_table_remoe(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        self.collaborative_analysis_workspace.source_workspaces.add(
+            source_workspace.workspace
+        )
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(
+            group=self.collaborative_analysis_workspace.analyst_group, account=account
+        )
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace.workspace.authorization_domains.first(),
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(
+            group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(),
+            account=account,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            audit.AccessAuditResultsTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("workspace"),
+            self.collaborative_analysis_workspace,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_SOURCE_AUTH_DOMAINS,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_error_table_group_in_auth_domain(self):
+        """error shows a record when audit finds a group in the auth domain."""
+        # Create accounts.
+        group = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+            )
+        )
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            audit.AccessAuditResultsTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("workspace"),
+            self.collaborative_analysis_workspace,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("member"), group)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.UNEXPECTED_GROUP_ACCESS,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))

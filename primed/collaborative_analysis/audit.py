@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Union
 
+import django_tables2 as tables
 from anvil_consortium_manager.models import (
     Account,
     GroupAccountMembership,
@@ -8,6 +9,7 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
 )
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from . import models
 
@@ -27,6 +29,17 @@ class AccessAuditResult:
     def get_action(self):
         """An indicator of what action needs to be taken."""
         return None
+
+    def get_table_dictionary(self):
+        """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
+        row = {
+            "workspace": self.collaborative_analysis_workspace,
+            "member": self.member,
+            "note": self.note,
+            "action": self.get_action(),
+            "action_url": self.get_action_url(),
+        }
+        return row
 
 
 @dataclass
@@ -91,6 +104,25 @@ class RemoveAccess(AccessAuditResult):
             )
 
 
+class AccessAuditResultsTable(tables.Table):
+    """A table to show results from a CollaborativeAnalysisWorkspaceAccessAudit instance."""
+
+    workspace = tables.Column(linkify=True)
+    member = tables.Column(linkify=True)
+    note = tables.Column()
+    action = tables.Column()
+
+    class Meta:
+        attrs = {"class": "table align-middle"}
+
+    def render_action(self, record, value):
+        return mark_safe(
+            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
+                record["action_url"], value
+            )
+        )
+
+
 class CollaborativeAnalysisWorkspaceAccessAudit:
     """Class to audit access to a CollaborativeAnalysisWorkspace."""
 
@@ -105,6 +137,8 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
 
     # Errors.
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
+
+    results_table_class = AccessAuditResultsTable
 
     def __init__(self, queryset=None):
         """Initialize the audit.
@@ -240,3 +274,19 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         for workspace in self.queryset:
             self._audit_workspace(workspace)
         self.completed = True
+
+    def get_verified_table(self):
+        """Return a table of verified results."""
+        return self.results_table_class(
+            [x.get_table_dictionary() for x in self.verified]
+        )
+
+    def get_needs_action_table(self):
+        """Return a table of results where action is needed."""
+        return self.results_table_class(
+            [x.get_table_dictionary() for x in self.needs_action]
+        )
+
+    def get_errors_table(self):
+        """Return a table of audit errors."""
+        return self.results_table_class([x.get_table_dictionary() for x in self.errors])

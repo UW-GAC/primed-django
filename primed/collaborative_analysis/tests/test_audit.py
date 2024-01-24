@@ -968,3 +968,92 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace_2)
         self.assertEqual(record.member, analyst_2)
         self.assertEqual(record.note, collab_audit_2.IN_SOURCE_AUTH_DOMAINS)
+
+
+class AccessAuditResultsTableTest(TestCase):
+    """Tests for the `AccessAuditResultsTable` table."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = audit.AccessAuditResultsTable([])
+        self.assertIsInstance(table, audit.AccessAuditResultsTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row_account(self):
+        """Table works with one row with an account member."""
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        member_account = AccountFactory.create()
+        data = [
+            {
+                "workspace": workspace,
+                "member": member_account,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            }
+        ]
+        table = audit.AccessAuditResultsTable(data)
+        self.assertIsInstance(table, audit.AccessAuditResultsTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_one_row_group(self):
+        """Table works with one row with a group member."""
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        member_group = ManagedGroupFactory.create()
+        data = [
+            {
+                "workspace": workspace,
+                "member": member_group,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            }
+        ]
+        table = audit.AccessAuditResultsTable(data)
+        self.assertIsInstance(table, audit.AccessAuditResultsTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        member_account = AccountFactory.create()
+        member_group = ManagedGroupFactory.create()
+        data = [
+            {
+                "workspace": workspace,
+                "member": member_account,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            },
+            {
+                "workspace": workspace,
+                "member": member_group,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            },
+        ]
+        table = audit.AccessAuditResultsTable(data)
+        self.assertIsInstance(table, audit.AccessAuditResultsTable)
+        self.assertEqual(len(table.rows), 2)
+
+    def test_render_action(self):
+        """Render action works as expected for grant access types."""
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        member_group = ManagedGroupFactory.create()
+        data = [
+            {
+                "workspace": workspace,
+                "member": member_group,
+                "note": "a note",
+                "action": "Grant",
+                "action_url": "foo",
+            }
+        ]
+
+        table = audit.AccessAuditResultsTable(data)
+        self.assertIsInstance(table, audit.AccessAuditResultsTable)
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn("foo", table.rows[0].get_cell("action"))
+        self.assertIn("Grant", table.rows[0].get_cell("action"))
