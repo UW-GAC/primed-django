@@ -128,6 +128,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
 
     # Allowed reasons for access.
     IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains for this workspace."
+    DCC_ACCESS = "DCC groups are allowed access."
 
     # Allowed reasons for no access.
     NOT_IN_SOURCE_AUTH_DOMAINS = (
@@ -187,17 +188,30 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             )
 
         # Check that no groups have access.
+        groups_to_ignore = [
+            "PRIMED_CC_ADMINS",
+            "PRIMED_CC_WRITERS",
+            "PRIMED_CC_MEMBERS",
+        ]
         group_memberships = GroupGroupMembership.objects.filter(
             parent_group=workspace.workspace.authorization_domains.first()
         )
         for membership in group_memberships:
             # Ignore PRIMED admins group.
-            if membership.child_group.name != "PRIMED_CC_ADMINS":
+            if membership.child_group.name not in groups_to_ignore:
                 self.errors.append(
                     RemoveAccess(
                         collaborative_analysis_workspace=workspace,
                         member=membership.child_group,
                         note=self.UNEXPECTED_GROUP_ACCESS,
+                    )
+                )
+            else:
+                self.verified.append(
+                    VerifiedAccess(
+                        collaborative_analysis_workspace=workspace,
+                        member=membership.child_group,
+                        note=self.DCC_ACCESS,
                     )
                 )
 

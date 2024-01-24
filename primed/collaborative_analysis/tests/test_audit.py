@@ -888,12 +888,52 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         )
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         collab_audit._audit_workspace(workspace)
-        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.verified), 1)
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collab_audit.DCC_ACCESS)
 
-    def test_dcc_access(self):
-        self.fail("How do we handle DCC member access?")
+    def test_no_errors_for_primed_cc_members_group(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create(name="PRIMED_CC_MEMBERS")
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collab_audit.DCC_ACCESS)
+
+    def test_no_errors_for_primed_cc_writers_group(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collab_audit.DCC_ACCESS)
 
     def test_two_workspaces(self):
         # Create a workspace with an analyst that needs access.
