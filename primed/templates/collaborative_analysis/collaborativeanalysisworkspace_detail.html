@@ -23,3 +23,13 @@
     {% endif %}
 </dl>
 {% endblock workspace_data %}
+
+
+{% block action_buttons %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+<p>
+  <a href="{% url 'collaborative_analysis:workspaces:audit' billing_project_slug=object.billing_project.name workspace_slug=object.name%}" class="btn btn-secondary" role="button">Audit workspace access</a>
+</p>
+{% endif %}
+{{block.super}}
+{% endblock action_buttons %}

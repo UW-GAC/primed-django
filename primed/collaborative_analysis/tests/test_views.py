@@ -105,6 +105,38 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         )
         self.assertNotIn(obj.analyst_group.name, response.content.decode())
 
+    def test_link_to_audit_staff_view(self):
+        """Links to the audit view page do appear on the detail page for staff viewers."""
+        user = User.objects.create_user(
+            username="test-staff-view", password="test-staff-view"
+        )
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        self.client.force_login(user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        url = reverse(
+            "collaborative_analysis:workspaces:audit",
+            args=[obj.workspace.billing_project.name, obj.workspace.name],
+        )
+        self.assertIn(url, response.content.decode())
+
+    def test_link_to_audit_view(self):
+        """Links to the audit view page do not appear on the detail page for viewers."""
+        obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.workspace.get_absolute_url())
+        self.assertNotIn(
+            reverse(
+                "collaborative_analysis:workspaces:audit",
+                args=[obj.workspace.billing_project.name, obj.workspace.name],
+            ),
+            response.content.decode(),
+        )
+
 
 class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's CollaborativeAnalysisWorkspace model."""
