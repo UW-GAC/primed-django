@@ -188,32 +188,48 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
             )
 
         # Check that no groups have access.
-        groups_to_ignore = [
-            "PRIMED_CC_ADMINS",
-            "PRIMED_CC_WRITERS",
-            "PRIMED_CC_MEMBERS",
-        ]
         group_memberships = GroupGroupMembership.objects.filter(
-            parent_group=workspace.workspace.authorization_domains.first()
+            parent_group=workspace.workspace.authorization_domains.first(),
+        ).exclude(
+            # Ignore cc admins group - it is handled differently because it should have admin privileges.
+            child_group__name="PRIMED_CC_ADMINS",
         )
-        for membership in group_memberships:
-            # Ignore PRIMED admins group.
-            if membership.child_group.name not in groups_to_ignore:
-                self.errors.append(
-                    RemoveAccess(
+        # CC groups that should have access.
+        cc_groups = ManagedGroup.objects.filter(
+            name__in=[
+                "PRIMED_CC_WRITERS",
+                "PRIMED_CC_MEMBERS",
+            ]
+        )
+        for cc_group in cc_groups:
+            try:
+                group_memberships.get(child_group=cc_group)
+            except GroupGroupMembership.DoesNotExist:
+                self.needs_action.append(
+                    GrantAccess(
                         collaborative_analysis_workspace=workspace,
-                        member=membership.child_group,
-                        note=self.UNEXPECTED_GROUP_ACCESS,
-                    )
-                )
-            else:
-                self.verified.append(
-                    VerifiedAccess(
-                        collaborative_analysis_workspace=workspace,
-                        member=membership.child_group,
+                        member=cc_group,
                         note=self.DCC_ACCESS,
                     )
                 )
+            else:
+                group_memberships = group_memberships.exclude(child_group=cc_group)
+                self.verified.append(
+                    VerifiedAccess(
+                        collaborative_analysis_workspace=workspace,
+                        member=cc_group,
+                        note=self.DCC_ACCESS,
+                    )
+                )
+        # Any other groups are an error.
+        for membership in group_memberships:
+            self.errors.append(
+                RemoveAccess(
+                    collaborative_analysis_workspace=workspace,
+                    member=membership.child_group,
+                    note=self.UNEXPECTED_GROUP_ACCESS,
+                )
+            )
 
     def _audit_workspace_and_account(self, collaborative_analysis_workspace, account):
         """Audit access for a specific CollaborativeAnalysisWorkspace and account."""
