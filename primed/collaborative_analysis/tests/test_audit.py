@@ -1095,6 +1095,7 @@ class AccessAuditResultsTableTest(TestCase):
             {
                 "workspace": workspace,
                 "member": member_account,
+                "has_access": True,
                 "note": "a note",
                 "action": "",
                 "action_url": "",
@@ -1102,6 +1103,7 @@ class AccessAuditResultsTableTest(TestCase):
             {
                 "workspace": workspace,
                 "member": member_group,
+                "has_access": False,
                 "note": "a note",
                 "action": "",
                 "action_url": "",

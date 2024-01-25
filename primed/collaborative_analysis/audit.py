@@ -11,6 +11,8 @@ from anvil_consortium_manager.models import (
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
+from primed.primed_anvil.tables import BooleanIconColumn
+
 from . import models
 
 
@@ -21,6 +23,7 @@ class AccessAuditResult:
     collaborative_analysis_workspace: models.CollaborativeAnalysisWorkspace
     member: Union[Account, ManagedGroup]
     note: str
+    has_access: bool
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -35,6 +38,7 @@ class AccessAuditResult:
         row = {
             "workspace": self.collaborative_analysis_workspace,
             "member": self.member,
+            "has_access": self.has_access,
             "note": self.note,
             "action": self.get_action(),
             "action_url": self.get_action_url(),
@@ -46,15 +50,21 @@ class AccessAuditResult:
 class VerifiedAccess(AccessAuditResult):
     """Audit results class for when an account has verified access."""
 
+    has_access: bool = True
+
 
 @dataclass
 class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when an account has verified no access."""
 
+    has_access: bool = False
+
 
 @dataclass
 class GrantAccess(AccessAuditResult):
     """Audit results class for when an account should be granted access."""
+
+    has_access: bool = False
 
     def get_action(self):
         return "Grant access"
@@ -81,6 +91,8 @@ class GrantAccess(AccessAuditResult):
 @dataclass
 class RemoveAccess(AccessAuditResult):
     """Audit results class for when access for an account should be removed."""
+
+    has_access: bool = True
 
     def get_action(self):
         return "Remove access"
@@ -109,6 +121,7 @@ class AccessAuditResultsTable(tables.Table):
 
     workspace = tables.Column(linkify=True)
     member = tables.Column(linkify=True)
+    has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
     action = tables.Column()
 
@@ -135,6 +148,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         "Account is not in all source auth domains for this workspace."
     )
     NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
+    INACTIVE_ACCOUNT = "Account is inactive."
 
     # Errors.
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
