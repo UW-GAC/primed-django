@@ -26,7 +26,7 @@ class Command(BaseCommand):
         should_update = options.get("update")
 
         user_audit_results = drupal_data_user_audit(apply_changes=should_update)
-        print(f"User Audit Results {user_audit_results}")
+        print(f"User Audit (Update: {should_update}) Results {user_audit_results}")
         if user_audit_results.encountered_issues():
             print(
                 user_audit_results.rows_by_result_type(
@@ -35,7 +35,7 @@ class Command(BaseCommand):
             )
 
         site_audit_results = drupal_data_study_site_audit(apply_changes=should_update)
-        print(f"Site Audit Results {site_audit_results}")
+        print(f"Site Audit (Update: {should_update}) Results {site_audit_results}")
         if site_audit_results.encountered_issues():
             print(
                 site_audit_results.rows_by_result_type(

@@ -243,8 +243,10 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
             if sa:
                 user_sites_changed = drupal_adapter.update_user_study_sites(
                     user=sa.user,
-                    extra_data={"study_site_or_center": drupal_user_study_site_shortnames},
-                    apply_update=apply_changes
+                    extra_data={
+                        "study_site_or_center": drupal_user_study_site_shortnames
+                    },
+                    apply_update=apply_changes,
                 )
             if user_changed or user_sites_changed and not is_new_user:
                 audit_results.add_update(data=user)
