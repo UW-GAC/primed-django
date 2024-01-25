@@ -1,3 +1,5 @@
+import logging
+
 import jsonapi_requests
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
@@ -9,6 +11,8 @@ from requests_oauthlib import OAuth2, OAuth2Session
 from primed.drupal_oauth_provider.provider import CustomProvider
 from primed.primed_anvil.models import StudySite
 from primed.users.adapters import SocialAccountAdapter
+
+logger = logging.getLogger(__name__)
 
 
 class AuditResults:
@@ -230,6 +234,9 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                     "email": drupal_email,
                 },
                 apply_update=apply_changes,
+            )
+            logger.info(
+                f"for user {user} ss_short_names {drupal_user_study_site_shortnames}"
             )
 
             user_sites_changed = drupal_adapter.update_user_study_sites(
