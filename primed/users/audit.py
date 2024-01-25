@@ -47,12 +47,13 @@ class AuditResults:
             }
         )
 
-    def add_issue(self, data):
+    def add_issue(self, data, issue_type):
         self.results.append(
             {
                 "data_type": self.data_type,
                 "result_type": self.RESULT_TYPE_ISSUE,
                 "data": data,
+                "issue_type": issue_type,
             }
         )
 
@@ -201,11 +202,12 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                         study_site_info["short_name"]
                     )
             is_new_user = False
+
             # no uid is blocked or anonymous
             if not drupal_uid:
-                # FIXME - deactivate if not anonymous and present locally
+                # potential blocked user, but will no longer have a drupal uid
+                # so we cover these below
                 continue
-
             try:
                 sa = SocialAccount.objects.get(
                     uid=user.attributes["drupal_internal__uid"],
@@ -235,9 +237,6 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                 },
                 apply_update=apply_changes,
             )
-            logger.info(
-                f"for user {user} ss_short_names {drupal_user_study_site_shortnames}"
-            )
 
             user_sites_changed = drupal_adapter.update_user_study_sites(
                 user=sa.user,
@@ -246,13 +245,19 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
             if user_changed or user_sites_changed and not is_new_user:
                 audit_results.add_update(data=user)
 
-            drupal_uids.add(sa.user.id)
+            drupal_uids.add(drupal_uid)
             user_count += 1
 
     # find active drupal users that we did not account before
-    # unaudited_drupal_accounts = SocialAccount.objects.filter(
-    #     provider=CustomProvider.id, user__is_active=True
-    # ).exclude(uid__in=drupal_uids)
+    # these may include blocked users
+
+    unaudited_drupal_accounts = SocialAccount.objects.filter(
+        provider=CustomProvider.id, user__is_active=True
+    ).exclude(uid__in=drupal_uids)
+
+    for uda in unaudited_drupal_accounts:
+        audit_results.add_issue(data=uda, issue_type="Local account not in drupal")
+
     return audit_results
 
 
@@ -305,6 +310,6 @@ def audit_drupal_study_sites(study_sites, apply_changes=False):
     invalid_study_sites = StudySite.objects.exclude(drupal_node_id__in=valid_nodes)
 
     for iss in invalid_study_sites:
-        audit_results.add_issue(data=iss)
+        audit_results.add_issue(data=iss, issue_type="Local site not in drupal")
 
     return audit_results
