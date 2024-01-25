@@ -208,6 +208,7 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                 # potential blocked user, but will no longer have a drupal uid
                 # so we cover these below
                 continue
+            sa = None
             try:
                 sa = SocialAccount.objects.get(
                     uid=user.attributes["drupal_internal__uid"],
@@ -218,30 +219,33 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                 drupal_user.username = drupal_username
                 drupal_user.name = drupal_full_name
                 drupal_user.email = drupal_email
-                drupal_user.save()
+                if apply_changes is True:
+                    drupal_user.save()
                 is_new_user = True
-                sa = SocialAccount.objects.create(
-                    user=drupal_user,
-                    uid=user.attributes["drupal_internal__uid"],
-                    provider=CustomProvider.id,
-                )
+                if apply_changes is True:
+                    sa = SocialAccount.objects.create(
+                        user=drupal_user,
+                        uid=user.attributes["drupal_internal__uid"],
+                        provider=CustomProvider.id,
+                    )
                 audit_results.add_new(data=user)
-
-            user_changed = drupal_adapter.update_user_info(
-                user=sa.user,
-                extra_data={
-                    "preferred_username": drupal_username,
-                    "first_name": drupal_firstname,
-                    "last_name": drupal_lastname,
-                    "email": drupal_email,
-                },
-                apply_update=apply_changes,
-            )
-
-            user_sites_changed = drupal_adapter.update_user_study_sites(
-                user=sa.user,
-                extra_data={"study_site_or_center": drupal_user_study_site_shortnames},
-            )
+            if sa:
+                user_changed = drupal_adapter.update_user_info(
+                    user=sa.user,
+                    extra_data={
+                        "preferred_username": drupal_username,
+                        "first_name": drupal_firstname,
+                        "last_name": drupal_lastname,
+                        "email": drupal_email,
+                    },
+                    apply_update=apply_changes,
+                )
+            if sa:
+                user_sites_changed = drupal_adapter.update_user_study_sites(
+                    user=sa.user,
+                    extra_data={"study_site_or_center": drupal_user_study_site_shortnames},
+                    apply_update=apply_changes
+                )
             if user_changed or user_sites_changed and not is_new_user:
                 audit_results.add_update(data=user)
 
