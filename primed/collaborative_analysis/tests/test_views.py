@@ -161,7 +161,7 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.workspace_type = "collab_analysis"
         self.custodian = UserFactory.create()
-        self.source_workspace = dbGaPWorkspaceFactory.create()
+        self.source_workspace = dbGaPWorkspaceFactory.create().workspace
         self.analyst_group = ManagedGroupFactory.create()
 
     def get_url(self, *args):
@@ -200,9 +200,6 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-analyst_group": self.analyst_group.pk,
             },
         )
-        print(response.content)
-        print(response.context_data["form"].errors)
-        print(response.context_data["workspace_data_formset"].errors)
         self.assertEqual(response.status_code, 302)
         # The workspace is created.
         new_workspace = Workspace.objects.latest("pk")
@@ -234,7 +231,7 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             )
         )
         self.custodian = UserFactory.create()
-        self.source_workspace = dbGaPWorkspaceFactory.create()
+        self.source_workspace = dbGaPWorkspaceFactory.create().workspace
         self.workspace_type = "collab_analysis"
         self.analyst_group = ManagedGroupFactory.create()
 
