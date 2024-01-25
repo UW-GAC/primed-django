@@ -200,6 +200,8 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-analyst_group": self.analyst_group.pk,
             },
         )
+        print(response["form"].errors)
+        print(response["workspace_data_formset"].errors)
         self.assertEqual(response.status_code, 302)
         # The workspace is created.
         new_workspace = Workspace.objects.latest("pk")
