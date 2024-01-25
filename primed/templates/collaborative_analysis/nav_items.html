@@ -1,0 +1,13 @@
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Collaborative Analysis
+  </a>
+  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <li>
+        <a class="dropdown-item" href="{% url 'collaborative_analysis:workspaces:audit_all' %}">Audit access</a>
+      </li>
+    {% endif %}
+
+    </ul>
+  </li>

@@ -30,6 +30,48 @@ from . import factories
 User = get_user_model()
 
 
+class NavbarTest(TestCase):
+    """Tests for the navbar involving Collaborative Analysis links."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        # Use the workspace landing page, since view users can see it.
+        return reverse("anvil_consortium_manager:workspaces:landing_page", args=args)
+
+    def test_links_for_staff_view(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertContains(
+            response, reverse("collaborative_analysis:workspaces:audit_all")
+        )
+
+    def test_links_for_view(self):
+        """Returns successful response code."""
+        user = User.objects.create_user(username="test", password="test")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(user)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(
+            response, reverse("collaborative_analysis:workspaces:audit_all")
+        )
+
+
 class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
     """Tests of the WorkspaceDetail view from ACM with this app's CollaborativeAnalysisWorkspace model."""
 
