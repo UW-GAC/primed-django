@@ -131,8 +131,8 @@ class TestUserDataAudit(TestCase):
         fake_time = time.time()
         self.token = {
             "token_type": "Bearer",
-            "access_token": "asdfoiw37850234lkjsdfsdfTEST",
-            "refresh_token": "sldvafkjw34509s8dfsdfTEST",
+            "access_token": "asdfoiw37850234lkjsdfsdfTEST",  # gitleaks:allow
+            "refresh_token": "sldvafkjw34509s8dfsdfTEST",  # gitleaks:allow
             "expires_in": 3600,
             "expires_at": fake_time + 3600,
         }
@@ -272,7 +272,7 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].title,
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
-        results = drupal_data_user_audit()
+        results = drupal_data_user_audit(apply_changes=True)
         assert results.encountered_issues() is False
         assert results.count_new_rows() == 1
         assert results.count_update_rows() == 0
@@ -288,3 +288,6 @@ class TestUserDataAudit(TestCase):
             users.first().study_sites.first().short_name
             == TEST_STUDY_SITE_DATA[0].title
         )
+
+    # test user removal
+    # test user change
