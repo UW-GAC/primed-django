@@ -2,3 +2,5 @@
 2f8573f44abd55cd30367f673bbbcb4ebc4861bd:test.secrets:generic-api-key:2
 faa490c4de15c23401525ebf6ad532e2bd724e5e:config/settings/base.py:generic-api-key:83
 faa490c4de15c23401525ebf6ad532e2bd724e5e:config/settings/base.py:generic-api-key:84
+7574ae877b24fd6eece988582b30f8c8366c930b:primed/users/tests/test_audit.py:generic-api-key:78
+7574ae877b24fd6eece988582b30f8c8366c930b:primed/users/tests/test_audit.py:generic-api-key:79
