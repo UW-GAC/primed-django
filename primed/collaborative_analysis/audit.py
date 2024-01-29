@@ -212,7 +212,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         cc_groups = ManagedGroup.objects.filter(
             name__in=[
                 "PRIMED_CC_WRITERS",
-                "PRIMED_CC_MEMBERS",
+                # "PRIMED_CC_MEMBERS", # CC_MEMBERS should not get access.
             ]
         )
         for cc_group in cc_groups:
