@@ -90,7 +90,7 @@ django-tables2==2.7.0
     # via django-anvil-consortium-manager
 django-tree-queries==0.16.1
     # via -r requirements/requirements.in
-fastobo==0.12.2
+fastobo==0.12.3
     # via pronto
 fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
