@@ -15,7 +15,8 @@ django>=4.2,<5.0  # https://www.djangoproject.com/
 # Pin to <= 0.10.0 because 0.11+ introduces a bug with reading environment variables with # characters.
 django-environ<=0.10.0  # https://github.com/joke2k/django-environ
 # Turn on and off maintenance mode.
-django-maintenance-mode # https://github.com/fabiocaccamo/django-maintenance-mode
+# 0.21.1 fixes a bug with permissions of the maintenance mode file.
+django-maintenance-mode>=0.21.1 # https://github.com/fabiocaccamo/django-maintenance-mode
 # Model utilities
 django-model-utils  # https://github.com/jazzband/django-model-utils
 # login/auth using Drupal or other SocialApplications.

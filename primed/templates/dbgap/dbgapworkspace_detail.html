@@ -89,9 +89,12 @@
 
 
 {% block action_buttons %}
+
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
 <p>
   <a href="{% url 'dbgap:workspaces:audit' billing_project_slug=object.billing_project.name workspace_slug=object.name%}" class="btn btn-secondary" role="button">Audit application access</a>
 </p>
+{% endif %}
 
 {{block.super}}
 {% endblock action_buttons %}
