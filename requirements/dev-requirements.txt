@@ -31,7 +31,7 @@ certifi==2023.11.17
     #   requests
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==2.0.12
+charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -48,7 +48,7 @@ decorator==5.1.1
     #   ipython
 dill==0.3.7
     # via pylint
-distlib==0.3.7
+distlib==0.3.8
     # via virtualenv
 django==4.2.8
     # via
@@ -132,7 +132,7 @@ pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-platformdirs==3.11.0
+platformdirs==4.1.0
     # via
     #   black
     #   pylint
@@ -161,7 +161,7 @@ pylint-django==2.5.5
     # via -r requirements/dev-requirements.in
 pylint-plugin-utils==0.8.2
     # via pylint-django
-pyparsing==3.0.9
+pyparsing==3.1.1
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -225,7 +225,7 @@ tomlkit==0.12.3
     # via pylint
 tornado==6.4
     # via livereload
-traitlets==5.13.0
+traitlets==5.14.1
     # via
     #   ipython
     #   matplotlib-inline
@@ -255,7 +255,7 @@ urllib3==2.1.0
     #   types-requests
 virtualenv==20.25.0
     # via pre-commit
-wcwidth==0.2.10
+wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.0.1
     # via -r requirements/dev-requirements.in
