@@ -76,6 +76,7 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
     data_use_limitations = Faker("paragraph")
     acknowledgments = Faker("paragraph")
     requested_by = SubFactory(UserFactory)
+    is_sensitive = Faker("boolean")
 
     class Meta:
         model = models.dbGaPWorkspace

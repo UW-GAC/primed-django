@@ -134,6 +134,7 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_consent_abbreviation="GRU-NPU",
             acknowledgments="test acknowledgments",
             requested_by=user,
+            is_sensitive=False,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPWorkspace)
