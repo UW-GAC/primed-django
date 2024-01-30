@@ -329,6 +329,9 @@ class CDSAWorkspace(
         help_text="Data available in this accession.",
         blank=True,
     )
+    is_sensitive = models.BooleanField(
+        help_text="Indicator of whether this workspace contains sensitive data.",
+    )
 
     class Meta:
         verbose_name = " CDSA workspace"
