@@ -5,7 +5,10 @@ from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
 
-from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumColumn
+from primed.primed_anvil.tables import (
+    BooleanIconColumn,
+    WorkspaceSharedWithConsortiumColumn,
+)
 
 from . import models
 
@@ -93,6 +96,7 @@ class dbGaPWorkspaceStaffTable(tables.Table):
         verbose_name="Approved DARs",
         orderable=False,
     )
+    dbgapworkspace__is_sensitive = BooleanIconColumn(orderable=False)
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
@@ -103,6 +107,7 @@ class dbGaPWorkspaceStaffTable(tables.Table):
             "dbgap_accession",
             "dbgapworkspace__dbgap_consent_abbreviation",
             "number_approved_dars",
+            "dbgapworkspace__is_sensitive",
             "is_shared",
         )
         order_by = ("name",)
@@ -133,6 +138,7 @@ class dbGaPWorkspaceUserTable(tables.Table):
     dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
         verbose_name="Consent"
     )
+    dbgapworkspace__is_sensitive = BooleanIconColumn(orderable=False)
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
@@ -142,6 +148,7 @@ class dbGaPWorkspaceUserTable(tables.Table):
             "billing_project",
             "dbgap_accession",
             "dbgapworkspace__dbgap_consent_abbreviation",
+            "dbgapworkspace__is_sensitive",
             "is_shared",
         )
         order_by = ("name",)
