@@ -3670,7 +3670,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("dbgap:dbgap_applications:dars", args=args)
+        return reverse("dbgap:dars:current", args=args)
 
     def get_view(self):
         """Return the view being tested."""
