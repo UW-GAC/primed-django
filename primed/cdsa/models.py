@@ -329,9 +329,9 @@ class CDSAWorkspace(
         help_text="Data available in this accession.",
         blank=True,
     )
-    is_sensitive = models.BooleanField(
-        verbose_name="Sensitive?",
-        help_text="Indicator of whether this workspace contains sensitive data.",
+    gsr_restricted = models.BooleanField(
+        verbose_name="GSR restricted?",
+        help_text="Indicator of whether public posting of GSRs is restricted.",
     )
 
     class Meta:

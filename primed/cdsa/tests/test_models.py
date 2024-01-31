@@ -620,7 +620,7 @@ class CDSAWorkspaceTest(TestCase):
             acknowledgments="test acknowledgments",
             requested_by=requester,
             workspace=workspace,
-            is_sensitive=False,
+            gsr_restricted=False,
         )
         instance.save()
         self.assertIsInstance(instance, models.CDSAWorkspace)

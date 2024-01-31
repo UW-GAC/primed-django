@@ -1024,7 +1024,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-requested_by": self.requester.pk,
-                "workspacedata-0-is_sensitive": False,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -1090,7 +1090,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                     data_use_modifier_2.pk,
                 ],
                 "workspacedata-0-requested_by": self.requester.pk,
-                "workspacedata-0-is_sensitive": False,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -1226,7 +1226,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-requested_by": self.requester.pk,
-                "workspacedata-0-is_sensitive": False,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -1324,7 +1324,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                     data_use_modifier_2.pk,
                 ],
                 "workspacedata-0-requested_by": self.requester.pk,
-                "workspacedata-0-is_sensitive": False,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)

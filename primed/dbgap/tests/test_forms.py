@@ -127,7 +127,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -145,7 +145,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -166,7 +166,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -187,7 +187,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -203,7 +203,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -223,7 +223,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -232,7 +232,7 @@ class dbGaPWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["requested_by"]), 1)
         self.assertIn("required", form.errors["requested_by"][0])
 
-    def test_invalid_missing_is_sensitive(self):
+    def test_invalid_missing_gsr_restricted(self):
         """Form is invalid when missing requested_by."""
         form_data = {
             "dbgap_study_accession": self.dbgap_study_accession,
@@ -244,14 +244,14 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            # "is_sensitive": False,
+            # "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("is_sensitive", form.errors)
-        self.assertEqual(len(form.errors["is_sensitive"]), 1)
-        self.assertIn("required", form.errors["is_sensitive"][0])
+        self.assertIn("gsr_restricted", form.errors)
+        self.assertEqual(len(form.errors["gsr_restricted"]), 1)
+        self.assertIn("required", form.errors["gsr_restricted"][0])
 
     def test_invalid_missing_dbgap_version(self):
         """Form is invalid when missing dbgap_version."""
@@ -265,7 +265,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -286,7 +286,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -306,7 +306,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -327,7 +327,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -347,7 +347,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -367,7 +367,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -387,7 +387,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -407,7 +407,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -427,7 +427,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -448,7 +448,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "acknowledgments": "test acknowledgmnts",
             "workspace": self.workspace,
             "requested_by": self.requester,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -470,7 +470,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "requested_by": self.requester,
             "available_data": [available_data],
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -489,7 +489,7 @@ class dbGaPWorkspaceFormTest(TestCase):
             "workspace": self.workspace,
             "requested_by": self.requester,
             "available_data": available_data,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())

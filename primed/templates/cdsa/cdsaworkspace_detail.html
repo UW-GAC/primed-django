@@ -1,7 +1,7 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
 
 {% block pills %}
-  {% if workspace_data_object.is_sensitive %}
+  {% if workspace_data_object.gsr_restricted %}
   <span class="badge bg-warning text-dark">
     <span class="me-2 fa-solid fa-hand"></span>
       Sensitive data

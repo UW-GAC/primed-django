@@ -513,7 +513,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -528,7 +528,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_modifier": DataUseModifier.objects.all(),
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -543,7 +543,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_modifier": DataUseModifier.objects.all(),
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -557,7 +557,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -575,7 +575,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -593,7 +593,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -611,7 +611,7 @@ class CDSAWorkspaceFormTest(TestCase):
             # "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -629,7 +629,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             # "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -647,7 +647,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             # "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -656,8 +656,8 @@ class CDSAWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["acknowledgments"]), 1)
         self.assertIn("required", form.errors["acknowledgments"][0])
 
-    def test_invalid_missing_is_sensitive(self):
-        """Form is valid? when missing is_sensitive."""
+    def test_invalid_missing_gsr_restricted(self):
+        """Form is valid? when missing gsr_restricted."""
         form_data = {
             "workspace": self.workspace,
             "study": self.study,
@@ -665,14 +665,14 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            # "is_sensitive": False,
+            # "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.errors), 1)
-        self.assertIn("is_sensitive", form.errors)
-        self.assertEqual(len(form.errors["is_sensitive"]), 1)
-        self.assertIn("required", form.errors["is_sensitive"][0])
+        self.assertIn("gsr_restricted", form.errors)
+        self.assertEqual(len(form.errors["gsr_restricted"]), 1)
+        self.assertIn("required", form.errors["gsr_restricted"][0])
 
     def test_invalid_duplicate_workspace(self):
         """Form is invalid with a duplicated workspace."""
@@ -684,7 +684,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_permission": self.duo_permission,
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -704,7 +704,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "available_data": [available_data],
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -720,7 +720,7 @@ class CDSAWorkspaceFormTest(TestCase):
             "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "available_data": available_data,
-            "is_sensitive": False,
+            "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
