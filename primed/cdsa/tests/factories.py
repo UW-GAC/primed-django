@@ -112,7 +112,7 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
     requested_by = SubFactory(UserFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)
     workspace = SubFactory(WorkspaceFactory, workspace_type="cdsa")
-    is_sensitive = Faker("boolean")
+    gsr_restricted = Faker("boolean")
 
     @post_generation
     def authorization_domains(self, create, extracted, **kwargs):

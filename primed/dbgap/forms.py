@@ -30,7 +30,7 @@ class dbGaPStudyAccessionForm(Bootstrap5MediaFormMixin, forms.ModelForm):
 class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPWorkspace object."""
 
-    is_sensitive = forms.TypedChoiceField(
+    gsr_restricted = forms.TypedChoiceField(
         coerce=lambda x: x == "True",
         choices=((True, "Primary"), (False, "Component")),
         widget=forms.RadioSelect,
@@ -46,7 +46,7 @@ class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "dbgap_consent_abbreviation",
             "dbgap_consent_code",
             "data_use_limitations",
-            "is_sensitive",
+            "gsr_restricted",
             "acknowledgments",
             "data_use_permission",
             "disease_term",
