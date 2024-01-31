@@ -3811,7 +3811,7 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
         response = self.client.get(self.get_url(instance.dbgap_dar_id))
         self.assertIn("table", response.context_data)
         self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPDataAccessRequestTable
+            response.context_data["table"], tables.dbGaPDataAccessRequestHistoryTable
         )
 
     def test_one_dars(self):

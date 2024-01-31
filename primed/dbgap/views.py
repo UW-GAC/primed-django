@@ -523,7 +523,7 @@ class dbGaPDataAccessRequestHistory(
     """View to show the history of a given DAR."""
 
     model = models.dbGaPDataAccessRequest
-    table_class = tables.dbGaPDataAccessRequestTable
+    table_class = tables.dbGaPDataAccessRequestHistoryTable
     template_name = "dbgap/dbgapdataaccessrequest_history.html"
 
     def get_dbgap_dar_id(self):
