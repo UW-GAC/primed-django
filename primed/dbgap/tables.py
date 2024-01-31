@@ -237,7 +237,10 @@ class dbGaPDataAccessRequestTable(tables.Table):
         verbose_name=" dbGaP application",
         linkify=lambda record: record.dbgap_data_access_snapshot.dbgap_application.get_absolute_url(),
     )
-    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
+    dbgap_dar_id = tables.columns.Column(
+        verbose_name="DAR",
+        linkify=("dbgap:dars:history", {"dbgap_dar_id": tables.A("dbgap_dar_id")}),
+    )
     dbgap_dac = tables.columns.Column(verbose_name="DAC")
     dbgap_accession = dbGaPAccessionColumn(
         accessor="get_dbgap_accession",
@@ -273,22 +276,11 @@ class dbGaPDataAccessRequestTable(tables.Table):
         attrs = {"class": "table table-sm"}
 
 
-class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
+class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
     """Class to render a table of dbGaPDataAccessRequest objects for a specific dbGaPDataAccessSnapshot."""
 
-    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
-    dbgap_dac = tables.columns.Column(verbose_name="DAC")
-    dbgap_accession = dbGaPAccessionColumn(
-        accessor="get_dbgap_accession",
-        verbose_name="Accession",
-        order_by=(
-            "dbgap_phs",
-            "original_version",
-            "original_participant_set",
-        ),
-    )
-    dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
-    dbgap_current_status = tables.columns.Column(verbose_name="Current status")
+    dbgap_data_access_snapshot__dbgap_application__dbgap_project_id = None
+    dbgap_data_access_snapshot__created = None
     matching_workspaces = tables.columns.Column(
         accessor="get_dbgap_workspaces", orderable=False, default=" "
     )
@@ -326,42 +318,12 @@ class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
         return html
 
 
-class dbGaPDataAccessRequestSummaryTable(tables.Table):
-    """Table intended to show a summary of data access requests, grouped by DAC and current status."""
-
-    dbgap_dac = tables.columns.Column(attrs={"class": "col-auto"})
-    dbgap_current_status = tables.columns.Column()
-    total = tables.columns.Column()
-
-    class Meta:
-        model = models.dbGaPDataAccessRequest
-        fields = ("dbgap_dac", "dbgap_current_status", "total")
-        attrs = {"class": "table table-sm"}
-
-
-class dbGaPDataAccessRequestHistoryTable(tables.Table):
+class dbGaPDataAccessRequestHistoryTable(dbGaPDataAccessRequestTable):
     """Class to render a table of dbGaPDataAccessRequest history by dbgap_dar_id."""
 
-    dbgap_data_access_snapshot__dbgap_application__dbgap_project_id = tables.columns.Column(
-        verbose_name=" dbGaP application",
-        linkify=lambda record: record.dbgap_data_access_snapshot.dbgap_application.get_absolute_url(),
-    )
-    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
-    dbgap_dac = tables.columns.Column(verbose_name="DAC")
-    dbgap_accession = dbGaPAccessionColumn(
-        accessor="get_dbgap_accession",
-        verbose_name="Accession",
-        order_by=(
-            "dbgap_phs",
-            "original_version",
-            "original_participant_set",
-        ),
-    )
-    dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
-    dbgap_current_status = tables.columns.Column(verbose_name="Status")
-    dbgap_data_access_snapshot__created = tables.columns.DateTimeColumn(
-        verbose_name="Snapshot",
-        linkify=lambda record: record.dbgap_data_access_snapshot.get_absolute_url(),
+    dbgap_dar_id = tables.columns.Column(
+        verbose_name="DAR",
+        linkify=False,
     )
 
     class Meta:
@@ -376,6 +338,19 @@ class dbGaPDataAccessRequestHistoryTable(tables.Table):
             "dbgap_consent_abbreviation",
         )
         order_by = ("-dbgap_data_access_snapshot__created",)
+        attrs = {"class": "table table-sm"}
+
+
+class dbGaPDataAccessRequestSummaryTable(tables.Table):
+    """Table intended to show a summary of data access requests, grouped by DAC and current status."""
+
+    dbgap_dac = tables.columns.Column(attrs={"class": "col-auto"})
+    dbgap_current_status = tables.columns.Column()
+    total = tables.columns.Column()
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = ("dbgap_dac", "dbgap_current_status", "total")
         attrs = {"class": "table table-sm"}
 
 
