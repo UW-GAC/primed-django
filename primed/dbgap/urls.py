@@ -44,6 +44,11 @@ data_access_snapshot_patterns = (
 data_access_request_patterns = (
     [
         path("current/", views.dbGaPDataAccessRequestList.as_view(), name="current"),
+        path(
+            "history/<int:dbgap_dar_id>",
+            views.dbGaPDataAccessRequestHistory.as_view(),
+            name="history",
+        ),
     ],
     "dars",
 )
