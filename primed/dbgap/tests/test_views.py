@@ -3670,7 +3670,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("dbgap:dbgap_applications:dars", args=args)
+        return reverse("dbgap:dars:current", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -3749,6 +3749,120 @@ class dbGaPDataAccessRequestListTest(TestCase):
         self.assertEqual(
             response["Content-Disposition"], 'attachment; filename="dars_table.tsv"'
         )
+
+
+class dbGaPDataAccessRequestHistoryTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("dbgap:dars:history", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPDataAccessRequestHistory.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.dbGaPDataAccessRequestFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.dbgap_dar_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, 1)
+
+    def test_dbgap_dar_id_does_not_exist(self):
+        """Raises permission denied if user has no permissions."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, 1)
+
+    def test_table_class(self):
+        """The table is the correct class."""
+        instance = factories.dbGaPDataAccessRequestFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.dbgap_dar_id))
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(
+            response.context_data["table"], tables.dbGaPDataAccessRequestHistoryTable
+        )
+
+    def test_one_dars(self):
+        """Table displays two dars."""
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        self.assertIn(dar, response.context_data["table"].data)
+
+    def test_two_dars(self):
+        """Table displays two dars."""
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
+        dar_2 = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+        self.assertIn(dar_1, response.context_data["table"].data)
+        self.assertIn(dar_2, response.context_data["table"].data)
+
+    def test_matching_dbgap_dar_id(self):
+        """Only DARs with the same dbgap_dar_id are in the table."""
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
+        dar_2 = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=2)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        self.assertIn(dar_1, response.context_data["table"].data)
+        self.assertNotIn(dar_2, response.context_data["table"].data)
+
+    def test_table_ordering(self):
+        """DARs from the most recent snapshot appear first."""
+        old_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            created=timezone.now() - timedelta(weeks=5),
+            is_most_recent=False,
+        )
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_dar_id=1, dbgap_data_access_snapshot=old_snapshot
+        )
+        new_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+            created=timezone.now() - timedelta(weeks=1),
+            is_most_recent=True,
+        )
+        dar_2 = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_dar_id=1, dbgap_data_access_snapshot=new_snapshot
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+        self.assertEqual(dar_2, response.context_data["table"].rows[0].record)
+        self.assertEqual(dar_1, response.context_data["table"].rows[1].record)
 
 
 class dbGaPApplicationAuditTest(TestCase):

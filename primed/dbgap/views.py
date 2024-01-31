@@ -517,6 +517,41 @@ class dbGaPDataAccessRequestList(
         )
 
 
+class dbGaPDataAccessRequestHistory(
+    AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView
+):
+    """View to show the history of a given DAR."""
+
+    model = models.dbGaPDataAccessRequest
+    table_class = tables.dbGaPDataAccessRequestHistoryTable
+    template_name = "dbgap/dbgapdataaccessrequest_history.html"
+
+    def get_dbgap_dar_id(self):
+        return self.kwargs.get("dbgap_dar_id")
+
+    def get(self, request, *args, **kwargs):
+        self.dbgap_dar_id = self.get_dbgap_dar_id()
+        return super().get(request, *args, **kwargs)
+
+    def get_table_data(self):
+        qs = self.get_queryset().filter(
+            dbgap_dar_id=self.dbgap_dar_id,
+        )
+        if not qs.count():
+            raise Http404("No DARs found matching the query.")
+        return qs
+
+    def get_table_kwargs(self):
+        return {
+            "order_by": "-dbgap_data_access_snapshot__created",
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dbgap_dar_id"] = self.dbgap_dar_id
+        return context
+
+
 class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 

@@ -18,7 +18,7 @@
       <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:list' %}">List dbGaP applications</a>
     </li>
     <li>
-      <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:dars' %}">List all current DARs</a>
+      <a class="dropdown-item" href="{% url 'dbgap:dars:current' %}">List all current DARs</a>
     </li>
   {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
       <li>
