@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import django_tables2 as tables
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -164,13 +165,26 @@ class dbGaPAccessAudit:
         self.verified = None
         self.needs_action = None
         self.errors = None
+        if dbgap_application_queryset is None:
+            dbgap_application_queryset = dbGaPApplication.objects.all()
+        if not (
+            isinstance(dbgap_application_queryset, QuerySet)
+            and dbgap_application_queryset.model is dbGaPApplication
+        ):
+            raise ValueError(
+                "dbgap_application_queryset must be a queryset of dbGaPApplication objects."
+            )
         self.dbgap_application_queryset = dbgap_application_queryset
+        if dbgap_workspace_queryset is None:
+            dbgap_workspace_queryset = dbGaPWorkspace.objects.all()
+        if not (
+            isinstance(dbgap_workspace_queryset, QuerySet)
+            and dbgap_workspace_queryset.model is dbGaPWorkspace
+        ):
+            raise ValueError(
+                "dbgap_workspace_queryset must be a queryset of dbGaPWorkspace objects."
+            )
         self.dbgap_workspace_queryset = dbgap_workspace_queryset
-        if not self.dbgap_application_queryset:
-            self.dbgap_application_queryset = dbGaPApplication.objects.all()
-        if not self.dbgap_workspace_queryset:
-            self.dbgap_workspace_queryset = dbGaPWorkspace.objects.all()
-        # Check types of workspaces.
 
     def run_audit(self):
         self.verified = []

@@ -503,6 +503,78 @@ class dbGaPAccessAuditTest(TestCase):
         )
         self.assertEqual(record.data_access_request, dar_2)
 
+    def test_dbgap_application_queryset(self):
+        """dbGapAccessAudit only includes the specified dbgap_application_queryset objects."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        dbgap_application_3 = factories.dbGaPApplicationFactory.create()
+        dbgap_audit = audit.dbGaPAccessAudit(
+            dbgap_application_queryset=models.dbGaPApplication.objects.filter(
+                pk__in=[dbgap_application_1.pk, dbgap_application_2.pk]
+            )
+        )
+        self.assertEqual(dbgap_audit.dbgap_application_queryset.count(), 2)
+        self.assertIn(dbgap_application_1, dbgap_audit.dbgap_application_queryset)
+        self.assertIn(dbgap_application_2, dbgap_audit.dbgap_application_queryset)
+        self.assertNotIn(dbgap_application_3, dbgap_audit.dbgap_application_queryset)
+
+    def test_dbgap_workspace_queryset(self):
+        """dbGapAccessAudit only includes the specified dbgap_application_queryset objects."""
+        dbgap_workspace_1 = factories.dbGaPWorkspaceFactory.create()
+        dbgap_workspace_2 = factories.dbGaPWorkspaceFactory.create()
+        dbgap_workspace_3 = factories.dbGaPWorkspaceFactory.create()
+        dbgap_audit = audit.dbGaPAccessAudit(
+            dbgap_workspace_queryset=models.dbGaPWorkspace.objects.filter(
+                pk__in=[dbgap_workspace_1.pk, dbgap_workspace_2.pk]
+            )
+        )
+        self.assertEqual(dbgap_audit.dbgap_workspace_queryset.count(), 2)
+        self.assertIn(dbgap_workspace_1, dbgap_audit.dbgap_workspace_queryset)
+        self.assertIn(dbgap_workspace_2, dbgap_audit.dbgap_workspace_queryset)
+        self.assertNotIn(dbgap_workspace_3, dbgap_audit.dbgap_workspace_queryset)
+
+    def test_dbgap_workspace_queryset_wrong_class(self):
+        """dbGaPAccessAudit raises error if dbgap_workspace_queryset has the wrong model class."""
+        with self.assertRaises(ValueError) as e:
+            audit.dbGaPAccessAudit(
+                dbgap_workspace_queryset=models.dbGaPApplication.objects.all()
+            )
+        self.assertEqual(
+            str(e.exception),
+            "dbgap_workspace_queryset must be a queryset of dbGaPWorkspace objects.",
+        )
+
+    def test_dbgap_workspace_queryset_not_queryset(self):
+        """dbGaPAccessAudit raises error if dbgap_workspace_queryset is not a queryset."""
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        with self.assertRaises(ValueError) as e:
+            audit.dbGaPAccessAudit(dbgap_workspace_queryset=dbgap_workspace)
+        self.assertEqual(
+            str(e.exception),
+            "dbgap_workspace_queryset must be a queryset of dbGaPWorkspace objects.",
+        )
+
+    def test_dbgap_application_queryset_wrong_class(self):
+        """dbGaPAccessAudit raises error if dbgap_application_queryset has the wrong model class."""
+        with self.assertRaises(ValueError) as e:
+            audit.dbGaPAccessAudit(
+                dbgap_application_queryset=models.dbGaPWorkspace.objects.all()
+            )
+        self.assertEqual(
+            str(e.exception),
+            "dbgap_application_queryset must be a queryset of dbGaPApplication objects.",
+        )
+
+    def test_dbgap_application_queryset_not_queryset(self):
+        """dbGaPAccessAudit raises error if dbgap_application_queryset is not a queryset."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        with self.assertRaises(ValueError) as e:
+            audit.dbGaPAccessAudit(dbgap_application_queryset=dbgap_application)
+        self.assertEqual(
+            str(e.exception),
+            "dbgap_application_queryset must be a queryset of dbGaPApplication objects.",
+        )
+
 
 class dbGaPAccessAuditTableTest(TestCase):
     """Tests for the `dbGaPAccessAuditTableTest` table."""
