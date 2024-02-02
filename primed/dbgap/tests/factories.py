@@ -2,6 +2,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
+from django.conf import settings
 from factory import (
     Dict,
     DictFactory,
@@ -99,7 +100,15 @@ class dbGaPApplicationFactory(DjangoModelFactory):
 
     principal_investigator = SubFactory(UserFactory)
     dbgap_project_id = Sequence(lambda n: n + 1)
-    anvil_access_group = SubFactory(ManagedGroupFactory)
+    anvil_access_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(
+            lambda o: "{}_DBGAP_ACCESS_{}".format(
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
+                o.factory_parent.dbgap_project_id,
+            )
+        ),
+    )
 
     class Meta:
         model = models.dbGaPApplication
