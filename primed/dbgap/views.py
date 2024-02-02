@@ -587,7 +587,9 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         context["latest_snapshot"] = latest_snapshot
         if latest_snapshot:
             # Run the audit.
-            data_access_audit = audit.dbGaPApplicationAccessAudit(self.object)
+            data_access_audit = audit.dbGaPAccessAudit(
+                dbgap_application_queryset=self.model.objects.filter(pk=self.object.pk)
+            )
             data_access_audit.run_audit()
             context["verified_table"] = data_access_audit.get_verified_table()
             context["errors_table"] = data_access_audit.get_errors_table()

@@ -3938,14 +3938,24 @@ class dbGaPApplicationAuditTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.application.dbgap_project_id))
         self.assertIn("data_access_audit", response.context_data)
+        data_access_audit = response.context_data["data_access_audit"]
         self.assertIsInstance(
-            response.context_data["data_access_audit"],
-            audit.dbGaPApplicationAccessAudit,
+            data_access_audit,
+            audit.dbGaPAccessAudit,
         )
-        self.assertTrue(response.context_data["data_access_audit"].completed)
-        self.assertEqual(
-            response.context_data["data_access_audit"].dbgap_application,
-            self.application,
+        self.assertTrue(data_access_audit.completed)
+        self.assertEqual(data_access_audit.dbgap_application_queryset.count(), 1)
+        self.assertIn(self.application, data_access_audit.dbgap_application_queryset)
+
+    def test_context_data_access_audit_does_not_include_other_applications(self):
+        """The data_access_audit does not include other applications."""
+        other_application = factories.dbGaPApplicationFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.application.dbgap_project_id))
+        data_access_audit = response.context_data["data_access_audit"]
+        self.assertEqual(data_access_audit.dbgap_application_queryset.count(), 1)
+        self.assertNotIn(
+            other_application, data_access_audit.dbgap_application_queryset
         )
 
     def test_context_verified_table_access(self):
@@ -3975,7 +3985,7 @@ class dbGaPApplicationAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPApplicationAccessAudit.APPROVED_DAR,
+            audit.dbGaPAccessAudit.APPROVED_DAR,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -3996,7 +4006,7 @@ class dbGaPApplicationAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPApplicationAccessAudit.NO_DAR,
+            audit.dbGaPAccessAudit.NO_DAR,
         )
         self.assertIsNone(table.rows[0].get_cell_value("action"))
 
@@ -4022,7 +4032,7 @@ class dbGaPApplicationAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPApplicationAccessAudit.NEW_APPROVED_DAR,
+            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4064,7 +4074,7 @@ class dbGaPApplicationAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPApplicationAccessAudit.PREVIOUS_APPROVAL,
+            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4096,7 +4106,7 @@ class dbGaPApplicationAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPApplicationAccessAudit.ERROR_HAS_ACCESS,
+            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4243,6 +4253,20 @@ class dbGaPWorkspaceAuditTest(TestCase):
         self.assertTrue(data_access_audit.completed)
         self.assertEqual(data_access_audit.dbgap_workspace_queryset.count(), 1)
         self.assertIn(self.dbgap_workspace, data_access_audit.dbgap_workspace_queryset)
+
+    def test_context_data_access_audit_does_not_include_other_applications(self):
+        """The data_access_audit does not include other workspaces."""
+        other_workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                self.dbgap_workspace.workspace.billing_project.name,
+                self.dbgap_workspace.workspace.name,
+            )
+        )
+        data_access_audit = response.context_data["data_access_audit"]
+        self.assertEqual(data_access_audit.dbgap_workspace_queryset.count(), 1)
+        self.assertNotIn(other_workspace, data_access_audit.dbgap_workspace_queryset)
 
     def test_context_verified_table_access(self):
         """verified_table shows a record when audit has verified access."""
