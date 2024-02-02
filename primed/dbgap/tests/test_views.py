@@ -4603,6 +4603,297 @@ class dbGaPWorkspaceAuditTest(TestCase):
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
 
+class dbGaPAuditTest(TestCase):
+    """Tests for the dbGaPAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "dbgap:audit",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns successful response code if the user has staff view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns successful response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_data_access_audit(self):
+        """The data_access_audit exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("data_access_audit", response.context_data)
+        data_access_audit = response.context_data["data_access_audit"]
+        self.assertIsInstance(
+            data_access_audit,
+            audit.dbGaPAccessAudit,
+        )
+        self.assertTrue(data_access_audit.completed)
+
+    def test_no_applications_no_workspaces(self):
+        """Loads correctly if there are no applications or workspaces."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        dbgap_audit = response.context_data["data_access_audit"]
+        self.assertEqual(dbgap_audit.dbgap_application_queryset.count(), 0)
+        self.assertEqual(dbgap_audit.dbgap_workspace_queryset.count(), 0)
+
+    def test_one_applications_no_workspaces(self):
+        """Loads correctly if there is one application and no workspaces."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        dbgap_audit = response.context_data["data_access_audit"]
+        self.assertEqual(dbgap_audit.dbgap_application_queryset.count(), 1)
+        self.assertIn(dbgap_application, dbgap_audit.dbgap_application_queryset)
+        self.assertEqual(dbgap_audit.dbgap_workspace_queryset.count(), 0)
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+
+    def test_no_applications_one_workspaces(self):
+        """Loads correctly if there is no application one workspace."""
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        dbgap_audit = response.context_data["data_access_audit"]
+        self.assertEqual(dbgap_audit.dbgap_application_queryset.count(), 0)
+        self.assertEqual(dbgap_audit.dbgap_workspace_queryset.count(), 1)
+        self.assertIn(dbgap_workspace, dbgap_audit.dbgap_workspace_queryset)
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+
+    def test_three_applications_two_workspaces(self):
+        """Loads correctly if there is one application and no workspaces."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        dbgap_application_3 = factories.dbGaPApplicationFactory.create()
+        dbgap_workspace_1 = factories.dbGaPWorkspaceFactory.create()
+        dbgap_workspace_2 = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        dbgap_audit = response.context_data["data_access_audit"]
+        self.assertEqual(dbgap_audit.dbgap_application_queryset.count(), 3)
+        self.assertIn(dbgap_application_1, dbgap_audit.dbgap_application_queryset)
+        self.assertIn(dbgap_application_2, dbgap_audit.dbgap_application_queryset)
+        self.assertIn(dbgap_application_3, dbgap_audit.dbgap_application_queryset)
+        self.assertEqual(dbgap_audit.dbgap_workspace_queryset.count(), 2)
+        self.assertIn(dbgap_workspace_1, dbgap_audit.dbgap_workspace_queryset)
+        self.assertIn(dbgap_workspace_2, dbgap_audit.dbgap_workspace_queryset)
+        self.assertIn("verified_table", response.context_data)
+        self.assertEqual(len(response.context_data["verified_table"].rows), 6)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        # Add a verified workspace.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            audit.dbGaPAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPAccessAudit.APPROVED_DAR,
+        )
+        self.assertIsNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            audit.dbGaPAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("application"), snapshot.dbgap_application
+        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPAccessAudit.NO_DAR,
+        )
+        self.assertIsNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_needs_action_table_grant(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            created=timezone.now() - timedelta(weeks=4)
+        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            audit.dbGaPAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("application"),
+            dar.dbgap_data_access_snapshot.dbgap_application,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_needs_action_table_remove(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        # Create an old dar that was approved
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_dar_id=dar.dbgap_dar_id,
+            dbgap_data_access_snapshot__dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=4),
+            dbgap_data_access_snapshot__is_most_recent=False,
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            audit.dbGaPAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(
+            table.rows[0].get_cell_value("application"),
+            dar.dbgap_data_access_snapshot.dbgap_application,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+    def test_context_error_table_has_access(self):
+        """error shows a record when audit finds that access needs to be removed."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        # Create a rejected DAR.
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
+        )
+        # Create the membership.
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            audit.dbGaPAccessAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
+        self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
+        )
+        self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+
 class dbGaPRecordsIndexTest(TestCase):
     """Tests for the dbGaPRecordsIndex view."""
 

@@ -256,6 +256,27 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.DAR_NOT_APPROVED)
 
+    def test_verified_no_access_no_dar(self):
+        """run_audit with one application and one workspace that has verified no access."""
+        # Create a workspace and matching DAR.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application
+        )
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        # Do not add the anvil group to the auth group for the workspace.
+        dbgap_audit = audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertIsNone(record.data_access_request)
+        self.assertEqual(record.note, audit.dbGaPAccessAudit.NO_DAR)
+
     def test_grant_access_new_approved_dar(self):
         # Create a workspace and matching DAR.
         # Workspace was created before the snapshot.
@@ -574,6 +595,9 @@ class dbGaPAccessAuditTest(TestCase):
             str(e.exception),
             "dbgap_application_queryset must be a queryset of dbGaPApplication objects.",
         )
+
+    def test_two_applications_two_workspaces(self):
+        pass
 
 
 class dbGaPAccessAuditTableTest(TestCase):
