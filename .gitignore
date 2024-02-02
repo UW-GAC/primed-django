@@ -279,6 +279,7 @@ primed/media/
 
 primed.db
 backup_primed.db
+*.db
 
 ### dbbackups
 dbbackups/
