@@ -13,7 +13,9 @@ fhs = StudyFactory.create(short_name="FHS", full_name="Framingham Heart Study")
 mesa = StudyFactory.create(
     short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis"
 )
-
+aric = StudyFactory.create(
+    short_name="ARIC", full_name="Atherosclerosis Risk in Communities"
+)
 
 # dbGaP study accessions
 dbgap_study_accession_fhs = factories.dbGaPStudyAccessionFactory.create(
@@ -21,6 +23,9 @@ dbgap_study_accession_fhs = factories.dbGaPStudyAccessionFactory.create(
 )
 dbgap_study_accession_mesa = factories.dbGaPStudyAccessionFactory.create(
     dbgap_phs=209, studies=[mesa]
+)
+dbgap_study_accession_aric = factories.dbGaPStudyAccessionFactory.create(
+    dbgap_phs=280, studies=[aric]
 )
 
 
@@ -31,6 +36,7 @@ workspace_fhs_1 = factories.dbGaPWorkspaceFactory.create(
     dbgap_participant_set=12,
     dbgap_consent_code=1,
     dbgap_consent_abbreviation="HMB",
+    workspace__name="DBGAP_FHS_v33_p12_HMB",
 )
 workspace_fhs_2 = factories.dbGaPWorkspaceFactory.create(
     dbgap_study_accession=dbgap_study_accession_fhs,
@@ -38,6 +44,7 @@ workspace_fhs_2 = factories.dbGaPWorkspaceFactory.create(
     dbgap_participant_set=12,
     dbgap_consent_code=2,
     dbgap_consent_abbreviation="GRU",
+    workspace__name="DBGAP_FHS_v33_p12_GRU",
 )
 workspace_mesa_1 = factories.dbGaPWorkspaceFactory.create(
     dbgap_study_accession=dbgap_study_accession_mesa,
@@ -45,6 +52,7 @@ workspace_mesa_1 = factories.dbGaPWorkspaceFactory.create(
     dbgap_participant_set=1,
     dbgap_consent_code=1,
     dbgap_consent_abbreviation="HMB-NPU",
+    workspace__name="DBGAP_MESA_v2_p1_HMB-NPU",
 )
 workspace_mesa_2 = factories.dbGaPWorkspaceFactory.create(
     dbgap_study_accession=dbgap_study_accession_mesa,
@@ -52,6 +60,15 @@ workspace_mesa_2 = factories.dbGaPWorkspaceFactory.create(
     dbgap_participant_set=1,
     dbgap_consent_code=2,
     dbgap_consent_abbreviation="HMB-NPU-IRB",
+    workspace__name="DBGAP_MESA_v2_p1_HMB-NPU-IRB",
+)
+workspace_aric = factories.dbGaPWorkspaceFactory.create(
+    dbgap_study_accession=dbgap_study_accession_aric,
+    dbgap_version=3,
+    dbgap_participant_set=1,
+    dbgap_consent_code=1,
+    dbgap_consent_abbreviation="HMB",
+    workspace__name="DBGAP_ARIC_v3_p1_HMB",
 )
 
 
