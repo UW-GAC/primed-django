@@ -10,7 +10,6 @@ from requests_oauthlib import OAuth2, OAuth2Session
 
 from primed.drupal_oauth_provider.provider import CustomProvider
 from primed.primed_anvil.models import StudySite
-from primed.users.adapters import SocialAccountAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +37,13 @@ class AuditResults:
             }
         )
 
-    def add_update(self, data):
+    def add_update(self, data, updates):
         self.results.append(
             {
                 "data_type": self.data_type,
                 "result_type": self.RESULT_TYPE_UPDATE,
                 "data": data,
+                "updates": updates,
             }
         )
 
@@ -145,7 +145,6 @@ def drupal_data_study_site_audit(apply_changes=False):
     status = audit_drupal_study_sites(
         study_sites=study_sites, apply_changes=apply_changes
     )
-
     return status
 
 
@@ -164,8 +163,6 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
 
     user_endpoint_url = "user/user"
     drupal_uids = set()
-
-    drupal_adapter = SocialAccountAdapter()
 
     user_count = 0
     while user_endpoint_url is not None:
@@ -201,8 +198,9 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                     drupal_user_study_site_shortnames.append(
                         study_site_info["short_name"]
                     )
-            is_new_user = False
-
+            new_user_sites = StudySite.objects.filter(
+                short_name__in=drupal_user_study_site_shortnames
+            )
             # no uid is blocked or anonymous
             if not drupal_uid:
                 # potential blocked user, but will no longer have a drupal uid
@@ -221,7 +219,7 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                 drupal_user.email = drupal_email
                 if apply_changes is True:
                     drupal_user.save()
-                is_new_user = True
+                    drupal_user.study_sites.set(new_user_sites)
                 if apply_changes is True:
                     sa = SocialAccount.objects.create(
                         user=drupal_user,
@@ -229,32 +227,50 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                         provider=CustomProvider.id,
                     )
                 audit_results.add_new(data=user)
+
             if sa:
-                user_changed = drupal_adapter.update_user_info(
-                    user=sa.user,
-                    extra_data={
-                        "preferred_username": drupal_username,
-                        "first_name": drupal_firstname,
-                        "last_name": drupal_lastname,
-                        "email": drupal_email,
-                    },
-                    apply_update=apply_changes,
+                user_updates = {}
+                if sa.user.name != drupal_full_name:
+                    user_updates.update(
+                        {"name": {"old": sa.user.name, "new": drupal_full_name}}
+                    )
+                    sa.user.name = drupal_full_name
+                if sa.user.username != drupal_username:
+                    user_updates.update(
+                        {"username": {"old": sa.user.username, "new": drupal_username}}
+                    )
+                    sa.user.username = drupal_username
+                if sa.user.email != drupal_email:
+                    user_updates.update(
+                        {"email": {"old": sa.user.email, "new": drupal_email}}
+                    )
+                    sa.user.email = drupal_email
+
+                prev_user_sites = set(
+                    sa.user.study_sites.all().values_list("short_name", flat=True)
                 )
-            if sa:
-                user_sites_changed = drupal_adapter.update_user_study_sites(
-                    user=sa.user,
-                    extra_data={
-                        "study_site_or_center": drupal_user_study_site_shortnames
-                    },
-                    apply_update=apply_changes,
-                )
-            if user_changed or user_sites_changed and not is_new_user:
-                audit_results.add_update(data=user)
+                if prev_user_sites != set(drupal_user_study_site_shortnames):
+                    user_updates.update(
+                        {
+                            "sites": {
+                                "old": prev_user_sites,
+                                "new": drupal_user_study_site_shortnames,
+                            }
+                        }
+                    )
+
+                    sa.user.study_sites.set(new_user_sites)
+
+                if user_updates:
+                    if apply_changes is True:
+                        sa.user.save()
+                    audit_results.add_update(data=user, updates=user_updates)
 
             drupal_uids.add(drupal_uid)
             user_count += 1
 
-    # find active drupal users that we did not account before
+    # find active django accounts that are drupal based
+    # users that we did not get from drupal
     # these may include blocked users
 
     unaudited_drupal_accounts = SocialAccount.objects.filter(
@@ -262,7 +278,10 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
     ).exclude(uid__in=drupal_uids)
 
     for uda in unaudited_drupal_accounts:
-        audit_results.add_issue(data=uda, issue_type="Local account not in drupal")
+        if settings.DRUPAL_DATA_AUDIT_DEACTIVATE_USERS is True:
+            uda.user.is_active = False
+            uda.user.save()
+        audit_results.add_removal(data=uda)
 
     return audit_results
 
@@ -306,12 +325,26 @@ def audit_drupal_study_sites(study_sites, apply_changes=False):
                 )
             audit_results.add_new(data=study_site_info)
         else:
-            if study_site.full_name != full_name or study_site.short_name != short_name:
+            study_site_updates = {}
+
+            if study_site.full_name != full_name:
+                study_site_updates.update(
+                    {"full_name": {"old": study_site.full_name, "new": full_name}}
+                )
                 study_site.full_name = full_name
+
+            if study_site.short_name != short_name:
+                study_site_updates.update(
+                    {"short_name": {"old": study_site.short_name, "new": short_name}}
+                )
                 study_site.short_name = short_name
+
+            if study_site_updates:
                 if apply_changes is True:
                     study_site.save()
-                audit_results.add_update(data=study_site_info)
+                audit_results.add_update(
+                    data=study_site_info, updates=study_site_updates
+                )
 
     invalid_study_sites = StudySite.objects.exclude(drupal_node_id__in=valid_nodes)
 

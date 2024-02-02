@@ -2,11 +2,13 @@ import json
 import time
 
 import responses
+from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from marshmallow_jsonapi import Schema, fields
 
+from primed.drupal_oauth_provider.provider import CustomProvider
 from primed.users.audit import (
     audit_drupal_study_sites,
     drupal_data_study_site_audit,
@@ -118,7 +120,20 @@ TEST_USER_DATA = [
             "field_examples_family_last_name_": "user1",
             "field_study_site_or_center": [],
         }
-    )
+    ),
+    # second mock object is deactivated user (no drupal uid)
+    UserMockObject(
+        **{
+            "id": "usr1",
+            "display_name": "dnusr2",
+            "drupal_internal__uid": "",
+            "name": "testuser2",
+            "mail": "testuser2@test.com",
+            "field_given_first_name_s_": "test2",
+            "field_examples_family_last_name_": "user2",
+            "field_study_site_or_center": [],
+        }
+    ),
 ]
 
 
@@ -232,7 +247,7 @@ class TestUserDataAudit(TestCase):
     def test_audit_study_sites_with_site_update(self):
         StudySite.objects.create(
             drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
-            short_name=TEST_STUDY_SITE_DATA[0].title,
+            short_name="WrongShortName",
             full_name="WrongTitle",
         )
         json_api = self.get_fake_json_api()
@@ -248,6 +263,7 @@ class TestUserDataAudit(TestCase):
         first_test_ss = StudySite.objects.get(short_name=TEST_STUDY_SITE_DATA[0].title)
         # did we update the long name
         assert first_test_ss.full_name == TEST_STUDY_SITE_DATA[0].field_long_name
+        assert first_test_ss.short_name == TEST_STUDY_SITE_DATA[0].title
 
     @responses.activate
     def test_audit_study_sites_with_extra_site(self):
@@ -273,6 +289,7 @@ class TestUserDataAudit(TestCase):
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
         results = drupal_data_user_audit(apply_changes=True)
+        print(f"RESULTS: {results} -- {results.results}")
         assert results.encountered_issues() is False
         assert results.count_new_rows() == 1
         assert results.count_update_rows() == 0
@@ -289,5 +306,119 @@ class TestUserDataAudit(TestCase):
             == TEST_STUDY_SITE_DATA[0].title
         )
 
+    @responses.activate
+    def test_full_user_audit_check_only(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[0].title,
+            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+        )
+        results = drupal_data_user_audit(apply_changes=False)
+
+        assert results.encountered_issues() is False
+        assert results.count_new_rows() == 1
+        assert results.count_update_rows() == 0
+        assert results.count_removal_rows() == 0
+
+        # verify we did not actually create a user
+        users = get_user_model().objects.all()
+        assert users.count() == 0
+
+    @responses.activate
+    def test_user_audit_change_user(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[0].title,
+            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+        )
+        drupal_fullname = "{} {}".format(
+            TEST_USER_DATA[0].field_given_first_name_s_,
+            TEST_USER_DATA[0].field_examples_family_last_name_,
+        )
+        drupal_username = TEST_USER_DATA[0].name
+        drupal_email = TEST_USER_DATA[0].mail
+        new_user = get_user_model().objects.create(
+            username=drupal_username + "UPDATE",
+            email=drupal_email + "UPDATE",
+            name=drupal_fullname + "UPDATE",
+        )
+        SocialAccount.objects.create(
+            user=new_user,
+            uid=TEST_USER_DATA[0].drupal_internal__uid,
+            provider=CustomProvider.id,
+        )
+        results = drupal_data_user_audit(apply_changes=True)
+        new_user.refresh_from_db()
+
+        assert new_user.name == drupal_fullname
+        assert results.encountered_issues() is False
+        assert results.count_new_rows() == 0
+        assert results.count_update_rows() == 1
+        assert results.count_removal_rows() == 0
+
     # test user removal
-    # test user change
+    @responses.activate
+    def test_user_audit_remove_user_only_inform(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[0].title,
+            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+        )
+
+        new_user = get_user_model().objects.create(
+            username="username2", email="useremail2", name="user fullname2"
+        )
+        SocialAccount.objects.create(
+            user=new_user,
+            uid=999,
+            provider=CustomProvider.id,
+        )
+        results = drupal_data_user_audit(apply_changes=True)
+
+        new_user.refresh_from_db()
+        assert new_user.is_active is True
+        assert results.encountered_issues() is False
+        assert results.count_new_rows() == 1
+        assert results.count_update_rows() == 0
+        assert results.count_removal_rows() == 1
+
+    # test user removal
+    @responses.activate
+    def test_user_audit_remove_user(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[0].title,
+            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+        )
+
+        new_user = get_user_model().objects.create(
+            username="username2", email="useremail2", name="user fullname2"
+        )
+        SocialAccount.objects.create(
+            user=new_user,
+            uid=999,
+            provider=CustomProvider.id,
+        )
+        with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):
+            results = drupal_data_user_audit(apply_changes=True)
+
+            new_user.refresh_from_db()
+            assert new_user.is_active is False
+            assert results.encountered_issues() is False
+            assert results.count_new_rows() == 1
+            assert results.count_update_rows() == 0
+            assert results.count_removal_rows() == 1
+
+    # test user removal
