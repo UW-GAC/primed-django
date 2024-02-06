@@ -102,9 +102,10 @@ records_patterns = (
 
 
 urlpatterns = [
-    path("studies/", include(dbgap_study_accession_patterns)),
     path("applications/", include(dbgap_application_patterns)),
+    path("audit/", views.dbGaPAudit.as_view(), name="audit"),
     path("dars/", include(data_access_request_patterns)),
-    path("workspaces/", include(dbgap_workspace_patterns)),
     path("records/", include(records_patterns)),
+    path("studies/", include(dbgap_study_accession_patterns)),
+    path("workspaces/", include(dbgap_workspace_patterns)),
 ]

@@ -1,11 +1,13 @@
-from abc import ABC
 from dataclasses import dataclass
 
 import django_tables2 as tables
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 # from . import models
+from primed.primed_anvil.tables import BooleanIconColumn
+
 from .models import (
     dbGaPApplication,
     dbGaPDataAccessRequest,
@@ -22,6 +24,7 @@ class AuditResult:
     workspace: dbGaPWorkspace
     note: str
     dbgap_application: dbGaPApplication
+    has_access: bool
     data_access_request: dbGaPDataAccessRequest = None
 
     def __post_init__(self):
@@ -55,6 +58,7 @@ class AuditResult:
             "data_access_request": self.data_access_request,
             "dar_accession": dar_accession,
             "dar_consent": dar_consent,
+            "has_access": self.has_access,
             "note": self.note,
             "action": self.get_action(),
             "action_url": self.get_action_url(),
@@ -66,19 +70,21 @@ class AuditResult:
 class VerifiedAccess(AuditResult):
     """Audit results class for when access has been verified."""
 
-    pass
+    has_access: bool = True
 
 
 @dataclass
 class VerifiedNoAccess(AuditResult):
     """Audit results class for when no access has been verified."""
 
-    pass
+    has_access: bool = False
 
 
 @dataclass
 class GrantAccess(AuditResult):
     """Audit results class for when access should be granted."""
+
+    has_access: bool = False
 
     def get_action(self):
         return "Grant access"
@@ -96,6 +102,8 @@ class GrantAccess(AuditResult):
 @dataclass
 class RemoveAccess(AuditResult):
     """Audit results class for when access should be removed for a known reason."""
+
+    has_access: bool = True
 
     def get_action(self):
         return "Remove access"
@@ -125,6 +133,7 @@ class dbGaPAccessAuditTable(tables.Table):
     data_access_request = tables.Column()
     dar_accession = tables.Column(verbose_name="DAR accession")
     dar_consent = tables.Column(verbose_name="DAR consent")
+    has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
     action = tables.Column()
 
@@ -139,7 +148,7 @@ class dbGaPAccessAuditTable(tables.Table):
         )
 
 
-class dbGaPAccessAudit(ABC):
+class dbGaPAccessAudit:
 
     # Access verified.
     APPROVED_DAR = "Approved DAR."
@@ -159,12 +168,42 @@ class dbGaPAccessAudit(ABC):
 
     results_table_class = dbGaPAccessAuditTable
 
-    def __init__(self):
+    def __init__(self, dbgap_application_queryset=None, dbgap_workspace_queryset=None):
         self.completed = False
         # Set up lists to hold audit results.
         self.verified = None
         self.needs_action = None
         self.errors = None
+        if dbgap_application_queryset is None:
+            dbgap_application_queryset = dbGaPApplication.objects.all()
+        if not (
+            isinstance(dbgap_application_queryset, QuerySet)
+            and dbgap_application_queryset.model is dbGaPApplication
+        ):
+            raise ValueError(
+                "dbgap_application_queryset must be a queryset of dbGaPApplication objects."
+            )
+        self.dbgap_application_queryset = dbgap_application_queryset
+        if dbgap_workspace_queryset is None:
+            dbgap_workspace_queryset = dbGaPWorkspace.objects.all()
+        if not (
+            isinstance(dbgap_workspace_queryset, QuerySet)
+            and dbgap_workspace_queryset.model is dbGaPWorkspace
+        ):
+            raise ValueError(
+                "dbgap_workspace_queryset must be a queryset of dbGaPWorkspace objects."
+            )
+        self.dbgap_workspace_queryset = dbgap_workspace_queryset
+
+    def run_audit(self):
+        self.verified = []
+        self.needs_action = []
+        self.errors = []
+
+        for dbgap_application in self.dbgap_application_queryset:
+            for dbgap_workspace in self.dbgap_workspace_queryset:
+                self.audit_application_and_workspace(dbgap_application, dbgap_workspace)
+        self.completed = True
 
     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
         """Audit access for a specific dbGaP application and a specific workspace."""
@@ -319,45 +358,3 @@ class dbGaPAccessAudit(ABC):
     def get_errors_table(self):
         """Return a table of audit errors."""
         return self.results_table_class([x.get_table_dictionary() for x in self.errors])
-
-
-class dbGaPApplicationAccessAudit(dbGaPAccessAudit):
-    def __init__(self, dbgap_application):
-        super().__init__()
-        self.dbgap_application = dbgap_application
-
-    def run_audit(self):
-        """Audit all workspaces against access provided by this dbGaPApplication."""
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
-
-        # Get a list of all dbGaP workspaces.
-        dbgap_workspaces = dbGaPWorkspace.objects.all()
-        # Loop through workspaces and verify access.
-        for dbgap_workspace in dbgap_workspaces:
-            self.audit_application_and_workspace(
-                self.dbgap_application, dbgap_workspace
-            )
-        self.completed = True
-
-
-class dbGaPWorkspaceAccessAudit(dbGaPAccessAudit):
-    def __init__(self, dbgap_workspace):
-        super().__init__()
-        self.dbgap_workspace = dbgap_workspace
-
-    def run_audit(self):
-        """Audit this workspace against access provided by all dbGaPApplications."""
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
-
-        # Get a list of all dbGaP applications.
-        dbgap_applications = dbGaPApplication.objects.all()
-        # Loop through workspaces and verify access.
-        for dbgap_application in dbgap_applications:
-            self.audit_application_and_workspace(
-                dbgap_application, self.dbgap_workspace
-            )
-        self.completed = True

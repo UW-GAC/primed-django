@@ -2,6 +2,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
+from django.conf import settings
 from factory import (
     Dict,
     DictFactory,
@@ -90,7 +91,9 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create()
+        auth_domain = ManagedGroupFactory.create(
+            name="auth_{}".format(self.workspace.name)
+        )
         self.workspace.authorization_domains.add(auth_domain)
 
 
@@ -99,7 +102,15 @@ class dbGaPApplicationFactory(DjangoModelFactory):
 
     principal_investigator = SubFactory(UserFactory)
     dbgap_project_id = Sequence(lambda n: n + 1)
-    anvil_access_group = SubFactory(ManagedGroupFactory)
+    anvil_access_group = SubFactory(
+        ManagedGroupFactory,
+        name=LazyAttribute(
+            lambda o: "{}_DBGAP_ACCESS_{}".format(
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
+                o.factory_parent.dbgap_project_id,
+            )
+        ),
+    )
 
     class Meta:
         model = models.dbGaPApplication
@@ -155,7 +166,9 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
         lambda o: o.dbgap_workspace.dbgap_participant_set
     )
     dbgap_consent_code = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_code)
-    dbgap_consent_abbreviation = Faker("word")
+    dbgap_consent_abbreviation = LazyAttribute(
+        lambda o: o.dbgap_workspace.dbgap_consent_abbreviation
+    )
     dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
     dbgap_dac = Faker("word")
 

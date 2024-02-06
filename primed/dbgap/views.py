@@ -552,6 +552,24 @@ class dbGaPDataAccessRequestHistory(
         return context
 
 
+class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit access for all dbGaPApplications and dbGaPWorkspaces."""
+
+    template_name = "dbgap/dbgap_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        data_access_audit = audit.dbGaPAccessAudit()
+        data_access_audit.run_audit()
+        print(data_access_audit.get_verified_table())
+        context["verified_table"] = data_access_audit.get_verified_table()
+        context["errors_table"] = data_access_audit.get_errors_table()
+        context["needs_action_table"] = data_access_audit.get_needs_action_table()
+        context["data_access_audit"] = data_access_audit
+        return context
+
+
 class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 
@@ -587,7 +605,9 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         context["latest_snapshot"] = latest_snapshot
         if latest_snapshot:
             # Run the audit.
-            data_access_audit = audit.dbGaPApplicationAccessAudit(self.object)
+            data_access_audit = audit.dbGaPAccessAudit(
+                dbgap_application_queryset=self.model.objects.filter(pk=self.object.pk)
+            )
             data_access_audit.run_audit()
             context["verified_table"] = data_access_audit.get_verified_table()
             context["errors_table"] = data_access_audit.get_errors_table()
@@ -629,7 +649,9 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPWorkspaceAccessAudit(self.object)
+        data_access_audit = audit.dbGaPAccessAudit(
+            dbgap_workspace_queryset=self.model.objects.filter(pk=self.object.pk)
+        )
         data_access_audit.run_audit()
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()
