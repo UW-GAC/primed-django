@@ -6,6 +6,8 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 # from . import models
+from primed.primed_anvil.tables import BooleanIconColumn
+
 from .models import (
     dbGaPApplication,
     dbGaPDataAccessRequest,
@@ -22,6 +24,7 @@ class AuditResult:
     workspace: dbGaPWorkspace
     note: str
     dbgap_application: dbGaPApplication
+    has_access: bool
     data_access_request: dbGaPDataAccessRequest = None
 
     def __post_init__(self):
@@ -55,6 +58,7 @@ class AuditResult:
             "data_access_request": self.data_access_request,
             "dar_accession": dar_accession,
             "dar_consent": dar_consent,
+            "has_access": self.has_access,
             "note": self.note,
             "action": self.get_action(),
             "action_url": self.get_action_url(),
@@ -66,19 +70,21 @@ class AuditResult:
 class VerifiedAccess(AuditResult):
     """Audit results class for when access has been verified."""
 
-    pass
+    has_access: bool = True
 
 
 @dataclass
 class VerifiedNoAccess(AuditResult):
     """Audit results class for when no access has been verified."""
 
-    pass
+    has_access: bool = False
 
 
 @dataclass
 class GrantAccess(AuditResult):
     """Audit results class for when access should be granted."""
+
+    has_access: bool = False
 
     def get_action(self):
         return "Grant access"
@@ -96,6 +102,8 @@ class GrantAccess(AuditResult):
 @dataclass
 class RemoveAccess(AuditResult):
     """Audit results class for when access should be removed for a known reason."""
+
+    has_access: bool = True
 
     def get_action(self):
         return "Remove access"
@@ -125,6 +133,7 @@ class dbGaPAccessAuditTable(tables.Table):
     data_access_request = tables.Column()
     dar_accession = tables.Column(verbose_name="DAR accession")
     dar_consent = tables.Column(verbose_name="DAR consent")
+    has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
     action = tables.Column()
 

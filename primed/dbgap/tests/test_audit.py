@@ -22,6 +22,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         self.assertIsNone(instance.get_action_url())
+        self.assertTrue(instance.has_access)
 
     def test_verified_no_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -33,6 +34,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         self.assertIsNone(instance.get_action_url())
+        self.assertFalse(instance.has_access)
 
     def test_grant_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -52,6 +54,7 @@ class AuditResultTest(TestCase):
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
+        self.assertFalse(instance.has_access)
 
     def test_remove_access(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -71,12 +74,15 @@ class AuditResultTest(TestCase):
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
+        self.assertTrue(instance.has_access)
 
     def test_remove_access_no_dar(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dbgap_application = factories.dbGaPApplicationFactory.create()
         instance = audit.RemoveAccess(
-            workspace=dbgap_workspace, dbgap_application=dbgap_application, note="foo"
+            workspace=dbgap_workspace,
+            dbgap_application=dbgap_application,
+            note="foo",
         )
         expected_url = reverse(
             "anvil_consortium_manager:managed_groups:member_groups:delete",
@@ -86,6 +92,7 @@ class AuditResultTest(TestCase):
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
+        self.assertTrue(instance.has_access)
 
     def test_error(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -95,6 +102,7 @@ class AuditResultTest(TestCase):
             dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
             data_access_request=dar,
             note="foo",
+            has_access=True,
         )
         self.assertIsNone(instance.get_action_url())
 
@@ -102,7 +110,10 @@ class AuditResultTest(TestCase):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dbgap_application = factories.dbGaPApplicationFactory.create()
         instance = audit.Error(
-            workspace=dbgap_workspace, dbgap_application=dbgap_application, note="foo"
+            workspace=dbgap_workspace,
+            dbgap_application=dbgap_application,
+            note="foo",
+            has_access=True,
         )
         self.assertIsNone(instance.get_action_url())
 
@@ -116,6 +127,7 @@ class AuditResultTest(TestCase):
                 dbgap_application=other_application,
                 data_access_request=dar,
                 note="foo",
+                has_access=False,
             )
 
 
