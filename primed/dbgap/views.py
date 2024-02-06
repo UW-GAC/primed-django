@@ -562,7 +562,6 @@ class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         # Run the audit.
         data_access_audit = audit.dbGaPAccessAudit()
         data_access_audit.run_audit()
-        print(data_access_audit.get_verified_table())
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()
         context["needs_action_table"] = data_access_audit.get_needs_action_table()

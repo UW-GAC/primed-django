@@ -147,7 +147,6 @@ class AgreementVersionDetail(
     def get_table_data(self):
         qs = models.SignedAgreement.objects.filter(version=self.object)
         # import ipdb; ipdb.set_trace()
-        print(qs)
         return qs
 
     def get_object(self, queryset=None):

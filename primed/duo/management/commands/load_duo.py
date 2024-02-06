@@ -33,7 +33,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        print(options)
         # Error if anything is loaded into either model.
         if (
             models.DataUsePermission.objects.exists()
@@ -103,7 +102,6 @@ class Command(BaseCommand):
         return comment
 
     def _create_permission(self, term, parent=None):
-        print("parent {} - term {}".format(parent, term))
         obj = models.DataUsePermission(
             identifier=term.id,
             abbreviation=self._get_term_abbreviation(term),
@@ -118,7 +116,6 @@ class Command(BaseCommand):
             self._create_permission(child, parent=obj)
 
     def _create_modifier(self, term, parent=None):
-        print("parent {} - term {}".format(parent, term))
         if term.obsolete:
             return
         obj = models.DataUseModifier(
