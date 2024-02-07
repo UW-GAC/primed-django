@@ -88,7 +88,7 @@ jobs:
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
       - name: Collect staticfiles
-        run: python manage.py collectstatic --noinput
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
         run:  coverage run -p -m pytest
@@ -129,7 +129,7 @@ jobs:
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
       - name: Collect staticfiles
-        run: python manage.py collectstatic --noinput
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
         run:  coverage run -p -m pytest
