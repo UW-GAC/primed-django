@@ -18,6 +18,9 @@ class CDSARecordsTest(TestCase):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.outdir = os.path.join(self.tmpdir.name, "test_output")
 
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
     def test_output(self):
         out = StringIO()
         call_command("cdsa_records", self.outdir, "--no-color", stdout=out)

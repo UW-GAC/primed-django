@@ -4646,7 +4646,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
-        print(form.errors)
         self.assertEqual(len(form.errors), 1)
         self.assertIn("is_primary", form.errors)
         self.assertEqual(len(form.errors["is_primary"]), 1)
