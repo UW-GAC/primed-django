@@ -63,6 +63,9 @@ jobs:
     env:
       # mysql://user:password@host:port/database
       DATABASE_URL: "mysql://root:root@127.0.0.1:3306/mysql"
+      # We can set this to an empty string, since we'll never make an API call.
+      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+
 
     steps:
 
@@ -102,6 +105,10 @@ jobs:
   pytest-sqlite:
     runs-on: ubuntu-latest
 
+    env:
+      # We can set this to an empty string, since we'll never make an API call.
+      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
@@ -126,9 +133,6 @@ jobs:
 
       - name: Run tests
         run:  coverage run -p -m pytest
-        env:
-          # We can set this to an empty string, since we'll never make an API call.
-          ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
