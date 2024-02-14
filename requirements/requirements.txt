@@ -94,7 +94,7 @@ fastobo==0.12.3
     # via pronto
 fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
-google-auth==2.26.2
+google-auth==2.27.0
     # via django-anvil-consortium-manager
 idna==3.3
     # via requests
