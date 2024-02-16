@@ -2,15 +2,7 @@
 
 {% block pills %}
   {% if workspace_data_object.gsr_restricted %}
-  <span class="badge bg-warning text-dark">
-    <span class="me-2 fa-solid fa-circle-minus"></span>
-      GSR posting restricted
-    <span class="ms-2 fa-solid fa-circle-question"
-    data-bs-toggle="tooltip"
-    data-bs-placement="bottom"
-    data-bs-title="This workspace contains sensitive data and therefore public posting of Genomic Summary Results (GSR) is prohibited; see also NOT-19-023."
-    ></span>
-  </span>
+    {% include "snippets/gsr_restricted_badge.html" %}
   {% endif %}
 
 {{ block.super }}
