@@ -310,7 +310,9 @@ class CDSAWorkspaceStaffTable(tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
-    cdsaworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
+    cdsaworkspace__gsr_restricted = BooleanIconColumn(
+        orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
+    )
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:

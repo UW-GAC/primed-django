@@ -96,7 +96,9 @@ class dbGaPWorkspaceStaffTable(tables.Table):
         verbose_name="Approved DARs",
         orderable=False,
     )
-    dbgapworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
+    dbgapworkspace__gsr_restricted = BooleanIconColumn(
+        orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
+    )
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
