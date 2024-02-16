@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import django_tables2 as tables
 from anvil_consortium_manager.models import ManagedGroup
 from django.conf import settings
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -143,13 +144,24 @@ class SignedAgreementAccessAudit:
 
     results_table_class = SignedAgreementAccessAuditTable
 
-    def __init__(self):
+    def __init__(self, signed_agreement_queryset=None):
         # Store the CDSA group for auditing membership.
         self.completed = False
         # Set up lists to hold audit results.
         self.verified = []
         self.needs_action = []
         self.errors = []
+        # Store the queryset to run the audit on.
+        if signed_agreement_queryset is None:
+            signed_agreement_queryset = models.SignedAgreement.objects.all()
+        if not (
+            isinstance(signed_agreement_queryset, QuerySet)
+            and signed_agreement_queryset.model is models.SignedAgreement
+        ):
+            raise ValueError(
+                "signed_agreement_queryset must be a queryset of SignedAgreement objects."
+            )
+        self.signed_agreement_queryset = signed_agreement_queryset
 
     def _audit_primary_agreement(self, signed_agreement):
         """Audit a single component signed agreement.
@@ -338,7 +350,7 @@ class SignedAgreementAccessAudit:
 
     def run_audit(self):
         """Run an audit on all SignedAgreements."""
-        for signed_agreement in models.SignedAgreement.objects.all():
+        for signed_agreement in self.signed_agreement_queryset:
             self._audit_signed_agreement(signed_agreement)
         self.completed = True
 
