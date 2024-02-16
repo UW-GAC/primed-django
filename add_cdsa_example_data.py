@@ -1,13 +1,11 @@
 # Temporary script to create some test data.
 # Run with: python manage.py shell < add_cdsa_example_data.py
 
-from anvil_consortium_manager.models import ManagedGroup
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
-    WorkspaceGroupSharingFactory,
 )
 from django.conf import settings
 
@@ -37,6 +35,7 @@ dum = DataUseModifierFactory.create(abbreviation="NPU")
 cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
 
 # Create some study sites.
+StudySiteFactory.create(short_name="CC", full_name="Coordinating Center")
 StudySiteFactory.create(short_name="CARDINAL", full_name="CARDINAL")
 # Create some studies.
 StudyFactory.create(short_name="Amish", full_name="Amish")
@@ -213,13 +212,8 @@ GroupGroupMembershipFactory.create(
     child_group=cdsa_group,
 )
 
-# Share with primed_all.
-primed_all_group = ManagedGroup.objects.get(name="PRIMED_ALL")
-WorkspaceGroupSharingFactory.create(
-    group=primed_all_group, workspace=cdsa_workspace_1.workspace
-)
 
-# Create a second workspace that is not shared.
+# Create a second workspace.
 cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     workspace__billing_project__name="demo-primed-cdsa",
     workspace__name="DEMO_PRIMED_CDSA_MESA_2",
