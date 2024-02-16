@@ -1,0 +1,35 @@
+{% extends "anvil_consortium_manager/workspace_detail.html" %}
+
+{% block workspace_data %}
+  <dl class="row">
+    <hr>
+    <dt class="col-sm-2">Custodian</dt> <dd class="col-sm-10">
+        <a href="{{ workspace_data_object.custodian.get_absolute_url }}">
+        {{ workspace_data_object.custodian.name }}
+        </a>
+    </dd>
+    <!-- Eventually move to a custom table in the context data. -->
+    <dt class="col-sm-2">Source workspaces</dt> <dd class="col-sm-10">
+        {% for workspace in workspace_data_object.source_workspaces.all %}
+            <p><a href="{{ workspace.get_absolute_url }}">{{ workspace }}</a></p>
+        {% endfor %}
+    </dd>
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+    <dt class="col-sm-2">Analyst group</dt> <dd class="col-sm-10">
+        <a href="{{ workspace_data_object.analyst_group.get_absolute_url }}">
+        {{ workspace_data_object.analyst_group.name }}
+        </a>
+    </dd>
+    {% endif %}
+</dl>
+{% endblock workspace_data %}
+
+
+{% block action_buttons %}
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+<p>
+  <a href="{% url 'collaborative_analysis:workspaces:audit' billing_project_slug=object.billing_project.name workspace_slug=object.name%}" class="btn btn-secondary" role="button">Audit workspace access</a>
+</p>
+{% endif %}
+{{block.super}}
+{% endblock action_buttons %}
