@@ -27,13 +27,16 @@
         <ul>
           <li>An account in the analyst group is in the auth domain for this workspace and is in all auth domains for all source workspaces.</li>
           <li>An account in the analyst group is <b>not</b> in the auth domain for this workspace and is <b>not</b> in all auth domains for all source workspaces.</li>
+          <li>The PRIMED_CC_WRITERS group is in the auth domain for this workspace.</li>
         </ul>
 
       <li><b>Needs action</b> includes the following:</li>
       <ul>
         <li>An account in the analyst group is <b>not</b> in the auth domain for this workspace and is in all auth domains for all source workspaces.</li>
         <li>An account in the analyst group is in the auth domain for this workspace and is <b>not</b> in all auth domains for all source workspaces.</li>
-    </ul>
+        <li>An account is <b>not</b> in the analyst group but is in the auth domain of this workspace.</li>
+        <li>The PRIMED_CC_WRITERS group needs to be added to the auth domain for this workspace.</li>
+      </ul>
 
       <li><b>Errors</b></li>
       <ul>
