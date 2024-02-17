@@ -633,7 +633,7 @@ class SignedAgreementAuditResolve(
                         child_group=self.object.anvil_access_group,
                         role=GroupGroupMembership.MEMBER,
                     )
-                    membership.anvil_create()
+                    # membership.anvil_create()
                     membership.full_clean()
                     membership.save()
                 elif isinstance(
@@ -653,7 +653,7 @@ class SignedAgreementAuditResolve(
                         parent_group=cdsa_group,
                         child_group=self.object.anvil_access_group,
                     )
-                    membership.anvil_delete()
+                    # membership.anvil_delete()
                     membership.delete()
                 else:
                     # Add a message.
