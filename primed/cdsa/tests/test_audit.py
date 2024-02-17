@@ -32,7 +32,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertIsNone(instance.action)
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+            ),
+        )
 
     def test_verified_no_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -40,7 +46,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertIsNone(instance.action)
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+            ),
+        )
 
     def test_grant_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -48,11 +60,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[self.cdsa_group, signed_agreement.anvil_access_group],
+        self.assertEqual(instance.action, "Grant access")
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -60,11 +74,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[self.cdsa_group, signed_agreement.anvil_access_group],
+        self.assertEqual(instance.action, "Remove access")
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -72,7 +88,12 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+            ),
+        )
 
     def test_anvil_group_name(self):
         signed_agreement = factories.SignedAgreementFactory.create()

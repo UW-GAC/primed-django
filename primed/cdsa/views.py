@@ -17,10 +17,12 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import inlineformset_factory
+from django.forms.forms import Form
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from . import forms, helpers, models, tables
@@ -568,6 +570,99 @@ class SignedAgreementAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView
         context["needs_action_table"] = audit.get_needs_action_table()
         context["audit"] = audit
         return context
+
+
+class SignedAgreementAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView
+):
+
+    model = models.SignedAgreement
+    form_class = Form
+    template_name = "cdsa/signedagreement_audit_resolve.html"
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by CDSA cc_id."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(cc_id=self.kwargs.get("cc_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_audit_result(self):
+        audit = signed_agreement_audit.SignedAgreementAccessAudit(
+            signed_agreement_queryset=models.SignedAgreement.objects.filter(
+                pk=self.object.pk
+            )
+        )
+        audit.run_audit()
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def form_valid(self, form):
+        cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
+        # Handle the result.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, signed_agreement_audit.GrantAccess):
+                    print("granting")
+                    # Add to CDSA group.
+                    membership = GroupGroupMembership(
+                        parent_group=cdsa_group,
+                        child_group=self.object.anvil_access_group,
+                        role=GroupGroupMembership.MEMBER,
+                    )
+                    membership.anvil_create()
+                    membership.full_clean()
+                    membership.save()
+                elif isinstance(
+                    self.audit_result, signed_agreement_audit.VerifiedAccess
+                ):
+                    print("verified access")
+                    pass
+                elif isinstance(
+                    self.audit_result, signed_agreement_audit.VerifiedNoAccess
+                ):
+                    print("verified no access")
+                    pass
+                elif isinstance(self.audit_result, signed_agreement_audit.RemoveAccess):
+                    print("remove access")
+                    # Remove from CDSA group.
+                    membership = GroupGroupMembership.objects.get(
+                        parent_group=cdsa_group,
+                        child_group=self.object.anvil_access_group,
+                    )
+                    membership.anvil_delete()
+                    membership.delete()
+                else:
+                    # Add a message.
+                    messages.error(self.request, "Unknown audit result.")
+                    return self.form_invalid(form)
+        except AnVILAPIError as e:
+            messages.error(self.request, "AnVIL API Error: " + str(e))
+            return self.form_invalid(form)
+        return super().form_valid(form)
 
 
 class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):

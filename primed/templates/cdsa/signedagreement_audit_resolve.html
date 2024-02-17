@@ -1,0 +1,66 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block title %}Signed Agreement audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Signed Agreement audit</h1>
+
+<h2>Audit results for SignedAgreement {{ object }}</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    For each Signed Agreement in the app, the audit checks that access is correct.
+    To have access to CDSA workspaces, the group associated with the Signed Agreement must be a member of the PRIMED CDSA group. The audit does not check that the workspace is shared with the group.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>Active primary Signed Agreements that are in the PRIMED CDSA group on AnVIL.</li>
+          <li>Active component Signed Agreements with an active primary that are in the PRIMED CDSA group on AnVIL.</li>
+          <li>Active component Signed Agreements without an active primary that are <b>not</b> in the PRIMED CDSA group on AnVIL.</li>
+          <li>Inctive primary Signed Agreements that are <b>not</b> in the PRIMED CDSA group on AnVIL.</li>
+          <li>Inctive component Signed Agreements that are <b>not</b> in the PRIMED CDSA group on AnVIL.</li>
+        </ul>
+
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>Active primary Signed Agreements that are not in the PRIMED CDSA group on AnVIL.</li>
+        <li>Active component Signed Agreements with an active primary that are not in the PRIMED CDSA group on AnVIL.</li>
+      </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>The Signed Agreement access group is in the PRIMED CDSA group on AnVIL for an unknown reason.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+
+<div class="card container-fluid mt-3 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Result</h5>
+    <p class="card-text">{{ audit_result }}</p>
+    {% if audit_result.action %}
+    <form method="post">
+
+      {% csrf_token %}
+      {{ form|crispy }}
+
+      <button type="submit" class="btn btn-primary">{{ audit_result.action }}</button>
+    </form>
+    {% else %}
+    <button type="submit" class="btn btn-primary disabled">No action needed</button>
+    {% endif %}
+  </div>
+</div>
+
+
+{% endblock content %}

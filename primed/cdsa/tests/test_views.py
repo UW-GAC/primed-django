@@ -1,6 +1,6 @@
 """Tests for views related to the `cdsa` app."""
 
-from datetime import date
+from datetime import date, timedelta
 
 import responses
 from anvil_consortium_manager.models import (
@@ -9,6 +9,7 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
     Workspace,
 )
+from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
     GroupAccountMembershipFactory,
@@ -25,6 +26,8 @@ from django.http import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (
@@ -5491,6 +5494,380 @@ class SignedAgreementAuditTest(TestCase):
         self.assertEqual(len(messages), 1)
         self.assertIn("FOOBAR", str(messages[0]))
         self.assertIn("does not exist", str(messages[0]))
+
+
+class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the SignedAgreementAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        # Create the test group.
+        self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:audit:resolve", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user only has view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_get_context_data_access_audit(self):
+        """The data_access_audit exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            signed_agreement_audit.AccessAuditResult,
+        )
+
+    def test_get_context_verified_access(self):
+        """Context with VerifiedAccess."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.VerifiedAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, "No action needed")
+
+    def test_get_context_verified_no_access(self):
+        """Context with VerifiedNoAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.VerifiedNoAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, "No action needed")
+
+    def test_get_context_remove_access(self):
+        """Context with RemoveAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.RemoveAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, audit_result.action)
+
+    def test_get_context_grant_access(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.GrantAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, audit_result.action)
+
+    def test_post_context_verified_access(self):
+        """Context with VerifiedAccess."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=self.anvil_cdsa_group,
+                child_group=member_agreement.signed_agreement.anvil_access_group,
+            )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        # Make sure the membership hasn't changed.
+        membership.refresh_from_db()
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_context_verified_no_access(self):
+        """Context with VerifiedNoAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_post_context_remove_access(self):
+        """Context with RemoveAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        # Make sure the membership hasn't changed.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_context_grant_access(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_get_only_this_signed_agreement(self):
+        """Only runs on the specified signed_agreement."""
+        factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            signed_agreement_audit.AccessAuditResult,
+        )
+        self.assertEqual(
+            response.context_data["audit_result"].signed_agreement,
+            member_agreement.signed_agreement,
+        )
+
+    def test_post_only_this_signed_agreement(self):
+        """Only runs on the specified signed_agreement."""
+        factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_anvil_api_error_grant(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertEqual(response.status_code, 200)
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # Audit result is still GrantAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.GrantAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertEqual(response.status_code, 200)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # Audit result is still RemoveAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.RemoveAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
 
 
 class CDSAWorkspaceAuditTest(TestCase):

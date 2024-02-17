@@ -18,6 +18,7 @@ class AccessAuditResult:
 
     note: str
     signed_agreement: models.SignedAgreement
+    action: str = None
 
     # def __init__(self, *args, **kwargs):
     #     super().__init(*args, **kwargs)
@@ -30,18 +31,19 @@ class AccessAuditResult:
 
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "cdsa:signed_agreements:audit:resolve",
+            args=[
+                self.signed_agreement,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
         row = {
             "signed_agreement": self.signed_agreement,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -51,48 +53,36 @@ class AccessAuditResult:
 class VerifiedAccess(AccessAuditResult):
     """Audit results class for when access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified access: {self.note}"
 
 
 @dataclass
 class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when no access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified no access: {self.note}"
 
 
 @dataclass
 class GrantAccess(AccessAuditResult):
     """Audit results class for when access should be granted."""
 
-    def get_action(self):
-        return "Grant access"
+    action: str = "Grant access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[
-                self.anvil_cdsa_group,
-                self.signed_agreement.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
 class RemoveAccess(AccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
-    def get_action(self):
-        return "Remove access"
+    action: str = "Remove access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[
-                self.anvil_cdsa_group,
-                self.signed_agreement.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 @dataclass
@@ -353,6 +343,9 @@ class SignedAgreementAccessAudit:
         for signed_agreement in self.signed_agreement_queryset:
             self._audit_signed_agreement(signed_agreement)
         self.completed = True
+
+    def get_all_results(self):
+        return self.verified + self.needs_action + self.errors
 
     def get_verified_table(self):
         """Return a table of verified results."""

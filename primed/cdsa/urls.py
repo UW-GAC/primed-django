@@ -83,7 +83,11 @@ non_data_affiliate_agreement_patterns = (
 signed_agreement_audit_patterns = (
     [
         path("", views.SignedAgreementAudit.as_view(), name="all"),
-        # path("resolve/<int:pk>/", views.SignedAgreementAuditResolve.as_view(), name="resolve"),
+        path(
+            "resolve/<int:cc_id>/",
+            views.SignedAgreementAuditResolve.as_view(),
+            name="resolve",
+        ),
     ],
     "audit",
 )
