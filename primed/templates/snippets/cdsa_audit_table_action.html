@@ -1,0 +1,9 @@
+<div id="cdsa-audit-resolve-button-{{ record.signed_agreement.cc_id }}">
+    {% if record.action %}
+    <a href="{% url 'cdsa:signed_agreements:audit:resolve' record.signed_agreement.cc_id %}" class="btn btn-primary btn-sm">
+        {{ record.action }}
+    </a>
+    {% else %}
+    &mdash;
+    {% endif %}
+</div>

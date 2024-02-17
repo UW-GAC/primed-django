@@ -6,7 +6,6 @@ from anvil_consortium_manager.models import ManagedGroup
 from django.conf import settings
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 
 from .. import models
 
@@ -100,17 +99,12 @@ class SignedAgreementAccessAuditTable(tables.Table):
     agreement_type = tables.Column(accessor="signed_agreement__combined_type")
     agreement_version = tables.Column(accessor="signed_agreement__version")
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="snippets/cdsa_audit_table_action.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
-
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
 
 class SignedAgreementAccessAudit:

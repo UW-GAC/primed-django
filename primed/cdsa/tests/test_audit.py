@@ -1357,10 +1357,10 @@ class SignedAgreementAccessAuditTableTest(TestCase):
 
     def test_one_row(self):
         """Table works with one row."""
-        signed_agreement = factories.SignedAgreementFactory.create()
+        member_agreement = factories.MemberAgreementFactory.create()
         data = [
             {
-                "signed_agreement": signed_agreement,
+                "signed_agreement": member_agreement.signed_agreement,
                 "agreement_type": "Foo",
                 "agreement_group": "Bar",
                 "note": "a note",
@@ -1373,25 +1373,30 @@ class SignedAgreementAccessAuditTableTest(TestCase):
             table, signed_agreement_audit.SignedAgreementAccessAuditTable
         )
         self.assertEqual(len(table.rows), 1)
+        self.assertIn(
+            str(member_agreement.signed_agreement.cc_id),
+            table.rows[0].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[0].get_cell("note"), "a note")
 
     def test_two_rows(self):
         """Table works with two rows."""
-        signed_agreement_1 = factories.SignedAgreementFactory.create()
-        signed_agreement_2 = factories.SignedAgreementFactory.create()
+        signed_agreement_1 = factories.MemberAgreementFactory.create()
+        signed_agreement_2 = factories.DataAffiliateAgreementFactory.create()
         data = [
             {
-                "signed_agreement": signed_agreement_1,
+                "signed_agreement": signed_agreement_1.signed_agreement,
                 "agreement_type": "Foo",
                 "agreement_group": "Bar",
-                "note": "a note",
+                "note": "note 1",
                 "action": "",
                 "action_url": "",
             },
             {
-                "signed_agreement": signed_agreement_2,
+                "signed_agreement": signed_agreement_2.signed_agreement,
                 "agreement_type": "Foo",
                 "agreement_group": "Bar",
-                "note": "a note",
+                "note": "note 2",
                 "action": "",
                 "action_url": "",
             },
@@ -1401,27 +1406,16 @@ class SignedAgreementAccessAuditTableTest(TestCase):
             table, signed_agreement_audit.SignedAgreementAccessAuditTable
         )
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        signed_agreement = factories.SignedAgreementFactory.create()
-        data = [
-            {
-                "signed_agreement": signed_agreement,
-                "agreement_type": "Foo",
-                "agreement_group": "Bar",
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-        table = signed_agreement_audit.SignedAgreementAccessAuditTable(data)
-        self.assertIsInstance(
-            table, signed_agreement_audit.SignedAgreementAccessAuditTable
+        self.assertIn(
+            str(signed_agreement_1.signed_agreement.cc_id),
+            table.rows[0].get_cell("signed_agreement"),
         )
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))
+        self.assertEqual(table.rows[0].get_cell("note"), "note 1")
+        self.assertIn(
+            str(signed_agreement_2.signed_agreement.cc_id),
+            table.rows[1].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[1].get_cell("note"), "note 2")
 
 
 class WorkspaceAuditResultTest(TestCase):
