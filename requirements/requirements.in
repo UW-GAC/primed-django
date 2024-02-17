@@ -59,6 +59,8 @@ pandas
 # for exporting django-tables2 tables to tsv.
 tablib
 
+# for htmx
+django-htmx
 
 # Temporary(?) pins to fix security alerts.
 certifi>=2023.7.22
