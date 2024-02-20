@@ -5713,6 +5713,39 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         with self.assertRaises(GroupGroupMembership.DoesNotExist):
             membership.refresh_from_db()
 
+    def test_post_context_remove_access_htmx(self):
+        """Context with RemoveAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
+        )
+        # Make sure the membership hasn't changed.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
     def test_post_context_grant_access(self):
         """Context with GrantAccess."""
         member_agreement = factories.MemberAgreementFactory.create(
@@ -5738,6 +5771,40 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             self.get_url(member_agreement.signed_agreement.cc_id), {}
         )
         self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_htmx(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
+        )
         membership = GroupGroupMembership.objects.get(
             parent_group=self.anvil_cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -5831,6 +5898,41 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(messages), 1)
         self.assertIn("AnVIL API Error", str(messages[0]))
 
+    def test_anvil_api_error_grant_htmx(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
+        )
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # No messages waere added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
     def test_anvil_api_error_remove(self):
         """AnVIL API errors are properly handled."""
         member_agreement = factories.MemberAgreementFactory.create(
@@ -5868,6 +5970,42 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
         self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove_htmx(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
+        )
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # No messages was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
 
 
 class CDSAWorkspaceAuditTest(TestCase):

@@ -84,6 +84,7 @@ THIRD_PARTY_APPS = [
     # django-simple-history for model change tracking
     "simple_history",
     "dbbackup",
+    "django_htmx",
 ]
 
 LOCAL_APPS = [
@@ -158,6 +159,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 # STATIC

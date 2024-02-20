@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.forms.forms import Form
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView
@@ -579,6 +579,8 @@ class SignedAgreementAuditResolve(
     model = models.SignedAgreement
     form_class = Form
     template_name = "cdsa/signedagreement_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -626,43 +628,42 @@ class SignedAgreementAuditResolve(
         try:
             with transaction.atomic():
                 if isinstance(self.audit_result, signed_agreement_audit.GrantAccess):
-                    print("granting")
                     # Add to CDSA group.
                     membership = GroupGroupMembership(
                         parent_group=cdsa_group,
                         child_group=self.object.anvil_access_group,
                         role=GroupGroupMembership.MEMBER,
                     )
-                    # membership.anvil_create()
+                    membership.anvil_create()
                     membership.full_clean()
                     membership.save()
-                elif isinstance(
-                    self.audit_result, signed_agreement_audit.VerifiedAccess
-                ):
-                    print("verified access")
-                    pass
-                elif isinstance(
-                    self.audit_result, signed_agreement_audit.VerifiedNoAccess
-                ):
-                    print("verified no access")
-                    pass
                 elif isinstance(self.audit_result, signed_agreement_audit.RemoveAccess):
-                    print("remove access")
                     # Remove from CDSA group.
                     membership = GroupGroupMembership.objects.get(
                         parent_group=cdsa_group,
                         child_group=self.object.anvil_access_group,
                     )
-                    # membership.anvil_delete()
+                    membership.anvil_delete()
                     membership.delete()
                 else:
-                    # Add a message.
-                    messages.error(self.request, "Unknown audit result.")
-                    return self.form_invalid(form)
+                    pass
         except AnVILAPIError as e:
-            messages.error(self.request, "AnVIL API Error: " + str(e))
-            return self.form_invalid(form)
-        return super().form_valid(form)
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.htmx:
+            return HttpResponse(self.htmx_error)
+        else:
+            return super().form_invalid(form)
 
 
 class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
