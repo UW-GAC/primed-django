@@ -220,5 +220,4 @@ cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     study=Study.objects.get(short_name="MESA"),
     data_use_permission=dup,
 )
-cdsa_workspace_2.workspace.authorization_domains.add(cdsa_group)
 cdsa_workspace_2.data_use_modifiers.add(dum)
