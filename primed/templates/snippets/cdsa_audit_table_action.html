@@ -9,6 +9,7 @@
             type="submit"
             class="btn btn-primary btn-sm"
             hx-post="{% url 'cdsa:signed_agreements:audit:resolve' record.signed_agreement.cc_id %}"
+            hx-disabled-elt="this"
             hx-target="closest div"
             hx-swap="innerHTML">
             {{ record.action }}
