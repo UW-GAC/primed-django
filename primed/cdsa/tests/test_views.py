@@ -6007,6 +6007,39 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
 
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOOBAR")
+    def test_anvil_cdsa_group_does_not_exist(self):
+        """Settings file has a different CDSA group name."""
+        cdsa_group = ManagedGroupFactory.create(name="FOOBAR")
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/FOOBAR/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
 
 class CDSAWorkspaceAuditTest(TestCase):
     """Tests for the SignedAgreementAudit view."""
