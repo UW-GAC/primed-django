@@ -26,6 +26,12 @@ urlpatterns = [
     path("dbgap/", include("primed.dbgap.urls", namespace="dbgap")),
     path("duo/", include("primed.duo.urls", namespace="duo")),
     path("cdsa/", include("primed.cdsa.urls", namespace="cdsa")),
+    path(
+        "collaborative_analysis/",
+        include(
+            "primed.collaborative_analysis.urls", namespace="collaborative_analysis"
+        ),
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

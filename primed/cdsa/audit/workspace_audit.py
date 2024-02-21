@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import django_tables2 as tables
 from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
 from django.conf import settings
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -139,7 +140,7 @@ class WorkspaceAccessAudit:
 
     results_table_class = WorkspaceAccessAuditTable
 
-    def __init__(self):
+    def __init__(self, cdsa_workspace_queryset=None):
         # Store the CDSA group for auditing membership.
         self.anvil_cdsa_group = ManagedGroup.objects.get(
             name=settings.ANVIL_CDSA_GROUP_NAME
@@ -149,6 +150,17 @@ class WorkspaceAccessAudit:
         self.verified = []
         self.needs_action = []
         self.errors = []
+        # Store the queryset to run the audit on.
+        if cdsa_workspace_queryset is None:
+            cdsa_workspace_queryset = models.CDSAWorkspace.objects.all()
+        if not (
+            isinstance(cdsa_workspace_queryset, QuerySet)
+            and cdsa_workspace_queryset.model is models.CDSAWorkspace
+        ):
+            raise ValueError(
+                "cdsa_workspace_queryset must be a queryset of CDSAWorkspace objects."
+            )
+        self.cdsa_workspace_queryset = cdsa_workspace_queryset
 
     def _audit_workspace(self, workspace):
         # Check if the access group is in the overall CDSA group.
@@ -233,7 +245,7 @@ class WorkspaceAccessAudit:
 
     def run_audit(self):
         """Run an audit on all SignedAgreements."""
-        for workspace in models.CDSAWorkspace.objects.all():
+        for workspace in self.cdsa_workspace_queryset:
             self._audit_workspace(workspace)
         self.completed = True
 

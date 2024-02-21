@@ -1,5 +1,14 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
 
+{% block pills %}
+  {% if workspace_data_object.gsr_restricted %}
+    {% include "snippets/gsr_restricted_badge.html" %}
+  {% endif %}
+
+
+{{ block.super }}
+{% endblock pills %}
+
 {% block workspace_data %}
   <dl class="row">
     <hr>

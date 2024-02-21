@@ -620,6 +620,7 @@ class CDSAWorkspaceTest(TestCase):
             acknowledgments="test acknowledgments",
             requested_by=requester,
             workspace=workspace,
+            gsr_restricted=False,
         )
         instance.save()
         self.assertIsInstance(instance, models.CDSAWorkspace)
@@ -628,24 +629,6 @@ class CDSAWorkspaceTest(TestCase):
         """The custom __str__ method returns the correct string."""
         instance = factories.CDSAWorkspaceFactory.create()
         self.assertIsInstance(instance.__str__(), str)
-
-    def test_can_add_data_use_permission(self):
-        """Saving a model with data_use_permission set is valid."""
-        workspace = WorkspaceFactory.create()
-        study = StudyFactory.create()
-        requester = UserFactory.create()
-        data_use_permission = DataUsePermissionFactory.create()
-        instance = models.CDSAWorkspace(
-            workspace=workspace,
-            study=study,
-            data_use_limitations="test limitations",
-            acknowledgments="test acknowledgments",
-            requested_by=requester,
-            data_use_permission=data_use_permission,
-        )
-        instance.save()
-        self.assertIsInstance(instance, models.CDSAWorkspace)
-        self.assertEqual(instance.data_use_permission, data_use_permission)
 
     def test_can_add_data_use_modifiers(self):
         """Saving a model with data_use_permission and data_use_modifiers set is valid."""

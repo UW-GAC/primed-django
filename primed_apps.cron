@@ -1,6 +1,12 @@
-# PRIMED_APPS crontab
+# PRIMED_APPS crontab - maintained in git primed_apps.cron
+# Send errors to primedweb email
+MAILTO="primedweb@uw.edu"
+
 # nightly except sunday at 01:00
-0 1 * * MON-SAT . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit --email primedconsortium@uw.edu --errors-only >> cron.log 2>&1
+0 1 * * MON-SAT . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit --email primedconsortium@uw.edu --errors-only >> cron.log
 
 # sunday night at 01:00
-0 1 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit --email primedconsortium@uw.edu >> cron.log 2>&1
+0 1 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit --email primedconsortium@uw.edu >> cron.log
+
+# Weekly cdsa_records run Sundays at 03:00 - disabled until permissions issues are resolved
+0 3 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py cdsa_records --outdir /projects/primed/records/cdsa/$(date +'\%Y-\%m-\%d') >> cron.log

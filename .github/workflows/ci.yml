@@ -39,7 +39,7 @@ jobs:
       # Getting only staged files can be tricky in case a new PR is opened
       # since the action is run on a branch in detached head state
       - name: Install and Run Pre-commit
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
   pytest-mariadb:
     runs-on: ubuntu-latest
@@ -63,6 +63,9 @@ jobs:
     env:
       # mysql://user:password@host:port/database
       DATABASE_URL: "mysql://root:root@127.0.0.1:3306/mysql"
+      # We can set this to an empty string, since we'll never make an API call.
+      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
+
 
     steps:
 
@@ -84,6 +87,9 @@ jobs:
           pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
+      - name: Collect staticfiles
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
+
       - name: Run tests
         run:  coverage run -p -m pytest
         env:
@@ -98,6 +104,10 @@ jobs:
 
   pytest-sqlite:
     runs-on: ubuntu-latest
+
+    env:
+      # We can set this to an empty string, since we'll never make an API call.
+      ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
     steps:
       - name: Checkout Code Repository
@@ -118,11 +128,11 @@ jobs:
           pip install pip-tools
           pip-sync requirements/requirements.txt requirements/test-requirements.txt
 
+      - name: Collect staticfiles
+        run: python manage.py collectstatic --noinput --settings=config.settings.test
+
       - name: Run tests
         run:  coverage run -p -m pytest
-        env:
-          # We can set this to an empty string, since we'll never make an API call.
-          ANVIL_API_SERVICE_ACCOUNT_FILE: foo
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -164,6 +174,6 @@ jobs:
           python -m coverage combine
           python -m coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -329,6 +329,10 @@ class CDSAWorkspace(
         help_text="Data available in this accession.",
         blank=True,
     )
+    gsr_restricted = models.BooleanField(
+        verbose_name="GSR restricted?",
+        help_text="Indicator of whether public posting of GSRs is restricted.",
+    )
 
     class Meta:
         verbose_name = " CDSA workspace"

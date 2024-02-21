@@ -310,6 +310,9 @@ class CDSAWorkspaceStaffTable(tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
+    cdsaworkspace__gsr_restricted = BooleanIconColumn(
+        orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
+    )
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
@@ -320,6 +323,7 @@ class CDSAWorkspaceStaffTable(tables.Table):
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
+            "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)
 
@@ -337,6 +341,7 @@ class CDSAWorkspaceUserTable(tables.Table):
         transform=lambda x: x.abbreviation,
         verbose_name="DUO modifiers",
     )
+    cdsaworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
@@ -347,5 +352,6 @@ class CDSAWorkspaceUserTable(tables.Table):
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
+            "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)

@@ -4646,7 +4646,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
-        print(form.errors)
         self.assertEqual(len(form.errors), 1)
         self.assertIn("is_primary", form.errors)
         self.assertEqual(len(form.errors["is_primary"]), 1)
@@ -6188,6 +6187,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-requested_by": self.requester.pk,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -6244,6 +6244,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                     data_use_modifier_2.pk,
                 ],
                 "workspacedata-0-requested_by": self.requester.pk,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -6289,6 +6290,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-disease_term": "foo",
                 "workspacedata-0-requested_by": self.requester.pk,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
