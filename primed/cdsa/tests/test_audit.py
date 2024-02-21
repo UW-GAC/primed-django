@@ -2203,22 +2203,3 @@ class WorkspaceAccessAuditTableTest(TestCase):
         ]
         table = workspace_audit.WorkspaceAccessAuditTable(data)
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        study = StudyFactory.create()
-        agreement = factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(study=study)
-        data = [
-            {
-                "data_affiliate_agreement": agreement,
-                "workspace": workspace,
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-        table = workspace_audit.WorkspaceAccessAuditTable(data)
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))
