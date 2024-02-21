@@ -5,7 +5,10 @@ from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
 
-from primed.primed_anvil.tables import WorkspaceSharedWithConsortiumColumn
+from primed.primed_anvil.tables import (
+    BooleanIconColumn,
+    WorkspaceSharedWithConsortiumColumn,
+)
 
 from . import models
 
@@ -93,6 +96,9 @@ class dbGaPWorkspaceStaffTable(tables.Table):
         verbose_name="Approved DARs",
         orderable=False,
     )
+    dbgapworkspace__gsr_restricted = BooleanIconColumn(
+        orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
+    )
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
@@ -103,6 +109,7 @@ class dbGaPWorkspaceStaffTable(tables.Table):
             "dbgap_accession",
             "dbgapworkspace__dbgap_consent_abbreviation",
             "number_approved_dars",
+            "dbgapworkspace__gsr_restricted",
             "is_shared",
         )
         order_by = ("name",)
@@ -133,6 +140,7 @@ class dbGaPWorkspaceUserTable(tables.Table):
     dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
         verbose_name="Consent"
     )
+    dbgapworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
@@ -142,6 +150,7 @@ class dbGaPWorkspaceUserTable(tables.Table):
             "billing_project",
             "dbgap_accession",
             "dbgapworkspace__dbgap_consent_abbreviation",
+            "dbgapworkspace__gsr_restricted",
             "is_shared",
         )
         order_by = ("name",)
@@ -230,7 +239,10 @@ class dbGaPDataAccessRequestTable(tables.Table):
         verbose_name=" dbGaP application",
         linkify=lambda record: record.dbgap_data_access_snapshot.dbgap_application.get_absolute_url(),
     )
-    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
+    dbgap_dar_id = tables.columns.Column(
+        verbose_name="DAR",
+        linkify=("dbgap:dars:history", {"dbgap_dar_id": tables.A("dbgap_dar_id")}),
+    )
     dbgap_dac = tables.columns.Column(verbose_name="DAC")
     dbgap_accession = dbGaPAccessionColumn(
         accessor="get_dbgap_accession",
@@ -266,22 +278,11 @@ class dbGaPDataAccessRequestTable(tables.Table):
         attrs = {"class": "table table-sm"}
 
 
-class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
+class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
     """Class to render a table of dbGaPDataAccessRequest objects for a specific dbGaPDataAccessSnapshot."""
 
-    dbgap_dar_id = tables.columns.Column(verbose_name="DAR")
-    dbgap_dac = tables.columns.Column(verbose_name="DAC")
-    dbgap_accession = dbGaPAccessionColumn(
-        accessor="get_dbgap_accession",
-        verbose_name="Accession",
-        order_by=(
-            "dbgap_phs",
-            "original_version",
-            "original_participant_set",
-        ),
-    )
-    dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
-    dbgap_current_status = tables.columns.Column(verbose_name="Current status")
+    dbgap_data_access_snapshot__dbgap_application__dbgap_project_id = None
+    dbgap_data_access_snapshot__created = None
     matching_workspaces = tables.columns.Column(
         accessor="get_dbgap_workspaces", orderable=False, default=" "
     )
@@ -317,6 +318,29 @@ class dbGaPDataAccessRequestBySnapshotTable(tables.Table):
             items = items + [this]
         html = format_html("" + "<br>".join(items))
         return html
+
+
+class dbGaPDataAccessRequestHistoryTable(dbGaPDataAccessRequestTable):
+    """Class to render a table of dbGaPDataAccessRequest history by dbgap_dar_id."""
+
+    dbgap_dar_id = tables.columns.Column(
+        verbose_name="DAR",
+        linkify=False,
+    )
+
+    class Meta:
+        model = models.dbGaPDataAccessRequest
+        fields = (
+            "dbgap_dar_id",
+            "dbgap_data_access_snapshot__created",
+            "dbgap_current_status",
+            "dbgap_data_access_snapshot__dbgap_application__dbgap_project_id",
+            "dbgap_dac",
+            "dbgap_accession",
+            "dbgap_consent_abbreviation",
+        )
+        order_by = ("-dbgap_data_access_snapshot__created",)
+        attrs = {"class": "table table-sm"}
 
 
 class dbGaPDataAccessRequestSummaryTable(tables.Table):

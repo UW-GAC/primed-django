@@ -96,6 +96,7 @@ LOCAL_APPS = [
     "primed.miscellaneous_workspaces",
     "primed.duo",
     "primed.cdsa",
+    "primed.collaborative_analysis",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -376,6 +377,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ResourceWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
+    "primed.collaborative_analysis.adapters.CollaborativeAnalysisWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
 ]

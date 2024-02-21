@@ -30,6 +30,13 @@ class dbGaPStudyAccessionForm(Bootstrap5MediaFormMixin, forms.ModelForm):
 class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a dbGaPWorkspace object."""
 
+    gsr_restricted = forms.TypedChoiceField(
+        coerce=lambda x: x == "True",
+        choices=((True, "Primary"), (False, "Component")),
+        widget=forms.RadioSelect,
+        label="Sensitive data?",
+    )
+
     class Meta:
         model = models.dbGaPWorkspace
         fields = (
@@ -39,6 +46,7 @@ class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "dbgap_consent_abbreviation",
             "dbgap_consent_code",
             "data_use_limitations",
+            "gsr_restricted",
             "acknowledgments",
             "data_use_permission",
             "disease_term",

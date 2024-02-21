@@ -10,7 +10,7 @@ asgiref==3.7.2
     # via
     #   -c requirements/requirements.txt
     #   django
-astroid==3.0.1
+astroid==3.0.3
     # via pylint
 asttokens==2.4.1
     # via stack-data
@@ -46,11 +46,11 @@ decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-dill==0.3.7
+dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-django==4.2.8
+django==4.2.10
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -74,7 +74,7 @@ flake8==7.0.0
     #   flake8-isort
 flake8-isort==6.1.1
     # via -r requirements/dev-requirements.in
-identify==2.5.33
+identify==2.5.34
     # via pre-commit
 idna==3.3
     # via
@@ -91,7 +91,7 @@ ipdb==0.13.13
     # via -r requirements/dev-requirements.in
 ipython==8.12.3
     # via ipdb
-isort==5.12.0
+isort==5.13.2
     # via
     #   flake8-isort
     #   pylint
@@ -101,7 +101,7 @@ jinja2==3.1.3
     # via sphinx
 livereload==2.6.3
     # via sphinx-autobuild
-markupsafe==2.1.3
+markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
@@ -149,7 +149,7 @@ pycodestyle==2.11.1
     # via flake8
 pyflakes==3.2.0
     # via flake8
-pygments==2.16.1
+pygments==2.17.2
     # via
     #   ipython
     #   sphinx
@@ -229,11 +229,11 @@ traitlets==5.14.1
     # via
     #   ipython
     #   matplotlib-inline
-types-pytz==2023.3.1.1
+types-pytz==2024.1.0.20240203
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.31.0.20240106
+types-requests==2.31.0.20240125
     # via -r requirements/dev-requirements.in
 typing-extensions==4.8.0
     # via

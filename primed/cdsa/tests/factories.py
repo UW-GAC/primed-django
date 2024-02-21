@@ -112,6 +112,7 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
     requested_by = SubFactory(UserFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)
     workspace = SubFactory(WorkspaceFactory, workspace_type="cdsa")
+    gsr_restricted = Faker("boolean")
 
     @post_generation
     def authorization_domains(self, create, extracted, **kwargs):
@@ -121,7 +122,9 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create()
+        auth_domain = ManagedGroupFactory.create(
+            name="auth_{}".format(self.workspace.name)
+        )
         self.workspace.authorization_domains.add(auth_domain)
 
     class Meta:

@@ -93,8 +93,8 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(instance.anvil_cdsa_group, group)
 
 
-class SignedAgreementAccessAuditResultTest(TestCase):
-    """Tests for the SignedAgreementAccessAuditResult class."""
+class SignedAgreementAccessAuditTest(TestCase):
+    """Tests for the SignedAgreementAccessAudit class."""
 
     def setUp(self):
         super().setUp()
@@ -118,13 +118,67 @@ class SignedAgreementAccessAuditResultTest(TestCase):
         self.assertEqual(len(cdsa_audit.needs_action), 0)
         self.assertEqual(len(cdsa_audit.errors), 0)
 
-    def test_loops_over_signed_agreements(self):
-        """run_audit loops over all signed agreements."""
+    def test_one_signed_agreement(self):
+        """Audit works when there is one signed agreement."""
+        this_agreement = factories.MemberAgreementFactory.create()
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit.run_audit()
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
+
+    def test_two_signed_agreements(self):
+        """Audit runs on all signed agreements by default."""
         # Create two signed agreements that need to be added to the SAG group.
         factories.MemberAgreementFactory.create_batch(2)
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
         cdsa_audit.run_audit()
         self.assertEqual(len(cdsa_audit.needs_action), 2)
+
+    def test_signed_agreement_queryset(self):
+        """Audit only runs on SignedAgreements in the signed_agreement_queryset."""
+        this_agreement = factories.MemberAgreementFactory.create()
+        factories.MemberAgreementFactory.create()
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit(
+            signed_agreement_queryset=models.SignedAgreement.objects.filter(
+                pk=this_agreement.signed_agreement.pk
+            )
+        )
+        cdsa_audit.run_audit()
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 1)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.needs_action[0]
+        self.assertIsInstance(record, signed_agreement_audit.GrantAccess)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
+
+    def test_dbgap_application_queryset_wrong_class(self):
+        """dbGaPAccessAudit raises error if dbgap_application_queryset has the wrong model class."""
+        with self.assertRaises(ValueError) as e:
+            signed_agreement_audit.SignedAgreementAccessAudit(
+                signed_agreement_queryset=models.MemberAgreement.objects.all()
+            )
+        self.assertEqual(
+            str(e.exception),
+            "signed_agreement_queryset must be a queryset of SignedAgreement objects.",
+        )
+
+    def test_dbgap_application_queryset_not_queryset(self):
+        """dbGaPAccessAudit raises error if dbgap_application_queryset is not a queryset."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        with self.assertRaises(ValueError) as e:
+            signed_agreement_audit.SignedAgreementAccessAudit(
+                signed_agreement_queryset=member_agreement.signed_agreement
+            )
+        self.assertEqual(
+            str(e.exception),
+            "signed_agreement_queryset must be a queryset of SignedAgreement objects.",
+        )
 
     def test_member_primary_in_group(self):
         """Member primary agreement with valid version in CDSA group."""
@@ -1477,6 +1531,46 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertFalse(cdsa_audit.completed)
         cdsa_audit.run_audit()
         self.assertTrue(cdsa_audit.completed)
+
+    def test_cdsa_workspace_queryset(self):
+        """Audit only runs on CDSAWorkspaces in the cdsa_workspace_queryset."""
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        factories.CDSAWorkspaceFactory.create()
+        cdsa_audit = workspace_audit.WorkspaceAccessAudit(
+            cdsa_workspace_queryset=models.CDSAWorkspace.objects.filter(
+                pk=cdsa_workspace.workspace.pk
+            )
+        )
+        cdsa_audit.run_audit()
+        self.assertEqual(len(cdsa_audit.verified), 1)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 0)
+        record = cdsa_audit.verified[0]
+        self.assertIsInstance(record, workspace_audit.VerifiedNoAccess)
+        self.assertEqual(record.workspace, cdsa_workspace)
+        self.assertIsNone(record.data_affiliate_agreement)
+        self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
+
+    def test_cdsa_workspace_queryset_wrong_class(self):
+        """Audit raises error if dbgap_application_queryset has the wrong model class."""
+        with self.assertRaises(ValueError) as e:
+            workspace_audit.WorkspaceAccessAudit(
+                cdsa_workspace_queryset=models.SignedAgreement.objects.all()
+            )
+        self.assertEqual(
+            str(e.exception),
+            "cdsa_workspace_queryset must be a queryset of CDSAWorkspace objects.",
+        )
+
+    def test_cdsa_workspace_queryset_not_queryset(self):
+        """Audit raises error if dbgap_application_queryset is not a queryset."""
+        workspace = factories.CDSAWorkspaceFactory.create()
+        with self.assertRaises(ValueError) as e:
+            workspace_audit.WorkspaceAccessAudit(cdsa_workspace_queryset=workspace)
+        self.assertEqual(
+            str(e.exception),
+            "cdsa_workspace_queryset must be a queryset of CDSAWorkspace objects.",
+        )
 
     def test_primary_in_auth_domain(self):
         study = StudyFactory.create()

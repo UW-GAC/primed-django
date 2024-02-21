@@ -98,6 +98,13 @@ class NonDataAffiliateAgreementForm(forms.ModelForm):
 class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for `CDSAWorkspace` objects."""
 
+    gsr_restricted = forms.TypedChoiceField(
+        coerce=lambda x: x == "True",
+        choices=((True, "Primary"), (False, "Component")),
+        widget=forms.RadioSelect,
+        label="Sensitive data?",
+    )
+
     class Meta:
         model = models.CDSAWorkspace
         fields = (
@@ -107,6 +114,7 @@ class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "data_use_modifiers",
             "disease_term",
             "data_use_limitations",
+            "gsr_restricted",
             "acknowledgments",
             "available_data",
             "disease_term",

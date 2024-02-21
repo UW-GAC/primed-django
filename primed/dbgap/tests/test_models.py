@@ -134,6 +134,7 @@ class dbGaPWorkspaceTest(TestCase):
             dbgap_consent_abbreviation="GRU-NPU",
             acknowledgments="test acknowledgments",
             requested_by=user,
+            gsr_restricted=False,
         )
         instance.save()
         self.assertIsInstance(instance, models.dbGaPWorkspace)
@@ -151,46 +152,17 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_can_add_data_use_permission(self):
         """Saving a model with data_use_permission set is valid."""
-        user = UserFactory.create()
-        workspace = WorkspaceFactory.create()
-        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
-        instance = models.dbGaPWorkspace(
-            workspace=workspace,
-            dbgap_study_accession=dbgap_study_accession,
-            dbgap_version=1,
-            dbgap_participant_set=1,
-            data_use_limitations="test limitations",
-            dbgap_consent_code=1,
-            dbgap_consent_abbreviation="GRU-NPU",
+        instance = factories.dbGaPWorkspaceFactory.create(
             data_use_permission=data_use_permission,
-            acknowledgments="test acknowledgments",
-            requested_by=user,
         )
-        instance.save()
         self.assertIsInstance(instance, models.dbGaPWorkspace)
         self.assertEqual(instance.data_use_permission, data_use_permission)
 
     def test_can_add_data_use_modifiers(self):
         """Saving a model with data_use_permission and data_use_modifiers set is valid."""
-        user = UserFactory.create()
-        workspace = WorkspaceFactory.create()
-        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        data_use_permission = DataUsePermissionFactory.create()
         data_use_modifiers = DataUseModifierFactory.create_batch(2)
-        instance = models.dbGaPWorkspace(
-            workspace=workspace,
-            dbgap_study_accession=dbgap_study_accession,
-            dbgap_version=1,
-            dbgap_participant_set=1,
-            data_use_limitations="test limitations",
-            dbgap_consent_code=1,
-            dbgap_consent_abbreviation="GRU-NPU",
-            data_use_permission=data_use_permission,
-            acknowledgments="test acknowledgments",
-            requested_by=user,
-        )
-        instance.save()
+        instance = factories.dbGaPWorkspaceFactory.create()
         instance.data_use_modifiers.add(*data_use_modifiers)
         self.assertIsInstance(instance, models.dbGaPWorkspace)
         self.assertIn(data_use_modifiers[0], instance.data_use_modifiers.all())
@@ -523,21 +495,8 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_available_data(self):
         """Can add available data to a workspace."""
-        user = UserFactory.create()
-        workspace = WorkspaceFactory.create()
-        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         available_data = AvailableDataFactory.create_batch(2)
-        instance = models.dbGaPWorkspace(
-            workspace=workspace,
-            dbgap_study_accession=dbgap_study_accession,
-            dbgap_version=1,
-            dbgap_participant_set=1,
-            data_use_limitations="test limitations",
-            dbgap_consent_code=1,
-            dbgap_consent_abbreviation="GRU-NPU",
-            acknowledgments="test acknowledgments",
-            requested_by=user,
-        )
+        instance = factories.dbGaPWorkspaceFactory.create()
         instance.save()
         instance.available_data.add(*available_data)
         self.assertIsInstance(instance, models.dbGaPWorkspace)

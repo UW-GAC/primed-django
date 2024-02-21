@@ -611,6 +611,53 @@ class dbGaPDataAccessRequestTableTest(TestCase):
         self.assertEqual(table.data[3], instance_1)
 
 
+class dbGaPDataAccessRequestHistoryTest(TestCase):
+    model = models.dbGaPDataAccessRequest
+    model_factory = factories.dbGaPDataAccessRequestFactory
+    table_class = tables.dbGaPDataAccessRequestHistoryTable
+
+    def test_row_count_with_no_objects(self):
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        self.model_factory.create()
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        self.model_factory.create_batch(2)
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+    def test_ordering(self):
+        """Instances are ordered alphabetically by dbgap_application and dbgap_dar_id."""
+        dbgap_snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            created=timezone.now() - timedelta(weeks=5),
+        )
+        instance_1 = self.model_factory.create(
+            dbgap_data_access_snapshot=dbgap_snapshot_1,
+        )
+        dbgap_snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            created=timezone.now() - timedelta(weeks=4)
+        )
+        instance_2 = self.model_factory.create(
+            dbgap_dar_id=instance_1.dbgap_dar_id,
+            dbgap_data_access_snapshot=dbgap_snapshot_2,
+        )
+        dbgap_snapshot_3 = factories.dbGaPDataAccessSnapshotFactory.create(
+            created=timezone.now() - timedelta(weeks=3)
+        )
+        instance_3 = self.model_factory.create(
+            dbgap_dar_id=instance_1.dbgap_dar_id,
+            dbgap_data_access_snapshot=dbgap_snapshot_3,
+        )
+        table = self.table_class(self.model.objects.all())
+        self.assertEqual(table.data[0], instance_3)
+        self.assertEqual(table.data[1], instance_2)
+        self.assertEqual(table.data[2], instance_1)
+
+
 class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
     model = models.dbGaPDataAccessRequest
     model_factory = factories.dbGaPDataAccessRequestFactory

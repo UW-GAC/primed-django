@@ -111,6 +111,10 @@ class dbGaPWorkspace(
         help_text="Data available in this accession.",
         blank=True,
     )
+    gsr_restricted = models.BooleanField(
+        verbose_name="GSR restricted?",
+        help_text="Indicator of whether public posting of GSRs is restricted.",
+    )
 
     class Meta:
         # Add a white space to prevent autocapitalization fo the "d" in "dbGaP".
