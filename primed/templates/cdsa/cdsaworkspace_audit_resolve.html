@@ -1,0 +1,64 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block title %}CDSA workspace audit{% endblock %}
+
+
+{% block content %}
+
+<h1>CDSA workspace audit</h1>
+
+<h2>Audit results</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    For each CDSA Workspace in the app, the audit checks that access is correct.
+    To be accessed by PRIMED members, the workspace must have a valid, primary Signed Agreement from the study whose data it contains.
+    If that is the case, the CDSA group should be in the auth domain of the workspace.
+    The audit does not check that the workspace is shared with the CDSA group.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>CDSA workspaces with an active primary Data Affiliate Agreement, and the PRIMED CDSA group <b>is</b> in the auth domain of the workspace.</li>
+          <li>CDSA workspaces without an active primary Data Affiliate Agreement, and the PRIMED CDSA group <b>is not</b> in the auth domain of the workspace.</li>
+        </ul>
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>CDSA workspaces with an active primary Data Affiliate Agreement, but the PRIMED CDSA group <b>is not</b> in the auth domain of the workspace.</li>
+        <li>CDSA workspaces with an inactive primary Data Affiliate Agreement, and the PRIMED CDSA group <b>is</b> in the auth domain of the workspace.</li>
+      </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>The PRIMED CDSA group is in the auth domain of the workspace, but there is no primary Signed Agreement from the study.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+
+<div class="card container-fluid mt-3 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Result</h5>
+    <p class="card-text">{{ audit_result }}</p>
+    {% if audit_result.action %}
+    <form method="post">
+
+      {% csrf_token %}
+      {{ form|crispy }}
+
+      <button type="submit" class="btn btn-primary">{{ audit_result.action }}</button>
+    </form>
+    {% else %}
+    <button type="submit" class="btn btn-primary disabled">No action needed</button>
+    {% endif %}
+  </div>
+</div>
+
+
+{% endblock content %}

@@ -1438,7 +1438,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:workspaces:audit:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_verified_no_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1450,7 +1459,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:workspaces:audit:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_grant_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1462,11 +1480,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[workspace.workspace.authorization_domains.first(), self.cdsa_group],
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:workspaces:audit:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1478,11 +1501,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[workspace.workspace.authorization_domains.first(), self.cdsa_group],
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:workspaces:audit:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1494,7 +1522,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:workspaces:audit:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_error_no_data_affiliate_agreement(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1502,7 +1539,16 @@ class WorkspaceAuditResultTest(TestCase):
             workspace=workspace,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:workspaces:audit:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_anvil_group_name(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)

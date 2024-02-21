@@ -18,23 +18,25 @@ class AccessAuditResult:
     workspace: models.CDSAWorkspace
     note: str
     data_affiliate_agreement: models.DataAffiliateAgreement = None
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init(*args, **kwargs)
-    #     self.anvil_cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
+    action: str = None
 
     def __post_init__(self):
         self.anvil_cdsa_group = ManagedGroup.objects.get(
             name=settings.ANVIL_CDSA_GROUP_NAME
         )
 
+    def __str__(self):
+        return f"{self.action} for {self.workspace}"
+
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "cdsa:workspaces:audit:resolve",
+            args=[
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
@@ -42,7 +44,7 @@ class AccessAuditResult:
             "workspace": self.workspace,
             "data_affiliate_agreement": self.data_affiliate_agreement,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -52,48 +54,36 @@ class AccessAuditResult:
 class VerifiedAccess(AccessAuditResult):
     """Audit results class for when access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified access: {self.note}"
 
 
 @dataclass
 class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when no access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified no access: {self.note}"
 
 
 @dataclass
 class GrantAccess(AccessAuditResult):
     """Audit results class for when access should be granted."""
 
-    def get_action(self):
-        return "Grant access"
+    action: str = "Grant access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.anvil_cdsa_group,
-            ],
-        )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
 class RemoveAccess(AccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
-    def get_action(self):
-        return "Remove access"
+    action: str = "Remove access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.anvil_cdsa_group,
-            ],
-        )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 @dataclass
@@ -254,6 +244,9 @@ class WorkspaceAccessAudit:
         return self.results_table_class(
             [x.get_table_dictionary() for x in self.verified]
         )
+
+    def get_all_results(self):
+        return self.verified + self.needs_action + self.errors
 
     def get_needs_action_table(self):
         """Return a table of results where action is needed."""

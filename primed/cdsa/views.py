@@ -698,6 +698,106 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
+class CDSAWorkspaceAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView
+):
+
+    model = models.CDSAWorkspace
+    form_class = Form
+    template_name = "cdsa/cdsaworkspace_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by CDSA workspace billing project and name."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(
+                workspace__billing_project__name=self.kwargs.get(
+                    "billing_project_slug"
+                ),
+                workspace__name=self.kwargs.get("workspace_slug"),
+            )
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_audit_result(self):
+        audit = workspace_audit.WorkspaceAccessAudit(
+            cdsa_workspace_queryset=models.CDSAWorkspace.objects.filter(
+                pk=self.object.pk
+            )
+        )
+        audit.run_audit()
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def form_valid(self, form):
+        cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
+        auth_domain = self.object.workspace.authorization_domains.first()
+        # Handle the result.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, workspace_audit.GrantAccess):
+                    # Add CDSA group to workspace auth domain.
+                    membership = GroupGroupMembership(
+                        parent_group=auth_domain,
+                        child_group=cdsa_group,
+                        role=GroupGroupMembership.MEMBER,
+                    )
+                    membership.anvil_create()
+                    membership.full_clean()
+                    membership.save()
+                elif isinstance(self.audit_result, workspace_audit.RemoveAccess):
+                    # Remove CDSA group from workspace auth domain.
+                    membership = GroupGroupMembership.objects.get(
+                        parent_group=auth_domain,
+                        child_group=cdsa_group,
+                    )
+                    membership.anvil_delete()
+                    membership.delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.htmx:
+            return HttpResponse(self.htmx_error)
+        else:
+            return super().form_invalid(form)
+
+
 class RecordsIndex(TemplateView):
     """Index page for records."""
 

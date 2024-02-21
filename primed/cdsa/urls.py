@@ -107,7 +107,11 @@ signed_agreement_patterns = (
 cdsa_workspace_audit_patterns = (
     [
         path("", views.CDSAWorkspaceAudit.as_view(), name="all"),
-        # path("resolve/<int:pk>/", views.CDSAWorkspaceAuditResolve.as_view(), name="resolve"),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.CDSAWorkspaceAuditResolve.as_view(),
+            name="resolve",
+        ),
     ],
     "audit",
 )
