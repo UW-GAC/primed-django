@@ -6761,7 +6761,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(messages), 0)
 
     @override_settings(ANVIL_CDSA_GROUP_NAME="FOOBAR")
-    def test_anvil_cdsa_group_does_not_exist(self):
+    def test_different_cdsa_group_name(self):
         """Settings file has a different CDSA group name."""
         cdsa_group = ManagedGroupFactory.create(name="FOOBAR")
         study = StudyFactory.create()
