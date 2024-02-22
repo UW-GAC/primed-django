@@ -41,6 +41,23 @@ data_access_snapshot_patterns = (
     "dbgap_data_access_snapshots",
 )
 
+audit_patterns = (
+    [
+        path("", views.dbGaPAudit.as_view(), name="all"),
+        path(
+            "<int:dbgap_project_id>/",
+            views.dbGaPApplicationAudit.as_view(),
+            name="applications",
+        ),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.dbGaPWorkspaceAudit.as_view(),
+            name="workspaces",
+        ),
+    ],
+    "audit",
+)
+
 data_access_request_patterns = (
     [
         path("current/", views.dbGaPDataAccessRequestList.as_view(), name="current"),
@@ -68,22 +85,22 @@ dbgap_application_patterns = (
             name="detail",
         ),
         path("<int:dbgap_project_id>/dars/", include(data_access_snapshot_patterns)),
-        path(
-            "<int:dbgap_project_id>/audit/",
-            views.dbGaPApplicationAudit.as_view(),
-            name="audit",
-        ),
+        # path(
+        #     "<int:dbgap_project_id>/audit/",
+        #     views.dbGaPApplicationAudit.as_view(),
+        #     name="audit",
+        # ),
     ],
     "dbgap_applications",
 )
 
 dbgap_workspace_patterns = (
     [
-        path(
-            "<slug:billing_project_slug>/<slug:workspace_slug>/audit/",
-            views.dbGaPWorkspaceAudit.as_view(),
-            name="audit",
-        ),
+        # path(
+        #     "<slug:billing_project_slug>/<slug:workspace_slug>/audit/",
+        #     views.dbGaPWorkspaceAudit.as_view(),
+        #     name="audit",
+        # ),
     ],
     "workspaces",
 )
@@ -103,7 +120,7 @@ records_patterns = (
 
 urlpatterns = [
     path("applications/", include(dbgap_application_patterns)),
-    path("audit/", views.dbGaPAudit.as_view(), name="audit"),
+    path("audit/", include(audit_patterns)),
     path("dars/", include(data_access_request_patterns)),
     path("records/", include(records_patterns)),
     path("studies/", include(dbgap_study_accession_patterns)),

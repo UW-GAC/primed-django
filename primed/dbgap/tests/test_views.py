@@ -925,7 +925,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "dbgap:workspaces:audit",
+                "dbgap:audit:workspaces",
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
         )
@@ -943,7 +943,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "dbgap:workspaces:audit",
+                "dbgap:audit:workspaces",
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
         )
@@ -1475,7 +1475,7 @@ class dbGaPApplicationDetailTest(TestCase):
         )
         self.assertContains(
             response,
-            reverse("dbgap:dbgap_applications:audit", args=[self.obj.dbgap_project_id]),
+            reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
         )
         "dbgap:dbgap_applications:dbgap_data_access_snapshots:new"
 
@@ -1492,7 +1492,7 @@ class dbGaPApplicationDetailTest(TestCase):
         )
         self.assertContains(
             response,
-            reverse("dbgap:dbgap_applications:audit", args=[self.obj.dbgap_project_id]),
+            reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
         )
 
     def test_context_snapshot_table(self):
@@ -3886,7 +3886,7 @@ class dbGaPApplicationAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:dbgap_applications:audit",
+            "dbgap:audit:applications",
             args=args,
         )
 
@@ -4157,7 +4157,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:workspaces:audit",
+            "dbgap:audit:workspaces",
             args=args,
         )
 
@@ -4620,7 +4620,7 @@ class dbGaPAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:audit",
+            "dbgap:audit:all",
             args=args,
         )
 
