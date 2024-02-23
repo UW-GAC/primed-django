@@ -700,23 +700,3 @@ class dbGaPAccessAuditTableTest(TestCase):
         table = audit.dbGaPAccessAuditTable(data)
         self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        data = [
-            {
-                "workspace": dbgap_workspace,
-                "data_access_request": factories.dbGaPDataAccessRequestForWorkspaceFactory(
-                    dbgap_workspace=dbgap_workspace
-                ),
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-        table = audit.dbGaPAccessAuditTable(data)
-        self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))

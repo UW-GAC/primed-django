@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import django_tables2 as tables
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 
 # from . import models
 from primed.primed_anvil.tables import BooleanIconColumn
@@ -129,17 +128,12 @@ class dbGaPAccessAuditTable(tables.Table):
     dar_consent = tables.Column(verbose_name="DAR consent")
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="snippets/dbgap_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
-
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
 
 class dbGaPAccessAudit:

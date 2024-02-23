@@ -3990,7 +3990,7 @@ class dbGaPApplicationAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.APPROVED_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
@@ -4011,7 +4011,7 @@ class dbGaPApplicationAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.NO_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
@@ -4304,7 +4304,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.APPROVED_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_snapshot(self):
         """verified_table shows a record when an application has no snapshots and no access."""
@@ -4332,7 +4332,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.NO_SNAPSHOTS,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_dar(self):
         """verified_table shows a record when an application has a snapshot, no dars, and no access."""
@@ -4360,7 +4360,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.NO_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_other_dar(self):
         """verified_table shows a record when there is no access and no matching dar."""
@@ -4392,7 +4392,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.NO_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_dar_not_approved(self):
         """verified_table shows a record when audit has verified no access."""
@@ -4423,7 +4423,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.DAR_NOT_APPROVED,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
@@ -4766,7 +4766,7 @@ class dbGaPAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.APPROVED_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
@@ -4791,7 +4791,7 @@ class dbGaPAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.dbGaPAccessAudit.NO_DAR,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
