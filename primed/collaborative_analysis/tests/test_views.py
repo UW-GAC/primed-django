@@ -53,9 +53,7 @@ class NavbarTest(TestCase):
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
-        self.assertContains(
-            response, reverse("collaborative_analysis:workspaces:audit_all")
-        )
+        self.assertContains(response, reverse("collaborative_analysis:audit:all"))
 
     def test_links_for_view(self):
         """Returns successful response code."""
@@ -67,9 +65,7 @@ class NavbarTest(TestCase):
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
-        self.assertNotContains(
-            response, reverse("collaborative_analysis:workspaces:audit_all")
-        )
+        self.assertNotContains(response, reverse("collaborative_analysis:audit:all"))
 
 
 class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
@@ -161,7 +157,7 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(obj.workspace.get_absolute_url())
         url = reverse(
-            "collaborative_analysis:workspaces:audit",
+            "collaborative_analysis:audit:workspaces",
             args=[obj.workspace.billing_project.name, obj.workspace.name],
         )
         self.assertIn(url, response.content.decode())
@@ -173,7 +169,7 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertNotIn(
             reverse(
-                "collaborative_analysis:workspaces:audit",
+                "collaborative_analysis:audit:workspaces",
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
             response.content.decode(),
@@ -402,7 +398,7 @@ class WorkspaceAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "collaborative_analysis:workspaces:audit",
+            "collaborative_analysis:audit:workspaces",
             args=args,
         )
 
@@ -745,7 +741,7 @@ class WorkspaceAuditAllTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "collaborative_analysis:workspaces:audit_all",
+            "collaborative_analysis:audit:all",
             args=args,
         )
 

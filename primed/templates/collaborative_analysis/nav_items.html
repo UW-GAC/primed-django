@@ -5,7 +5,7 @@
   <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
     {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
       <li>
-        <a class="dropdown-item" href="{% url 'collaborative_analysis:workspaces:audit_all' %}">Audit access</a>
+        <a class="dropdown-item" href="{% url 'collaborative_analysis:audit:all' %}">Audit access</a>
       </li>
     {% endif %}
 
