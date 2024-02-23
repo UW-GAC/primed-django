@@ -11,6 +11,7 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
     Workspace,
 )
+from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
     GroupGroupMembershipFactory,
@@ -20,6 +21,7 @@ from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.contrib.messages import get_messages
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import resolve_url
@@ -27,6 +29,7 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from faker import Faker
+from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; DataUsePermissionFactory,
@@ -4892,6 +4895,685 @@ class dbGaPAuditTest(TestCase):
             audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
+
+
+class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the dbGaPAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "dbgap:audit:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1, "foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1, "foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url(1, "foo", "bar"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(1, "foo", "bar"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1, "foo", "bar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_dbgap_application_does_not_exist(self):
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        request = self.factory.get(
+            self.get_url(
+                1,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            )
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request)
+
+    def test_billing_project_does_not_exist(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        request = self.factory.get(
+            self.get_url(
+                dbgap_application.dbgap_project_id,
+                "foo",
+                dbgap_workspace.workspace.name,
+            )
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request)
+
+    def test_workspace_does_not_exist(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        billing_project = BillingProjectFactory.create()
+        request = self.factory.get(
+            self.get_url(
+                dbgap_application.dbgap_project_id, billing_project.name, "foo"
+            )
+        )
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request)
+
+    def test_get_context_audit_result(self):
+        """The data_access_audit exists in the context."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            audit.AuditResult,
+        )
+
+    def test_get_context_dbgap_application(self):
+        """The dbgap_application exists in the context."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            )
+        )
+        self.assertIn("dbgap_application", response.context_data)
+        self.assertEqual(response.context_data["dbgap_application"], dbgap_application)
+
+    def test_get_context_dbgap_workspace(self):
+        """The dbgap_workspace exists in the context."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            )
+        )
+        self.assertIn("dbgap_workspace", response.context_data)
+        self.assertEqual(response.context_data["dbgap_workspace"], dbgap_workspace)
+
+    def test_get_verified_access(self):
+        """Get request with verified access."""
+        # Add a verified workspace.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, audit.VerifiedAccess)
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(
+            audit_result.dbgap_application,
+            dar.dbgap_data_access_snapshot.dbgap_application,
+        )
+        self.assertEqual(audit_result.data_access_request, dar)
+        self.assertEqual(
+            audit_result.note,
+            audit.dbGaPAccessAudit.APPROVED_DAR,
+        )
+        self.assertIsNone(audit_result.action)
+
+    def test_get_verified_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, audit.VerifiedNoAccess)
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(audit_result.dbgap_application, snapshot.dbgap_application)
+        self.assertIsNone(audit_result.data_access_request)
+        self.assertEqual(
+            audit_result.note,
+            audit.dbGaPAccessAudit.NO_DAR,
+        )
+        self.assertIsNone(audit_result.action)
+
+    def test_get_grant_access(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        workspace = factories.dbGaPWorkspaceFactory.create(
+            created=timezone.now() - timedelta(weeks=4)
+        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, audit.GrantAccess)
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(
+            audit_result.dbgap_application,
+            dar.dbgap_data_access_snapshot.dbgap_application,
+        )
+        self.assertEqual(audit_result.data_access_request, dar)
+        self.assertEqual(
+            audit_result.note,
+            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
+        )
+        self.assertIsNotNone(audit_result.action)
+
+    def test_get_remove_access(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        # Create an old dar that was approved
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_dar_id=dar.dbgap_dar_id,
+            dbgap_data_access_snapshot__dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=4),
+            dbgap_data_access_snapshot__is_most_recent=False,
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, audit.RemoveAccess)
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(
+            audit_result.dbgap_application,
+            dar.dbgap_data_access_snapshot.dbgap_application,
+        )
+        self.assertEqual(audit_result.data_access_request, dar)
+        self.assertEqual(
+            audit_result.note,
+            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
+        )
+        self.assertIsNotNone(audit_result.action)
+
+    def test_post_verified_access(self):
+        """post with VerifiedAccess audit result."""
+        # Add a verified workspace.
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace
+        )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+        )
+        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        # Membership hasn't changed.
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(
+            membership.parent_group, workspace.workspace.authorization_domains.first()
+        )
+        self.assertEqual(
+            membership.child_group,
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+    def test_post_verified_no_access(self):
+        """post with VerifiedNoAccess audit result."""
+        snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+        )
+        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        # No membership has been created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_post_grant_access(self):
+        """post with GrantAccess audit result."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        membership = GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_htmx(self):
+        """Context with GrantAccess."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(
+            response.content.decode(), views.dbGaPAuditResolve.htmx_success
+        )
+        # Membership has been created.
+        membership = GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_remove_access(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        # Create an old dar that was approved
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_dar_id=dar.dbgap_dar_id,
+            dbgap_data_access_snapshot__dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=4),
+            dbgap_data_access_snapshot__is_most_recent=False,
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+        )
+        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_anvil_api_error_grant(self):
+        """AnVIL API errors are properly handled."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # Audit result is still GrantAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, audit.GrantAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_grant_htmx(self):
+        """AnVIL API errors are properly handled with htmx."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.dbGaPAuditResolve.htmx_error)
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_anvil_api_error_remove(self):
+        """AnVIL API errors are properly handled."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        # Create an old dar that was approved
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_dar_id=dar.dbgap_dar_id,
+            dbgap_data_access_snapshot__dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=4),
+            dbgap_data_access_snapshot__is_most_recent=False,
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # Audit result is still RemoveAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, audit.RemoveAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove_htmx(self):
+        """AnVIL API errors are properly handled."""
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
+        )
+        # Create an old dar that was approved
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_dar_id=dar.dbgap_dar_id,
+            dbgap_data_access_snapshot__dbgap_application=dar.dbgap_data_access_snapshot.dbgap_application,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=4),
+            dbgap_data_access_snapshot__is_most_recent=False,
+            dbgap_workspace=workspace,
+            dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        group_name = (
+            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        )
+        api_url = (
+            self.api_client.sam_entry_point
+            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.dbGaPAuditResolve.htmx_error)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # No messages was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
 
 
 class dbGaPRecordsIndexTest(TestCase):

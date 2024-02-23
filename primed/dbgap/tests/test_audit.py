@@ -21,7 +21,15 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
         self.assertTrue(instance.has_access)
 
     def test_verified_no_access(self):
@@ -33,7 +41,15 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
         self.assertFalse(instance.has_access)
 
     def test_grant_access(self):
@@ -45,12 +61,12 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        instance.get_action_url()
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            "dbgap:audit:resolve",
             args=[
-                dbgap_workspace.workspace.authorization_domains.first(),
-                dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
@@ -65,12 +81,12 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        instance.get_action_url()
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            "dbgap:audit:resolve",
             args=[
-                dbgap_workspace.workspace.authorization_domains.first(),
-                dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
@@ -85,10 +101,11 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            "dbgap:audit:resolve",
             args=[
-                dbgap_workspace.workspace.authorization_domains.first(),
-                dbgap_application.anvil_access_group,
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
@@ -104,7 +121,15 @@ class AuditResultTest(TestCase):
             note="foo",
             has_access=True,
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error_no_dar(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -115,7 +140,16 @@ class AuditResultTest(TestCase):
             note="foo",
             has_access=True,
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
+        self.assertTrue(instance.has_access)
 
     def test_post_init(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()

@@ -45,6 +45,11 @@ audit_patterns = (
     [
         path("", views.dbGaPAudit.as_view(), name="all"),
         path(
+            "resolve/<int:dbgap_project_id>/<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.dbGaPAuditResolve.as_view(),
+            name="resolve",
+        ),
+        path(
             "<int:dbgap_project_id>/",
             views.dbGaPApplicationAudit.as_view(),
             name="applications",
