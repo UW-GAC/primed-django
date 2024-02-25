@@ -59,7 +59,7 @@ django-allauth==0.54.0
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.21
     # via -r requirements/requirements.in
-django-autocomplete-light==3.9.7
+django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
 django-crispy-forms==2.1
     # via
@@ -186,9 +186,7 @@ rpds-py==0.17.1
 rsa==4.9
     # via google-auth
 six==1.16.0
-    # via
-    #   django-autocomplete-light
-    #   python-dateutil
+    # via python-dateutil
 sqlparse==0.4.4
     # via
     #   -r requirements/requirements.in
