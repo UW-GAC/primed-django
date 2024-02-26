@@ -553,7 +553,7 @@ class WorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.CollaborativeAnalysisWorkspaceAccessAudit.IN_SOURCE_AUTH_DOMAINS,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has one account with verified no access."""
@@ -601,7 +601,7 @@ class WorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_SOURCE_AUTH_DOMAINS,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
@@ -872,7 +872,7 @@ class WorkspaceAuditAllTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.CollaborativeAnalysisWorkspaceAccessAudit.IN_SOURCE_AUTH_DOMAINS,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has one account with verified no access."""
@@ -914,7 +914,7 @@ class WorkspaceAuditAllTest(TestCase):
             table.rows[0].get_cell_value("note"),
             audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_SOURCE_AUTH_DOMAINS,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""

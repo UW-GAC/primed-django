@@ -1155,23 +1155,3 @@ class AccessAuditResultsTableTest(TestCase):
         table = audit.AccessAuditResultsTable(data)
         self.assertIsInstance(table, audit.AccessAuditResultsTable)
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        member_group = ManagedGroupFactory.create()
-        data = [
-            {
-                "workspace": workspace,
-                "member": member_group,
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-
-        table = audit.AccessAuditResultsTable(data)
-        self.assertIsInstance(table, audit.AccessAuditResultsTable)
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))

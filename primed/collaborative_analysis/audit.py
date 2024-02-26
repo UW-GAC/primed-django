@@ -9,7 +9,6 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
 )
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 
 from primed.primed_anvil.tables import BooleanIconColumn
 
@@ -98,17 +97,12 @@ class AccessAuditResultsTable(tables.Table):
     member = tables.Column(linkify=True)
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="snippets/collaborativeanalysis_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
-
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
 
 class CollaborativeAnalysisWorkspaceAccessAudit:
