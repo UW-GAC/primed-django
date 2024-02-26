@@ -102,7 +102,7 @@ class WorkspaceAccessAuditTable(tables.Table):
     )
     note = tables.Column()
     action = tables.TemplateColumn(
-        template_name="snippets/cdsa_workspace_audit_action_button.html"
+        template_name="cdsa/snippets/cdsa_workspace_audit_action_button.html"
     )
 
     class Meta:

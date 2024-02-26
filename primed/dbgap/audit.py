@@ -129,7 +129,7 @@ class dbGaPAccessAuditTable(tables.Table):
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
     action = tables.TemplateColumn(
-        template_name="snippets/dbgap_audit_action_button.html"
+        template_name="dbgap/snippets/dbgap_audit_action_button.html"
     )
 
     class Meta:

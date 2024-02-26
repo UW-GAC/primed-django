@@ -100,7 +100,7 @@ class SignedAgreementAccessAuditTable(tables.Table):
     agreement_version = tables.Column(accessor="signed_agreement__version")
     note = tables.Column()
     action = tables.TemplateColumn(
-        template_name="snippets/cdsa_signedagreement_audit_action_button.html"
+        template_name="cdsa/snippets/cdsa_signedagreement_audit_action_button.html"
     )
 
     class Meta:
