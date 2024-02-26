@@ -24,9 +24,6 @@ class AccessAuditResult:
             name=settings.ANVIL_CDSA_GROUP_NAME
         )
 
-    def __str__(self):
-        return f"{self.action} for {self.workspace}"
-
     def get_action_url(self):
         """The URL that handles the action needed."""
         return reverse(

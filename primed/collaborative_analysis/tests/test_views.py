@@ -1141,7 +1141,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         response = self.client.get(
             self.get_url(
                 collab_workspace.workspace.billing_project.name,
-                collab_workspace.workspace.billing_project.name,
+                collab_workspace.workspace.name,
                 "test@example.com",
             )
         )

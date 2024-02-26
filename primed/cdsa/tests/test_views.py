@@ -5558,6 +5558,11 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request)
 
+    def test_signed_agreement_does_not_exist(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(response.status_code, 404)
+
     def test_get_context_data_access_audit(self):
         """The data_access_audit exists in the context."""
         member_agreement = factories.MemberAgreementFactory.create()

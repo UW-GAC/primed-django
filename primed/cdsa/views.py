@@ -659,12 +659,6 @@ class SignedAgreementAuditResolve(
         else:
             return super().form_valid(form)
 
-    def form_invalid(self, form):
-        if self.request.htmx:
-            return HttpResponse(self.htmx_error)
-        else:
-            return super().form_invalid(form)
-
 
 class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show audit results for `CDSAWorkspaces`."""
@@ -790,12 +784,6 @@ class CDSAWorkspaceAuditResolve(
             return HttpResponse(self.htmx_success)
         else:
             return super().form_valid(form)
-
-    def form_invalid(self, form):
-        if self.request.htmx:
-            return HttpResponse(self.htmx_error)
-        else:
-            return super().form_invalid(form)
 
 
 class RecordsIndex(TemplateView):

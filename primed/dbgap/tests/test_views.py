@@ -3929,12 +3929,9 @@ class dbGaPApplicationAuditTest(TestCase):
 
     def test_invalid_dbgap_application_pk(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(self.get_url(self.application.dbgap_project_id + 1))
-        request.user = self.user
-        with self.assertRaises(Http404):
-            self.get_view()(
-                request, dbgap_project_id=self.application.dbgap_project_id + 1
-            )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.application.dbgap_project_id + 1))
+        self.assertEqual(response.status_code, 404)
 
     def test_context_data_access_audit(self):
         """The data_access_audit exists in the context."""
