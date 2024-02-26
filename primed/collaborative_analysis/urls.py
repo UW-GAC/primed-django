@@ -17,6 +17,11 @@ collaborative_analysis_audit_patterns = (
             views.WorkspaceAudit.as_view(),
             name="workspaces",
         ),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<str:member_email>/",
+            views.CollaborativeAnalysisAuditResolve.as_view(),
+            name="resolve",
+        ),
     ],
     "audit",
 )

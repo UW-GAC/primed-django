@@ -771,12 +771,6 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         else:
             return super().form_valid(form)
 
-    # def form_invalid(self, form):
-    #     if self.request.htmx:
-    #         return HttpResponse(self.htmx_error)
-    #     else:
-    #         return super().form_invalid(form)
-
 
 class dbGaPRecordsIndex(TemplateView):
     """Index page for dbGaP records."""
