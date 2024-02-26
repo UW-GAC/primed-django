@@ -6293,6 +6293,20 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request)
 
+    def test_billing_project_does_not_exist(self):
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url("foo", cdsa_workspace.workspace.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_workspace_name_does_not_exist(self):
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(cdsa_workspace.workspace.billing_project.name, "foo")
+        )
+        self.assertEqual(response.status_code, 404)
+
     def test_get_context_audit_result(self):
         """The data_access_audit exists in the context."""
         workspace = factories.CDSAWorkspaceFactory.create()
