@@ -141,7 +141,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
 
     # Allowed reasons for access.
     IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains for this workspace."
-    DCC_ACCESS = "DCC groups are allowed access."
+    DCC_ACCESS = "CC groups are allowed access."
 
     # Allowed reasons for no access.
     NOT_IN_SOURCE_AUTH_DOMAINS = (
@@ -149,10 +149,12 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
     )
     NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
     INACTIVE_ACCOUNT = "Account is inactive."
+    NON_DCC_GROUP = "Non-CC groups are not allowed access."
 
     # Errors.
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
 
+    ALLOWED_GROUP_NAMES = ("PRIMED_CC_WRITERS",)
     results_table_class = AccessAuditResultsTable
 
     def __init__(self, queryset=None):
@@ -201,47 +203,71 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
                 )
             )
 
-        # Check that no groups have access.
-        group_memberships = GroupGroupMembership.objects.filter(
-            parent_group=workspace.workspace.authorization_domains.first(),
-        ).exclude(
-            # Ignore cc admins group - it is handled differently because it should have admin privileges.
-            child_group__name="PRIMED_CC_ADMINS",
+        # Check group access. Most groups should not have access.
+        group_memberships = (
+            GroupGroupMembership.objects.filter(
+                parent_group=workspace.workspace.authorization_domains.first(),
+            )
+            .exclude(
+                # Ignore cc admins group - it is handled differently because it should have admin privileges.
+                child_group__name="PRIMED_CC_ADMINS",
+            )
+            .exclude(
+                # Ignore allowed groups - they will be checked separately later.
+                child_group__name__in=self.ALLOWED_GROUP_NAMES,
+            )
         )
-        # CC groups that should have access.
-        cc_groups = ManagedGroup.objects.filter(
-            name__in=[
-                "PRIMED_CC_WRITERS",
-                # "PRIMED_CC_MEMBERS", # CC_MEMBERS should not get access.
-            ]
-        )
-        for cc_group in cc_groups:
-            try:
-                group_memberships.get(child_group=cc_group)
-            except GroupGroupMembership.DoesNotExist:
-                self.needs_action.append(
-                    GrantAccess(
-                        collaborative_analysis_workspace=workspace,
-                        member=cc_group,
-                        note=self.DCC_ACCESS,
-                    )
-                )
-            else:
-                group_memberships = group_memberships.exclude(child_group=cc_group)
-                self.verified.append(
-                    VerifiedAccess(
-                        collaborative_analysis_workspace=workspace,
-                        member=cc_group,
-                        note=self.DCC_ACCESS,
-                    )
-                )
-        # Any other groups are an error.
         for membership in group_memberships:
+            self._audit_workspace_and_group(workspace, membership.child_group)
+        # Audit allowed groups
+        for group in ManagedGroup.objects.filter(name__in=self.ALLOWED_GROUP_NAMES):
+            self._audit_workspace_and_group(workspace, group)
+
+    def _audit_workspace_and_group(self, collaborative_analysis_workspace, group):
+        """Audit access for a specific CollaborativeAnalysisWorkspace and group."""
+        # CC_WRITERS group should have access.
+        access_allowed = group.name in [
+            "PRIMED_CC_WRITERS",
+        ]
+        in_auth_domain = (
+            collaborative_analysis_workspace.workspace.authorization_domains.first()
+        )
+        auth_domain = (
+            collaborative_analysis_workspace.workspace.authorization_domains.first()
+        )
+        in_auth_domain = GroupGroupMembership.objects.filter(
+            parent_group=auth_domain, child_group=group
+        ).exists()
+        if access_allowed and in_auth_domain:
+            self.verified.append(
+                VerifiedAccess(
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
+                    note=self.DCC_ACCESS,
+                )
+            )
+        elif access_allowed and not in_auth_domain:
+            self.needs_action.append(
+                GrantAccess(
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
+                    note=self.DCC_ACCESS,
+                )
+            )
+        elif not access_allowed and in_auth_domain:
             self.errors.append(
                 RemoveAccess(
-                    collaborative_analysis_workspace=workspace,
-                    member=membership.child_group,
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
                     note=self.UNEXPECTED_GROUP_ACCESS,
+                )
+            )
+        else:
+            self.verified.append(
+                VerifiedNoAccess(
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
+                    note=self.NON_DCC_GROUP,
                 )
             )
 
