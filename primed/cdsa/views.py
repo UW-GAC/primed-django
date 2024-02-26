@@ -766,17 +766,17 @@ class CDSAWorkspaceAuditResolve(
                         child_group=cdsa_group,
                         role=GroupGroupMembership.MEMBER,
                     )
-                    membership.anvil_create()
                     membership.full_clean()
                     membership.save()
+                    membership.anvil_create()
                 elif isinstance(self.audit_result, workspace_audit.RemoveAccess):
                     # Remove CDSA group from workspace auth domain.
                     membership = GroupGroupMembership.objects.get(
                         parent_group=auth_domain,
                         child_group=cdsa_group,
                     )
-                    membership.anvil_delete()
                     membership.delete()
+                    membership.anvil_delete()
                 else:
                     pass
         except AnVILAPIError as e:

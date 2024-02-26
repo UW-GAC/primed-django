@@ -195,9 +195,9 @@ class CollaborativeAnalysisAuditResolve(
                             child_group=self.member,
                             role=GroupGroupMembership.MEMBER,
                         )
-                    membership.anvil_create()
                     membership.full_clean()
                     membership.save()
+                    membership.anvil_create()
                 elif isinstance(self.audit_result, audit.RemoveAccess):
                     # Remove from CDSA group.
                     if isinstance(self.member, Account):
@@ -212,8 +212,8 @@ class CollaborativeAnalysisAuditResolve(
                             child_group=self.member,
                             role=GroupGroupMembership.MEMBER,
                         )
-                    membership.anvil_delete()
                     membership.delete()
+                    membership.anvil_delete()
                 else:
                     pass
         except AnVILAPIError as e:

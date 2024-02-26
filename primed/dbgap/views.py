@@ -746,17 +746,17 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
                         child_group=self.dbgap_application.anvil_access_group,
                         role=GroupGroupMembership.MEMBER,
                     )
-                    membership.anvil_create()
                     membership.full_clean()
                     membership.save()
+                    membership.anvil_create()
                 elif isinstance(self.audit_result, audit.RemoveAccess):
                     # Remove from CDSA group.
                     membership = GroupGroupMembership.objects.get(
                         parent_group=auth_domain,
                         child_group=self.dbgap_application.anvil_access_group,
                     )
-                    membership.anvil_delete()
                     membership.delete()
+                    membership.anvil_delete()
                 else:
                     pass
         except AnVILAPIError as e:
