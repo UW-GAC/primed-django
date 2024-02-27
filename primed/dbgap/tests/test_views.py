@@ -4986,17 +4986,17 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             self.get_view()(request)
 
     def test_dbgap_application_does_not_exist(self):
+        """Raises a 404 error with an invalid object dbgap_application_pk."""
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        request = self.factory.get(
+        self.client.force_login(self.user)
+        response = self.client.get(
             self.get_url(
                 1,
                 dbgap_workspace.workspace.billing_project.name,
                 dbgap_workspace.workspace.name,
             )
         )
-        request.user = self.user
-        with self.assertRaises(Http404):
-            self.get_view()(request)
+        self.assertEqual(response.status_code, 404)
 
     def test_billing_project_does_not_exist(self):
         dbgap_application = factories.dbGaPApplicationFactory.create()

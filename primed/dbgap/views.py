@@ -693,10 +693,7 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
                 dbgap_project_id=self.kwargs.get("dbgap_project_id")
             )
         except models.dbGaPApplication.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404("No dbGaPApplications found matching the query")
         return obj
 
     def get_audit_result(self):
