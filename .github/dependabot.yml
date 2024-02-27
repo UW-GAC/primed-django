@@ -20,4 +20,12 @@ updates:
       # Allow both direct and indirect updates for all packages
       - dependency-type: "all"
     # Allow up to 10 dependencies for pip dependencies
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 20
+
+    prod-dependencies-minor-patch:
+      dependency-type: "production"
+      update-types:
+        - "minor"
+        - "patch"
+    dev-dependencies:
+      dependency-type: "development"
