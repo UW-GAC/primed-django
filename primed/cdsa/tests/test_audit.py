@@ -36,7 +36,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
             ),
         )
 
@@ -50,7 +50,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
             ),
         )
 
@@ -64,7 +64,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
             ),
         )
 
@@ -78,7 +78,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
             ),
         )
 
@@ -91,7 +91,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:signed_agreements:audit:resolve", args=[signed_agreement.cc_id]
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
             ),
         )
 
@@ -1441,7 +1441,7 @@ class WorkspaceAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:workspaces:audit:resolve",
+                "cdsa:audit:workspaces:resolve",
                 args=[
                     workspace.workspace.billing_project.name,
                     workspace.workspace.name,
@@ -1462,7 +1462,7 @@ class WorkspaceAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:workspaces:audit:resolve",
+                "cdsa:audit:workspaces:resolve",
                 args=[
                     workspace.workspace.billing_project.name,
                     workspace.workspace.name,
@@ -1483,7 +1483,7 @@ class WorkspaceAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:workspaces:audit:resolve",
+                "cdsa:audit:workspaces:resolve",
                 args=[
                     workspace.workspace.billing_project.name,
                     workspace.workspace.name,
@@ -1504,7 +1504,7 @@ class WorkspaceAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:workspaces:audit:resolve",
+                "cdsa:audit:workspaces:resolve",
                 args=[
                     workspace.workspace.billing_project.name,
                     workspace.workspace.name,
@@ -1525,7 +1525,7 @@ class WorkspaceAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:workspaces:audit:resolve",
+                "cdsa:audit:workspaces:resolve",
                 args=[
                     workspace.workspace.billing_project.name,
                     workspace.workspace.name,
@@ -1542,7 +1542,7 @@ class WorkspaceAuditResultTest(TestCase):
         self.assertEqual(
             instance.get_action_url(),
             reverse(
-                "cdsa:workspaces:audit:resolve",
+                "cdsa:audit:workspaces:resolve",
                 args=[
                     workspace.workspace.billing_project.name,
                     workspace.workspace.name,

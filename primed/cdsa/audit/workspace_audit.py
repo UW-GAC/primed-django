@@ -27,7 +27,7 @@ class AccessAuditResult:
     def get_action_url(self):
         """The URL that handles the action needed."""
         return reverse(
-            "cdsa:workspaces:audit:resolve",
+            "cdsa:audit:workspaces:resolve",
             args=[
                 self.workspace.workspace.billing_project.name,
                 self.workspace.workspace.name,

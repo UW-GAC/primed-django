@@ -80,49 +80,48 @@ non_data_affiliate_agreement_patterns = (
     "non_data_affiliates",
 )
 
-signed_agreement_audit_patterns = (
-    [
-        path("", views.SignedAgreementAudit.as_view(), name="all"),
-        path(
-            "resolve/<int:cc_id>/",
-            views.SignedAgreementAuditResolve.as_view(),
-            name="resolve",
-        ),
-    ],
-    "audit",
-)
-
 signed_agreement_patterns = (
     [
         path("", views.SignedAgreementList.as_view(), name="list"),
         path("members/", include(member_agreement_patterns)),
         path("data_affiliates/", include(data_affiliate_agreement_patterns)),
         path("non_data_affiliates/", include(non_data_affiliate_agreement_patterns)),
-        path("audit/", include(signed_agreement_audit_patterns)),
+        # path("audit/", include(signed_agreement_audit_patterns)),
     ],
     "signed_agreements",
 )
 
+signed_agreement_audit_patterns = (
+    [
+        path("", views.SignedAgreementAudit.as_view(), name="all"),
+        path(
+            "<int:cc_id>/resolve/",
+            views.SignedAgreementAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "signed_agreements",
+)
 
-cdsa_workspace_audit_patterns = (
+workspace_audit_patterns = (
     [
         path("", views.CDSAWorkspaceAudit.as_view(), name="all"),
         path(
-            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/",
+            "<slug:billing_project_slug>/<slug:workspace_slug>/resolve/",
             views.CDSAWorkspaceAuditResolve.as_view(),
             name="resolve",
         ),
     ],
-    "audit",
-)
-
-cdsa_workspace_patterns = (
-    [
-        path("audit/", include(cdsa_workspace_audit_patterns)),
-    ],
     "workspaces",
 )
 
+audit_patterns = (
+    [
+        path("workspaces", include(workspace_audit_patterns)),
+        path("signed_agreements", include(signed_agreement_audit_patterns)),
+    ],
+    "audit",
+)
 
 records_patterns = (
     [
@@ -156,5 +155,5 @@ urlpatterns = [
     path("agreement_versions/", include(agreement_version_patterns)),
     path("signed_agreements/", include(signed_agreement_patterns)),
     path("records/", include(records_patterns)),
-    path("cdsa_workspaces/", include(cdsa_workspace_patterns)),
+    path("audit/", include(audit_patterns)),
 ]

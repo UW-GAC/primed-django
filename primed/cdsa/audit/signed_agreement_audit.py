@@ -31,7 +31,7 @@ class AccessAuditResult:
     def get_action_url(self):
         """The URL that handles the action needed."""
         return reverse(
-            "cdsa:signed_agreements:audit:resolve",
+            "cdsa:audit:signed_agreements:resolve",
             args=[
                 self.signed_agreement,
             ],
