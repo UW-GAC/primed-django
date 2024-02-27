@@ -1,0 +1,32 @@
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    To have access to a Collaborative Analysis Workspace, an account must meet both of the following criteria:
+
+    <ul>
+      <li>Be in the analyst group associated with the workspace</li>
+      <li>Be in the auth domain for all source workspaces</li>
+    </ul>
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>An account in the analyst group is in the auth domain for this workspace and is in all auth domains for all source workspaces.</li>
+          <li>An account in the analyst group is <b>not</b> in the auth domain for this workspace and is <b>not</b> in all auth domains for all source workspaces.</li>
+        </ul>
+
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>An account in the analyst group is <b>not</b> in the auth domain for this workspace and is in all auth domains for all source workspaces.</li>
+        <li>An account in the analyst group is in the auth domain for this workspace and is <b>not</b> in all auth domains for all source workspaces.</li>
+    </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>A group is unexpectedly in the auth domain.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>

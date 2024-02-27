@@ -5,22 +5,27 @@ from . import views
 app_name = "collaborative_analysis"
 
 
-collaborative_analysis_workspace_patterns = (
+collaborative_analysis_audit_patterns = (
     [
         path(
-            "audit/",
+            "",
             views.WorkspaceAuditAll.as_view(),
-            name="audit_all",
+            name="all",
         ),
         path(
-            "<slug:billing_project_slug>/<slug:workspace_slug>/audit/",
+            "workspaces/<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.WorkspaceAudit.as_view(),
-            name="audit",
+            name="workspaces",
+        ),
+        path(
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/<str:member_email>/",
+            views.CollaborativeAnalysisAuditResolve.as_view(),
+            name="resolve",
         ),
     ],
-    "workspaces",
+    "audit",
 )
 
 urlpatterns = [
-    path("workspaces/", include(collaborative_analysis_workspace_patterns)),
+    path("audit/", include(collaborative_analysis_audit_patterns)),
 ]

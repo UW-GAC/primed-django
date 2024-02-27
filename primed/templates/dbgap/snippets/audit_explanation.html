@@ -1,0 +1,29 @@
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+    <p>
+      To have access to a workspace, a dbGaP application must have an approved DAR for the data in that workspace.
+      Access to a workspace is controlled by adding or removing the access group for a dbGaP application to or from the workspace authorization domain.
+    </p>
+    <p>The audit result categories are explained below.
+      <ul>
+
+        <li><b>Verified</b> includes the following:</li>
+          <ul>
+            <li>No DAR is associated with the workspace and the access group is not in the auth domain.</li>
+            <li>There is a DAR associated with the workspace, but it is not approved, and the group is not in the auth domain.</li>
+            <li>There is an approved DAR associated with the workspace and the group is in the auth domain.</li>
+          </ul>
+
+        <li><b>Needs action</b> includes the following:</li>
+        <ul>
+          <li>There is an approved DAR for the workspace, but the group is not in the auth domain.</li>
+          <li>A DAR that used to be approved for the workspace is no longer approved, and the group is in the auth domain.</li>
+        </ul>
+
+        <li><b>Errors</b></li>
+        <ul>
+          <li>The access group is in the auth domain of the workspace for an unknown reason.</li>
+        </ul>
+      </ul>
+    </p>
+    <p>Any errors should be reported!</p>
+  </div>

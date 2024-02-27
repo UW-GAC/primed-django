@@ -17,10 +17,12 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import inlineformset_factory
-from django.http import Http404, HttpResponseRedirect
+from django.forms.forms import Form
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from . import forms, helpers, models, tables
@@ -570,6 +572,94 @@ class SignedAgreementAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView
         return context
 
 
+class SignedAgreementAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView
+):
+
+    model = models.SignedAgreement
+    form_class = Form
+    template_name = "cdsa/signedagreement_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by CDSA cc_id."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(cc_id=self.kwargs.get("cc_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_audit_result(self):
+        audit = signed_agreement_audit.SignedAgreementAccessAudit(
+            signed_agreement_queryset=models.SignedAgreement.objects.filter(
+                pk=self.object.pk
+            )
+        )
+        audit.run_audit()
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def form_valid(self, form):
+        cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
+        # Handle the result.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, signed_agreement_audit.GrantAccess):
+                    # Add to CDSA group.
+                    membership = GroupGroupMembership(
+                        parent_group=cdsa_group,
+                        child_group=self.object.anvil_access_group,
+                        role=GroupGroupMembership.MEMBER,
+                    )
+                    membership.anvil_create()
+                    membership.full_clean()
+                    membership.save()
+                elif isinstance(self.audit_result, signed_agreement_audit.RemoveAccess):
+                    # Remove from CDSA group.
+                    membership = GroupGroupMembership.objects.get(
+                        parent_group=cdsa_group,
+                        child_group=self.object.anvil_access_group,
+                    )
+                    membership.anvil_delete()
+                    membership.delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+
 class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show audit results for `CDSAWorkspaces`."""
 
@@ -600,6 +690,100 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         context["needs_action_table"] = self.audit.get_needs_action_table()
         context["audit"] = self.audit
         return context
+
+
+class CDSAWorkspaceAuditResolve(
+    AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView
+):
+
+    model = models.CDSAWorkspace
+    form_class = Form
+    template_name = "cdsa/cdsaworkspace_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by CDSA workspace billing project and name."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(
+                workspace__billing_project__name=self.kwargs.get(
+                    "billing_project_slug"
+                ),
+                workspace__name=self.kwargs.get("workspace_slug"),
+            )
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query"
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_audit_result(self):
+        audit = workspace_audit.WorkspaceAccessAudit(
+            cdsa_workspace_queryset=models.CDSAWorkspace.objects.filter(
+                pk=self.object.pk
+            )
+        )
+        audit.run_audit()
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.object
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def form_valid(self, form):
+        cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
+        auth_domain = self.object.workspace.authorization_domains.first()
+        # Handle the result.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, workspace_audit.GrantAccess):
+                    # Add CDSA group to workspace auth domain.
+                    membership = GroupGroupMembership(
+                        parent_group=auth_domain,
+                        child_group=cdsa_group,
+                        role=GroupGroupMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, workspace_audit.RemoveAccess):
+                    # Remove CDSA group from workspace auth domain.
+                    membership = GroupGroupMembership.objects.get(
+                        parent_group=auth_domain,
+                        child_group=cdsa_group,
+                    )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
 
 
 class RecordsIndex(TemplateView):

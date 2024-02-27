@@ -1,0 +1,35 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+{% load crispy_forms_tags %}
+
+{% block title %}Signed Agreement audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Signed Agreement audit</h1>
+
+<h2>Audit results for SignedAgreement {{ object }}</h2>
+
+{% include 'snippets/cdsa_signedagreement_audit_explanation.html' %}
+
+<div class="card container-fluid mt-3 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Result</h5>
+    <p class="card-text">{{ audit_result }}</p>
+    {% if audit_result.action %}
+    <form method="post">
+
+      {% csrf_token %}
+      {{ form|crispy }}
+
+      <button type="submit" class="btn btn-primary">{{ audit_result.action }}</button>
+    </form>
+    {% else %}
+    <button type="submit" class="btn btn-primary disabled">No action needed</button>
+    {% endif %}
+  </div>
+</div>
+
+
+{% endblock content %}

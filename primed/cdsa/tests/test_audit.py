@@ -32,7 +32,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertIsNone(instance.action)
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
+            ),
+        )
 
     def test_verified_no_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -40,7 +46,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertIsNone(instance.action)
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
+            ),
+        )
 
     def test_grant_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -48,11 +60,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[self.cdsa_group, signed_agreement.anvil_access_group],
+        self.assertEqual(instance.action, "Grant access")
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -60,11 +74,13 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[self.cdsa_group, signed_agreement.anvil_access_group],
+        self.assertEqual(instance.action, "Remove access")
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -72,7 +88,12 @@ class SignedAgreementAuditResultTest(TestCase):
             signed_agreement=signed_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]
+            ),
+        )
 
     def test_anvil_group_name(self):
         signed_agreement = factories.SignedAgreementFactory.create()
@@ -1336,10 +1357,10 @@ class SignedAgreementAccessAuditTableTest(TestCase):
 
     def test_one_row(self):
         """Table works with one row."""
-        signed_agreement = factories.SignedAgreementFactory.create()
+        member_agreement = factories.MemberAgreementFactory.create()
         data = [
             {
-                "signed_agreement": signed_agreement,
+                "signed_agreement": member_agreement.signed_agreement,
                 "agreement_type": "Foo",
                 "agreement_group": "Bar",
                 "note": "a note",
@@ -1352,25 +1373,30 @@ class SignedAgreementAccessAuditTableTest(TestCase):
             table, signed_agreement_audit.SignedAgreementAccessAuditTable
         )
         self.assertEqual(len(table.rows), 1)
+        self.assertIn(
+            str(member_agreement.signed_agreement.cc_id),
+            table.rows[0].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[0].get_cell("note"), "a note")
 
     def test_two_rows(self):
         """Table works with two rows."""
-        signed_agreement_1 = factories.SignedAgreementFactory.create()
-        signed_agreement_2 = factories.SignedAgreementFactory.create()
+        signed_agreement_1 = factories.MemberAgreementFactory.create()
+        signed_agreement_2 = factories.DataAffiliateAgreementFactory.create()
         data = [
             {
-                "signed_agreement": signed_agreement_1,
+                "signed_agreement": signed_agreement_1.signed_agreement,
                 "agreement_type": "Foo",
                 "agreement_group": "Bar",
-                "note": "a note",
+                "note": "note 1",
                 "action": "",
                 "action_url": "",
             },
             {
-                "signed_agreement": signed_agreement_2,
+                "signed_agreement": signed_agreement_2.signed_agreement,
                 "agreement_type": "Foo",
                 "agreement_group": "Bar",
-                "note": "a note",
+                "note": "note 2",
                 "action": "",
                 "action_url": "",
             },
@@ -1380,27 +1406,16 @@ class SignedAgreementAccessAuditTableTest(TestCase):
             table, signed_agreement_audit.SignedAgreementAccessAuditTable
         )
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        signed_agreement = factories.SignedAgreementFactory.create()
-        data = [
-            {
-                "signed_agreement": signed_agreement,
-                "agreement_type": "Foo",
-                "agreement_group": "Bar",
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-        table = signed_agreement_audit.SignedAgreementAccessAuditTable(data)
-        self.assertIsInstance(
-            table, signed_agreement_audit.SignedAgreementAccessAuditTable
+        self.assertIn(
+            str(signed_agreement_1.signed_agreement.cc_id),
+            table.rows[0].get_cell("signed_agreement"),
         )
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))
+        self.assertEqual(table.rows[0].get_cell("note"), "note 1")
+        self.assertIn(
+            str(signed_agreement_2.signed_agreement.cc_id),
+            table.rows[1].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[1].get_cell("note"), "note 2")
 
 
 class WorkspaceAuditResultTest(TestCase):
@@ -1423,7 +1438,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:workspaces:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_verified_no_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1435,7 +1459,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:workspaces:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_grant_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1447,11 +1480,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[workspace.workspace.authorization_domains.first(), self.cdsa_group],
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:workspaces:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_remove_access(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1463,11 +1501,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[workspace.workspace.authorization_domains.first(), self.cdsa_group],
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:workspaces:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
         )
-        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1479,7 +1522,16 @@ class WorkspaceAuditResultTest(TestCase):
             data_affiliate_agreement=data_affiliate_agreement,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:workspaces:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_error_no_data_affiliate_agreement(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -1487,7 +1539,16 @@ class WorkspaceAuditResultTest(TestCase):
             workspace=workspace,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        self.assertEqual(
+            instance.get_action_url(),
+            reverse(
+                "cdsa:audit:workspaces:resolve",
+                args=[
+                    workspace.workspace.billing_project.name,
+                    workspace.workspace.name,
+                ],
+            ),
+        )
 
     def test_anvil_group_name(self):
         workspace = factories.CDSAWorkspaceFactory.create(study=self.study)
@@ -2142,22 +2203,3 @@ class WorkspaceAccessAuditTableTest(TestCase):
         ]
         table = workspace_audit.WorkspaceAccessAuditTable(data)
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        study = StudyFactory.create()
-        agreement = factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(study=study)
-        data = [
-            {
-                "data_affiliate_agreement": agreement,
-                "workspace": workspace,
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-        table = workspace_audit.WorkspaceAccessAuditTable(data)
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))
