@@ -14,16 +14,10 @@ updates:
     directory: "/"
     # Check for updates to GitHub Actions every weekday
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
     allow:
-      - dependency-type: "direct"
-    # Allow up to 10 dependencies for pip dependencies
+      # Allow both direct and indirect updates for all packages
+      - dependency-type: "all"
+    # Allow up to 20 dependencies for pip dependencies
     open-pull-requests-limit: 20
-
-    groups:
-      minor-patch:
-        update-types:
-        - "minor"
-        - "patch"
-        patterns:
-        - "*"
