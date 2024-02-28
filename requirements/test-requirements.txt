@@ -12,7 +12,7 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   requests
-coverage==7.4.1
+coverage==7.4.3
     # via
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
@@ -45,7 +45,7 @@ pyparsing==3.1.1
     # via
     #   -c requirements/requirements.txt
     #   packaging
-pytest==8.0.1
+pytest==8.0.2
     # via
     #   -r requirements/test-requirements.in
     #   pytest-django
@@ -65,7 +65,7 @@ requests==2.31.0
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.24.1
+responses==0.25.0
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
