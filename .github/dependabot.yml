@@ -22,10 +22,9 @@ updates:
     open-pull-requests-limit: 20
 
     groups:
-      prod-dependencies-minor-patch:
-        dependency-type: "production"
+      minor-patch:
         update-types:
-          - "minor"
-          - "patch"
-      dev-dependencies:
-        dependency-type: "development"
+        - "minor"
+        - "patch"
+        patterns:
+        - "*"
