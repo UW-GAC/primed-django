@@ -54,7 +54,7 @@
       {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
       <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
       {% endif %}
-      <a href="{% url 'dbgap:dbgap_applications:audit' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-secondary" role="button">Audit workspace access</a>
+      <a href="{% url 'dbgap:audit:applications' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-secondary" role="button">Audit workspace access</a>
 
     </p>
 {% endblock action_buttons %}

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import django_tables2 as tables
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 
 # from . import models
 from primed.primed_anvil.tables import BooleanIconColumn
@@ -26,6 +25,7 @@ class AuditResult:
     dbgap_application: dbGaPApplication
     has_access: bool
     data_access_request: dbGaPDataAccessRequest = None
+    action: str = None
 
     def __post_init__(self):
         if self.data_access_request and (
@@ -38,11 +38,14 @@ class AuditResult:
 
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "dbgap:audit:resolve",
+            args=[
+                self.dbgap_application.dbgap_project_id,
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
@@ -60,7 +63,7 @@ class AuditResult:
             "dar_consent": dar_consent,
             "has_access": self.has_access,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -72,6 +75,9 @@ class VerifiedAccess(AuditResult):
 
     has_access: bool = True
 
+    def __str__(self):
+        return f"Verified access: {self.note}"
+
 
 @dataclass
 class VerifiedNoAccess(AuditResult):
@@ -79,24 +85,19 @@ class VerifiedNoAccess(AuditResult):
 
     has_access: bool = False
 
+    def __str__(self):
+        return f"Verified no access: {self.note}"
+
 
 @dataclass
 class GrantAccess(AuditResult):
     """Audit results class for when access should be granted."""
 
     has_access: bool = False
+    action: str = "Grant access"
 
-    def get_action(self):
-        return "Grant access"
-
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
@@ -104,18 +105,10 @@ class RemoveAccess(AuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
     has_access: bool = True
+    action: str = "Remove access"
 
-    def get_action(self):
-        return "Remove access"
-
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.dbgap_application.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 @dataclass
@@ -135,17 +128,12 @@ class dbGaPAccessAuditTable(tables.Table):
     dar_consent = tables.Column(verbose_name="DAR consent")
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="dbgap/snippets/dbgap_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
-
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
 
 class dbGaPAccessAudit:
@@ -342,6 +330,9 @@ class dbGaPAccessAudit:
                     note=self.DAR_NOT_APPROVED,
                 )
             )
+
+    def get_all_results(self):
+        return self.verified + self.needs_action + self.errors
 
     def get_verified_table(self):
         """Return a table of verified results."""

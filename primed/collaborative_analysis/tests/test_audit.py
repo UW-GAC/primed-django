@@ -26,7 +26,15 @@ class WorkspaceAccessAuditResultTest(TestCase):
         instance = audit.VerifiedAccess(
             collaborative_analysis_workspace=workspace, member=account, note="test"
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                account.email,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_account_verified_no_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -34,7 +42,15 @@ class WorkspaceAccessAuditResultTest(TestCase):
         instance = audit.VerifiedNoAccess(
             collaborative_analysis_workspace=workspace, member=account, note="test"
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                account.email,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_account_grant_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -43,8 +59,12 @@ class WorkspaceAccessAuditResultTest(TestCase):
             collaborative_analysis_workspace=workspace, member=account, note="test"
         )
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_accounts:new_by_account",
-            args=[workspace.workspace.authorization_domains.first().name, account.uuid],
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                account.email,
+            ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
 
@@ -55,8 +75,12 @@ class WorkspaceAccessAuditResultTest(TestCase):
             collaborative_analysis_workspace=workspace, member=account, note="test"
         )
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_accounts:delete",
-            args=[workspace.workspace.authorization_domains.first().name, account.uuid],
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                account.email,
+            ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
 
@@ -66,7 +90,15 @@ class WorkspaceAccessAuditResultTest(TestCase):
         instance = audit.VerifiedAccess(
             collaborative_analysis_workspace=workspace, member=group, note="test"
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.email,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_group_verified_no_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -74,7 +106,15 @@ class WorkspaceAccessAuditResultTest(TestCase):
         instance = audit.VerifiedNoAccess(
             collaborative_analysis_workspace=workspace, member=group, note="test"
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.email,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_group_grant_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -83,8 +123,12 @@ class WorkspaceAccessAuditResultTest(TestCase):
             collaborative_analysis_workspace=workspace, member=group, note="test"
         )
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[workspace.workspace.authorization_domains.first().name, group.name],
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.email,
+            ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
 
@@ -95,8 +139,12 @@ class WorkspaceAccessAuditResultTest(TestCase):
             collaborative_analysis_workspace=workspace, member=group, note="test"
         )
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[workspace.workspace.authorization_domains.first().name, group.name],
+            "collaborative_analysis:audit:resolve",
+            args=[
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+                group.email,
+            ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
 
@@ -1107,23 +1155,3 @@ class AccessAuditResultsTableTest(TestCase):
         table = audit.AccessAuditResultsTable(data)
         self.assertIsInstance(table, audit.AccessAuditResultsTable)
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        member_group = ManagedGroupFactory.create()
-        data = [
-            {
-                "workspace": workspace,
-                "member": member_group,
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-
-        table = audit.AccessAuditResultsTable(data)
-        self.assertIsInstance(table, audit.AccessAuditResultsTable)
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))

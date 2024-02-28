@@ -9,7 +9,9 @@ argon2-cffi==23.1.0
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 asgiref==3.7.2
-    # via django
+    # via
+    #   django
+    #   django-htmx
 attrs==23.2.0
     # via
     #   jsonschema
@@ -53,6 +55,7 @@ django==4.2.10
     #   django-dbbackup
     #   django-extensions
     #   django-filter
+    #   django-htmx
     #   django-model-utils
     #   django-tables2
 django-allauth==0.54.0
@@ -76,6 +79,8 @@ django-extensions==3.2.3
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
+django-htmx==1.17.2
+    # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
 django-maintenance-mode==0.21.1
