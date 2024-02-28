@@ -16,8 +16,7 @@ updates:
     schedule:
       interval: "daily"
     allow:
-      # Allow both direct and indirect updates for all packages
-      - dependency-type: "all"
+      - dependency-type: "direct"
     # Allow up to 10 dependencies for pip dependencies
     open-pull-requests-limit: 20
 
