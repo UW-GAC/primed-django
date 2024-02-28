@@ -29,3 +29,5 @@ updates:
           - "patch"
       dev-dependencies:
         dependency-type: "development"
+      all:
+        pattern: "*"
