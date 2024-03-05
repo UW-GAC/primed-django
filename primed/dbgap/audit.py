@@ -349,3 +349,10 @@ class dbGaPAccessAudit:
     def get_errors_table(self):
         """Return a table of audit errors."""
         return self.results_table_class([x.get_table_dictionary() for x in self.errors])
+
+    def ok(self):
+        if not self.completed:
+            raise ValueError(
+                "Audit has not been completed. Use run_audit() to run the audit."
+            )
+        return len(self.errors) + len(self.needs_action) == 0
