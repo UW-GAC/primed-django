@@ -393,13 +393,11 @@ class RunCDSAAuditTest(TestCase):
         self.assertEqual(email.subject, "CDSA WorkspaceAccessAudit errors")
         self.assertIn(reverse("cdsa:audit:workspaces:all"), email.alternatives[0][0])
 
-    def two_needs_action(self):
+    def test_signed_agreement_and_workspace_needs_action(self):
         agreement = factories.DataAffiliateAgreementFactory.create()
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
             "Running CDSAWorkspace access audit... problems found.\n"
             "* Verified: 0\n"
@@ -417,7 +415,7 @@ class RunCDSAAuditTest(TestCase):
         # No messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
 
-    def two_needs_action_email(self):
+    def test_signed_agreement_and_workspace_needs_action_email(self):
         agreement = factories.DataAffiliateAgreementFactory.create()
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
         out = StringIO()
@@ -442,7 +440,7 @@ class RunCDSAAuditTest(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
-        self.assertEqual(email.subject, "CDSA SignedAgreement errors")
+        self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
         self.assertIn(
             reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0]
         )
