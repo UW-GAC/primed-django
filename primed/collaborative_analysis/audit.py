@@ -10,13 +10,14 @@ from anvil_consortium_manager.models import (
 )
 from django.urls import reverse
 
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
 
 from . import models
 
 
 @dataclass
-class AccessAuditResult:
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold the result of an access audit for a CollaborativeAnalysisWorkspace."""
 
     collaborative_analysis_workspace: models.CollaborativeAnalysisWorkspace
@@ -105,7 +106,7 @@ class AccessAuditResultsTable(tables.Table):
         attrs = {"class": "table align-middle"}
 
 
-class CollaborativeAnalysisWorkspaceAccessAudit:
+class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
     """Class to audit access to a CollaborativeAnalysisWorkspace."""
 
     # Allowed reasons for access.
@@ -124,6 +125,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
 
     ALLOWED_GROUP_NAMES = ("PRIMED_CC_WRITERS",)
+
     results_table_class = AccessAuditResultsTable
 
     def __init__(self, queryset=None):
@@ -132,13 +134,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         Args:
             queryset: A queryset of CollaborativeAnalysisWorkspaces to audit.
         """
+        super().__init__()
         if queryset is None:
             queryset = models.CollaborativeAnalysisWorkspace.objects.all()
         self.queryset = queryset
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
-        self.completed = False
 
     def _audit_workspace(self, workspace):
         """Audit access to a single CollaborativeAnalysisWorkspace."""
@@ -328,27 +327,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
                     )
                 )
 
-    def run_audit(self):
+    def _run_audit(self):
         """Run the audit on the set of workspaces."""
         for workspace in self.queryset:
             self._audit_workspace(workspace)
-        self.completed = True
-
-    def get_all_results(self):
-        return self.verified + self.needs_action + self.errors
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])

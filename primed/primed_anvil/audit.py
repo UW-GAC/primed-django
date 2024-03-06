@@ -44,6 +44,9 @@ class PRIMEDAudit(ABC):
         completed: A boolean indicator of whether the audit has been run.
     """
 
+    # TODO: Add add_verified_result, add_needs_action_result, add_error_result methods. They should
+    # verify that the result is an instance of PRIMEDAuditResult (subclass).
+
     @abstractproperty
     def results_table_class(self):
         return ...

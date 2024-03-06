@@ -4,7 +4,7 @@ import django_tables2 as tables
 from django.db.models import QuerySet
 from django.urls import reverse
 
-# from . import models
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
 
 from .models import (
@@ -17,7 +17,7 @@ from .models import (
 
 # Dataclasses for storing audit results?
 @dataclass
-class AuditResult:
+class AuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing dbGaP workspace access for a dbGaPDataAccessSnapshot."""
 
     workspace: dbGaPWorkspace
@@ -136,7 +136,7 @@ class dbGaPAccessAuditTable(tables.Table):
         attrs = {"class": "table align-middle"}
 
 
-class dbGaPAccessAudit:
+class dbGaPAccessAudit(PRIMEDAudit):
 
     # Access verified.
     APPROVED_DAR = "Approved DAR."
@@ -157,11 +157,7 @@ class dbGaPAccessAudit:
     results_table_class = dbGaPAccessAuditTable
 
     def __init__(self, dbgap_application_queryset=None, dbgap_workspace_queryset=None):
-        self.completed = False
-        # Set up lists to hold audit results.
-        self.verified = None
-        self.needs_action = None
-        self.errors = None
+        super().__init__()
         if dbgap_application_queryset is None:
             dbgap_application_queryset = dbGaPApplication.objects.all()
         if not (
@@ -183,15 +179,10 @@ class dbGaPAccessAudit:
             )
         self.dbgap_workspace_queryset = dbgap_workspace_queryset
 
-    def run_audit(self):
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
-
+    def _run_audit(self):
         for dbgap_application in self.dbgap_application_queryset:
             for dbgap_workspace in self.dbgap_workspace_queryset:
                 self.audit_application_and_workspace(dbgap_application, dbgap_workspace)
-        self.completed = True
 
     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
         """Audit access for a specific dbGaP application and a specific workspace."""
@@ -330,29 +321,3 @@ class dbGaPAccessAudit:
                     note=self.DAR_NOT_APPROVED,
                 )
             )
-
-    def get_all_results(self):
-        return self.verified + self.needs_action + self.errors
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])
-
-    def ok(self):
-        if not self.completed:
-            raise ValueError(
-                "Audit has not been completed. Use run_audit() to run the audit."
-            )
-        return len(self.errors) + len(self.needs_action) == 0
