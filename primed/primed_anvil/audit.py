@@ -24,7 +24,7 @@ class PRIMEDAuditResult(ABC):
     @abstractmethod
     def get_table_dictionary(self):
         """Return a dictionary representation of the result."""
-        ...
+        ...  # pragma: no cover
 
 
 class PRIMEDAudit(ABC):
@@ -49,7 +49,7 @@ class PRIMEDAudit(ABC):
 
     @abstractproperty
     def results_table_class(self):
-        return ...
+        return ...  # pragma: no cover
 
     def __init__(self):
         self.completed = False
@@ -59,6 +59,7 @@ class PRIMEDAudit(ABC):
         self.errors = []
         self.completed = False
 
+    @abstractmethod
     def _run_audit(self):
         """Run the audit and store results in `verified`, `needs_action`, and `errors` lists.
 
@@ -71,7 +72,7 @@ class PRIMEDAudit(ABC):
         - needs_action: The result is expected for some reason, but action is needed.
         - errors: The result is not expected and action is likely needed.
         """
-        raise NotImplementedError("Subclasses must implement this method.")
+        ...  # pragma: no cover
 
     def run_audit(self):
         """Run the audit and mark it as completed."""
