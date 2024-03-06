@@ -49,8 +49,9 @@ class Command(BaseCommand):
             email = options["email"]
             subject = "dbGaP access audit - problems found"
             html_body = render_to_string(
-                "dbgap/email_audit_report.html",
+                "primed_anvil/email_audit_report.html",
                 context={
+                    "title": "dbGaP access audit",
                     "data_access_audit": data_access_audit,
                     "url": url,
                 },
