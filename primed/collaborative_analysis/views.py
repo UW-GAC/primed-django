@@ -144,6 +144,8 @@ class CollaborativeAnalysisAuditResolve(
             instance._audit_workspace_and_group(
                 self.collaborative_analysis_workspace, self.member
             )
+        # Set to completed, because we are just running this one specific check.
+        instance.completed = True
         return instance.get_all_results()[0]
 
     def get(self, request, *args, **kwargs):

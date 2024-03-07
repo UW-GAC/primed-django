@@ -6,12 +6,14 @@ from django.conf import settings
 from django.db.models import QuerySet
 from django.urls import reverse
 
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
+
 # from . import models
 from .. import models
 
 
 @dataclass
-class AccessAuditResult:
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing CDSA access for a specific SignedAgreement."""
 
     workspace: models.CDSAWorkspace
@@ -106,7 +108,7 @@ class WorkspaceAccessAuditTable(tables.Table):
         attrs = {"class": "table align-middle"}
 
 
-class WorkspaceAccessAudit:
+class WorkspaceAccessAudit(PRIMEDAudit):
     """Audit for CDSA Workspaces."""
 
     # Access verified.
@@ -224,27 +226,7 @@ class WorkspaceAccessAudit:
                 )
                 return
 
-    def run_audit(self):
+    def _run_audit(self):
         """Run an audit on all SignedAgreements."""
         for workspace in self.cdsa_workspace_queryset:
             self._audit_workspace(workspace)
-        self.completed = True
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_all_results(self):
-        return self.verified + self.needs_action + self.errors
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])
