@@ -32,9 +32,10 @@ class dbGaPWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
 
     gsr_restricted = forms.TypedChoiceField(
         coerce=lambda x: x == "True",
-        choices=((True, "Primary"), (False, "Component")),
+        choices=((True, "Restricted"), (False, "Unrestricted")),
         widget=forms.RadioSelect,
-        label="Sensitive data?",
+        label="GSR restricted?",
+        help_text="Indicator of whether public posting of GSRs is restricted.",
     )
 
     class Meta:

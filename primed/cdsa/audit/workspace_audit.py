@@ -5,23 +5,21 @@ from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup
 from django.conf import settings
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils.safestring import mark_safe
+
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 
 # from . import models
 from .. import models
 
 
 @dataclass
-class AccessAuditResult:
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing CDSA access for a specific SignedAgreement."""
 
     workspace: models.CDSAWorkspace
     note: str
     data_affiliate_agreement: models.DataAffiliateAgreement = None
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init(*args, **kwargs)
-    #     self.anvil_cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
+    action: str = None
 
     def __post_init__(self):
         self.anvil_cdsa_group = ManagedGroup.objects.get(
@@ -30,11 +28,13 @@ class AccessAuditResult:
 
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "cdsa:audit:workspaces:resolve",
+            args=[
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
@@ -42,7 +42,7 @@ class AccessAuditResult:
             "workspace": self.workspace,
             "data_affiliate_agreement": self.data_affiliate_agreement,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -52,48 +52,36 @@ class AccessAuditResult:
 class VerifiedAccess(AccessAuditResult):
     """Audit results class for when access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified access: {self.note}"
 
 
 @dataclass
 class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when no access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified no access: {self.note}"
 
 
 @dataclass
 class GrantAccess(AccessAuditResult):
     """Audit results class for when access should be granted."""
 
-    def get_action(self):
-        return "Grant access"
+    action: str = "Grant access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.anvil_cdsa_group,
-            ],
-        )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
 class RemoveAccess(AccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
-    def get_action(self):
-        return "Remove access"
+    action: str = "Remove access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.anvil_cdsa_group,
-            ],
-        )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 @dataclass
@@ -112,20 +100,15 @@ class WorkspaceAccessAuditTable(tables.Table):
         accessor="data_affiliate_agreement__signed_agreement__version"
     )
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="cdsa/snippets/cdsa_workspace_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
 
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
-
-class WorkspaceAccessAudit:
+class WorkspaceAccessAudit(PRIMEDAudit):
     """Audit for CDSA Workspaces."""
 
     # Access verified.
@@ -243,24 +226,7 @@ class WorkspaceAccessAudit:
                 )
                 return
 
-    def run_audit(self):
+    def _run_audit(self):
         """Run an audit on all SignedAgreements."""
         for workspace in self.cdsa_workspace_queryset:
             self._audit_workspace(workspace)
-        self.completed = True
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])
