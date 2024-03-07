@@ -163,6 +163,8 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
 
         # Loop over remaining accounts in the auth domain.
         for account in auth_domain_membership:
+            # Should this be an error, or a needs_action?
+            # eg if an analyst is removed on purpose, it should be needs_action.
             self.errors.append(
                 RemoveAccess(
                     collaborative_analysis_workspace=workspace,
