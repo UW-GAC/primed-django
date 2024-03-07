@@ -9,29 +9,32 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
 )
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
 
 from . import models
 
 
 @dataclass
-class AccessAuditResult:
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold the result of an access audit for a CollaborativeAnalysisWorkspace."""
 
     collaborative_analysis_workspace: models.CollaborativeAnalysisWorkspace
     member: Union[Account, ManagedGroup]
     note: str
     has_access: bool
+    action: str = None
 
     def get_action_url(self):
-        """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "collaborative_analysis:audit:resolve",
+            args=[
+                self.collaborative_analysis_workspace.workspace.billing_project.name,
+                self.collaborative_analysis_workspace.workspace.name,
+                self.member.email,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
@@ -40,7 +43,7 @@ class AccessAuditResult:
             "member": self.member,
             "has_access": self.has_access,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -52,6 +55,9 @@ class VerifiedAccess(AccessAuditResult):
 
     has_access: bool = True
 
+    def __str__(self):
+        return f"Verified access: {self.note}"
+
 
 @dataclass
 class VerifiedNoAccess(AccessAuditResult):
@@ -59,33 +65,19 @@ class VerifiedNoAccess(AccessAuditResult):
 
     has_access: bool = False
 
+    def __str__(self):
+        return f"Verified no access: {self.note}"
+
 
 @dataclass
 class GrantAccess(AccessAuditResult):
     """Audit results class for when an account should be granted access."""
 
     has_access: bool = False
+    action: str = "Grant access"
 
-    def get_action(self):
-        return "Grant access"
-
-    def get_action_url(self):
-        if isinstance(self.member, Account):
-            return reverse(
-                "anvil_consortium_manager:managed_groups:member_accounts:new_by_account",
-                args=[
-                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
-                    self.member.uuid,
-                ],
-            )
-        else:
-            return reverse(
-                "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-                args=[
-                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
-                    self.member.name,
-                ],
-            )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
@@ -93,27 +85,10 @@ class RemoveAccess(AccessAuditResult):
     """Audit results class for when access for an account should be removed."""
 
     has_access: bool = True
+    action: str = "Remove access"
 
-    def get_action(self):
-        return "Remove access"
-
-    def get_action_url(self):
-        if isinstance(self.member, Account):
-            return reverse(
-                "anvil_consortium_manager:managed_groups:member_accounts:delete",
-                args=[
-                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
-                    self.member.uuid,
-                ],
-            )
-        else:
-            return reverse(
-                "anvil_consortium_manager:managed_groups:member_groups:delete",
-                args=[
-                    self.collaborative_analysis_workspace.workspace.authorization_domains.first().name,
-                    self.member.name,
-                ],
-            )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 class AccessAuditResultsTable(tables.Table):
@@ -123,25 +98,20 @@ class AccessAuditResultsTable(tables.Table):
     member = tables.Column(linkify=True)
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="collaborative_analysis/snippets/collaborativeanalysis_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
 
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
-
-class CollaborativeAnalysisWorkspaceAccessAudit:
+class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
     """Class to audit access to a CollaborativeAnalysisWorkspace."""
 
     # Allowed reasons for access.
     IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains for this workspace."
-    DCC_ACCESS = "DCC groups are allowed access."
+    DCC_ACCESS = "CC groups are allowed access."
 
     # Allowed reasons for no access.
     NOT_IN_SOURCE_AUTH_DOMAINS = (
@@ -149,9 +119,12 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
     )
     NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
     INACTIVE_ACCOUNT = "Account is inactive."
+    NON_DCC_GROUP = "Non-CC groups are not allowed access."
 
     # Errors.
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
+
+    ALLOWED_GROUP_NAMES = ("PRIMED_CC_WRITERS",)
 
     results_table_class = AccessAuditResultsTable
 
@@ -161,13 +134,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         Args:
             queryset: A queryset of CollaborativeAnalysisWorkspaces to audit.
         """
+        super().__init__()
         if queryset is None:
             queryset = models.CollaborativeAnalysisWorkspace.objects.all()
         self.queryset = queryset
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
-        self.completed = False
 
     def _audit_workspace(self, workspace):
         """Audit access to a single CollaborativeAnalysisWorkspace."""
@@ -193,6 +163,8 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
 
         # Loop over remaining accounts in the auth domain.
         for account in auth_domain_membership:
+            # Should this be an error, or a needs_action?
+            # eg if an analyst is removed on purpose, it should be needs_action.
             self.errors.append(
                 RemoveAccess(
                     collaborative_analysis_workspace=workspace,
@@ -201,47 +173,71 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
                 )
             )
 
-        # Check that no groups have access.
-        group_memberships = GroupGroupMembership.objects.filter(
-            parent_group=workspace.workspace.authorization_domains.first(),
-        ).exclude(
-            # Ignore cc admins group - it is handled differently because it should have admin privileges.
-            child_group__name="PRIMED_CC_ADMINS",
+        # Check group access. Most groups should not have access.
+        group_memberships = (
+            GroupGroupMembership.objects.filter(
+                parent_group=workspace.workspace.authorization_domains.first(),
+            )
+            .exclude(
+                # Ignore cc admins group - it is handled differently because it should have admin privileges.
+                child_group__name="PRIMED_CC_ADMINS",
+            )
+            .exclude(
+                # Ignore allowed groups - they will be checked separately later.
+                child_group__name__in=self.ALLOWED_GROUP_NAMES,
+            )
         )
-        # CC groups that should have access.
-        cc_groups = ManagedGroup.objects.filter(
-            name__in=[
-                "PRIMED_CC_WRITERS",
-                # "PRIMED_CC_MEMBERS", # CC_MEMBERS should not get access.
-            ]
-        )
-        for cc_group in cc_groups:
-            try:
-                group_memberships.get(child_group=cc_group)
-            except GroupGroupMembership.DoesNotExist:
-                self.needs_action.append(
-                    GrantAccess(
-                        collaborative_analysis_workspace=workspace,
-                        member=cc_group,
-                        note=self.DCC_ACCESS,
-                    )
-                )
-            else:
-                group_memberships = group_memberships.exclude(child_group=cc_group)
-                self.verified.append(
-                    VerifiedAccess(
-                        collaborative_analysis_workspace=workspace,
-                        member=cc_group,
-                        note=self.DCC_ACCESS,
-                    )
-                )
-        # Any other groups are an error.
         for membership in group_memberships:
+            self._audit_workspace_and_group(workspace, membership.child_group)
+        # Audit allowed groups
+        for group in ManagedGroup.objects.filter(name__in=self.ALLOWED_GROUP_NAMES):
+            self._audit_workspace_and_group(workspace, group)
+
+    def _audit_workspace_and_group(self, collaborative_analysis_workspace, group):
+        """Audit access for a specific CollaborativeAnalysisWorkspace and group."""
+        # CC_WRITERS group should have access.
+        access_allowed = group.name in [
+            "PRIMED_CC_WRITERS",
+        ]
+        in_auth_domain = (
+            collaborative_analysis_workspace.workspace.authorization_domains.first()
+        )
+        auth_domain = (
+            collaborative_analysis_workspace.workspace.authorization_domains.first()
+        )
+        in_auth_domain = GroupGroupMembership.objects.filter(
+            parent_group=auth_domain, child_group=group
+        ).exists()
+        if access_allowed and in_auth_domain:
+            self.verified.append(
+                VerifiedAccess(
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
+                    note=self.DCC_ACCESS,
+                )
+            )
+        elif access_allowed and not in_auth_domain:
+            self.needs_action.append(
+                GrantAccess(
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
+                    note=self.DCC_ACCESS,
+                )
+            )
+        elif not access_allowed and in_auth_domain:
             self.errors.append(
                 RemoveAccess(
-                    collaborative_analysis_workspace=workspace,
-                    member=membership.child_group,
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
                     note=self.UNEXPECTED_GROUP_ACCESS,
+                )
+            )
+        else:
+            self.verified.append(
+                VerifiedNoAccess(
+                    collaborative_analysis_workspace=collaborative_analysis_workspace,
+                    member=group,
+                    note=self.NON_DCC_GROUP,
                 )
             )
 
@@ -255,82 +251,85 @@ class CollaborativeAnalysisWorkspaceAccessAudit:
         # - analyst is in some but not all relevant source auth domains, and is not in the workspace auth domain.
         # - analyst is in none of the relevant source auth domains, and is not in the workspace auth domain.
         # - an account is in the workspace auth domain, but is not in the analyst group.
-
-        # Check whether access is allowed. Start by assuming yes; set to false if the account should not have access.
-        access_allowed = True
+        # Get all groups for the account.
         account_groups = account.get_all_groups()
-        # Loop over all source workspaces.
-        for (
-            source_workspace
-        ) in collaborative_analysis_workspace.source_workspaces.all():
-            # Loop over all auth domains for that source workspace.
-            for source_auth_domain in source_workspace.authorization_domains.all():
-                # If the user is not in the auth domain, they are not allowed to have access to the collab workspace.
-                # If so, break out of the loop - it is not necessary to check membership of the remaining auth domains.
-                # Note that this only breaks out of the inner loop.
-                # It would be more efficient to break out of the outer loop as well.
-                if source_auth_domain not in account_groups:
-                    access_allowed = False
-                    break
+        # Check whether the account is in the analyst group.
+        in_analyst_group = (
+            collaborative_analysis_workspace.analyst_group in account_groups
+        )
         # Check whether the account is in the auth domain of the collab workspace.
         in_auth_domain = (
             collaborative_analysis_workspace.workspace.authorization_domains.first()
             in account_groups
         )
-        # Determine the audit result.
-        print(access_allowed)
-        print(in_auth_domain)
-        if access_allowed and in_auth_domain:
-            self.verified.append(
-                VerifiedAccess(
-                    collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    member=account,
-                    note=self.IN_SOURCE_AUTH_DOMAINS,
+        if in_analyst_group:
+            # Check whether access is allowed. Start by assuming yes, and then
+            # set to false if the account should not have access.
+            access_allowed = True
+            # Loop over all source workspaces.
+            for (
+                source_workspace
+            ) in collaborative_analysis_workspace.source_workspaces.all():
+                # Loop over all auth domains for that source workspace.
+                for source_auth_domain in source_workspace.authorization_domains.all():
+                    # If the user is not in the auth domain, they are not allowed to have access to the workspace.
+                    # If so, break out of the loop - not necessary to check membership of the remaining auth domains.
+                    # Note that this only breaks out of the inner loop.
+                    # It would be more efficient to break out of the outer loop as well.
+                    if source_auth_domain not in account_groups:
+                        access_allowed = False
+                        break
+            if access_allowed and in_auth_domain:
+                self.verified.append(
+                    VerifiedAccess(
+                        collaborative_analysis_workspace=collaborative_analysis_workspace,
+                        member=account,
+                        note=self.IN_SOURCE_AUTH_DOMAINS,
+                    )
                 )
-            )
-        elif access_allowed and not in_auth_domain:
-            self.needs_action.append(
-                GrantAccess(
-                    collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    member=account,
-                    note=self.IN_SOURCE_AUTH_DOMAINS,
+            elif access_allowed and not in_auth_domain:
+                self.needs_action.append(
+                    GrantAccess(
+                        collaborative_analysis_workspace=collaborative_analysis_workspace,
+                        member=account,
+                        note=self.IN_SOURCE_AUTH_DOMAINS,
+                    )
                 )
-            )
-        elif not access_allowed and in_auth_domain:
-            self.needs_action.append(
-                RemoveAccess(
-                    collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    member=account,
-                    note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
+            elif not access_allowed and in_auth_domain:
+                self.needs_action.append(
+                    RemoveAccess(
+                        collaborative_analysis_workspace=collaborative_analysis_workspace,
+                        member=account,
+                        note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
+                    )
                 )
-            )
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        collaborative_analysis_workspace=collaborative_analysis_workspace,
+                        member=account,
+                        note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
+                    )
+                )
         else:
-            self.verified.append(
-                VerifiedNoAccess(
-                    collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    member=account,
-                    note=self.NOT_IN_SOURCE_AUTH_DOMAINS,
+            if in_auth_domain:
+                self.needs_action.append(
+                    RemoveAccess(
+                        collaborative_analysis_workspace=collaborative_analysis_workspace,
+                        member=account,
+                        note=self.NOT_IN_ANALYST_GROUP,
+                    )
                 )
-            )
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        collaborative_analysis_workspace=collaborative_analysis_workspace,
+                        member=account,
+                        note=self.NOT_IN_ANALYST_GROUP,
+                    )
+                )
 
-    def run_audit(self):
+    def _run_audit(self):
         """Run the audit on the set of workspaces."""
         for workspace in self.queryset:
             self._audit_workspace(workspace)
-        self.completed = True
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])

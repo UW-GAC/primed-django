@@ -1,3 +1,5 @@
+import sys
+
 from .production import *  # noqa
 from .production import LOGGING, SOCIALACCOUNT_PROVIDERS, env  # noqa
 
@@ -14,6 +16,8 @@ try:
 
 except ImportError:
     LOGGING["handlers"]["console"]["class"] = "logging.StreamHandler"
+    # Send stream logging to stdout so we can redirect exceptions to email
+    LOGGING["handlers"]["console"]["stream"] = sys.stdout
 
 # Update drupal oauth api url for production
 DRUPAL_SITE_URL = "https://primedconsortium.org"

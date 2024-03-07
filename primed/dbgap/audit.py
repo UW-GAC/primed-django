@@ -3,9 +3,8 @@ from dataclasses import dataclass
 import django_tables2 as tables
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 
-# from . import models
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
 
 from .models import (
@@ -18,7 +17,7 @@ from .models import (
 
 # Dataclasses for storing audit results?
 @dataclass
-class AuditResult:
+class AuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing dbGaP workspace access for a dbGaPDataAccessSnapshot."""
 
     workspace: dbGaPWorkspace
@@ -26,6 +25,7 @@ class AuditResult:
     dbgap_application: dbGaPApplication
     has_access: bool
     data_access_request: dbGaPDataAccessRequest = None
+    action: str = None
 
     def __post_init__(self):
         if self.data_access_request and (
@@ -38,11 +38,14 @@ class AuditResult:
 
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "dbgap:audit:resolve",
+            args=[
+                self.dbgap_application.dbgap_project_id,
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
@@ -60,7 +63,7 @@ class AuditResult:
             "dar_consent": dar_consent,
             "has_access": self.has_access,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -72,6 +75,9 @@ class VerifiedAccess(AuditResult):
 
     has_access: bool = True
 
+    def __str__(self):
+        return f"Verified access: {self.note}"
+
 
 @dataclass
 class VerifiedNoAccess(AuditResult):
@@ -79,24 +85,19 @@ class VerifiedNoAccess(AuditResult):
 
     has_access: bool = False
 
+    def __str__(self):
+        return f"Verified no access: {self.note}"
+
 
 @dataclass
 class GrantAccess(AuditResult):
     """Audit results class for when access should be granted."""
 
     has_access: bool = False
+    action: str = "Grant access"
 
-    def get_action(self):
-        return "Grant access"
-
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.data_access_request.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
@@ -104,18 +105,10 @@ class RemoveAccess(AuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
     has_access: bool = True
+    action: str = "Remove access"
 
-    def get_action(self):
-        return "Remove access"
-
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[
-                self.workspace.workspace.authorization_domains.first(),
-                self.dbgap_application.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 @dataclass
@@ -135,20 +128,15 @@ class dbGaPAccessAuditTable(tables.Table):
     dar_consent = tables.Column(verbose_name="DAR consent")
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="dbgap/snippets/dbgap_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
 
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
-
-class dbGaPAccessAudit:
+class dbGaPAccessAudit(PRIMEDAudit):
 
     # Access verified.
     APPROVED_DAR = "Approved DAR."
@@ -169,11 +157,7 @@ class dbGaPAccessAudit:
     results_table_class = dbGaPAccessAuditTable
 
     def __init__(self, dbgap_application_queryset=None, dbgap_workspace_queryset=None):
-        self.completed = False
-        # Set up lists to hold audit results.
-        self.verified = None
-        self.needs_action = None
-        self.errors = None
+        super().__init__()
         if dbgap_application_queryset is None:
             dbgap_application_queryset = dbGaPApplication.objects.all()
         if not (
@@ -195,15 +179,10 @@ class dbGaPAccessAudit:
             )
         self.dbgap_workspace_queryset = dbgap_workspace_queryset
 
-    def run_audit(self):
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
-
+    def _run_audit(self):
         for dbgap_application in self.dbgap_application_queryset:
             for dbgap_workspace in self.dbgap_workspace_queryset:
                 self.audit_application_and_workspace(dbgap_application, dbgap_workspace)
-        self.completed = True
 
     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
         """Audit access for a specific dbGaP application and a specific workspace."""
@@ -342,19 +321,3 @@ class dbGaPAccessAudit:
                     note=self.DAR_NOT_APPROVED,
                 )
             )
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])

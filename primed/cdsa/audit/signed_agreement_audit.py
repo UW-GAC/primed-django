@@ -6,22 +6,20 @@ from anvil_consortium_manager.models import ManagedGroup
 from django.conf import settings
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils.safestring import mark_safe
+
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 
 from .. import models
 
 
 # Dataclasses for storing audit results?
 @dataclass
-class AccessAuditResult:
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing CDSA access for a specific SignedAgreement."""
 
     note: str
     signed_agreement: models.SignedAgreement
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init(*args, **kwargs)
-    #     self.anvil_cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
+    action: str = None
 
     def __post_init__(self):
         self.anvil_cdsa_group = ManagedGroup.objects.get(
@@ -30,18 +28,19 @@ class AccessAuditResult:
 
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return None
-
-    def get_action(self):
-        """An indicator of what action needs to be taken."""
-        return None
+        return reverse(
+            "cdsa:audit:signed_agreements:resolve",
+            args=[
+                self.signed_agreement,
+            ],
+        )
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `SignedAgreementAccessAuditTable`."""
         row = {
             "signed_agreement": self.signed_agreement,
             "note": self.note,
-            "action": self.get_action(),
+            "action": self.action,
             "action_url": self.get_action_url(),
         }
         return row
@@ -51,48 +50,36 @@ class AccessAuditResult:
 class VerifiedAccess(AccessAuditResult):
     """Audit results class for when access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified access: {self.note}"
 
 
 @dataclass
 class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when no access has been verified."""
 
-    pass
+    def __str__(self):
+        return f"Verified no access: {self.note}"
 
 
 @dataclass
 class GrantAccess(AccessAuditResult):
     """Audit results class for when access should be granted."""
 
-    def get_action(self):
-        return "Grant access"
+    action: str = "Grant access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
-            args=[
-                self.anvil_cdsa_group,
-                self.signed_agreement.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Grant access: {self.note}"
 
 
 @dataclass
 class RemoveAccess(AccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
-    def get_action(self):
-        return "Remove access"
+    action: str = "Remove access"
 
-    def get_action_url(self):
-        return reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
-            args=[
-                self.anvil_cdsa_group,
-                self.signed_agreement.anvil_access_group,
-            ],
-        )
+    def __str__(self):
+        return f"Remove access: {self.note}"
 
 
 @dataclass
@@ -110,20 +97,15 @@ class SignedAgreementAccessAuditTable(tables.Table):
     agreement_type = tables.Column(accessor="signed_agreement__combined_type")
     agreement_version = tables.Column(accessor="signed_agreement__version")
     note = tables.Column()
-    action = tables.Column()
+    action = tables.TemplateColumn(
+        template_name="cdsa/snippets/cdsa_signedagreement_audit_action_button.html"
+    )
 
     class Meta:
         attrs = {"class": "table align-middle"}
 
-    def render_action(self, record, value):
-        return mark_safe(
-            """<a href="{}" class="btn btn-primary btn-sm">{}</a>""".format(
-                record["action_url"], value
-            )
-        )
 
-
-class SignedAgreementAccessAudit:
+class SignedAgreementAccessAudit(PRIMEDAudit):
     """Audit for Signed Agreements."""
 
     # Access verified.
@@ -145,12 +127,7 @@ class SignedAgreementAccessAudit:
     results_table_class = SignedAgreementAccessAuditTable
 
     def __init__(self, signed_agreement_queryset=None):
-        # Store the CDSA group for auditing membership.
-        self.completed = False
-        # Set up lists to hold audit results.
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
+        super().__init__()
         # Store the queryset to run the audit on.
         if signed_agreement_queryset is None:
             signed_agreement_queryset = models.SignedAgreement.objects.all()
@@ -348,24 +325,7 @@ class SignedAgreementAccessAudit:
         else:
             self._audit_component_agreement(signed_agreement)
 
-    def run_audit(self):
+    def _run_audit(self):
         """Run an audit on all SignedAgreements."""
         for signed_agreement in self.signed_agreement_queryset:
             self._audit_signed_agreement(signed_agreement)
-        self.completed = True
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])

@@ -21,7 +21,15 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
         self.assertTrue(instance.has_access)
 
     def test_verified_no_access(self):
@@ -33,7 +41,15 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
         self.assertFalse(instance.has_access)
 
     def test_grant_access(self):
@@ -45,12 +61,12 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        instance.get_action_url()
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:new_by_child",
+            "dbgap:audit:resolve",
             args=[
-                dbgap_workspace.workspace.authorization_domains.first(),
-                dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
@@ -65,12 +81,12 @@ class AuditResultTest(TestCase):
             data_access_request=dar,
             note="foo",
         )
-        instance.get_action_url()
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            "dbgap:audit:resolve",
             args=[
-                dbgap_workspace.workspace.authorization_domains.first(),
-                dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
@@ -85,10 +101,11 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "anvil_consortium_manager:managed_groups:member_groups:delete",
+            "dbgap:audit:resolve",
             args=[
-                dbgap_workspace.workspace.authorization_domains.first(),
-                dbgap_application.anvil_access_group,
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
             ],
         )
         self.assertEqual(instance.get_action_url(), expected_url)
@@ -104,7 +121,15 @@ class AuditResultTest(TestCase):
             note="foo",
             has_access=True,
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
 
     def test_error_no_dar(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -115,7 +140,16 @@ class AuditResultTest(TestCase):
             note="foo",
             has_access=True,
         )
-        self.assertIsNone(instance.get_action_url())
+        expected_url = reverse(
+            "dbgap:audit:resolve",
+            args=[
+                dbgap_application.dbgap_project_id,
+                dbgap_workspace.workspace.billing_project.name,
+                dbgap_workspace.workspace.name,
+            ],
+        )
+        self.assertEqual(instance.get_action_url(), expected_url)
+        self.assertTrue(instance.has_access)
 
     def test_post_init(self):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
@@ -207,6 +241,7 @@ class dbGaPAccessAuditTest(TestCase):
             record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application
         )
         self.assertEqual(record.data_access_request, dar)
+        self.assertTrue(dbgap_audit.ok())
 
     def test_two_workspaces(self):
         """run_audit with one application and two workspaces with different access."""
@@ -267,6 +302,7 @@ class dbGaPAccessAuditTest(TestCase):
         )
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.DAR_NOT_APPROVED)
+        self.assertTrue(dbgap_audit.ok())
 
     def test_verified_no_access_no_dar(self):
         """run_audit with one application and one workspace that has verified no access."""
@@ -288,6 +324,7 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, dbgap_application)
         self.assertIsNone(record.data_access_request)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.NO_DAR)
+        self.assertTrue(dbgap_audit.ok())
 
     def test_grant_access_new_approved_dar(self):
         # Create a workspace and matching DAR.
@@ -313,6 +350,7 @@ class dbGaPAccessAuditTest(TestCase):
         )
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.NEW_APPROVED_DAR)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_grant_access_new_workspace(self):
         # Create a workspace and matching DAR.
@@ -338,6 +376,7 @@ class dbGaPAccessAuditTest(TestCase):
         )
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.NEW_WORKSPACE)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_grant_access_updated_dar(self):
         # Create a workspace and matching DAR.
@@ -374,6 +413,7 @@ class dbGaPAccessAuditTest(TestCase):
         )
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.NEW_APPROVED_DAR)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_remove_access_udpated_dar(self):
         # Create a workspace and matching DAR.
@@ -412,6 +452,7 @@ class dbGaPAccessAuditTest(TestCase):
         )
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.PREVIOUS_APPROVAL)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_error_remove_access_unknown_reason(self):
         """Access needs to be removed for an unknown reason."""
@@ -450,6 +491,7 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, dbgap_application)
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.ERROR_HAS_ACCESS)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_error_remove_access_no_snapshot(self):
         """Access needs to be removed for an unknown reason when there is no snapshot."""
@@ -472,6 +514,7 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, dbgap_application)
         self.assertIsNone(record.data_access_request)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.ERROR_HAS_ACCESS)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_error_remove_access_snapshot_no_dar(self):
         """Group has access but there is no matching DAR."""
@@ -494,6 +537,7 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, snapshot.dbgap_application)
         self.assertIsNone(record.data_access_request)
         self.assertEqual(record.note, audit.dbGaPAccessAudit.ERROR_HAS_ACCESS)
+        self.assertFalse(dbgap_audit.ok())
 
     def test_two_applications(self):
         """run_audit with two applications and one workspace."""
@@ -611,6 +655,66 @@ class dbGaPAccessAuditTest(TestCase):
     def test_two_applications_two_workspaces(self):
         pass
 
+    def test_ok_with_verified_and_needs_action(self):
+        # Create a workspace and matching DAR.
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        other_dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.first(),
+            child_group=other_dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace
+        )
+        # # Add the anvil group to the auth group for the workspace.
+        # GroupGroupMembershipFactory(
+        #     parent_group=dbgap_workspace.workspace.authorization_domains.first(),
+        #     child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        # )
+        dbgap_audit = audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
+        self.assertFalse(dbgap_audit.ok())
+
+    def test_ok_with_verified_and_error(self):
+        # Create a workspace and matching DAR.
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        other_dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.first(),
+            child_group=other_dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+        #     dbgap_workspace=dbgap_workspace
+        # )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.first(),
+            child_group=dbgap_application.anvil_access_group,
+        )
+        dbgap_audit = audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.errors), 1)
+        self.assertFalse(dbgap_audit.ok())
+
+    def test_ok_not_completed(self):
+        dbgap_audit = audit.dbGaPAccessAudit()
+        with self.assertRaises(ValueError) as e:
+            dbgap_audit.ok()
+        self.assertEqual(
+            str(e.exception),
+            "Audit has not been completed. Use run_audit() to run the audit.",
+        )
+
 
 class dbGaPAccessAuditTableTest(TestCase):
     """Tests for the `dbGaPAccessAuditTableTest` table."""
@@ -666,23 +770,3 @@ class dbGaPAccessAuditTableTest(TestCase):
         table = audit.dbGaPAccessAuditTable(data)
         self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 2)
-
-    def test_render_action(self):
-        """Render action works as expected for grant access types."""
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        data = [
-            {
-                "workspace": dbgap_workspace,
-                "data_access_request": factories.dbGaPDataAccessRequestForWorkspaceFactory(
-                    dbgap_workspace=dbgap_workspace
-                ),
-                "note": "a note",
-                "action": "Grant",
-                "action_url": "foo",
-            }
-        ]
-        table = audit.dbGaPAccessAuditTable(data)
-        self.assertIsInstance(table, audit.dbGaPAccessAuditTable)
-        self.assertEqual(len(table.rows), 1)
-        self.assertIn("foo", table.rows[0].get_cell("action"))
-        self.assertIn("Grant", table.rows[0].get_cell("action"))
