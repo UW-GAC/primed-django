@@ -7,21 +7,19 @@ from django.conf import settings
 from django.db.models import QuerySet
 from django.urls import reverse
 
+from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
+
 from .. import models
 
 
 # Dataclasses for storing audit results?
 @dataclass
-class AccessAuditResult:
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing CDSA access for a specific SignedAgreement."""
 
     note: str
     signed_agreement: models.SignedAgreement
     action: str = None
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init(*args, **kwargs)
-    #     self.anvil_cdsa_group = ManagedGroup.objects.get(name="PRIMED_CDSA")
 
     def __post_init__(self):
         self.anvil_cdsa_group = ManagedGroup.objects.get(
@@ -107,7 +105,7 @@ class SignedAgreementAccessAuditTable(tables.Table):
         attrs = {"class": "table align-middle"}
 
 
-class SignedAgreementAccessAudit:
+class SignedAgreementAccessAudit(PRIMEDAudit):
     """Audit for Signed Agreements."""
 
     # Access verified.
@@ -129,12 +127,7 @@ class SignedAgreementAccessAudit:
     results_table_class = SignedAgreementAccessAuditTable
 
     def __init__(self, signed_agreement_queryset=None):
-        # Store the CDSA group for auditing membership.
-        self.completed = False
-        # Set up lists to hold audit results.
-        self.verified = []
-        self.needs_action = []
-        self.errors = []
+        super().__init__()
         # Store the queryset to run the audit on.
         if signed_agreement_queryset is None:
             signed_agreement_queryset = models.SignedAgreement.objects.all()
@@ -332,27 +325,7 @@ class SignedAgreementAccessAudit:
         else:
             self._audit_component_agreement(signed_agreement)
 
-    def run_audit(self):
+    def _run_audit(self):
         """Run an audit on all SignedAgreements."""
         for signed_agreement in self.signed_agreement_queryset:
             self._audit_signed_agreement(signed_agreement)
-        self.completed = True
-
-    def get_all_results(self):
-        return self.verified + self.needs_action + self.errors
-
-    def get_verified_table(self):
-        """Return a table of verified results."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
-
-    def get_needs_action_table(self):
-        """Return a table of results where action is needed."""
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
-
-    def get_errors_table(self):
-        """Return a table of audit errors."""
-        return self.results_table_class([x.get_table_dictionary() for x in self.errors])
