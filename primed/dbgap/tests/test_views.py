@@ -32,6 +32,8 @@ from faker import Faker
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; DataUsePermissionFactory,
     StudyFactory,
 )
@@ -950,6 +952,22 @@ class dbGaPWorkspaceDetailTest(TestCase):
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
         )
+
+    def test_associated_data_prep_workspace_context_exists(self):
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspace", response.context_data)
+        self.assertIsInstance(response.context_data["associated_data_prep_workspace"], DataPrepWorkspaceTable)
+
+    def test_only_show_correct_associated_data_prep_workspace(self):
+        dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
+        dataPrep_obj = DataPrepWorkspaceFactory.create(target_workspace=dbGaP_obj.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(dbGaP_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspace", response.context_data)
+        self.assertEqual(len(response.context_data["associated_data_prep_workspace"].rows), 1)
+        self.assertIn(dataPrep_obj, response.context_data["associated_data_prep_workspace"].data)
 
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
