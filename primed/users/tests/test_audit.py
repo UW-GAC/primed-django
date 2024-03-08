@@ -126,7 +126,7 @@ TEST_USER_DATA = [
     # second mock object is deactivated user (no drupal uid)
     UserMockObject(
         **{
-            "id": "usr1",
+            "id": "usr2",
             "display_name": "dnusr2",
             "drupal_internal__uid": "",
             "name": "testuser2",
@@ -330,6 +330,77 @@ class TestUserDataAudit(TestCase):
         # verify we did not actually create a user
         users = get_user_model().objects.all()
         assert users.count() == 0
+
+    @responses.activate
+    def test_user_audit_remove_site_inform(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        ss1 = StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[1].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[1].title,
+            full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
+        )
+        drupal_fullname = "{} {}".format(
+            TEST_USER_DATA[0].field_given_first_name_s_,
+            TEST_USER_DATA[0].field_examples_family_last_name_,
+        )
+        drupal_username = TEST_USER_DATA[0].name
+        drupal_email = TEST_USER_DATA[0].mail
+        new_user = get_user_model().objects.create(
+            username=drupal_username + "UPDATE",
+            email=drupal_email + "UPDATE",
+            name=drupal_fullname + "UPDATE",
+        )
+        new_user.study_sites.add(ss1)
+        SocialAccount.objects.create(
+            user=new_user,
+            uid=TEST_USER_DATA[0].drupal_internal__uid,
+            provider=CustomProvider.id,
+        )
+        results = drupal_data_user_audit(apply_changes=True)
+        assert results.encountered_issues() is True
+        issue_rows = results.rows_by_result_type(results.RESULT_TYPE_ISSUE)
+        assert len(issue_rows) == 1
+        assert issue_rows[0]["issue_type"] == results.ISSUE_TYPE_USER_REMOVED_FROM_SITE
+        new_user.refresh_from_db()
+        # assert we did not remove the site
+        assert ss1 in new_user.study_sites.all()
+
+    @responses.activate
+    def test_user_audit_remove_site_act(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        ss1 = StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[1].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[1].title,
+            full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
+        )
+        drupal_fullname = "{} {}".format(
+            TEST_USER_DATA[0].field_given_first_name_s_,
+            TEST_USER_DATA[0].field_examples_family_last_name_,
+        )
+        drupal_username = TEST_USER_DATA[0].name
+        drupal_email = TEST_USER_DATA[0].mail
+        new_user = get_user_model().objects.create(
+            username=drupal_username + "UPDATE",
+            email=drupal_email + "UPDATE",
+            name=drupal_fullname + "UPDATE",
+        )
+        new_user.study_sites.add(ss1)
+        SocialAccount.objects.create(
+            user=new_user,
+            uid=TEST_USER_DATA[0].drupal_internal__uid,
+            provider=CustomProvider.id,
+        )
+        with self.settings(DRUPAL_DATA_AUDIT_REMOVE_USER_SITES=True):
+            results = drupal_data_user_audit(apply_changes=True)
+            assert results.encountered_issues() is False
+
+            new_user.refresh_from_db()
+            # assert we did remove the site
+            assert ss1 not in new_user.study_sites.all()
 
     @responses.activate
     def test_user_audit_change_user(self):

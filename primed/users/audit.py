@@ -29,6 +29,7 @@ class AuditResults:
     RESULT_TYPE_REMOVAL = "removed"
 
     ISSUE_TYPE_USER_INACTIVE = "user_inactive"
+    ISSUE_TYPE_USER_REMOVED_FROM_SITE = "user_site_removal"
 
     def add_new(self, data):
         self.results.append(
@@ -49,13 +50,14 @@ class AuditResults:
             }
         )
 
-    def add_issue(self, data, issue_type):
+    def add_issue(self, data, issue_type, issue_extra=None):
         self.results.append(
             {
                 "data_type": self.data_type,
                 "result_type": self.RESULT_TYPE_ISSUE,
                 "data": data,
                 "issue_type": issue_type,
+                "issue_extra": issue_extra,
             }
         )
 
@@ -296,20 +298,36 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
                     )
                     sa.user.email = drupal_email
 
-                prev_user_sites = set(
+                prev_user_site_names = set(
                     sa.user.study_sites.all().values_list("short_name", flat=True)
                 )
-                if prev_user_sites != set(drupal_user_study_site_shortnames):
+                new_user_site_names = set(drupal_user_study_site_shortnames)
+                if prev_user_site_names != new_user_site_names:
                     user_updates.update(
                         {
                             "sites": {
-                                "old": prev_user_sites,
-                                "new": drupal_user_study_site_shortnames,
+                                "old": prev_user_site_names,
+                                "new": new_user_site_names,
                             }
                         }
                     )
+                    # do not remove from sites by default
+                    removed_sites = prev_user_site_names.difference(new_user_sites)
+                    new_sites = new_user_site_names.difference(prev_user_site_names)
 
-                    sa.user.study_sites.set(new_user_sites)
+                    if settings.DRUPAL_DATA_AUDIT_REMOVE_USER_SITES is True:
+                        sa.user.study_sites.set(new_user_sites)
+                    else:
+                        if removed_sites:
+                            audit_results.add_issue(
+                                data=user,
+                                issue_type=audit_results.ISSUE_TYPE_USER_REMOVED_FROM_SITE,
+                                issue_extra=f"Removed Sites: {removed_sites}",
+                            )
+                        if new_sites:
+                            for new_site in new_user_sites:
+                                if new_site.short_name in new_user_site_names:
+                                    sa.user.study_sites.add(new_site)
 
                 if user_updates:
                     if apply_changes is True:
