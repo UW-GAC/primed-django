@@ -958,16 +958,25 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspace", response.context_data)
-        self.assertIsInstance(response.context_data["associated_data_prep_workspace"], DataPrepWorkspaceTable)
+        self.assertIsInstance(
+            response.context_data["associated_data_prep_workspace"],
+            DataPrepWorkspaceTable,
+        )
 
     def test_only_show_correct_associated_data_prep_workspace(self):
         dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
-        dataPrep_obj = DataPrepWorkspaceFactory.create(target_workspace=dbGaP_obj.workspace)
+        dataPrep_obj = DataPrepWorkspaceFactory.create(
+            target_workspace=dbGaP_obj.workspace
+        )
         self.client.force_login(self.user)
         response = self.client.get(dbGaP_obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspace", response.context_data)
-        self.assertEqual(len(response.context_data["associated_data_prep_workspace"].rows), 1)
-        self.assertIn(dataPrep_obj, response.context_data["associated_data_prep_workspace"].data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspace"].rows), 1
+        )
+        self.assertIn(
+            dataPrep_obj, response.context_data["associated_data_prep_workspace"].data
+        )
 
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
