@@ -28,6 +28,8 @@ class AuditResults:
     # A record was removed or deactivated
     RESULT_TYPE_REMOVAL = "removed"
 
+    ISSUE_TYPE_USER_INACTIVE = "user_inactive"
+
     def add_new(self, data):
         self.results.append(
             {
@@ -100,6 +102,55 @@ class AuditResults:
             f"Removals: {self.count_removal_rows()}"
         )
 
+    def display_result(self, result):
+        result_string = ""
+        result_type = result["result_type"]
+        result_string += f"{result['result_type']} {self.data_type}"
+        if self.data_type == "user":
+            if isinstance(result["data"], SocialAccount):
+                result_string += "\tUSERNAME: {}\tUID: {}".format(
+                    result["data"].user.username, result["data"].uid
+                )
+            else:
+                result_string += "\tUSERNAME: {}\tUID: {}".format(
+                    result["data"].attributes["display_name"],
+                    result["data"].attributes["drupal_internal__uid"],
+                )
+        elif self.data_type == "site":
+            if isinstance(result["data"], StudySite):
+                result_string += "\tShortName: {}FullName: {}\tNodeID: {}".format(
+                    result["data"].short_name,
+                    result["data"].full_name,
+                    result["data"].drupal_node_id,
+                )
+            else:
+                result_string += "\tShortName: {}FullName: {}\tNodeID: {}".format(
+                    result["data"]["short_name"],
+                    result["data"]["full_name"],
+                    result["data"]["node_id"],
+                )
+        if result_type == self.RESULT_TYPE_UPDATE:
+            result_string += "\t{result.get('updates')}"
+        if result_type == self.RESULT_TYPE_ISSUE:
+            result_string += f"\tIssue Type: {result.get('issue_type')}"
+        return result_string
+
+    def detailed_issues(self):
+        result_string = ""
+        for row in self.rows_by_result_type(result_type=self.RESULT_TYPE_ISSUE):
+            result_string += self.display_result(row)
+            result_string += "\n"
+
+        return result_string
+
+    def detailed_results(self):
+        result_string = ""
+        for row in self.results:
+            result_string += self.display_result(row)
+            result_string += "\n"
+
+        return result_string
+
 
 class UserAuditResults(AuditResults):
     def __init__(self):
@@ -171,11 +222,10 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
         users_endpoint_response = users_endpoint.get()
 
         # If there are more, there will be a 'next' link
-        next_user_endpoint = users_endpoint_response.content.links.get("next")
-        if next_user_endpoint:
-            user_endpoint_url = next_user_endpoint["href"]
-        else:
-            user_endpoint_url = None
+
+        user_endpoint_url = users_endpoint_response.content.links.get("next", {}).get(
+            "href"
+        )
 
         for user in users_endpoint_response.data:
             drupal_uid = user.attributes.get("drupal_internal__uid")
@@ -281,7 +331,11 @@ def audit_drupal_users(study_sites, json_api, apply_changes=False):
         if settings.DRUPAL_DATA_AUDIT_DEACTIVATE_USERS is True:
             uda.user.is_active = False
             uda.user.save()
-        audit_results.add_removal(data=uda)
+            audit_results.add_removal(data=uda)
+        else:
+            audit_results.add_issue(
+                data=uda, issue_type=AuditResults.ISSUE_TYPE_USER_INACTIVE
+            )
 
     return audit_results
 

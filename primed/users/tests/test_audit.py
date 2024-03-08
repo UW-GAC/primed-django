@@ -1,10 +1,12 @@
 import json
 import time
+from io import StringIO
 
 import responses
 from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from marshmallow_jsonapi import Schema, fields
 
@@ -242,6 +244,7 @@ class TestUserDataAudit(TestCase):
         assert StudySite.objects.filter(
             short_name=TEST_STUDY_SITE_DATA[0].title
         ).exists()
+        self.assertRegex(audit_results.detailed_results(), "^new site")
 
     @responses.activate
     def test_audit_study_sites_with_site_update(self):
@@ -289,7 +292,7 @@ class TestUserDataAudit(TestCase):
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
         results = drupal_data_user_audit(apply_changes=True)
-        print(f"RESULTS: {results} -- {results.results}")
+
         assert results.encountered_issues() is False
         assert results.count_new_rows() == 1
         assert results.count_update_rows() == 0
@@ -305,6 +308,7 @@ class TestUserDataAudit(TestCase):
             users.first().study_sites.first().short_name
             == TEST_STUDY_SITE_DATA[0].title
         )
+        self.assertRegex(results.detailed_results(), "^new user")
 
     @responses.activate
     def test_full_user_audit_check_only(self):
@@ -361,6 +365,7 @@ class TestUserDataAudit(TestCase):
         assert results.count_new_rows() == 0
         assert results.count_update_rows() == 1
         assert results.count_removal_rows() == 0
+        self.assertRegex(results.detailed_results(), "^update user")
 
     # test user removal
     @responses.activate
@@ -386,10 +391,17 @@ class TestUserDataAudit(TestCase):
 
         new_user.refresh_from_db()
         assert new_user.is_active is True
-        assert results.encountered_issues() is False
+        assert results.encountered_issues() is True
         assert results.count_new_rows() == 1
         assert results.count_update_rows() == 0
-        assert results.count_removal_rows() == 1
+        assert results.count_removal_rows() == 0
+        assert results.count_issue_rows() == 1
+        issue_rows = results.rows_by_result_type(results.RESULT_TYPE_ISSUE)
+        assert len(issue_rows) == 1
+        assert issue_rows[0]["issue_type"] == results.ISSUE_TYPE_USER_INACTIVE
+        # assert not empty
+        assert results.detailed_issues()
+        self.assertRegex(str(results), "Issues: 1")
 
     # test user removal
     @responses.activate
@@ -421,4 +433,39 @@ class TestUserDataAudit(TestCase):
             assert results.count_update_rows() == 0
             assert results.count_removal_rows() == 1
 
-    # test user removal
+    @responses.activate
+    def test_sync_drupal_data_command(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        out = StringIO()
+        call_command("sync-drupal-data", stdout=out)
+        self.assertIn("sync-drupal-data audit complete", out.getvalue())
+
+    @responses.activate
+    def test_sync_drupal_data_command_with_issues(self):
+
+        StudySite.objects.create(
+            drupal_node_id="999999",
+            short_name=TEST_STUDY_SITE_DATA[0].title,
+            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+        )
+
+        new_user = get_user_model().objects.create(
+            username="username2", email="useremail2", name="user fullname2"
+        )
+        SocialAccount.objects.create(
+            user=new_user,
+            uid=999,
+            provider=CustomProvider.id,
+        )
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        out = StringIO()
+        call_command("sync-drupal-data", "--verbose", stdout=out)
+        self.assertIn("sync-drupal-data audit complete", out.getvalue())
