@@ -1,0 +1,21 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}dbGaP access audit{% endblock %}
+
+
+{% block content %}
+
+<h1>dbGaP access audit</h1>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+    Auditing accesss to all dbGaP workspaces for all dbGaP applications.
+</div>
+
+<h2>Audit results</h2>
+
+{% include "dbgap/snippets/audit_explanation.html" %}
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

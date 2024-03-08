@@ -187,6 +187,40 @@ class BooleanIconColumnTest(TestCase):
         self.assertIn("bi-x-circle-fill", value)
         self.assertIn("red", value)
 
+    def test_true_color(self):
+        column = tables.BooleanIconColumn(true_color="blue")
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("blue", value)
+        value = column.render(False, None, None)
+        self.assertEqual(value, "")
+
+    def test_true_icon(self):
+        column = tables.BooleanIconColumn(true_icon="dash")
+        value = column.render(True, None, None)
+        self.assertIn("bi-dash", value)
+        self.assertIn("green", value)
+        value = column.render(False, None, None)
+        self.assertEqual(value, "")
+
+    def test_false_color(self):
+        column = tables.BooleanIconColumn(show_false_icon=True, false_color="blue")
+        value = column.render(False, None, None)
+        self.assertIn("bi-x-circle-fill", value)
+        self.assertIn("blue", value)
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+
+    def test_false_icon(self):
+        column = tables.BooleanIconColumn(show_false_icon=True, false_icon="dash")
+        value = column.render(False, None, None)
+        self.assertIn("bi-dash", value)
+        self.assertIn("red", value)
+        value = column.render(True, None, None)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+
 
 class WorkspaceSharedWithConsortiumColumnTest(TestCase):
     """Tests for the WorkspaceSharedWithConsortiumColumn class."""

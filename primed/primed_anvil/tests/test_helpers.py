@@ -175,7 +175,6 @@ class GetSummaryTableDataTest(TestCase):
         )
         dbgap_workspace_2.available_data.add(available_data_2)
         res = helpers.get_summary_table_data()
-        print(res)
         self.assertEqual(len(res), 2)
         self.assertIn(
             {

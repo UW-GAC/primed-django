@@ -106,7 +106,6 @@ class StudyAutocomplete(
 
     def get_result_label(self, result):
         s = "{} ({})".format(result.full_name, result.short_name)
-        print(s)
         return s
 
     def get_selected_result_label(self, result):

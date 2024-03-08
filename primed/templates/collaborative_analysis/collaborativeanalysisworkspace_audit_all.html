@@ -1,0 +1,16 @@
+{% extends "anvil_consortium_manager/base.html" %}
+
+{% block title %}Collaborative analysis workspace audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Collaborative analysis workspace audit</h1>
+
+<h2>Audit results for workspaces</h2>
+
+{% include "collaborative_analysis/snippets/audit_explanation.html" %}
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

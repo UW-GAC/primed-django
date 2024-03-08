@@ -1,6 +1,6 @@
 """Tests for views related to the `cdsa` app."""
 
-from datetime import date
+from datetime import date, timedelta
 
 import responses
 from anvil_consortium_manager.models import (
@@ -9,6 +9,7 @@ from anvil_consortium_manager.models import (
     ManagedGroup,
     Workspace,
 )
+from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
     GroupAccountMembershipFactory,
@@ -25,6 +26,8 @@ from django.http import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (
@@ -64,8 +67,8 @@ class NavbarTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertContains(response, reverse("cdsa:agreement_versions:list"))
-        self.assertContains(response, reverse("cdsa:audit:signed_agreements"))
-        self.assertContains(response, reverse("cdsa:audit:workspaces"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements:all"))
+        self.assertContains(response, reverse("cdsa:audit:workspaces:all"))
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
         self.assertNotContains(response, reverse("cdsa:signed_agreements:members:new"))
@@ -92,8 +95,8 @@ class NavbarTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertContains(response, reverse("cdsa:agreement_versions:list"))
-        self.assertContains(response, reverse("cdsa:audit:signed_agreements"))
-        self.assertContains(response, reverse("cdsa:audit:workspaces"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements:all"))
+        self.assertContains(response, reverse("cdsa:audit:workspaces:all"))
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
         self.assertContains(response, reverse("cdsa:signed_agreements:members:new"))
@@ -4646,7 +4649,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
-        print(form.errors)
         self.assertEqual(len(form.errors), 1)
         self.assertIn("is_primary", form.errors)
         self.assertEqual(len(form.errors["is_primary"]), 1)
@@ -5334,7 +5336,7 @@ class SignedAgreementAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "cdsa:audit:signed_agreements",
+            "cdsa:audit:signed_agreements:all",
             args=args,
         )
 
@@ -5403,7 +5405,7 @@ class SignedAgreementAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             signed_agreement_audit.SignedAgreementAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
@@ -5428,7 +5430,7 @@ class SignedAgreementAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             signed_agreement_audit.SignedAgreementAccessAudit.INACTIVE_AGREEMENT,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
@@ -5494,6 +5496,556 @@ class SignedAgreementAuditTest(TestCase):
         self.assertIn("does not exist", str(messages[0]))
 
 
+class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the SignedAgreementAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        # Create the test group.
+        self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:audit:signed_agreements:resolve", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user only has view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_signed_agreement_does_not_exist(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(1))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_data_access_audit(self):
+        """The data_access_audit exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            signed_agreement_audit.AccessAuditResult,
+        )
+
+    def test_get_context_verified_access(self):
+        """Context with VerifiedAccess."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.VerifiedAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, "No action needed")
+
+    def test_get_context_verified_no_access(self):
+        """Context with VerifiedNoAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.VerifiedNoAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, "No action needed")
+
+    def test_get_context_remove_access(self):
+        """Context with RemoveAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.RemoveAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, audit_result.action)
+
+    def test_get_context_grant_access(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Check the audit_result in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.GrantAccess)
+        self.assertContains(response, audit_result.note)
+        self.assertContains(response, audit_result.action)
+
+    def test_post_context_verified_access(self):
+        """Context with VerifiedAccess."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=self.anvil_cdsa_group,
+                child_group=member_agreement.signed_agreement.anvil_access_group,
+            )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        # Make sure the membership hasn't changed.
+        membership.refresh_from_db()
+        self.assertEqual(membership.modified, date_created)
+
+    def test_post_context_verified_no_access(self):
+        """Context with VerifiedNoAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_post_context_remove_access(self):
+        """Context with RemoveAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        # Make sure the membership hasn't changed.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_htmx_context_remove_access(self):
+        """Context with RemoveAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
+        )
+        # Make sure the membership hasn't changed.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_context_grant_access(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_htmx_grant_access(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
+        )
+        membership = GroupGroupMembership.objects.get(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_get_only_this_signed_agreement(self):
+        """Only runs on the specified signed_agreement."""
+        factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(member_agreement.signed_agreement.cc_id)
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            signed_agreement_audit.AccessAuditResult,
+        )
+        self.assertEqual(
+            response.context_data["audit_result"].signed_agreement,
+            member_agreement.signed_agreement,
+        )
+
+    def test_post_only_this_signed_agreement(self):
+        """Only runs on the specified signed_agreement."""
+        factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_anvil_api_error_grant(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertEqual(response.status_code, 200)
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # Audit result is still GrantAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.GrantAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_grant_htmx(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
+        )
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # No messages waere added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_anvil_api_error_remove(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertEqual(response.status_code, 200)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # Audit result is still RemoveAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, signed_agreement_audit.RemoveAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove_htmx(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=self.anvil_cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
+        )
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # No messages was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOOBAR")
+    def test_anvil_cdsa_group_does_not_exist(self):
+        """Settings file has a different CDSA group name."""
+        cdsa_group = ManagedGroupFactory.create(name="FOOBAR")
+        member_agreement = factories.MemberAgreementFactory.create(
+            signed_agreement__cc_id=2345
+        )
+        # GroupGroupMembershipFactory.create(
+        #     parent_group=self.anvil_cdsa_group,
+        #     child_group=member_agreement.signed_agreement.anvil_access_group,
+        # )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/FOOBAR/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(member_agreement.signed_agreement.cc_id), {}
+        )
+        self.assertRedirects(response, member_agreement.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=cdsa_group,
+            child_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+
 class CDSAWorkspaceAuditTest(TestCase):
     """Tests for the SignedAgreementAudit view."""
 
@@ -5512,7 +6064,7 @@ class CDSAWorkspaceAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "cdsa:audit:workspaces",
+            "cdsa:audit:workspaces:all",
             args=args,
         )
 
@@ -5587,7 +6139,7 @@ class CDSAWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             workspace_audit.WorkspaceAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_verified_table_no_access(self):
         """verified_table shows a record when audit has verified no access."""
@@ -5611,7 +6163,7 @@ class CDSAWorkspaceAuditTest(TestCase):
             table.rows[0].get_cell_value("note"),
             workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT,
         )
-        self.assertIsNone(table.rows[0].get_cell_value("action"))
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
@@ -5677,6 +6229,590 @@ class CDSAWorkspaceAuditTest(TestCase):
         self.assertEqual(len(messages), 1)
         self.assertIn("FOOBAR", str(messages[0]))
         self.assertIn("does not exist", str(messages[0]))
+
+
+class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the SignedAgreementAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+            )
+        )
+        # Create the test group.
+        self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:audit:workspaces:resolve", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.CDSAWorkspaceAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url("foo", "bar"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar"),
+        )
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user only has view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url("foo", "bar"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url("foo", "bar"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_billing_project_does_not_exist(self):
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url("foo", cdsa_workspace.workspace.name))
+        self.assertEqual(response.status_code, 404)
+
+    def test_workspace_name_does_not_exist(self):
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(cdsa_workspace.workspace.billing_project.name, "foo")
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The data_access_audit exists in the context."""
+        workspace = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            workspace_audit.AccessAuditResult,
+        )
+
+    def test_get_context_verified_access(self):
+        """verified_table shows a record when audit has verified access."""
+        study = StudyFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(
+            audit_result,
+            workspace_audit.VerifiedAccess,
+        )
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(audit_result.data_affiliate_agreement, agreement)
+        self.assertEqual(
+            audit_result.note,
+            workspace_audit.WorkspaceAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
+        )
+        self.assertIsNone(audit_result.action)
+
+    def test_get_verified_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        workspace = factories.CDSAWorkspaceFactory.create()
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(
+            audit_result,
+            workspace_audit.VerifiedNoAccess,
+        )
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertIsNone(audit_result.data_affiliate_agreement)
+        self.assertEqual(
+            audit_result.note, workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT
+        )
+        self.assertIsNone(audit_result.action)
+
+    def test_get_grant_access(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        study = StudyFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(
+            audit_result,
+            workspace_audit.GrantAccess,
+        )
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(audit_result.data_affiliate_agreement, agreement)
+        self.assertEqual(
+            audit_result.note,
+            workspace_audit.WorkspaceAccessAudit.ACTIVE_PRIMARY_AGREEMENT,
+        )
+        self.assertEqual(audit_result.action, "Grant access")
+
+    def test_get_remove_access(self):
+        """get request with RemoveAccess audit result."""
+        workspace = factories.CDSAWorkspaceFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_audit.RemoveAccess)
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertIsNone(audit_result.data_affiliate_agreement)
+        self.assertEqual(
+            audit_result.note, workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT
+        )
+        self.assertEqual(audit_result.action, "Remove access")
+
+    def test_post_verified_access(self):
+        """Post with VerifiedAccess workspace."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=workspace.workspace.authorization_domains.first(),
+                child_group=self.anvil_cdsa_group,
+            )
+        # Check the response
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        # Make sure the membership hasn't changed.
+        membership.refresh_from_db()
+        self.assertEqual(membership.modified, date_created)
+        self.assertEqual(
+            membership.parent_group, workspace.workspace.authorization_domains.first()
+        )
+        self.assertEqual(membership.child_group, self.anvil_cdsa_group)
+
+    def test_post_verified_no_access(self):
+        """Post with VerifiedNoAccess workspace."""
+        study = StudyFactory.create()
+        workspace = factories.CDSAWorkspaceFactory.create(study=study)
+        # membership = GroupGroupMembershipFactory.create(
+        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     child_group=self.anvil_cdsa_group,
+        # )
+        # Check the response
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_post_grant_access(self):
+        """Context with GrantAccess."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(
+            study=study, workspace__name="TEST_CDSA"
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_htmx(self):
+        """Context with GrantAccess."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(
+            study=study, workspace__name="TEST_CDSA"
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+            **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
+        )
+        # Membership has been created.
+        membership = GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_remove_access(self):
+        """Get request with RemoveAccess audit result."""
+        workspace = factories.CDSAWorkspaceFactory.create(
+            workspace__name="TEST_WORKSPACE"
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_htmx_remove_access_htmx(self):
+        """HTMX post request with RemoveAccess audit result."""
+        workspace = factories.CDSAWorkspaceFactory.create(
+            workspace__name="TEST_WORKSPACE"
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+            **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.CDSAWorkspaceAuditResolve.htmx_success
+        )
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_get_only_this_workspace(self):
+        """Only runs on the specified workspace."""
+        factories.CDSAWorkspaceFactory.create()
+        workspace = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            workspace_audit.AccessAuditResult,
+        )
+        self.assertEqual(response.context_data["audit_result"].workspace, workspace)
+
+    def test_anvil_api_error_grant(self):
+        """AnVIL API errors are properly handled."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(
+            study=study, workspace__name="TEST_CDSA"
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # Audit result is still GrantAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_audit.GrantAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_grant_htmx(self):
+        """AnVIL API errors are properly handled with htmx."""
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(
+            study=study, workspace__name="TEST_CDSA"
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+            **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
+        )
+        # No group membership was created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_anvil_api_error_remove(self):
+        """AnVIL API errors are properly handled."""
+        workspace = factories.CDSAWorkspaceFactory.create(
+            workspace__name="TEST_WORKSPACE"
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # Audit result is still RemoveAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, workspace_audit.RemoveAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove_htmx(self):
+        """AnVIL API errors are properly handled."""
+        workspace = factories.CDSAWorkspaceFactory.create(
+            workspace__name="TEST_WORKSPACE"
+        )
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=self.anvil_cdsa_group,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+            **header
+        )
+        self.assertEqual(
+            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
+        )
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # No messages was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    @override_settings(ANVIL_CDSA_GROUP_NAME="FOOBAR")
+    def test_different_cdsa_group_name(self):
+        """Settings file has a different CDSA group name."""
+        cdsa_group = ManagedGroupFactory.create(name="FOOBAR")
+        study = StudyFactory.create()
+        factories.DataAffiliateAgreementFactory.create(study=study)
+        workspace = factories.CDSAWorkspaceFactory.create(
+            study=study, workspace__name="TEST_CDSA"
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/auth_TEST_CDSA/member/FOOBAR@firecloud.org"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                workspace.workspace.billing_project.name, workspace.workspace.name
+            ),
+            {},
+        )
+        self.assertRedirects(response, workspace.get_absolute_url())
+        membership = GroupGroupMembership.objects.get(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=cdsa_group,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
 
 
 class StudyRecordsList(TestCase):
@@ -6188,6 +7324,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-requested_by": self.requester.pk,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -6244,6 +7381,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                     data_use_modifier_2.pk,
                 ],
                 "workspacedata-0-requested_by": self.requester.pk,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -6289,6 +7427,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-disease_term": "foo",
                 "workspacedata-0-requested_by": self.requester.pk,
+                "workspacedata-0-gsr_restricted": False,
             },
         )
         self.assertEqual(response.status_code, 302)

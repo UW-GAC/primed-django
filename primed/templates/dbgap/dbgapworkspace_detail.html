@@ -1,5 +1,14 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
 
+{% block pills %}
+  {% if workspace_data_object.gsr_restricted %}
+    {% include "snippets/gsr_restricted_badge.html" %}
+  {% endif %}
+
+
+{{ block.super }}
+{% endblock pills %}
+
 {% block workspace_data %}
   <dl class="row">
     <hr>
@@ -92,7 +101,7 @@
 
 {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
 <p>
-  <a href="{% url 'dbgap:workspaces:audit' billing_project_slug=object.billing_project.name workspace_slug=object.name%}" class="btn btn-secondary" role="button">Audit application access</a>
+  <a href="{% url 'dbgap:audit:workspaces' billing_project_slug=object.billing_project.name workspace_slug=object.name%}" class="btn btn-secondary" role="button">Audit application access</a>
 </p>
 {% endif %}
 

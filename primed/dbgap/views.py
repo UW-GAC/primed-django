@@ -20,7 +20,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
 from django.db.utils import IntegrityError
-from django.http import Http404
+from django.forms.forms import Form
+from django.http import Http404, HttpResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import (
@@ -517,6 +518,58 @@ class dbGaPDataAccessRequestList(
         )
 
 
+class dbGaPDataAccessRequestHistory(
+    AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView
+):
+    """View to show the history of a given DAR."""
+
+    model = models.dbGaPDataAccessRequest
+    table_class = tables.dbGaPDataAccessRequestHistoryTable
+    template_name = "dbgap/dbgapdataaccessrequest_history.html"
+
+    def get_dbgap_dar_id(self):
+        return self.kwargs.get("dbgap_dar_id")
+
+    def get(self, request, *args, **kwargs):
+        self.dbgap_dar_id = self.get_dbgap_dar_id()
+        return super().get(request, *args, **kwargs)
+
+    def get_table_data(self):
+        qs = self.get_queryset().filter(
+            dbgap_dar_id=self.dbgap_dar_id,
+        )
+        if not qs.count():
+            raise Http404("No DARs found matching the query.")
+        return qs
+
+    def get_table_kwargs(self):
+        return {
+            "order_by": "-dbgap_data_access_snapshot__created",
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dbgap_dar_id"] = self.dbgap_dar_id
+        return context
+
+
+class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit access for all dbGaPApplications and dbGaPWorkspaces."""
+
+    template_name = "dbgap/dbgap_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        data_access_audit = audit.dbGaPAccessAudit()
+        data_access_audit.run_audit()
+        context["verified_table"] = data_access_audit.get_verified_table()
+        context["errors_table"] = data_access_audit.get_errors_table()
+        context["needs_action_table"] = data_access_audit.get_needs_action_table()
+        context["data_access_audit"] = data_access_audit
+        return context
+
+
 class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 
@@ -552,7 +605,9 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         context["latest_snapshot"] = latest_snapshot
         if latest_snapshot:
             # Run the audit.
-            data_access_audit = audit.dbGaPApplicationAccessAudit(self.object)
+            data_access_audit = audit.dbGaPAccessAudit(
+                dbgap_application_queryset=self.model.objects.filter(pk=self.object.pk)
+            )
             data_access_audit.run_audit()
             context["verified_table"] = data_access_audit.get_verified_table()
             context["errors_table"] = data_access_audit.get_errors_table()
@@ -594,13 +649,124 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPWorkspaceAccessAudit(self.object)
+        data_access_audit = audit.dbGaPAccessAudit(
+            dbgap_workspace_queryset=self.model.objects.filter(pk=self.object.pk)
+        )
         data_access_audit.run_audit()
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()
         context["needs_action_table"] = data_access_audit.get_needs_action_table()
         context["data_access_audit"] = data_access_audit
         return context
+
+
+class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+
+    form_class = Form
+    template_name = "dbgap/audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_dbgap_workspace(self):
+        """Look up the dbGaPWorkspace by billing project and name."""
+        # Filter the queryset based on kwargs.
+        billing_project_slug = self.kwargs.get("billing_project_slug", None)
+        workspace_slug = self.kwargs.get("workspace_slug", None)
+        queryset = models.dbGaPWorkspace.objects.filter(
+            workspace__billing_project__name=billing_project_slug,
+            workspace__name=workspace_slug,
+        )
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_dbgap_application(self, queryset=None):
+        """Look up the dbGaPApplication by dbgap_project_id."""
+        try:
+            obj = models.dbGaPApplication.objects.get(
+                dbgap_project_id=self.kwargs.get("dbgap_project_id")
+            )
+        except models.dbGaPApplication.DoesNotExist:
+            raise Http404("No dbGaPApplications found matching the query")
+        return obj
+
+    def get_audit_result(self):
+        instance = audit.dbGaPAccessAudit(
+            dbgap_workspace_queryset=models.dbGaPWorkspace.objects.filter(
+                pk=self.dbgap_workspace.pk
+            ),
+            dbgap_application_queryset=models.dbGaPApplication.objects.filter(
+                pk=self.dbgap_application.pk
+            ),
+        )
+        instance.run_audit()
+        return instance.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        print(self.kwargs)
+        self.dbgap_workspace = self.get_dbgap_workspace()
+        self.dbgap_application = self.get_dbgap_application()
+        self.audit_result = self.get_audit_result()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.dbgap_workspace = self.get_dbgap_workspace()
+        self.dbgap_application = self.get_dbgap_application()
+        self.audit_result = self.get_audit_result()
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dbgap_workspace"] = self.dbgap_workspace
+        context["dbgap_application"] = self.dbgap_application
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return reverse("dbgap:audit:all")
+
+    def form_valid(self, form):
+        auth_domain = self.dbgap_workspace.workspace.authorization_domains.first()
+        # Handle the result.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, audit.GrantAccess):
+                    # Add to workspace auth domain.
+                    membership = GroupGroupMembership(
+                        parent_group=auth_domain,
+                        child_group=self.dbgap_application.anvil_access_group,
+                        role=GroupGroupMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, audit.RemoveAccess):
+                    # Remove from CDSA group.
+                    membership = GroupGroupMembership.objects.get(
+                        parent_group=auth_domain,
+                        child_group=self.dbgap_application.anvil_access_group,
+                    )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
 
 
 class dbGaPRecordsIndex(TemplateView):

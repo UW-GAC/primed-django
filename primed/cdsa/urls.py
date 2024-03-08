@@ -86,21 +86,43 @@ signed_agreement_patterns = (
         path("members/", include(member_agreement_patterns)),
         path("data_affiliates/", include(data_affiliate_agreement_patterns)),
         path("non_data_affiliates/", include(non_data_affiliate_agreement_patterns)),
+        # path("audit/", include(signed_agreement_audit_patterns)),
     ],
     "signed_agreements",
 )
 
+signed_agreement_audit_patterns = (
+    [
+        path("", views.SignedAgreementAudit.as_view(), name="all"),
+        path(
+            "<int:cc_id>/resolve/",
+            views.SignedAgreementAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "signed_agreements",
+)
+
+workspace_audit_patterns = (
+    [
+        path("", views.CDSAWorkspaceAudit.as_view(), name="all"),
+        path(
+            "<slug:billing_project_slug>/<slug:workspace_slug>/resolve/",
+            views.CDSAWorkspaceAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "workspaces",
+)
+
 audit_patterns = (
     [
-        path(
-            "signed_agreements/",
-            views.SignedAgreementAudit.as_view(),
-            name="signed_agreements",
-        ),
-        path("workspaces/", views.CDSAWorkspaceAudit.as_view(), name="workspaces"),
+        path("workspaces", include(workspace_audit_patterns)),
+        path("signed_agreements", include(signed_agreement_audit_patterns)),
     ],
     "audit",
 )
+
 records_patterns = (
     [
         path("", views.RecordsIndex.as_view(), name="index"),

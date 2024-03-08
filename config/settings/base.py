@@ -84,6 +84,7 @@ THIRD_PARTY_APPS = [
     # django-simple-history for model change tracking
     "simple_history",
     "dbbackup",
+    "django_htmx",
 ]
 
 LOCAL_APPS = [
@@ -96,6 +97,7 @@ LOCAL_APPS = [
     "primed.miscellaneous_workspaces",
     "primed.duo",
     "primed.cdsa",
+    "primed.collaborative_analysis",
 ]
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -157,6 +159,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 # STATIC
@@ -376,6 +379,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.SimulatedDataWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ResourceWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.ConsortiumDevelWorkspaceAdapter",
+    "primed.collaborative_analysis.adapters.CollaborativeAnalysisWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.TemplateWorkspaceAdapter",
     "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
 ]

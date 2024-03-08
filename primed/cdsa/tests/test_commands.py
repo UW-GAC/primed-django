@@ -18,14 +18,17 @@ class CDSARecordsTest(TestCase):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.outdir = os.path.join(self.tmpdir.name, "test_output")
 
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
     def test_output(self):
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         self.assertIn("generating reports... done!", out.getvalue())
 
     def test_files_created(self):
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         self.assertTrue(isdir(self.outdir))
         self.assertTrue(isfile(os.path.join(self.outdir, "representative_records.tsv")))
         self.assertTrue(isfile(os.path.join(self.outdir, "study_records.tsv")))
@@ -34,7 +37,7 @@ class CDSARecordsTest(TestCase):
 
     def test_representative_records_zero(self):
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "representative_records.tsv")) as f:
             lines = f.readlines()
         self.assertEqual(len(lines), 1)
@@ -44,14 +47,14 @@ class CDSARecordsTest(TestCase):
         factories.DataAffiliateAgreementFactory.create()
         factories.NonDataAffiliateAgreementFactory.create()
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "representative_records.tsv")) as f:
             lines = f.readlines()
         self.assertEqual(len(lines), 4)
 
     def test_study_records_zero(self):
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "study_records.tsv")) as f:
             lines = f.readlines()
         self.assertEqual(len(lines), 1)
@@ -61,14 +64,14 @@ class CDSARecordsTest(TestCase):
             signed_agreement__is_primary=True
         )
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "study_records.tsv")) as f:
             lines = f.readlines()
         self.assertEqual(len(lines), 2)
 
     def test_cdsa_workspace_records_zero(self):
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "workspace_records.tsv")) as f:
             lines = f.readlines()
         self.assertEqual(len(lines), 1)
@@ -77,7 +80,7 @@ class CDSARecordsTest(TestCase):
         agreement = factories.DataAffiliateAgreementFactory.create()
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
         out = StringIO()
-        call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+        call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "workspace_records.tsv")) as f:
             lines = f.readlines()
         self.assertEqual(len(lines), 2)
@@ -86,5 +89,7 @@ class CDSARecordsTest(TestCase):
         os.mkdir(self.outdir)
         out = StringIO()
         with self.assertRaises(CommandError) as e:
-            call_command("cdsa_records", self.outdir, "--no-color", stdout=out)
+            call_command(
+                "cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out
+            )
         self.assertIn("already exists", str(e.exception))

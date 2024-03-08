@@ -12,8 +12,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "outdir",
+            "--outdir",
             help="""Output directory where reports should be written. This directory will be created.""",
+            required=True,
         )
 
     def _export_table(self, table, filename):
