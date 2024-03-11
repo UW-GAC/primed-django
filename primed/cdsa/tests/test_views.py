@@ -30,6 +30,8 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
     StudyFactory,
@@ -7259,6 +7261,32 @@ class CDSAWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertContains(response, modifiers[0].abbreviation)
         self.assertContains(response, modifiers[1].abbreviation)
+
+    def test_associated_data_prep_workspace_context_exists(self):
+        obj = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspace", response.context_data)
+        self.assertIsInstance(
+            response.context_data["associated_data_prep_workspace"],
+            DataPrepWorkspaceTable,
+        )
+
+    def test_only_show_correct_associated_data_prep_workspace(self):
+        cdsa_obj = factories.CDSAWorkspaceFactory.create()
+        dataPrep_obj = DataPrepWorkspaceFactory.create(
+            target_workspace=cdsa_obj.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(cdsa_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspace", response.context_data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspace"].rows), 1
+        )
+        self.assertIn(
+            dataPrep_obj.workspace,
+            response.context_data["associated_data_prep_workspace"].data,
+        )
 
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
