@@ -975,7 +975,8 @@ class dbGaPWorkspaceDetailTest(TestCase):
             len(response.context_data["associated_data_prep_workspace"].rows), 1
         )
         self.assertIn(
-            dataPrep_obj, response.context_data["associated_data_prep_workspace"].data
+            dataPrep_obj.workspace,
+            response.context_data["associated_data_prep_workspace"].data,
         )
 
 
