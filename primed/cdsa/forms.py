@@ -77,6 +77,7 @@ class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         fields = (
             "signed_agreement",
             "study",
+            "additional_limitations",
         )
         widgets = {
             "study": autocomplete.ModelSelect2(

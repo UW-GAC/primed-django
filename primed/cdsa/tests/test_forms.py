@@ -1,6 +1,7 @@
 """Tests for the `cdsa` app."""
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.test import TestCase
 
 from primed.duo.models import DataUseModifier
@@ -415,6 +416,35 @@ class DataAffiliateAgreementFormTest(TestCase):
         self.assertIn("signed_agreement", form.errors)
         self.assertEqual(len(form.errors["signed_agreement"]), 1)
         self.assertIn("expected type", form.errors["signed_agreement"][0])
+
+    def test_valid_primary_with_additional_limitations(self):
+        """Form is valid with necessary input."""
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=True
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "study": self.study,
+            "additional_limitations": "test limitations",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_component_with_additional_limitations(self):
+        """Form is valid with necessary input."""
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=False
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "study": self.study,
+            "additional_limitations": "test limitations",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn(NON_FIELD_ERRORS, form.errors)
+        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn("only allowed for primary", form.errors[NON_FIELD_ERRORS][0])
 
 
 class NonDataAffiliateAgreementFormTest(TestCase):
