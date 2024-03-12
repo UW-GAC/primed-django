@@ -277,12 +277,27 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
         help_text="Study that this agreement is associated with.",
     )
     anvil_upload_group = models.ForeignKey(ManagedGroup, on_delete=models.PROTECT)
+    additional_limitations = models.TextField(
+        blank=True,
+        help_text="Additional limitations on data use as specified in the signed CDSA.",
+    )
 
     def get_absolute_url(self):
         return reverse(
             "cdsa:signed_agreements:data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
+
+    def clean(self):
+        super().clean()
+        if (
+            self.additional_limitations
+            and hasattr(self, "signed_agreement")
+            and not self.signed_agreement.is_primary
+        ):
+            raise ValidationError(
+                "Additional limitations are only allowed for primary agreements."
+            )
 
     def get_agreement_group(self):
         return self.study

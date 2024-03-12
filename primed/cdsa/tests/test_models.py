@@ -506,6 +506,22 @@ class DataAffiliateAgreementTest(TestCase):
             e.exception.error_dict["signed_agreement"][0].messages[0],
         )
 
+    def test_clean_additional_limitations_primary(self):
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="foo bar",
+        )
+        instance.full_clean()
+
+    def test_clean_additional_limitations_not_primary(self):
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False,
+            additional_limitations="foo bar",
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.clean()
+        self.assertIn("only allowed for primary agreements", e.exception.message)
+
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
         instance = factories.DataAffiliateAgreementFactory.create()
