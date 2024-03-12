@@ -113,6 +113,7 @@ cdsa_1006 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__signing_institution="UW",
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
+    additional_limitations="This data can only be used for testing the app.",
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_group, child_group=cdsa_1006.signed_agreement.anvil_access_group
