@@ -45,6 +45,28 @@
 </dl>
 {% endblock panel %}
 
+{% block after_panel %}
+
+{% if object.additional_limitations %}
+<div>
+  <div class="card my-3">
+    <div class="card-header">
+      <span class="fa-solid fa-hand mx-2"></span>
+      Additional limitations
+    </div>
+    <div class="card-body">
+      <p>
+        {{ object.additional_limitations }}
+      </p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{{ block.super }}
+
+{% endblock after_panel %}
+
 
 {% block action_buttons %}
   {% if show_update_button %}

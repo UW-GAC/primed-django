@@ -4005,6 +4005,29 @@ class DataAffiliateAgreementDetailTest(TestCase):
             ),
         )
 
+    def test_response_includes_additional_limitations(self):
+        """Response includes a link to the study detail page."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="Test limitations for this data affiliate agreement",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Additional limitations")
+        self.assertContains(
+            response, "Test limitations for this data affiliate agreement"
+        )
+
+    def test_response_with_no_additional_limitations(self):
+        """Response includes a link to the study detail page."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertNotContains(response, "Additional limitations")
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
