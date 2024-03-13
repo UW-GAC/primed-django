@@ -44,23 +44,6 @@
 {% endblock workspace_data %}
 
 {% block after_panel %}
-{% if primary_cdsa.additional_limitations %}
-<div>
-  <div class="card my-3">
-    <div class="card-header">
-      <span class="fa-solid fa-hand mx-2"></span>
-      Additional CDSA limitations
-    </div>
-    <div class="card-body">
-      <p>
-        {{ primary_cdsa.additional_limitations }}
-      </p>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-
 <div class="my-3">
   <div class="accordion" id="accordionGroupsDUL">
     <div class="accordion-item">
@@ -72,7 +55,18 @@
       </h2>
       <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
         <div class="accordion-body">
-          {{ object.cdsaworkspace.data_use_limitations }}
+          <ul>
+            <li>{{ duo_permission_text }}</li>
+            {% for x in duo_modifiers_text %}
+            <li>{{ x }}</li>
+            {% endfor %}
+            {% if primary_cdsa.additional_limitations %}
+            <li><b>Additional CDSA limitations:</b> {{ primary_cdsa.additional_limitations }}</li>
+            {% endif %}
+            {% if workspace_data_object.data_use_limitations %}
+            <li><b>Additional workspace limitations:</b> {{ workspace_data_object.data_use_limitations }}</li>
+            {% endif %}
+          </ul>
         </div>
       </div>
     </div>
