@@ -352,3 +352,12 @@ class CDSAWorkspace(
     class Meta:
         verbose_name = " CDSA workspace"
         verbose_name_plural = " CDSA workspaces"
+
+    def get_primary_cdsa(self):
+        """Return the primary, valid CDSA associated with this workspace."""
+        cdsa = DataAffiliateAgreement.objects.get(
+            study=self.study,
+            signed_agreement__is_primary=True,
+            signed_agreement__status=SignedAgreement.StatusChoices.ACTIVE,
+        )
+        return cdsa

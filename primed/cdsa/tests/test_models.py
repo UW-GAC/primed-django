@@ -673,3 +673,59 @@ class CDSAWorkspaceTest(TestCase):
         instance.available_data.add(*available_data)
         self.assertIn(available_data[0], instance.available_data.all())
         self.assertIn(available_data[1], instance.available_data.all())
+
+    def test_get_primary_cdsa(self):
+        """get_primary_cdsa returns the primary valid CDSA for the study."""
+        instance = factories.CDSAWorkspaceFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            study=instance.study,
+        )
+        self.assertEqual(instance.get_primary_cdsa(), agreement)
+
+    def test_get_primary_cdsa_not_primary(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            study=instance.study,
+        )
+        with self.assertRaises(models.DataAffiliateAgreement.DoesNotExist):
+            instance.get_primary_cdsa()
+
+    def test_get_primary_cdsa_not_active(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
+            study=instance.study,
+        )
+        with self.assertRaises(models.DataAffiliateAgreement.DoesNotExist):
+            instance.get_primary_cdsa()
+
+    def test_get_primary_cdsa_different_study(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            # study=instance.study,
+        )
+        with self.assertRaises(models.DataAffiliateAgreement.DoesNotExist):
+            instance.get_primary_cdsa()
+
+    def test_get_primary_cdsa_multiple_agreements(self):
+        """get_primary_cdsa returns the primary valid CDSA for the study."""
+        instance = factories.CDSAWorkspaceFactory.create()
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            study=instance.study,
+        )
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
+            study=instance.study,
+        )
+        with self.assertRaises(models.DataAffiliateAgreement.MultipleObjectsReturned):
+            instance.get_primary_cdsa()
