@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -40,6 +42,9 @@ class DUOFields(models.Model):
         return "http://purl.obolibrary.org/obo/{}".format(
             self.identifier.replace("DUO:", "DUO_")
         )
+
+    def get_short_definition(self):
+        return re.sub(r"This .+? indicates that use", "Use", self.definition)
 
 
 class DataUsePermission(DUOFields, TreeNode):
