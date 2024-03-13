@@ -7361,11 +7361,19 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(response, "<li>Test modifier 2.</li>")
         self.assertContains(
             response,
-            "<li><b>Additional CDSA limitations:</b> Test limitations for this data affiliate agreement</li>",
+            "<dt>Additional CDSA limitations</dt>",
         )
         self.assertContains(
             response,
-            "<li><b>Additional workspace limitations:</b> Test additional limitations for workspace</li>",
+            "<li>Test limitations for this data affiliate agreement</li>",
+        )
+        self.assertContains(
+            response,
+            "<dt>Additional workspace limitations</dt>",
+        )
+        self.assertContains(
+            response,
+            "<li>Test additional limitations for workspace</li>",
         )
 
 
