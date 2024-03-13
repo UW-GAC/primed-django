@@ -44,6 +44,23 @@
 {% endblock workspace_data %}
 
 {% block after_panel %}
+{% if primary_cdsa.additional_limitations %}
+<div>
+  <div class="card my-3">
+    <div class="card-header">
+      <span class="fa-solid fa-hand mx-2"></span>
+      Additional CDSA limitations
+    </div>
+    <div class="card-body">
+      <p>
+        {{ primary_cdsa.additional_limitations }}
+      </p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
 <div class="my-3">
   <div class="accordion" id="accordionGroupsDUL">
     <div class="accordion-item">

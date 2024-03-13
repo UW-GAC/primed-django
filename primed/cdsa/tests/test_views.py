@@ -7283,6 +7283,48 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(response, modifiers[0].abbreviation)
         self.assertContains(response, modifiers[1].abbreviation)
 
+    def test_response_context_primary_cdsa(self):
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="Test limitations for this data affiliate agreement",
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("primary_cdsa", response.context)
+        self.assertEqual(response.context["primary_cdsa"], agreement)
+
+    def test_response_includes_additional_limitations(self):
+        """Response includes DataAffiliate additional limitations if they exist."""
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="Test limitations for this data affiliate agreement",
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertContains(response, "Additional CDSA limitations")
+        self.assertContains(
+            response, "Test limitations for this data affiliate agreement"
+        )
+
+    def test_response_with_no_additional_limitations(self):
+        """Does not include DataAffiliate additional limitations if they do not exist."""
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="",
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.workspace.get_absolute_url())
+        self.assertNotContains(response, "Additional CDSA limitations")
+
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's CDSAWorkspace model."""
