@@ -7343,7 +7343,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         """All data use limitations appear in the response content."""
         instance = factories.CDSAWorkspaceFactory.create(
             data_use_permission__definition="Test permission.",
-            data_use_limitations="Test additional limitations for workspace",
+            additional_limitations="Test additional limitations for workspace",
         )
         modifier_1 = DataUseModifierFactory.create(definition="Test modifier 1.")
         modifier_2 = DataUseModifierFactory.create(definition="Test modifier 2.")
@@ -7429,7 +7429,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-study": study.pk,
                 "workspacedata-0-data_use_permission": duo_permission.pk,
-                "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-requested_by": self.requester.pk,
                 "workspacedata-0-gsr_restricted": False,
@@ -7444,7 +7443,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.study, study)
         self.assertEqual(new_workspace_data.data_use_permission, duo_permission)
-        self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.requested_by, self.requester)
 
@@ -7481,7 +7479,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-study": study.pk,
-                "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-data_use_modifiers": [
@@ -7530,7 +7527,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-study": study.pk,
-                "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-disease_term": "foo",

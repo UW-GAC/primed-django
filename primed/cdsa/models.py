@@ -333,8 +333,9 @@ class CDSAWorkspace(
         on_delete=models.PROTECT,
         help_text="The study associated with data in this workspace.",
     )
-    data_use_limitations = models.TextField(
-        help_text="""The full data use limitations for this workspace."""
+    additional_limitations = models.TextField(
+        help_text="""Additional data use limitations that cannot be captured by DUO.""",
+        blank=True,
     )
     acknowledgments = models.TextField(
         help_text="Acknowledgments associated with data in this workspace."

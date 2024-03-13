@@ -632,7 +632,6 @@ class CDSAWorkspaceTest(TestCase):
         requester = UserFactory.create()
         instance = models.CDSAWorkspace(
             study=study,
-            data_use_limitations="test limitations",
             acknowledgments="test acknowledgments",
             requested_by=requester,
             workspace=workspace,
@@ -673,6 +672,11 @@ class CDSAWorkspaceTest(TestCase):
         instance.available_data.add(*available_data)
         self.assertIn(available_data[0], instance.available_data.all())
         self.assertIn(available_data[1], instance.available_data.all())
+
+    def test_additional_limitations(self):
+        """Can have additional_limitations set."""
+        instance = factories.CDSAWorkspaceFactory.create(additional_limitations="foo")
+        self.assertEqual(instance.additional_limitations, "foo")
 
     def test_get_primary_cdsa(self):
         """get_primary_cdsa returns the primary valid CDSA for the study."""
