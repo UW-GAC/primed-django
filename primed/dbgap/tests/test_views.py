@@ -979,6 +979,29 @@ class dbGaPWorkspaceDetailTest(TestCase):
             response.context_data["associated_data_prep_workspaces"].data,
         )
 
+    def test_show_two_associated_data_prep_workspaces(self):
+        dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
+        dataPrep_obj1 = DataPrepWorkspaceFactory.create(
+            target_workspace=dbGaP_obj.workspace
+        )
+        dataPrep_obj2 = DataPrepWorkspaceFactory.create(
+            target_workspace=dbGaP_obj.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(dbGaP_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspaces"].rows), 2
+        )
+        self.assertIn(
+            dataPrep_obj1.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+        self.assertIn(
+            dataPrep_obj2.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""
