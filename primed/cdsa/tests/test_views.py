@@ -7267,6 +7267,9 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspaces", response.context_data)
+        import ipdb
+
+        ipdb.set_trace()
         self.assertIsInstance(
             response.context_data["associated_data_prep_workspaces"],
             DataPrepWorkspaceTable,
@@ -7310,6 +7313,46 @@ class CDSAWorkspaceDetailTest(TestCase):
             dataPrep_obj2.workspace,
             response.context_data["associated_data_prep_workspaces"].data,
         )
+
+    def test_context_data_prep_active_with_no_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_inactive_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=False
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_one_inactive_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
 
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):

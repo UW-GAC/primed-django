@@ -94,7 +94,7 @@
   </div>
 </div>
 
-{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces %}
+{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
 
 {{block.super}}
 {% endblock after_panel %}

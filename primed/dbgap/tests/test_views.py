@@ -1002,6 +1002,46 @@ class dbGaPWorkspaceDetailTest(TestCase):
             response.context_data["associated_data_prep_workspaces"].data,
         )
 
+    def test_context_data_prep_active_with_no_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_inactive_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=False
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_one_inactive_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""

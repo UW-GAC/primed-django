@@ -30,4 +30,7 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
         extra_context["associated_data_prep_workspaces"] = DataPrepWorkspaceTable(
             associated_data_prep
         )
+        extra_context["data_prep_active"] = associated_data_prep.filter(
+            dataprepworkspace__is_active=True
+        ).exists()
         return extra_context
