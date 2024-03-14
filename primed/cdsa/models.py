@@ -277,12 +277,27 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
         help_text="Study that this agreement is associated with.",
     )
     anvil_upload_group = models.ForeignKey(ManagedGroup, on_delete=models.PROTECT)
+    additional_limitations = models.TextField(
+        blank=True,
+        help_text="Additional limitations on data use as specified in the signed CDSA.",
+    )
 
     def get_absolute_url(self):
         return reverse(
             "cdsa:signed_agreements:data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
+
+    def clean(self):
+        super().clean()
+        if (
+            self.additional_limitations
+            and hasattr(self, "signed_agreement")
+            and not self.signed_agreement.is_primary
+        ):
+            raise ValidationError(
+                "Additional limitations are only allowed for primary agreements."
+            )
 
     def get_agreement_group(self):
         return self.study
@@ -318,8 +333,9 @@ class CDSAWorkspace(
         on_delete=models.PROTECT,
         help_text="The study associated with data in this workspace.",
     )
-    data_use_limitations = models.TextField(
-        help_text="""The full data use limitations for this workspace."""
+    additional_limitations = models.TextField(
+        help_text="""Additional data use limitations that cannot be captured by DUO.""",
+        blank=True,
     )
     acknowledgments = models.TextField(
         help_text="Acknowledgments associated with data in this workspace."
@@ -337,3 +353,12 @@ class CDSAWorkspace(
     class Meta:
         verbose_name = " CDSA workspace"
         verbose_name_plural = " CDSA workspaces"
+
+    def get_primary_cdsa(self):
+        """Return the primary, valid CDSA associated with this workspace."""
+        cdsa = DataAffiliateAgreement.objects.get(
+            study=self.study,
+            signed_agreement__is_primary=True,
+            signed_agreement__status=SignedAgreement.StatusChoices.ACTIVE,
+        )
+        return cdsa

@@ -18,3 +18,14 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.CDSAWorkspace
     workspace_data_form_class = forms.CDSAWorkspaceForm
     workspace_detail_template_name = "cdsa/cdsaworkspace_detail.html"
+
+    def get_extra_detail_context_data(self, workspace, request):
+        # Get the primary CDSA for this study, assuming it exists.
+        extra_context = {}
+        # Data use limitations from CDSA
+        try:
+            extra_context["primary_cdsa"] = workspace.cdsaworkspace.get_primary_cdsa()
+        except models.DataAffiliateAgreement.DoesNotExist:
+            extra_context["primary_cdsa"] = None
+
+        return extra_context

@@ -4005,6 +4005,29 @@ class DataAffiliateAgreementDetailTest(TestCase):
             ),
         )
 
+    def test_response_includes_additional_limitations(self):
+        """Response includes a link to the study detail page."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="Test limitations for this data affiliate agreement",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Additional limitations")
+        self.assertContains(
+            response, "Test limitations for this data affiliate agreement"
+        )
+
+    def test_response_with_no_additional_limitations(self):
+        """Response includes a link to the study detail page."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertNotContains(response, "Additional limitations")
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
@@ -7260,6 +7283,75 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(response, modifiers[0].abbreviation)
         self.assertContains(response, modifiers[1].abbreviation)
 
+    def test_response_context_primary_cdsa(self):
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("primary_cdsa", response.context)
+        self.assertEqual(response.context["primary_cdsa"], agreement)
+
+    def test_response_includes_additional_limitations(self):
+        """Response includes DataAffiliate additional limitations if they exist."""
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            additional_limitations="Test limitations for this data affiliate agreement",
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertContains(
+            response, "Test limitations for this data affiliate agreement"
+        )
+
+    def test_response_data_use_limitations(self):
+        """All data use limitations appear in the response content."""
+        instance = factories.CDSAWorkspaceFactory.create(
+            data_use_permission__definition="Test permission.",
+            data_use_permission__abbreviation="P",
+            additional_limitations="Test additional limitations for workspace",
+        )
+        modifier_1 = DataUseModifierFactory.create(
+            abbreviation="M1", definition="Test modifier 1."
+        )
+        modifier_2 = DataUseModifierFactory.create(
+            abbreviation="M2", definition="Test modifier 2."
+        )
+        instance.data_use_modifiers.add(modifier_1, modifier_2)
+        # Create an agreement with data use limitations.
+        factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=True,
+            study=instance.study,
+            additional_limitations="Test limitations for this data affiliate agreement",
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertContains(response, "<li>P: Test permission.</li>")
+        self.assertContains(response, "<li>M1: Test modifier 1.</li>")
+        self.assertContains(response, "<li>M2: Test modifier 2.</li>")
+        self.assertContains(
+            response,
+            "<dt>Additional limitations from CDSA</dt>",
+        )
+        self.assertContains(
+            response,
+            "<li>Test limitations for this data affiliate agreement</li>",
+        )
+        self.assertContains(
+            response,
+            "<dt>Additional limitations for this consent group</dt>",
+        )
+        self.assertContains(
+            response,
+            "<li>Test additional limitations for workspace</li>",
+        )
+
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's CDSAWorkspace model."""
@@ -7321,7 +7413,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-study": study.pk,
                 "workspacedata-0-data_use_permission": duo_permission.pk,
-                "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-requested_by": self.requester.pk,
                 "workspacedata-0-gsr_restricted": False,
@@ -7336,7 +7427,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.study, study)
         self.assertEqual(new_workspace_data.data_use_permission, duo_permission)
-        self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.requested_by, self.requester)
 
@@ -7373,7 +7463,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-study": study.pk,
-                "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-data_use_modifiers": [
@@ -7422,7 +7511,6 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
                 "workspacedata-0-study": study.pk,
-                "workspacedata-0-data_use_limitations": "test limitations",
                 "workspacedata-0-acknowledgments": "test acknowledgments",
                 "workspacedata-0-data_use_permission": data_use_permission.pk,
                 "workspacedata-0-disease_term": "foo",
