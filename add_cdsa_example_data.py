@@ -224,5 +224,6 @@ cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     workspace__name="DEMO_PRIMED_CDSA_MESA_2",
     study=Study.objects.get(short_name="MESA"),
     data_use_permission=dup,
+    additional_limitations="Additional limitations for workspace.",
 )
 cdsa_workspace_2.data_use_modifiers.add(dum)
