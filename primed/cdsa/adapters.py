@@ -27,13 +27,5 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
             extra_context["primary_cdsa"] = workspace.cdsaworkspace.get_primary_cdsa()
         except models.DataAffiliateAgreement.DoesNotExist:
             extra_context["primary_cdsa"] = None
-        # Data use limitations from DUOs
-        extra_context[
-            "duo_permission_text"
-        ] = workspace.cdsaworkspace.data_use_permission.get_short_definition()
-        extra_context["duo_modifiers_text"] = [
-            x.get_short_definition()
-            for x in workspace.cdsaworkspace.data_use_modifiers.all()
-        ]
 
         return extra_context

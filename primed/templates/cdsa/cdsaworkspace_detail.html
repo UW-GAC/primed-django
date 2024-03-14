@@ -58,9 +58,9 @@
           <dl>
             <dt>DUO consent description</dt>
             <dd>
-              <li>{{ duo_permission_text }}</li>
-              {% for x in duo_modifiers_text %}
-              <li>{{ x }}</li>
+              <li>{{ workspace_data_object.data_use_permission.abbreviation }}: {{ workspace_data_object.data_use_permission.get_short_definition }}</li>
+              {% for x in workspace_data_object.data_use_modifiers.all %}
+              <li>{{ x.abbreviation }}: {{ x.get_short_definition }}</li>
               {% endfor %}
             </dd>
             {% if primary_cdsa.additional_limitations %}

@@ -7310,43 +7310,19 @@ class CDSAWorkspaceDetailTest(TestCase):
             response, "Test limitations for this data affiliate agreement"
         )
 
-    def test_response_context_duo_permission_text(self):
-        instance = factories.CDSAWorkspaceFactory.create(
-            data_use_permission__definition="Test permission.",
-        )
-        self.client.force_login(self.user)
-        response = self.client.get(instance.get_absolute_url())
-        self.assertIn("duo_permission_text", response.context)
-        self.assertEqual(response.context["duo_permission_text"], "Test permission.")
-
-    def test_response_context_duo_modifier_text_one_modifier(self):
-        instance = factories.CDSAWorkspaceFactory.create()
-        modifier = DataUseModifierFactory.create(definition="Test modifier.")
-        instance.data_use_modifiers.add(modifier)
-        self.client.force_login(self.user)
-        response = self.client.get(instance.get_absolute_url())
-        self.assertIn("duo_modifiers_text", response.context)
-        self.assertEqual(len(response.context["duo_modifiers_text"]), 1)
-        self.assertIn("Test modifier.", response.context["duo_modifiers_text"])
-
-    def test_response_context_duo_modifier_text_two_modifiers(self):
-        instance = factories.CDSAWorkspaceFactory.create()
-        modifier_1 = DataUseModifierFactory.create(definition="Test modifier 1.")
-        modifier_2 = DataUseModifierFactory.create(definition="Test modifier 2.")
-        instance.data_use_modifiers.add(modifier_1, modifier_2)
-        self.client.force_login(self.user)
-        response = self.client.get(instance.get_absolute_url())
-        self.assertIn("duo_modifiers_text", response.context)
-        self.assertEqual(len(response.context["duo_modifiers_text"]), 2)
-
     def test_response_data_use_limitations(self):
         """All data use limitations appear in the response content."""
         instance = factories.CDSAWorkspaceFactory.create(
             data_use_permission__definition="Test permission.",
+            data_use_permission__abbreviation="P",
             additional_limitations="Test additional limitations for workspace",
         )
-        modifier_1 = DataUseModifierFactory.create(definition="Test modifier 1.")
-        modifier_2 = DataUseModifierFactory.create(definition="Test modifier 2.")
+        modifier_1 = DataUseModifierFactory.create(
+            abbreviation="M1", definition="Test modifier 1."
+        )
+        modifier_2 = DataUseModifierFactory.create(
+            abbreviation="M2", definition="Test modifier 2."
+        )
         instance.data_use_modifiers.add(modifier_1, modifier_2)
         # Create an agreement with data use limitations.
         factories.DataAffiliateAgreementFactory.create(
@@ -7356,9 +7332,9 @@ class CDSAWorkspaceDetailTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
-        self.assertContains(response, "<li>Test permission.</li>")
-        self.assertContains(response, "<li>Test modifier 1.</li>")
-        self.assertContains(response, "<li>Test modifier 2.</li>")
+        self.assertContains(response, "<li>P: Test permission.</li>")
+        self.assertContains(response, "<li>M1: Test modifier 1.</li>")
+        self.assertContains(response, "<li>M2: Test modifier 2.</li>")
         self.assertContains(
             response,
             "<dt>Additional CDSA limitations</dt>",
