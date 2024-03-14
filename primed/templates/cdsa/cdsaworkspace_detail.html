@@ -56,7 +56,27 @@
       </h2>
       <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
         <div class="accordion-body">
-          {{ object.cdsaworkspace.data_use_limitations }}
+          <dl>
+            <dt>DUO consent description</dt>
+            <dd>
+              <li>{{ workspace_data_object.data_use_permission.abbreviation }}: {{ workspace_data_object.data_use_permission.get_short_definition }}</li>
+              {% for x in workspace_data_object.data_use_modifiers.all %}
+              <li>{{ x.abbreviation }}: {{ x.get_short_definition }}</li>
+              {% endfor %}
+            </dd>
+            {% if workspace_data_object.additional_limitations %}
+            <dt>Additional limitations for this consent group</dt>
+            <dd>
+              <li>{{ workspace_data_object.additional_limitations }}</li>
+            </dd>
+            {% endif %}
+            {% if primary_cdsa.additional_limitations %}
+            <dt>Additional limitations from CDSA</dt>
+            <dd>
+              <li>{{ primary_cdsa.additional_limitations }}</li>
+            </dd>
+            {% endif %}
+          </ul>
         </div>
       </div>
     </div>

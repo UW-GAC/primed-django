@@ -1,6 +1,7 @@
 """Tests for the `cdsa` app."""
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.test import TestCase
 
 from primed.duo.models import DataUseModifier
@@ -416,6 +417,35 @@ class DataAffiliateAgreementFormTest(TestCase):
         self.assertEqual(len(form.errors["signed_agreement"]), 1)
         self.assertIn("expected type", form.errors["signed_agreement"][0])
 
+    def test_valid_primary_with_additional_limitations(self):
+        """Form is valid with necessary input."""
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=True
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "study": self.study,
+            "additional_limitations": "test limitations",
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_component_with_additional_limitations(self):
+        """Form is valid with necessary input."""
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=False
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "study": self.study,
+            "additional_limitations": "test limitations",
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn(NON_FIELD_ERRORS, form.errors)
+        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn("only allowed for primary", form.errors[NON_FIELD_ERRORS][0])
+
 
 class NonDataAffiliateAgreementFormTest(TestCase):
     """Tests for the NonDataAffiliateAgreementForm class."""
@@ -511,7 +541,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -526,7 +555,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
             "data_use_modifier": DataUseModifier.objects.all(),
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -541,7 +569,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
             "data_use_modifier": DataUseModifier.objects.all(),
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -555,7 +582,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -573,7 +599,6 @@ class CDSAWorkspaceFormTest(TestCase):
             # "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -591,7 +616,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             # "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -609,7 +633,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             # "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -620,23 +643,20 @@ class CDSAWorkspaceFormTest(TestCase):
         self.assertEqual(len(form.errors["data_use_permission"]), 1)
         self.assertIn("required", form.errors["data_use_permission"][0])
 
-    def test_invalid_missing_data_use_limitations(self):
+    def test_valid_additional_limitations(self):
         """Form is invalid when missing data_use_limitations."""
         form_data = {
             "workspace": self.workspace,
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            # "data_use_limitations": "test limitations",
+            "additional_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
         form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("data_use_limitations", form.errors)
-        self.assertEqual(len(form.errors["data_use_limitations"]), 1)
-        self.assertIn("required", form.errors["data_use_limitations"][0])
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.instance.additional_limitations, "test limitations")
 
     def test_invalid_missing_acknowledgments(self):
         """Form is invalid when missing acknowledgments."""
@@ -645,7 +665,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             # "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -663,7 +682,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             # "gsr_restricted": False,
         }
@@ -682,7 +700,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "gsr_restricted": False,
         }
@@ -701,7 +718,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "available_data": [available_data],
             "gsr_restricted": False,
@@ -717,7 +733,6 @@ class CDSAWorkspaceFormTest(TestCase):
             "study": self.study,
             "requested_by": self.requester,
             "data_use_permission": self.duo_permission,
-            "data_use_limitations": "test limitations",
             "acknowledgments": "test acknowledgmnts",
             "available_data": available_data,
             "gsr_restricted": False,

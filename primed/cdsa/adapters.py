@@ -33,4 +33,10 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
         extra_context["data_prep_active"] = associated_data_prep.filter(
             dataprepworkspace__is_active=True
         ).exists()
+        # Get the primary CDSA for this study, assuming it exists.
+        try:
+            extra_context["primary_cdsa"] = workspace.cdsaworkspace.get_primary_cdsa()
+        except models.DataAffiliateAgreement.DoesNotExist:
+            extra_context["primary_cdsa"] = None
+
         return extra_context

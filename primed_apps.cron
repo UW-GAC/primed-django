@@ -10,3 +10,8 @@ MAILTO="primedweb@uw.edu"
 
 # Weekly cdsa_records run Sundays at 03:00 - disabled until permissions issues are resolved
 0 3 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py cdsa_records --outdir /projects/primed/records/cdsa/$(date +'\%Y-\%m-\%d') >> cron.log
+
+# Weekly audits run Sundays around 04:00
+10 4 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_dbgap_audit --email primedconsortium@uw.edu >> cron.log
+15 4 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_cdsa_audit --email primedconsortium@uw.edu >> cron.log
+20 4 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_collaborative_analysis_audit --email primedconsortium@uw.edu >> cron.log

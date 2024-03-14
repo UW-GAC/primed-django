@@ -77,6 +77,7 @@ class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         fields = (
             "signed_agreement",
             "study",
+            "additional_limitations",
         )
         widgets = {
             "study": autocomplete.ModelSelect2(
@@ -114,7 +115,7 @@ class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "data_use_permission",
             "data_use_modifiers",
             "disease_term",
-            "data_use_limitations",
+            "additional_limitations",
             "gsr_restricted",
             "acknowledgments",
             "available_data",
