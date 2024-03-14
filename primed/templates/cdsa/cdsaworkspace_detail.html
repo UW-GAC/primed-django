@@ -63,16 +63,16 @@
               <li>{{ x.abbreviation }}: {{ x.get_short_definition }}</li>
               {% endfor %}
             </dd>
-            {% if primary_cdsa.additional_limitations %}
-            <dt>Additional CDSA limitations</dt>
-            <dd>
-              <li>{{ primary_cdsa.additional_limitations }}</li>
-            </dd>
-            {% endif %}
             {% if workspace_data_object.additional_limitations %}
-            <dt>Additional workspace limitations</dt>
+            <dt>Additional limitations for this consent group</dt>
             <dd>
               <li>{{ workspace_data_object.additional_limitations }}</li>
+            </dd>
+            {% endif %}
+            {% if primary_cdsa.additional_limitations %}
+            <dt>Additional limitations from CDSA</dt>
+            <dd>
+              <li>{{ primary_cdsa.additional_limitations }}</li>
             </dd>
             {% endif %}
           </ul>
