@@ -953,30 +953,30 @@ class dbGaPWorkspaceDetailTest(TestCase):
             ),
         )
 
-    def test_associated_data_prep_workspace_context_exists(self):
+    def test_associated_data_prep_workspaces_context_exists(self):
         obj = factories.dbGaPWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(obj.get_absolute_url())
-        self.assertIn("associated_data_prep_workspace", response.context_data)
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
         self.assertIsInstance(
-            response.context_data["associated_data_prep_workspace"],
+            response.context_data["associated_data_prep_workspaces"],
             DataPrepWorkspaceTable,
         )
 
-    def test_only_show_correct_associated_data_prep_workspace(self):
+    def test_only_show_one_associated_data_prep_workspace(self):
         dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
         dataPrep_obj = DataPrepWorkspaceFactory.create(
             target_workspace=dbGaP_obj.workspace
         )
         self.client.force_login(self.user)
         response = self.client.get(dbGaP_obj.get_absolute_url())
-        self.assertIn("associated_data_prep_workspace", response.context_data)
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
         self.assertEqual(
-            len(response.context_data["associated_data_prep_workspace"].rows), 1
+            len(response.context_data["associated_data_prep_workspaces"].rows), 1
         )
         self.assertIn(
             dataPrep_obj.workspace,
-            response.context_data["associated_data_prep_workspace"].data,
+            response.context_data["associated_data_prep_workspaces"].data,
         )
 
 
