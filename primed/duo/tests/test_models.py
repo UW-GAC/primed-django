@@ -95,9 +95,15 @@ class DataUsePermissionTest(TestCase):
 
     def test_get_short_definition_re_sub(self):
         instance = factories.DataUsePermissionFactory.create(
-            definition="This XXX indicates that use is allowed."
+            definition="This XXX indicates that everything is fine."
         )
-        self.assertEqual(instance.get_short_definition(), "Use is allowed.")
+        self.assertEqual(instance.get_short_definition(), "Everything is fine.")
+
+    def test_get_short_definition_capitalization(self):
+        instance = factories.DataUsePermissionFactory.create(
+            definition="Test definition XyXy"
+        )
+        self.assertEqual(instance.get_short_definition(), "Test definition XyXy")
 
 
 class DataUseModifierTest(TestCase):

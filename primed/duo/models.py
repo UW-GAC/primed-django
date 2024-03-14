@@ -44,7 +44,10 @@ class DUOFields(models.Model):
         )
 
     def get_short_definition(self):
-        return re.sub(r"This .+? indicates that use", "Use", self.definition)
+        text = re.sub(r"This .+? indicates that ", "", self.definition)
+        # Only capitalize the first letter - keep the remaining text as is.
+        text = text[0].capitalize() + text[1:]
+        return text
 
 
 class DataUsePermission(DUOFields, TreeNode):
