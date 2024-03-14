@@ -30,6 +30,8 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
     StudyFactory,
@@ -7282,6 +7284,95 @@ class CDSAWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertContains(response, modifiers[0].abbreviation)
         self.assertContains(response, modifiers[1].abbreviation)
+
+    def test_associated_data_prep_workspaces_context_exists(self):
+        obj = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertIsInstance(
+            response.context_data["associated_data_prep_workspaces"],
+            DataPrepWorkspaceTable,
+        )
+
+    def test_only_show_one_associated_data_prep_workspace(self):
+        cdsa_obj = factories.CDSAWorkspaceFactory.create()
+        dataPrep_obj = DataPrepWorkspaceFactory.create(
+            target_workspace=cdsa_obj.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(cdsa_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspaces"].rows), 1
+        )
+        self.assertIn(
+            dataPrep_obj.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+
+    def test_show_two_associated_data_prep_workspaces(self):
+        cdsa_obj = factories.CDSAWorkspaceFactory.create()
+        dataPrep_obj1 = DataPrepWorkspaceFactory.create(
+            target_workspace=cdsa_obj.workspace
+        )
+        dataPrep_obj2 = DataPrepWorkspaceFactory.create(
+            target_workspace=cdsa_obj.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(cdsa_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspaces"].rows), 2
+        )
+        self.assertIn(
+            dataPrep_obj1.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+        self.assertIn(
+            dataPrep_obj2.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+
+    def test_context_data_prep_active_with_no_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_inactive_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=False
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_one_inactive_prep_workspace(self):
+        instance = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
 
     def test_response_context_primary_cdsa(self):
         agreement = factories.DataAffiliateAgreementFactory.create(
