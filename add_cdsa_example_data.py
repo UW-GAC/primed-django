@@ -8,13 +8,17 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
 )
 from django.conf import settings
+from django.core.management import call_command
 
 from primed.cdsa.tests import factories
-from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.duo.models import DataUseModifier, DataUsePermission
 from primed.primed_anvil.models import Study, StudySite
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.models import User
 from primed.users.tests.factories import UserFactory
+
+# Load duos
+call_command("load_duo")
 
 # Create major versions
 major_version = factories.AgreementMajorVersionFactory.create(version=1)
@@ -28,8 +32,8 @@ v11 = factories.AgreementVersionFactory.create(
 )
 
 # Create a couple signed CDSAs.
-dup = DataUsePermissionFactory.create(abbreviation="GRU")
-dum = DataUseModifierFactory.create(abbreviation="NPU")
+dup = DataUsePermission.objects.get(abbreviation="GRU")
+dum = DataUseModifier.objects.get(abbreviation="NPU")
 
 # create the CDSA auth group
 cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
