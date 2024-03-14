@@ -81,24 +81,7 @@
   </div>
 </div>
 
-<div class="my-3">
-  <div class="accordion" id="accordionDataPrepWorkspace">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingDataPrepWorkspace">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataPrepWorkspace" aria-expanded="false" aria-controls="collapseDataPrepWorkspace">
-          <span class="fa-solid fa-computer mx-2"></span>
-          Associated data prep workspaces
-          <span class="badge mx-2 bg-secondary pill"> {{ associated_data_prep_workspace.rows|length }}</span>
-        </button>
-      </h2>
-      <div id="collapseDataPrepWorkspace" class="accordion-collapse collapse" aria-labelledby="headingDataPrepWorkspace" data-bs-parent="#accordionDataPrepWorkspace">
-        <div class="accordion-body">
-          {% render_table associated_data_prep_workspaces %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces %}
 
 {{block.super}}
 {% endblock after_panel %}
