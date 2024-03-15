@@ -107,7 +107,6 @@ class NonDataAffiliateAgreementFactory(DjangoModelFactory):
 class CDSAWorkspaceFactory(DjangoModelFactory):
 
     study = SubFactory(StudyFactory)
-    data_use_limitations = Faker("paragraph")
     acknowledgments = Faker("paragraph")
     requested_by = SubFactory(UserFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)

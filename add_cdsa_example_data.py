@@ -8,13 +8,17 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
 )
 from django.conf import settings
+from django.core.management import call_command
 
 from primed.cdsa.tests import factories
-from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.duo.models import DataUseModifier, DataUsePermission
 from primed.primed_anvil.models import Study, StudySite
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.models import User
 from primed.users.tests.factories import UserFactory
+
+# Load duos
+call_command("load_duo")
 
 # Create major versions
 major_version = factories.AgreementMajorVersionFactory.create(version=1)
@@ -28,8 +32,8 @@ v11 = factories.AgreementVersionFactory.create(
 )
 
 # Create a couple signed CDSAs.
-dup = DataUsePermissionFactory.create(abbreviation="GRU")
-dum = DataUseModifierFactory.create(abbreviation="NPU")
+dup = DataUsePermission.objects.get(abbreviation="GRU")
+dum = DataUseModifier.objects.get(abbreviation="NPU")
 
 # create the CDSA auth group
 cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
@@ -113,6 +117,7 @@ cdsa_1006 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__signing_institution="UW",
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
+    additional_limitations="This data can only be used for testing the app.",
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_group, child_group=cdsa_1006.signed_agreement.anvil_access_group
@@ -219,5 +224,6 @@ cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     workspace__name="DEMO_PRIMED_CDSA_MESA_2",
     study=Study.objects.get(short_name="MESA"),
     data_use_permission=dup,
+    additional_limitations="Additional limitations for workspace.",
 )
 cdsa_workspace_2.data_use_modifiers.add(dum)

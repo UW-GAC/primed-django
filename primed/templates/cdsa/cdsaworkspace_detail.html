@@ -1,4 +1,5 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
+{% load render_table from django_tables2 %}
 
 {% block pills %}
   {% if workspace_data_object.gsr_restricted %}
@@ -55,7 +56,27 @@
       </h2>
       <div id="collapseDUL" class="accordion-collapse collapse show" aria-labelledby="headingDUL" data-bs-parent="#accordionDUL">
         <div class="accordion-body">
-          {{ object.cdsaworkspace.data_use_limitations }}
+          <dl>
+            <dt>DUO consent description</dt>
+            <dd>
+              <li>{{ workspace_data_object.data_use_permission.abbreviation }}: {{ workspace_data_object.data_use_permission.get_short_definition }}</li>
+              {% for x in workspace_data_object.data_use_modifiers.all %}
+              <li>{{ x.abbreviation }}: {{ x.get_short_definition }}</li>
+              {% endfor %}
+            </dd>
+            {% if workspace_data_object.additional_limitations %}
+            <dt>Additional limitations for this consent group</dt>
+            <dd>
+              <li>{{ workspace_data_object.additional_limitations }}</li>
+            </dd>
+            {% endif %}
+            {% if primary_cdsa.additional_limitations %}
+            <dt>Additional limitations from CDSA</dt>
+            <dd>
+              <li>{{ primary_cdsa.additional_limitations }}</li>
+            </dd>
+            {% endif %}
+          </ul>
         </div>
       </div>
     </div>
@@ -79,6 +100,8 @@
     </div>
   </div>
 </div>
+
+{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
 
 {{block.super}}
 {% endblock after_panel %}
