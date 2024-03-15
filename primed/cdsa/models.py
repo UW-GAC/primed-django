@@ -298,14 +298,16 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     def clean(self):
         super().clean()
-        if (
-            self.additional_limitations
-            and hasattr(self, "signed_agreement")
-            and not self.signed_agreement.is_primary
-        ):
-            raise ValidationError(
-                "Additional limitations are only allowed for primary agreements."
-            )
+        # Checks for fields only allowed for primary agreements.
+        if hasattr(self, "signed_agreement") and not self.signed_agreement.is_primary:
+            if self.additional_limitations:
+                raise ValidationError(
+                    "Additional limitations are only allowed for primary agreements."
+                )
+            if self.requires_study_review:
+                raise ValidationError(
+                    "requires_study_review can only be True for primary agreements."
+                )
 
     def get_agreement_group(self):
         return self.study

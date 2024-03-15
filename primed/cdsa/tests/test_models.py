@@ -571,12 +571,22 @@ class DataAffiliateAgreementTest(TestCase):
         instance = factories.DataAffiliateAgreementFactory.create()
         self.assertEqual(instance.get_agreement_group(), instance.study)
 
-    def test_requires_study_review(self):
+    def test_requires_study_review_primary(self):
         """Can set requires_study_review"""
         instance = factories.DataAffiliateAgreementFactory.create(
             requires_study_review=True
         )
         self.assertTrue(instance.requires_study_review)
+
+    def test_requires_study_review_not_primary(self):
+        """ValidationError when trying to set requires_study_review=True for components."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            signed_agreement__is_primary=False,
+            requires_study_review=True,
+        )
+        with self.assertRaises(ValidationError) as e:
+            instance.clean()
+        self.assertIn("can only be True for primary", e.exception.message)
 
 
 class NonDataAffiliateAgreementTest(TestCase):
