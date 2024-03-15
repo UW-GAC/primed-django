@@ -2862,6 +2862,194 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             views.DataAffiliateAgreementCreate.success_message, str(messages[0])
         )
 
+    def test_can_create_primary_with_requires_study_review(self):
+        """Can create an object."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+                "agreementtype-0-requires_study_review": True,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # Check the agreement type.
+        self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)
+        new_agreement_type = models.DataAffiliateAgreement.objects.latest("pk")
+        self.assertTrue(new_agreement_type.requires_study_review)
+
+    def test_cannot_create_component_with_requires_study_review(self):
+        """Cannot create a component agreement with requires_study_review=True."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": False,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+                "agreementtype-0-requires_study_review": True,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        self.assertFalse(response.context["form"].is_valid())
+        form = response.context["form"]
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn(NON_FIELD_ERRORS, form.errors)
+        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn(
+            "can only be True for primary",
+            form.errors[NON_FIELD_ERRORS][0],
+        )
+
+    def test_can_create_primary_with_additional_limitations(self):
+        """Can create an object."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+                "agreementtype-0-additional_limitations": "Test limitations",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # Check the agreement type.
+        self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)
+        new_agreement_type = models.DataAffiliateAgreement.objects.latest("pk")
+        self.assertEqual(new_agreement_type.additional_limitations, "Test limitations")
+
+    def test_cannot_create_component_with_additional_limitations(self):
+        """Cannot create a component agreement with additional_limitations."""
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "is_primary": False,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+                "agreementtype-0-additional_limitations": "Test limitations",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        self.assertFalse(response.context["form"].is_valid())
+        form = response.context["form"]
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn(NON_FIELD_ERRORS, form.errors)
+        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn(
+            "only allowed for primary",
+            form.errors[NON_FIELD_ERRORS][0],
+        )
+
     def test_error_missing_cc_id(self):
         """Form shows an error when cc_id is missing."""
         self.client.force_login(self.user)
