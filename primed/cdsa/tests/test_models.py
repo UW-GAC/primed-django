@@ -471,6 +471,20 @@ class MemberAgreementTest(TestCase):
 class DataAffiliateAgreementTest(TestCase):
     """Tests for the DataAffiliateAgreement model."""
 
+    def test_defaults(self):
+        upload_group = ManagedGroupFactory.create()
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.DATA_AFFILIATE
+        )
+        study = StudyFactory.create()
+        instance = models.DataAffiliateAgreement(
+            signed_agreement=signed_agreement,
+            study=study,
+            anvil_upload_group=upload_group,
+        )
+        self.assertFalse(instance.requires_study_review)
+        self.assertEqual(instance.additional_limitations, "")
+
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         upload_group = ManagedGroupFactory.create()
@@ -556,6 +570,13 @@ class DataAffiliateAgreementTest(TestCase):
     def test_get_agreement_group(self):
         instance = factories.DataAffiliateAgreementFactory.create()
         self.assertEqual(instance.get_agreement_group(), instance.study)
+
+    def test_requires_study_review(self):
+        """Can set requires_study_review"""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            requires_study_review=True
+        )
+        self.assertTrue(instance.requires_study_review)
 
 
 class NonDataAffiliateAgreementTest(TestCase):

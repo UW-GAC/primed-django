@@ -281,6 +281,14 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
         blank=True,
         help_text="Additional limitations on data use as specified in the signed CDSA.",
     )
+    requires_study_review = models.BooleanField(
+        default=False,
+        help_text=(
+            "Indicator of whether indicates investigators need to have an approved PRIMED paper proposal "
+            "where this dataset was selected and approved in order to work with data brought "
+            "under this CDSA."
+        ),
+    )
 
     def get_absolute_url(self):
         return reverse(
