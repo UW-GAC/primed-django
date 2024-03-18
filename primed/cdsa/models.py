@@ -155,9 +155,6 @@ class SignedAgreement(
         max_length=31,
         choices=TYPE_CHOICES,
     )
-    is_primary = models.BooleanField(
-        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
-    )
     version = models.ForeignKey(
         AgreementVersion,
         help_text="The version of the Agreement that was signed.",
@@ -250,6 +247,9 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
 
     AGREEMENT_TYPE = SignedAgreement.MEMBER
 
+    is_primary = models.BooleanField(
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
+    )
     study_site = models.ForeignKey(
         StudySite,
         on_delete=models.CASCADE,
@@ -271,6 +271,9 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     AGREEMENT_TYPE = SignedAgreement.DATA_AFFILIATE
 
+    is_primary = models.BooleanField(
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
+    )
     study = models.ForeignKey(
         Study,
         on_delete=models.PROTECT,

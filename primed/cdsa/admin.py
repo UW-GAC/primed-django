@@ -46,13 +46,13 @@ class SignedAgreement(SimpleHistoryAdmin):
         "cc_id",
         "representative",
         "type",
-        "is_primary",
+        # "is_primary",
         "date_signed",
         "version",
     )
     list_filter = (
         "type",
-        "is_primary",
+        # "is_primary",
         "version",
         "status",
     )
@@ -79,7 +79,7 @@ class MemberAgreementAdmin(SimpleHistoryAdmin):
     )
     list_filter = (
         "study_site",
-        "signed_agreement__is_primary",
+        # "signed_agreement__is_primary",
         "signed_agreement__status",
     )
 
@@ -94,7 +94,7 @@ class DataAffiliateAgreementAdmin(SimpleHistoryAdmin):
     )
     list_filter = (
         "study",
-        "signed_agreement__is_primary",
+        # "signed_agreement__is_primary",
         "signed_agreement__status",
     )
 
@@ -108,7 +108,7 @@ class NonDataAffiliateAgreementAdmin(SimpleHistoryAdmin):
         "affiliation",
     )
     list_filter = (
-        "signed_agreement__is_primary",
+        # "signed_agreement__is_primary",
         "signed_agreement__status",
     )
 
