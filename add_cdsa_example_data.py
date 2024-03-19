@@ -120,6 +120,7 @@ cdsa_1006 = factories.DataAffiliateAgreementFactory.create(
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
     additional_limitations="This data can only be used for testing the app.",
+    requires_study_review=True,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_group, child_group=cdsa_1006.signed_agreement.anvil_access_group
@@ -229,3 +230,14 @@ cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     additional_limitations="Additional limitations for workspace.",
 )
 cdsa_workspace_2.data_use_modifiers.add(dum)
+
+
+# Add a workspace with no primary cdsa.
+cdsa_workspace_3 = factories.CDSAWorkspaceFactory.create(
+    workspace__billing_project__name="demo-primed-cdsa",
+    workspace__name="DEMO_PRIMED_CDSA_ARIC_1",
+    study=Study.objects.create(
+        short_name="ARIC", full_name="Atherosclerosis Risk in Communities"
+    ),
+    data_use_permission=dup,
+)

@@ -472,6 +472,31 @@ class CDSAWorkspaceStaffTableTest(TestCase):
         self.assertEqual(table.data[0], instance_2.workspace)
         self.assertEqual(table.data[1], instance_1.workspace)
 
+    def test_render_requires_study_review(self):
+        table = self.table_class(self.model.objects.all())
+        # CDSA workspace with no data_affiliate_agreement.
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.assertIn(
+            "question-circle-fill",
+            table.render_requires_study_review(cdsa_workspace.workspace),
+        )
+        # With a primary - no review required.
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True,
+            requires_study_review=False,
+            study=cdsa_workspace.study,
+        )
+        self.assertEqual(
+            "", table.render_requires_study_review(cdsa_workspace.workspace)
+        )
+        # With a primary - review required.
+        agreement.requires_study_review = True
+        agreement.save()
+        self.assertIn(
+            "dash-circle-fill",
+            table.render_requires_study_review(cdsa_workspace.workspace),
+        )
+
 
 class CDSAWorkspaceUserTableTest(TestCase):
     """Tests for the CDSAWorkspaceUserTable class."""
@@ -501,3 +526,28 @@ class CDSAWorkspaceUserTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.data[0], instance_2.workspace)
         self.assertEqual(table.data[1], instance_1.workspace)
+
+    def test_render_requires_study_review(self):
+        table = self.table_class(self.model.objects.all())
+        # CDSA workspace with no data_affiliate_agreement.
+        cdsa_workspace = factories.CDSAWorkspaceFactory.create()
+        self.assertIn(
+            "question-circle-fill",
+            table.render_requires_study_review(cdsa_workspace.workspace),
+        )
+        # With a primary - no review required.
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True,
+            requires_study_review=False,
+            study=cdsa_workspace.study,
+        )
+        self.assertEqual(
+            "", table.render_requires_study_review(cdsa_workspace.workspace)
+        )
+        # With a primary - review required.
+        agreement.requires_study_review = True
+        agreement.save()
+        self.assertIn(
+            "dash-circle-fill",
+            table.render_requires_study_review(cdsa_workspace.workspace),
+        )
