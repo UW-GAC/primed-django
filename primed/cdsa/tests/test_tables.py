@@ -339,15 +339,11 @@ class UserAccessRecordsTableTest(TestCase):
         self.assertEqual(len(table.rows), 5)
 
     def test_includes_components(self):
-        agreement_1 = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create(
             group__signedagreement=agreement_1.signed_agreement
         )
-        agreement_2 = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
+        agreement_2 = factories.MemberAgreementFactory.create(is_primary=False)
         GroupAccountMembershipFactory.create(
             group__signedagreement=agreement_2.signed_agreement
         )

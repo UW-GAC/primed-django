@@ -43,9 +43,7 @@ class SignedAgreementTable(tables.Table):
         verbose_name="Representative",
     )
     representative_role = tables.Column(verbose_name="Role")
-    agreement_type = tables.Column(
-        accessor="combined_type", order_by=("type", "-is_primary")
-    )
+    agreement_type = tables.Column(accessor="combined_type", order_by=("type"))
     number_accessors = tables.Column(
         verbose_name="Number of accessors",
         accessor="anvil_access_group__groupaccountmembership_set__count",
@@ -79,7 +77,7 @@ class MemberAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
+    is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -96,7 +94,7 @@ class MemberAgreementTable(tables.Table):
         fields = (
             "signed_agreement__cc_id",
             "study_site",
-            "signed_agreement__is_primary",
+            "is_primary",
             "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
@@ -113,7 +111,7 @@ class DataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
+    is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -130,7 +128,7 @@ class DataAffiliateAgreementTable(tables.Table):
         fields = (
             "signed_agreement__cc_id",
             "study",
-            "signed_agreement__is_primary",
+            "is_primary",
             "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
@@ -178,9 +176,7 @@ class RepresentativeRecordsTable(tables.Table):
 
     representative__name = tables.Column(verbose_name="Representative")
     signing_group = tables.Column(accessor="pk", orderable=False)
-    agreement_type = tables.Column(
-        accessor="combined_type", order_by=("type", "-is_primary")
-    )
+    agreement_type = tables.Column(accessor="combined_type", order_by=("type"))
 
     class Meta:
         model = models.SignedAgreement

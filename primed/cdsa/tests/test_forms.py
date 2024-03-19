@@ -36,7 +36,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -50,7 +49,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -68,7 +66,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -86,7 +83,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -104,7 +100,6 @@ class SignedAgreementFormTest(TestCase):
             # "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -122,7 +117,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             # "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -140,7 +134,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             # "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -148,24 +141,6 @@ class SignedAgreementFormTest(TestCase):
         self.assertIn("date_signed", form.errors)
         self.assertEqual(len(form.errors["date_signed"]), 1)
         self.assertIn("required", form.errors["date_signed"][0])
-
-    def test_missing_is_primary(self):
-        """Form is invalid when missing representative_role."""
-        form_data = {
-            "cc_id": 1234,
-            "representative": self.representative,
-            "representative_role": "Test role",
-            "signing_institution": "Test insitution",
-            "version": self.agreement_version,
-            "date_signed": "2023-01-01",
-            # "is_primary": True,
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("is_primary", form.errors)
-        self.assertEqual(len(form.errors["is_primary"]), 1)
-        self.assertIn("required", form.errors["is_primary"][0])
 
     def test_invalid_cc_id_zero(self):
         """Form is invalid when cc_id is zero."""
@@ -176,7 +151,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -195,7 +169,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -214,7 +187,6 @@ class SignedAgreementFormTest(TestCase):
             "signing_institution": "Test insitution",
             "version": self.agreement_version,
             "date_signed": "2023-01-01",
-            "is_primary": True,
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
@@ -282,6 +254,7 @@ class MemberAgreementFormTest(TestCase):
         """Form is valid with necessary input."""
         form_data = {
             "signed_agreement": self.signed_agreement,
+            "is_primary": True,
             "study_site": self.study_site,
         }
         form = self.form_class(data=form_data)
@@ -291,6 +264,7 @@ class MemberAgreementFormTest(TestCase):
         """Form is invalid when missing signed_agreement."""
         form_data = {
             # "signed_agreement": self.signed_agreement,
+            "is_primary": True,
             "study_site": self.study_site,
         }
         form = self.form_class(data=form_data)
@@ -300,10 +274,25 @@ class MemberAgreementFormTest(TestCase):
         self.assertEqual(len(form.errors["signed_agreement"]), 1)
         self.assertIn("required", form.errors["signed_agreement"][0])
 
+    def test_missing_is_primary(self):
+        """Form is invalid when missing study_site."""
+        form_data = {
+            "signed_agreement": self.signed_agreement,
+            # "is_primary": True,
+            "study_site": self.study_site,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("is_primary", form.errors)
+        self.assertEqual(len(form.errors["is_primary"]), 1)
+        self.assertIn("required", form.errors["is_primary"][0])
+
     def test_missing_study_site(self):
         """Form is invalid when missing study_site."""
         form_data = {
             "signed_agreement": self.signed_agreement,
+            "is_primary": True,
             # "study_site": self.study_site,
         }
         form = self.form_class(data=form_data)
@@ -318,6 +307,7 @@ class MemberAgreementFormTest(TestCase):
         obj = factories.MemberAgreementFactory.create()
         form_data = {
             "signed_agreement": obj.signed_agreement,
+            "is_primary": True,
             "study_site": self.study_site,
         }
         form = self.form_class(data=form_data)
@@ -333,6 +323,7 @@ class MemberAgreementFormTest(TestCase):
         )
         form_data = {
             "signed_agreement": obj,
+            "is_primary": True,
             "study_site": self.study_site,
         }
         form = self.form_class(data=form_data)
@@ -358,6 +349,7 @@ class DataAffiliateAgreementFormTest(TestCase):
         """Form is valid with necessary input."""
         form_data = {
             "signed_agreement": self.signed_agreement,
+            "is_primary": True,
             "study": self.study,
         }
         form = self.form_class(data=form_data)
@@ -367,6 +359,7 @@ class DataAffiliateAgreementFormTest(TestCase):
         """Form is invalid when missing signed_agreement."""
         form_data = {
             # "signed_agreement": self.signed_agreement,
+            "is_primary": True,
             "study": self.study,
         }
         form = self.form_class(data=form_data)
@@ -376,10 +369,25 @@ class DataAffiliateAgreementFormTest(TestCase):
         self.assertEqual(len(form.errors["signed_agreement"]), 1)
         self.assertIn("required", form.errors["signed_agreement"][0])
 
+    def test_missing_is_primary(self):
+        """Form is invalid when missing study_site."""
+        form_data = {
+            "signed_agreement": self.signed_agreement,
+            # "is_primary": True,
+            "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("is_primary", form.errors)
+        self.assertEqual(len(form.errors["is_primary"]), 1)
+        self.assertIn("required", form.errors["is_primary"][0])
+
     def test_missing_study(self):
         """Form is invalid when missing study."""
         form_data = {
             "signed_agreement": self.signed_agreement,
+            "is_primary": True,
             # "study": self.study,
         }
         form = self.form_class(data=form_data)
@@ -394,6 +402,7 @@ class DataAffiliateAgreementFormTest(TestCase):
         obj = factories.DataAffiliateAgreementFactory.create()
         form_data = {
             "signed_agreement": obj.signed_agreement,
+            "is_primary": True,
             "study": self.study,
         }
         form = self.form_class(data=form_data)
@@ -409,6 +418,7 @@ class DataAffiliateAgreementFormTest(TestCase):
         )
         form_data = {
             "signed_agreement": obj,
+            "is_primary": True,
             "study": self.study,
         }
         form = self.form_class(data=form_data)
@@ -419,12 +429,10 @@ class DataAffiliateAgreementFormTest(TestCase):
 
     def test_valid_primary_with_additional_limitations(self):
         """Form is valid with necessary input."""
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=True
-        )
         form_data = {
-            "signed_agreement": signed_agreement,
+            "signed_agreement": self.signed_agreement,
             "study": self.study,
+            "is_primary": True,
             "additional_limitations": "test limitations",
         }
         form = self.form_class(data=form_data)
@@ -432,12 +440,10 @@ class DataAffiliateAgreementFormTest(TestCase):
 
     def test_invalid_component_with_additional_limitations(self):
         """Form is valid with necessary input."""
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=False
-        )
         form_data = {
-            "signed_agreement": signed_agreement,
+            "signed_agreement": self.signed_agreement,
             "study": self.study,
+            "is_primary": False,
             "additional_limitations": "test limitations",
         }
         form = self.form_class(data=form_data)
@@ -448,12 +454,10 @@ class DataAffiliateAgreementFormTest(TestCase):
 
     def test_valid_primary_with_requires_study_review_true(self):
         """Form is valid with necessary input."""
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=True
-        )
         form_data = {
-            "signed_agreement": signed_agreement,
+            "signed_agreement": self.signed_agreement,
             "study": self.study,
+            "is_primary": True,
             "requires_study_review": True,
         }
         form = self.form_class(data=form_data)
@@ -461,12 +465,10 @@ class DataAffiliateAgreementFormTest(TestCase):
 
     def test_invalid_component_with_requires_study_review_true(self):
         """Form is valid with necessary input."""
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE, is_primary=False
-        )
         form_data = {
-            "signed_agreement": signed_agreement,
+            "signed_agreement": self.signed_agreement,
             "study": self.study,
+            "is_primary": False,
             "requires_study_review": True,
         }
         form = self.form_class(data=form_data)

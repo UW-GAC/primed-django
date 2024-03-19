@@ -175,16 +175,15 @@ class SignedAgreement(
     def __str__(self):
         return "{}".format(self.cc_id)
 
-    def clean(self):
-        if self.type == self.NON_DATA_AFFILIATE and self.is_primary is False:
-            raise ValidationError(
-                "Non-data affiliate agreements must be primary agreements."
-            )
-
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
-        if not self.is_primary:
+        if self.type == self.MEMBER and not self.get_agreement_type().is_primary:
+            combined_type = combined_type + " component"
+        elif (
+            self.type == self.DATA_AFFILIATE
+            and not self.get_agreement_type().is_primary
+        ):
             combined_type = combined_type + " component"
         return combined_type
 
@@ -302,7 +301,7 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
     def clean(self):
         super().clean()
         # Checks for fields only allowed for primary agreements.
-        if hasattr(self, "signed_agreement") and not self.signed_agreement.is_primary:
+        if not self.is_primary:
             if self.additional_limitations:
                 raise ValidationError(
                     "Additional limitations are only allowed for primary agreements."
@@ -371,7 +370,7 @@ class CDSAWorkspace(
         """Return the primary, valid CDSA associated with this workspace."""
         cdsa = DataAffiliateAgreement.objects.get(
             study=self.study,
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=SignedAgreement.StatusChoices.ACTIVE,
         )
         return cdsa

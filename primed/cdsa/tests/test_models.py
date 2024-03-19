@@ -8,7 +8,7 @@ from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
-from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
 from django.test import TestCase, override_settings
@@ -179,7 +179,6 @@ class SignedAgreementTest(TestCase):
             representative_role="foo",
             signing_institution="bar",
             type=models.SignedAgreement.MEMBER,
-            is_primary=True,
             version=agreement_version,
             anvil_access_group=group,
         )
@@ -318,22 +317,14 @@ class SignedAgreementTest(TestCase):
     def test_get_combined_type(self):
         obj = factories.MemberAgreementFactory()
         self.assertEqual(obj.signed_agreement.combined_type, "Member")
-        obj = factories.MemberAgreementFactory(signed_agreement__is_primary=False)
+        obj = factories.MemberAgreementFactory(is_primary=False)
         self.assertEqual(obj.signed_agreement.combined_type, "Member component")
         obj = factories.DataAffiliateAgreementFactory()
         self.assertEqual(obj.signed_agreement.combined_type, "Data affiliate")
-        obj = factories.DataAffiliateAgreementFactory(
-            signed_agreement__is_primary=False
-        )
+        obj = factories.DataAffiliateAgreementFactory(is_primary=False)
         self.assertEqual(obj.signed_agreement.combined_type, "Data affiliate component")
         obj = factories.NonDataAffiliateAgreementFactory()
         self.assertEqual(obj.signed_agreement.combined_type, "Non-data affiliate")
-        obj = factories.NonDataAffiliateAgreementFactory(
-            signed_agreement__is_primary=False
-        )
-        self.assertEqual(
-            obj.signed_agreement.combined_type, "Non-data affiliate component"
-        )
 
     def test_get_agreement_type(self):
         obj = factories.MemberAgreementFactory()
@@ -350,25 +341,6 @@ class SignedAgreementTest(TestCase):
         self.assertEqual(obj.signed_agreement.agreement_group, obj.study)
         obj = factories.NonDataAffiliateAgreementFactory()
         self.assertEqual(obj.signed_agreement.agreement_group, obj.affiliation)
-
-    def test_clean_non_data_affiliate_is_primary_false(self):
-        """ValidationError is raised when is_primary is False for a non-data affiliate."""
-        user = UserFactory.create()
-        group = ManagedGroupFactory.create()
-        agreement_version = factories.AgreementVersionFactory.create()
-        instance = factories.SignedAgreementFactory.build(
-            representative=user,
-            anvil_access_group=group,
-            version=agreement_version,
-            type=models.SignedAgreement.NON_DATA_AFFILIATE,
-            is_primary=False,
-        )
-        with self.assertRaises(ValidationError) as e:
-            instance.full_clean()
-        self.assertEqual(len(e.exception.message_dict), 1)
-        self.assertIn(NON_FIELD_ERRORS, e.exception.message_dict)
-        self.assertEqual(len(e.exception.message_dict[NON_FIELD_ERRORS]), 1)
-        self.assertIn("primary", e.exception.message_dict[NON_FIELD_ERRORS][0])
 
     def test_is_in_cdsa_group(self):
         """is_in_cdsa_group works as expected."""
@@ -414,9 +386,17 @@ class MemberAgreementTest(TestCase):
         instance = models.MemberAgreement(
             signed_agreement=signed_agreement,
             study_site=study_site,
+            is_primary=True,
         )
         instance.save()
         self.assertIsInstance(instance, models.MemberAgreement)
+
+    def test_is_primary(self):
+        """Creation using the model constructor and .save() works."""
+        instance = factories.MemberAgreementFactory.create(is_primary=True)
+        self.assertEqual(instance.is_primary, True)
+        instance = factories.MemberAgreementFactory.create(is_primary=False)
+        self.assertEqual(instance.is_primary, False)
 
     def test_clean_incorrect_type(self):
         signed_agreement = factories.SignedAgreementFactory.create(
@@ -496,9 +476,17 @@ class DataAffiliateAgreementTest(TestCase):
             signed_agreement=signed_agreement,
             study=study,
             anvil_upload_group=upload_group,
+            is_primary=True,
         )
         instance.save()
         self.assertIsInstance(instance, models.DataAffiliateAgreement)
+
+    def test_is_primary(self):
+        """Creation using the model constructor and .save() works."""
+        instance = factories.DataAffiliateAgreementFactory.create(is_primary=True)
+        self.assertEqual(instance.is_primary, True)
+        instance = factories.DataAffiliateAgreementFactory.create(is_primary=False)
+        self.assertEqual(instance.is_primary, False)
 
     def test_clean_incorrect_type(self):
         signed_agreement = factories.SignedAgreementFactory.create(
@@ -522,14 +510,14 @@ class DataAffiliateAgreementTest(TestCase):
 
     def test_clean_additional_limitations_primary(self):
         instance = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             additional_limitations="foo bar",
         )
         instance.full_clean()
 
     def test_clean_additional_limitations_not_primary(self):
         instance = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             additional_limitations="foo bar",
         )
         with self.assertRaises(ValidationError) as e:
@@ -581,7 +569,7 @@ class DataAffiliateAgreementTest(TestCase):
     def test_requires_study_review_not_primary(self):
         """ValidationError when trying to set requires_study_review=True for components."""
         instance = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             requires_study_review=True,
         )
         with self.assertRaises(ValidationError) as e:
@@ -713,7 +701,7 @@ class CDSAWorkspaceTest(TestCase):
         """get_primary_cdsa returns the primary valid CDSA for the study."""
         instance = factories.CDSAWorkspaceFactory.create()
         agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
             study=instance.study,
         )
@@ -722,7 +710,7 @@ class CDSAWorkspaceTest(TestCase):
     def test_get_primary_cdsa_not_primary(self):
         instance = factories.CDSAWorkspaceFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
             study=instance.study,
         )
@@ -732,7 +720,7 @@ class CDSAWorkspaceTest(TestCase):
     def test_get_primary_cdsa_not_active(self):
         instance = factories.CDSAWorkspaceFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED,
             study=instance.study,
         )
@@ -742,7 +730,7 @@ class CDSAWorkspaceTest(TestCase):
     def test_get_primary_cdsa_different_study(self):
         instance = factories.CDSAWorkspaceFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
             # study=instance.study,
         )
@@ -753,12 +741,12 @@ class CDSAWorkspaceTest(TestCase):
         """get_primary_cdsa returns the primary valid CDSA for the study."""
         instance = factories.CDSAWorkspaceFactory.create()
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
             study=instance.study,
         )
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
             study=instance.study,
         )

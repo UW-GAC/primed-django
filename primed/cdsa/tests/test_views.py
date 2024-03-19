@@ -1494,7 +1494,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1511,7 +1511,6 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement.representative_role, "Test role")
         self.assertEqual(new_agreement.signing_institution, "Test institution")
         self.assertEqual(new_agreement.date_signed, date.fromisoformat("2023-01-01"))
-        self.assertEqual(new_agreement.is_primary, True)
         # Type was set correctly.
         self.assertEqual(new_agreement.type, new_agreement.MEMBER)
         # AnVIL group was set correctly.
@@ -1527,6 +1526,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_agreement_type = models.MemberAgreement.objects.latest("pk")
         self.assertEqual(new_agreement.memberagreement, new_agreement_type)
         self.assertEqual(new_agreement_type.study_site, study_site)
+        self.assertEqual(new_agreement_type.is_primary, True)
 
     def test_redirect_url(self):
         """Redirects to successful url."""
@@ -1558,7 +1558,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1599,7 +1599,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1626,7 +1626,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1662,7 +1662,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1696,7 +1696,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1730,7 +1730,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1766,7 +1766,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1802,7 +1802,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 # "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1837,7 +1837,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 # "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1872,7 +1872,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": 999,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1908,7 +1908,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 # "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1944,7 +1944,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                # "is_primary": True,
+                # "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1959,11 +1959,14 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("is_primary", form.errors)
-        self.assertEqual(len(form.errors["is_primary"]), 1)
-        self.assertIn("required", form.errors["is_primary"][0])
+        self.assertTrue(form.is_valid())
+        formset = response.context_data["formset"]
+        self.assertFalse(formset.is_valid())
+        self.assertFalse(formset.forms[0].is_valid())
+        self.assertEqual(len(formset.forms[0].errors), 1)
+        self.assertIn("is_primary", formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors["is_primary"]), 1)
+        self.assertIn("required", formset.forms[0].errors["is_primary"][0])
 
     def test_error_missing_memberagreement_study_site(self):
         """Form shows an error when study_site is missing."""
@@ -1979,7 +1982,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -1991,10 +1994,10 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # No new objects were created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
         self.assertEqual(models.MemberAgreement.objects.count(), 0)
-        # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
         self.assertTrue(form.is_valid())
+        # Formset has errors in the correct field.
         formset = response.context_data["formset"]
         self.assertFalse(formset.is_valid())
         self.assertFalse(formset.forms[0].is_valid())
@@ -2017,7 +2020,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2055,7 +2058,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2116,7 +2119,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2167,7 +2170,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2215,7 +2218,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2253,7 +2256,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2293,7 +2296,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2343,7 +2346,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2713,7 +2716,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2730,7 +2733,6 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement.representative_role, "Test role")
         self.assertEqual(new_agreement.signing_institution, "Test institution")
         self.assertEqual(new_agreement.date_signed, date.fromisoformat("2023-01-01"))
-        self.assertEqual(new_agreement.is_primary, True)
         # Type was set correctly.
         self.assertEqual(new_agreement.type, new_agreement.DATA_AFFILIATE)
         # AnVIL group was set correctly.
@@ -2745,6 +2747,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)
         new_agreement_type = models.DataAffiliateAgreement.objects.latest("pk")
         self.assertEqual(new_agreement.dataaffiliateagreement, new_agreement_type)
+        self.assertEqual(new_agreement_type.is_primary, True)
         self.assertEqual(new_agreement_type.study, study)
         self.assertIsInstance(new_agreement_type.anvil_upload_group, ManagedGroup)
         self.assertEqual(
@@ -2794,7 +2797,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2848,7 +2851,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2905,7 +2908,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2935,7 +2938,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": False,
+                "agreementtype-0-is_primary": False,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -2946,14 +2949,18 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
-        self.assertFalse(response.context["form"].is_valid())
-        form = response.context["form"]
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn(NON_FIELD_ERRORS, form.errors)
-        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        form = response.context_data["form"]
+        self.assertTrue(form.is_valid())
+        # Formset has errors in the correct field.
+        formset = response.context_data["formset"]
+        self.assertFalse(formset.is_valid())
+        self.assertFalse(formset.forms[0].is_valid())
+        self.assertEqual(len(formset.forms[0].errors), 1)
+        self.assertIn(NON_FIELD_ERRORS, formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors[NON_FIELD_ERRORS]), 1)
         self.assertIn(
             "can only be True for primary",
-            form.errors[NON_FIELD_ERRORS][0],
+            formset.forms[0].errors[NON_FIELD_ERRORS][0],
         )
 
     def test_can_create_primary_with_additional_limitations(self):
@@ -2999,7 +3006,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3029,7 +3036,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": False,
+                "agreementtype-0-is_primary": False,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3040,14 +3047,18 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
-        self.assertFalse(response.context["form"].is_valid())
-        form = response.context["form"]
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn(NON_FIELD_ERRORS, form.errors)
-        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
+        form = response.context_data["form"]
+        self.assertTrue(form.is_valid())
+        # Formset has errors in the correct field.
+        formset = response.context_data["formset"]
+        self.assertFalse(formset.is_valid())
+        self.assertFalse(formset.forms[0].is_valid())
+        self.assertEqual(len(formset.forms[0].errors), 1)
+        self.assertIn(NON_FIELD_ERRORS, formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors[NON_FIELD_ERRORS]), 1)
         self.assertIn(
             "only allowed for primary",
-            form.errors[NON_FIELD_ERRORS][0],
+            formset.forms[0].errors[NON_FIELD_ERRORS][0],
         )
 
     def test_error_missing_cc_id(self):
@@ -3065,7 +3076,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3101,7 +3112,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3135,7 +3146,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3169,7 +3180,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3205,7 +3216,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3241,7 +3252,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 # "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3276,7 +3287,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 # "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3311,7 +3322,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": 9999,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3347,7 +3358,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 # "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3383,7 +3394,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                # "is_primary": True,
+                # "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3398,11 +3409,14 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
         form = response.context_data["form"]
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("is_primary", form.errors)
-        self.assertEqual(len(form.errors["is_primary"]), 1)
-        self.assertIn("required", form.errors["is_primary"][0])
+        self.assertTrue(form.is_valid())
+        formset = response.context_data["formset"]
+        self.assertFalse(formset.is_valid())
+        self.assertFalse(formset.forms[0].is_valid())
+        self.assertEqual(len(formset.forms[0].errors), 1)
+        self.assertIn("is_primary", formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors["is_primary"]), 1)
+        self.assertIn("required", formset.forms[0].errors["is_primary"][0])
 
     def test_error_missing_study(self):
         """Form shows an error when study is missing."""
@@ -3418,7 +3432,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3456,7 +3470,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3494,7 +3508,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3567,7 +3581,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3642,7 +3656,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3709,7 +3723,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3753,7 +3767,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3813,7 +3827,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3853,7 +3867,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3890,7 +3904,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -3954,7 +3968,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4020,7 +4034,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
+                "agreementtype-0-is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4198,7 +4212,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
     def test_response_includes_additional_limitations(self):
         """Response includes a link to the study detail page."""
         instance = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             additional_limitations="Test limitations for this data affiliate agreement",
         )
         self.client.force_login(self.user)
@@ -4211,7 +4225,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
     def test_response_with_no_additional_limitations(self):
         """Response includes a link to the study detail page."""
         instance = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             additional_limitations="",
         )
         self.client.force_login(self.user)
@@ -4406,7 +4420,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4423,7 +4436,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement.representative_role, "Test role")
         self.assertEqual(new_agreement.signing_institution, "Test institution")
         self.assertEqual(new_agreement.date_signed, date.fromisoformat("2023-01-01"))
-        self.assertEqual(new_agreement.is_primary, True)
         # Type was set correctly.
         self.assertEqual(new_agreement.type, new_agreement.NON_DATA_AFFILIATE)
         # AnVIL group was set correctly.
@@ -4469,7 +4481,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4509,7 +4520,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4537,7 +4547,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4572,7 +4581,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4605,7 +4613,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4638,7 +4645,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4673,7 +4679,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4708,7 +4713,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 # "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4742,7 +4746,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 # "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4776,7 +4779,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": 999,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4811,7 +4813,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 # "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4832,41 +4833,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(form.errors["date_signed"]), 1)
         self.assertIn("required", form.errors["date_signed"][0])
 
-    def test_error_missing_is_primary(self):
-        """Form shows an error when representative is missing."""
-        self.client.force_login(self.user)
-        representative = UserFactory.create()
-        agreement_version = factories.AgreementVersionFactory.create()
-        response = self.client.post(
-            self.get_url(),
-            {
-                "cc_id": 1,
-                "representative": representative.pk,
-                "representative_role": "Test role",
-                "signing_institution": "Test institution",
-                "version": agreement_version.pk,
-                "date_signed": "2023-01-01",
-                # "is_primary": True,
-                "agreementtype-TOTAL_FORMS": 1,
-                "agreementtype-INITIAL_FORMS": 0,
-                "agreementtype-MIN_NUM_FORMS": 1,
-                "agreementtype-MAX_NUM_FORMS": 1,
-                "agreementtype-0-affiliation": "Foo Bar",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        # No new objects were created.
-        self.assertEqual(models.SignedAgreement.objects.count(), 0)
-        self.assertEqual(models.MemberAgreement.objects.count(), 0)
-        # Form has errors in the correct field.
-        self.assertIn("form", response.context_data)
-        form = response.context_data["form"]
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("is_primary", form.errors)
-        self.assertEqual(len(form.errors["is_primary"]), 1)
-        self.assertIn("required", form.errors["is_primary"][0])
-
     def test_error_missing_nondataaffiliateagreement_affiliation(self):
         """Form shows an error when study_site is missing."""
         self.client.force_login(self.user)
@@ -4881,7 +4847,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4920,7 +4885,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -4943,40 +4907,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("cc_id", form.errors)
         self.assertEqual(len(form.errors["cc_id"]), 1)
         self.assertIn("already exists", form.errors["cc_id"][0])
-
-    def test_error_is_primary_false(self):
-        """Form shows an error when trying to create a duplicate dbgap_phs."""
-        self.client.force_login(self.user)
-        representative = UserFactory.create()
-        agreement_version = factories.AgreementVersionFactory.create()
-        response = self.client.post(
-            self.get_url(),
-            {
-                "cc_id": 1,
-                "representative": representative.pk,
-                "representative_role": "Test role",
-                "signing_institution": "Test institution",
-                "version": agreement_version.pk,
-                "date_signed": "2023-01-01",
-                "is_primary": False,
-                "agreementtype-TOTAL_FORMS": 1,
-                "agreementtype-INITIAL_FORMS": 0,
-                "agreementtype-MIN_NUM_FORMS": 1,
-                "agreementtype-MAX_NUM_FORMS": 1,
-                "agreementtype-0-affiliation": "Foo Bar",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        # No new objects were created.
-        self.assertEqual(models.SignedAgreement.objects.count(), 0)
-        self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 0)
-        # Form has errors in the correct field.
-        form = response.context_data["form"]
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn(NON_FIELD_ERRORS, form.errors)
-        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
-        self.assertIn("primary", form.errors[NON_FIELD_ERRORS][0])
 
     def test_post_blank_data(self):
         """Posting blank data does not create an object."""
@@ -5014,7 +4944,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -5064,7 +4993,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -5111,7 +5039,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -5148,7 +5075,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -5187,7 +5113,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "signing_institution": "Test institution",
                 "version": agreement_version.pk,
                 "date_signed": "2023-01-01",
-                "is_primary": True,
                 "agreementtype-TOTAL_FORMS": 1,
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
@@ -5670,9 +5595,7 @@ class SignedAgreementAuditTest(TestCase):
 
     def test_context_error_table_has_access(self):
         """error shows a record when audit finds that access needs to be removed."""
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
+        member_agreement = factories.MemberAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=self.anvil_cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -7069,25 +6992,19 @@ class StudyRecordsList(TestCase):
 
     def test_table_three_rows(self):
         """Three rows are shown if there are three SignedAgreement objects."""
-        factories.DataAffiliateAgreementFactory.create_batch(
-            3, signed_agreement__is_primary=True
-        )
+        factories.DataAffiliateAgreementFactory.create_batch(3, is_primary=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 3)
 
     def test_only_shows_data_affiliate_records(self):
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        member_agreement = factories.MemberAgreementFactory.create(is_primary=True)
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True
+            is_primary=True
         )
         non_data_affiliate_agreement = (
-            factories.NonDataAffiliateAgreementFactory.create(
-                signed_agreement__is_primary=True
-            )
+            factories.NonDataAffiliateAgreementFactory.create()
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
@@ -7099,10 +7016,10 @@ class StudyRecordsList(TestCase):
 
     def test_only_shows_primary_data_affiliate_records(self):
         primary_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True
+            is_primary=True
         )
         component_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False
+            is_primary=False
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
@@ -7176,7 +7093,7 @@ class UserAccessRecordsList(TestCase):
 
     def test_table_one_agreement_no_members(self):
         """No row is shown if there is one agreement with no account group members."""
-        factories.MemberAgreementFactory.create(signed_agreement__is_primary=True)
+        factories.MemberAgreementFactory.create(is_primary=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -7184,9 +7101,7 @@ class UserAccessRecordsList(TestCase):
 
     def test_table_one_agreement_one_member(self):
         """One row is shown if there is one agreement and one account group member."""
-        agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement = factories.MemberAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create(
             group=agreement.signed_agreement.anvil_access_group
         )
@@ -7197,9 +7112,7 @@ class UserAccessRecordsList(TestCase):
 
     def test_table_one_agreements_two_members(self):
         """Two rows are shown if there is one agreement with two account group members."""
-        agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement = factories.MemberAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create_batch(
             2, group=agreement.signed_agreement.anvil_access_group
         )
@@ -7210,15 +7123,11 @@ class UserAccessRecordsList(TestCase):
 
     def test_table_two_agreements(self):
         """Multiple rows is shown if there are two agreements and multiple account group members."""
-        agreement_1 = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create_batch(
             2, group=agreement_1.signed_agreement.anvil_access_group
         )
-        agreement_2 = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement_2 = factories.MemberAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create_batch(
             3, group=agreement_2.signed_agreement.anvil_access_group
         )
@@ -7228,21 +7137,15 @@ class UserAccessRecordsList(TestCase):
         self.assertEqual(len(response.context_data["table"].rows), 5)
 
     def test_only_shows_records_for_all_agreement_types(self):
-        agreement_1 = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create(
             group=agreement_1.signed_agreement.anvil_access_group
         )
-        agreement_2 = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement_2 = factories.DataAffiliateAgreementFactory.create(is_primary=True)
         GroupAccountMembershipFactory.create(
             group=agreement_2.signed_agreement.anvil_access_group
         )
-        agreement_3 = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        agreement_3 = factories.NonDataAffiliateAgreementFactory.create()
         GroupAccountMembershipFactory.create(
             group=agreement_3.signed_agreement.anvil_access_group
         )
@@ -7252,28 +7155,18 @@ class UserAccessRecordsList(TestCase):
         self.assertEqual(len(table.rows), 3)
 
     def test_shows_includes_component_agreements(self):
-        agreement_1 = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
+        agreement_1 = factories.MemberAgreementFactory.create(is_primary=False)
         GroupAccountMembershipFactory.create(
             group=agreement_1.signed_agreement.anvil_access_group
         )
-        agreement_2 = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
+        agreement_2 = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         GroupAccountMembershipFactory.create(
             group=agreement_2.signed_agreement.anvil_access_group
-        )
-        agreement_3 = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
-        GroupAccountMembershipFactory.create(
-            group=agreement_3.signed_agreement.anvil_access_group
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         table = response.context_data["table"]
-        self.assertEqual(len(table.rows), 3)
+        self.assertEqual(len(table.rows), 2)
 
     def test_does_not_show_anvil_upload_group_members(self):
         agreement = factories.DataAffiliateAgreementFactory.create()
@@ -7564,7 +7457,7 @@ class CDSAWorkspaceDetailTest(TestCase):
 
     def test_response_context_primary_cdsa(self):
         agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
         )
         instance = factories.CDSAWorkspaceFactory.create(
             study=agreement.study,
@@ -7577,7 +7470,7 @@ class CDSAWorkspaceDetailTest(TestCase):
     def test_response_includes_additional_limitations(self):
         """Response includes DataAffiliate additional limitations if they exist."""
         agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             additional_limitations="Test limitations for this data affiliate agreement",
         )
         instance = factories.CDSAWorkspaceFactory.create(
@@ -7605,7 +7498,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         instance.data_use_modifiers.add(modifier_1, modifier_2)
         # Create an agreement with data use limitations.
         factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True,
+            is_primary=True,
             study=instance.study,
             additional_limitations="Test limitations for this data affiliate agreement",
         )

@@ -51,7 +51,7 @@ cdsa_1001 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Ken Rice"),
     signed_agreement__signing_institution="UW",
     signed_agreement__representative_role="Contact PI",
-    signed_agreement__is_primary=True,
+    is_primary=True,
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CC"),
 )
@@ -64,7 +64,7 @@ cdsa_1002 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Sally Adebamowo"),
     signed_agreement__signing_institution="UM",
     signed_agreement__representative_role="Contact PI",
-    signed_agreement__is_primary=True,
+    is_primary=True,
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
@@ -77,7 +77,7 @@ cdsa_1003 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Bamidele Tayo"),
     signed_agreement__signing_institution="Loyola",
     signed_agreement__representative_role="Co-PI",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
@@ -90,7 +90,7 @@ cdsa_1004 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Brackie Mitchell"),
     signed_agreement__signing_institution="UM",
     signed_agreement__representative_role="Co-I",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     signed_agreement__version=v11,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
@@ -128,7 +128,7 @@ cdsa_1007 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Wendy"),
     signed_agreement__signing_institution="JHU",
     signed_agreement__representative_role="Field Center PI",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
 )
@@ -141,7 +141,7 @@ cdsa_1008 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Jerry"),
     signed_agreement__signing_institution="Lundquist",
     signed_agreement__representative_role="Analysis Center PI",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
 )
