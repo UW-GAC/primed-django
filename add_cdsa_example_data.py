@@ -20,6 +20,11 @@ from primed.users.tests.factories import UserFactory
 # Load duos
 call_command("load_duo")
 
+# create the CDSA auth group
+cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
+# Add PRIMED ADMINS group
+cc_admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+
 # Create major versions
 major_version = factories.AgreementMajorVersionFactory.create(version=1)
 
@@ -34,9 +39,6 @@ v11 = factories.AgreementVersionFactory.create(
 # Create a couple signed CDSAs.
 dup = DataUsePermission.objects.get(abbreviation="GRU")
 dum = DataUseModifier.objects.get(abbreviation="NPU")
-
-# create the CDSA auth group
-cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
 
 # Create some study sites.
 StudySiteFactory.create(short_name="CC", full_name="Coordinating Center")
