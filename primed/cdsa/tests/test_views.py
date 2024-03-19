@@ -21,7 +21,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.messages import get_messages
-from django.core.exceptions import NON_FIELD_ERRORS, PermissionDenied
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase, override_settings
@@ -2956,11 +2956,11 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertFalse(formset.is_valid())
         self.assertFalse(formset.forms[0].is_valid())
         self.assertEqual(len(formset.forms[0].errors), 1)
-        self.assertIn(NON_FIELD_ERRORS, formset.forms[0].errors)
-        self.assertEqual(len(formset.forms[0].errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn("requires_study_review", formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors["requires_study_review"]), 1)
         self.assertIn(
             "can only be True for primary",
-            formset.forms[0].errors[NON_FIELD_ERRORS][0],
+            formset.forms[0].errors["requires_study_review"][0],
         )
 
     def test_can_create_primary_with_additional_limitations(self):
@@ -3054,11 +3054,11 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertFalse(formset.is_valid())
         self.assertFalse(formset.forms[0].is_valid())
         self.assertEqual(len(formset.forms[0].errors), 1)
-        self.assertIn(NON_FIELD_ERRORS, formset.forms[0].errors)
-        self.assertEqual(len(formset.forms[0].errors[NON_FIELD_ERRORS]), 1)
+        self.assertIn("additional_limitations", formset.forms[0].errors)
+        self.assertEqual(len(formset.forms[0].errors["additional_limitations"]), 1)
         self.assertIn(
             "only allowed for primary",
-            formset.forms[0].errors[NON_FIELD_ERRORS][0],
+            formset.forms[0].errors["additional_limitations"][0],
         )
 
     def test_error_missing_cc_id(self):

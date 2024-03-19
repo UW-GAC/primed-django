@@ -1,7 +1,6 @@
 """Tests for the `cdsa` app."""
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from django.core.exceptions import NON_FIELD_ERRORS
 from django.test import TestCase
 
 from primed.duo.models import DataUseModifier
@@ -448,9 +447,11 @@ class DataAffiliateAgreementFormTest(TestCase):
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
-        self.assertIn(NON_FIELD_ERRORS, form.errors)
-        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
-        self.assertIn("only allowed for primary", form.errors[NON_FIELD_ERRORS][0])
+        self.assertIn("additional_limitations", form.errors)
+        self.assertEqual(len(form.errors["additional_limitations"]), 1)
+        self.assertIn(
+            "only allowed for primary", form.errors["additional_limitations"][0]
+        )
 
     def test_valid_primary_with_requires_study_review_true(self):
         """Form is valid with necessary input."""
@@ -473,9 +474,11 @@ class DataAffiliateAgreementFormTest(TestCase):
         }
         form = self.form_class(data=form_data)
         self.assertFalse(form.is_valid())
-        self.assertIn(NON_FIELD_ERRORS, form.errors)
-        self.assertEqual(len(form.errors[NON_FIELD_ERRORS]), 1)
-        self.assertIn("can only be True for primary", form.errors[NON_FIELD_ERRORS][0])
+        self.assertIn("requires_study_review", form.errors)
+        self.assertEqual(len(form.errors["requires_study_review"]), 1)
+        self.assertIn(
+            "can only be True for primary", form.errors["requires_study_review"][0]
+        )
 
 
 class NonDataAffiliateAgreementFormTest(TestCase):

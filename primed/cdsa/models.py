@@ -301,15 +301,18 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
     def clean(self):
         super().clean()
         # Checks for fields only allowed for primary agreements.
+        errors = {}
         if not self.is_primary:
             if self.additional_limitations:
-                raise ValidationError(
+                errors["additional_limitations"] = ValidationError(
                     "Additional limitations are only allowed for primary agreements."
                 )
             if self.requires_study_review:
-                raise ValidationError(
+                errors["requires_study_review"] = ValidationError(
                     "requires_study_review can only be True for primary agreements."
                 )
+        if errors:
+            raise ValidationError(errors)
 
     def get_agreement_group(self):
         return self.study

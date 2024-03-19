@@ -522,7 +522,13 @@ class DataAffiliateAgreementTest(TestCase):
         )
         with self.assertRaises(ValidationError) as e:
             instance.clean()
-        self.assertIn("only allowed for primary agreements", e.exception.message)
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("additional_limitations", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["additional_limitations"]), 1)
+        self.assertIn(
+            "only allowed for primary agreements",
+            e.exception.error_dict["additional_limitations"][0].message,
+        )
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
@@ -574,7 +580,13 @@ class DataAffiliateAgreementTest(TestCase):
         )
         with self.assertRaises(ValidationError) as e:
             instance.clean()
-        self.assertIn("can only be True for primary", e.exception.message)
+        self.assertEqual(len(e.exception.error_dict), 1)
+        self.assertIn("requires_study_review", e.exception.error_dict)
+        self.assertEqual(len(e.exception.error_dict["requires_study_review"]), 1)
+        self.assertIn(
+            "can only be True for primary",
+            e.exception.error_dict["requires_study_review"][0].message,
+        )
 
 
 class NonDataAffiliateAgreementTest(TestCase):
