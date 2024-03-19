@@ -6,6 +6,18 @@
     {% include "snippets/gsr_restricted_badge.html" %}
   {% endif %}
 
+  {% if primary_cdsa.requires_study_review %}
+  <span class="badge bg-warning text-dark">
+    <span class="me-2 fa-solid fa-clipboard-check"></span>
+      Study review required
+    <span class="ms-2 fa-solid fa-circle-question"
+    data-bs-toggle="tooltip"
+    data-bs-placement="bottom"
+    data-bs-title="Investigators must have an approved PRIMED paper proposal where this dataset was selected and approved in order to work with data in this workspace."
+    ></span>
+  </span>
+  {% endif %}
+
 {{ block.super }}
 {% endblock pills %}
 

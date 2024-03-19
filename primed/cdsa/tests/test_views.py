@@ -7524,6 +7524,32 @@ class CDSAWorkspaceDetailTest(TestCase):
             "<li>Test additional limitations for workspace</li>",
         )
 
+    def test_response_requires_study_review_true(self):
+        """Response includes DataAffiliate info about study review required if true."""
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True,
+            requires_study_review=True,
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertContains(response, "Study review required")
+
+    def test_response_requires_study_review_false(self):
+        """Response includes DataAffiliate info about study review required if true."""
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True,
+            requires_study_review=False,
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertNotContains(response, "Study review required")
+
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's CDSAWorkspace model."""
