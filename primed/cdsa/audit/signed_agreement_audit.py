@@ -119,9 +119,6 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
     PRIMARY_NOT_ACTIVE = "Primary agreement for this CDSA is not active."
 
     # Other errors
-    ERROR_NON_DATA_AFFILIATE_COMPONENT = (
-        "Non-data affiliate agreements must be primary."
-    )
     ERROR_OTHER_CASE = "Signed Agreement did not match any expected situations."
 
     results_table_class = SignedAgreementAccessAuditTable
@@ -227,14 +224,6 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
                 dataaffiliateagreement__is_primary=True,
                 dataaffiliateagreement__study=signed_agreement.dataaffiliateagreement.study,
             )
-        elif hasattr(signed_agreement, "nondataaffiliateagreement"):
-            self.errors.append(
-                OtherError(
-                    signed_agreement=signed_agreement,
-                    note=self.ERROR_NON_DATA_AFFILIATE_COMPONENT,
-                )
-            )
-            return
         primary_exists = primary_qs.exists()
         primary_active = primary_qs.filter(
             status=models.SignedAgreement.StatusChoices.ACTIVE,
