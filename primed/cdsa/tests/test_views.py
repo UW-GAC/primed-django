@@ -4232,6 +4232,29 @@ class DataAffiliateAgreementDetailTest(TestCase):
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertNotContains(response, "Additional limitations")
 
+    def test_response_requires_study_review(self):
+        """Response includes info about requires_study_review."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True, requires_study_review=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Study review required?")
+        self.assertContains(
+            response,
+            """<dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",
+            html=True,
+        )
+        instance.requires_study_review = False
+        instance.save()
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Study review required?")
+        self.assertContains(
+            response,
+            """<dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",
+            html=True,
+        )
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
