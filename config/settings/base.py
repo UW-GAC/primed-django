@@ -371,7 +371,9 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 
 # django-constance
 # ------------------------------------------------------------------------------
-CONSTANCE_CONFIG = {}
+CONSTANCE_CONFIG = {
+    "SITE_ANNOUNCEMENT": ("", "Site-wide announcement message", str),
+}
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 # CONSTANCE_DATABASE_CACHE_BACKEND = "default"
