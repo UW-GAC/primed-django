@@ -374,7 +374,8 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 CONSTANCE_CONFIG = {}
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
-CONSTANCE_DATABASE_CACHE_BACKEND = "default"
+# CONSTANCE_DATABASE_CACHE_BACKEND = "default"
+CONSTANCE_DATABASE_CACHE_AUTOFILL_TIMEOUT = None
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
