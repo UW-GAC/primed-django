@@ -155,9 +155,6 @@ class SignedAgreement(
         max_length=31,
         choices=TYPE_CHOICES,
     )
-    is_primary = models.BooleanField(
-        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
-    )
     version = models.ForeignKey(
         AgreementVersion,
         help_text="The version of the Agreement that was signed.",
@@ -178,16 +175,15 @@ class SignedAgreement(
     def __str__(self):
         return "{}".format(self.cc_id)
 
-    def clean(self):
-        if self.type == self.NON_DATA_AFFILIATE and self.is_primary is False:
-            raise ValidationError(
-                "Non-data affiliate agreements must be primary agreements."
-            )
-
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
-        if not self.is_primary:
+        if self.type == self.MEMBER and not self.get_agreement_type().is_primary:
+            combined_type = combined_type + " component"
+        elif (
+            self.type == self.DATA_AFFILIATE
+            and not self.get_agreement_type().is_primary
+        ):
             combined_type = combined_type + " component"
         return combined_type
 
@@ -250,6 +246,9 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
 
     AGREEMENT_TYPE = SignedAgreement.MEMBER
 
+    is_primary = models.BooleanField(
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
+    )
     study_site = models.ForeignKey(
         StudySite,
         on_delete=models.CASCADE,
@@ -271,6 +270,9 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     AGREEMENT_TYPE = SignedAgreement.DATA_AFFILIATE
 
+    is_primary = models.BooleanField(
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
+    )
     study = models.ForeignKey(
         Study,
         on_delete=models.PROTECT,
@@ -281,6 +283,14 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
         blank=True,
         help_text="Additional limitations on data use as specified in the signed CDSA.",
     )
+    requires_study_review = models.BooleanField(
+        default=False,
+        help_text=(
+            "Indicator of whether indicates investigators need to have an approved PRIMED paper proposal "
+            "where this dataset was selected and approved in order to work with data brought "
+            "under this CDSA."
+        ),
+    )
 
     def get_absolute_url(self):
         return reverse(
@@ -290,14 +300,19 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     def clean(self):
         super().clean()
-        if (
-            self.additional_limitations
-            and hasattr(self, "signed_agreement")
-            and not self.signed_agreement.is_primary
-        ):
-            raise ValidationError(
-                "Additional limitations are only allowed for primary agreements."
-            )
+        # Checks for fields only allowed for primary agreements.
+        errors = {}
+        if not self.is_primary:
+            if self.additional_limitations:
+                errors["additional_limitations"] = ValidationError(
+                    "Additional limitations are only allowed for primary agreements."
+                )
+            if self.requires_study_review:
+                errors["requires_study_review"] = ValidationError(
+                    "requires_study_review can only be True for primary agreements."
+                )
+        if errors:
+            raise ValidationError(errors)
 
     def get_agreement_group(self):
         return self.study
@@ -358,7 +373,7 @@ class CDSAWorkspace(
         """Return the primary, valid CDSA associated with this workspace."""
         cdsa = DataAffiliateAgreement.objects.get(
             study=self.study,
-            signed_agreement__is_primary=True,
+            is_primary=True,
             signed_agreement__status=SignedAgreement.StatusChoices.ACTIVE,
         )
         return cdsa

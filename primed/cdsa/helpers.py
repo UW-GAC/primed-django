@@ -13,7 +13,7 @@ def get_study_records_table():
     """Return the queryset for study records."""
     qs = models.DataAffiliateAgreement.objects.filter(
         signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE,
-        signed_agreement__is_primary=True,
+        is_primary=True,
     )
     return tables.StudyRecordsTable(qs)
 

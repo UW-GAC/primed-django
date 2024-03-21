@@ -119,9 +119,6 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
     PRIMARY_NOT_ACTIVE = "Primary agreement for this CDSA is not active."
 
     # Other errors
-    ERROR_NON_DATA_AFFILIATE_COMPONENT = (
-        "Non-data affiliate agreements must be primary."
-    )
     ERROR_OTHER_CASE = "Signed Agreement did not match any expected situations."
 
     results_table_class = SignedAgreementAccessAuditTable
@@ -218,23 +215,15 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         if hasattr(signed_agreement, "memberagreement"):
             # Member
             primary_qs = models.SignedAgreement.objects.filter(
-                is_primary=True,
+                memberagreement__is_primary=True,
                 memberagreement__study_site=signed_agreement.memberagreement.study_site,
             )
         elif hasattr(signed_agreement, "dataaffiliateagreement"):
             # Data affiliate
             primary_qs = models.SignedAgreement.objects.filter(
-                is_primary=True,
+                dataaffiliateagreement__is_primary=True,
                 dataaffiliateagreement__study=signed_agreement.dataaffiliateagreement.study,
             )
-        elif hasattr(signed_agreement, "nondataaffiliateagreement"):
-            self.errors.append(
-                OtherError(
-                    signed_agreement=signed_agreement,
-                    note=self.ERROR_NON_DATA_AFFILIATE_COMPONENT,
-                )
-            )
-            return
         primary_exists = primary_qs.exists()
         primary_active = primary_qs.filter(
             status=models.SignedAgreement.StatusChoices.ACTIVE,
@@ -320,7 +309,8 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         )  # pragma: no cover
 
     def _audit_signed_agreement(self, signed_agreement):
-        if signed_agreement.is_primary:
+        agreement_type = signed_agreement.get_agreement_type()
+        if not hasattr(agreement_type, "is_primary") or agreement_type.is_primary:
             self._audit_primary_agreement(signed_agreement)
         else:
             self._audit_component_agreement(signed_agreement)

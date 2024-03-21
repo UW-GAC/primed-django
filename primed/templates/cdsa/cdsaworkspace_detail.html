@@ -6,12 +6,41 @@
     {% include "snippets/gsr_restricted_badge.html" %}
   {% endif %}
 
+  {% if not primary_cdsa %}
+  <span class="badge bg-danger">
+    <span class="me-2 fa-solid fa-circle-exclamation"></span>
+      No primary CDSA
+    <span class="ms-2 fa-solid fa-circle-question"
+    data-bs-toggle="tooltip"
+    data-bs-placement="bottom"
+    data-bs-title="No active primary CDSA exists for this study."
+    ></span>
+  </span>
+  {% elif primary_cdsa.requires_study_review %}
+  <span class="badge bg-warning text-dark">
+    <span class="me-2 fa-solid fa-clipboard-check"></span>
+      Study review required
+    <span class="ms-2 fa-solid fa-circle-question"
+    data-bs-toggle="tooltip"
+    data-bs-placement="bottom"
+    data-bs-title="Investigators must have an approved PRIMED paper proposal where this dataset was selected and approved in order to work with data in this workspace."
+    ></span>
+  </span>
+  {% endif %}
+
 {{ block.super }}
 {% endblock pills %}
 
 {% block workspace_data %}
   <dl class="row">
     <hr>
+    <dt class="col-sm-2">Associated CDSA</dt><dd class="col-sm-9">
+      {% if primary_cdsa %}
+        <a href="{{ primary_cdsa.get_absolute_url }}">{{ primary_cdsa }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </dd>
     <dt class="col-sm-2">Study</dt> <dd class="col-sm-9">
       <a href="{{ object.cdsaworkspace.study.get_absolute_url }}">{{ object.cdsaworkspace.study }}</a>
     </dd>
