@@ -314,7 +314,7 @@ class CDSAWorkspaceStaffTable(tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
-    cdsaworkspace_requires_study_review = BooleanIconColumn(
+    cdsaworkspace__requires_study_review = BooleanIconColumn(
         verbose_name="Study review required?",
         orderable=False,
         true_icon="dash-circle-fill",
@@ -333,12 +333,12 @@ class CDSAWorkspaceStaffTable(tables.Table):
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
-            "cdsaworkspace_requires_study_review",
+            "cdsaworkspace__requires_study_review",
             "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)
 
-    def render_requires_study_review(self, record):
+    def render_cdsaworkspace__requires_study_review(self, record):
         try:
             if record.cdsaworkspace.get_primary_cdsa().requires_study_review:
                 icon = "dash-circle-fill"
@@ -364,7 +364,7 @@ class CDSAWorkspaceUserTable(tables.Table):
         transform=lambda x: x.abbreviation,
         verbose_name="DUO modifiers",
     )
-    cdsaworkspace_requires_study_review = BooleanIconColumn(
+    cdsaworkspace__requires_study_review = BooleanIconColumn(
         verbose_name="Study review required?",
         orderable=False,
         true_icon="dash-circle-fill",
@@ -381,12 +381,12 @@ class CDSAWorkspaceUserTable(tables.Table):
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
-            "cdsaworkspace_requires_study_review",
+            "cdsaworkspace__requires_study_review",
             "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)
 
-    def render_requires_study_review(self, record):
+    def render_cdsaworkspace__requires_study_review(self, record):
         try:
             if record.cdsaworkspace.get_primary_cdsa().requires_study_review:
                 icon = "dash-circle-fill"

@@ -478,7 +478,7 @@ class CDSAWorkspaceStaffTableTest(TestCase):
         cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         self.assertIn(
             "question-circle-fill",
-            table.render_requires_study_review(cdsa_workspace.workspace),
+            table.render_cdsaworkspace__requires_study_review(cdsa_workspace.workspace),
         )
         # With a primary - no review required.
         agreement = factories.DataAffiliateAgreementFactory.create(
@@ -487,14 +487,15 @@ class CDSAWorkspaceStaffTableTest(TestCase):
             study=cdsa_workspace.study,
         )
         self.assertEqual(
-            "", table.render_requires_study_review(cdsa_workspace.workspace)
+            "",
+            table.render_cdsaworkspace__requires_study_review(cdsa_workspace.workspace),
         )
         # With a primary - review required.
         agreement.requires_study_review = True
         agreement.save()
         self.assertIn(
             "dash-circle-fill",
-            table.render_requires_study_review(cdsa_workspace.workspace),
+            table.render_cdsaworkspace__requires_study_review(cdsa_workspace.workspace),
         )
 
 
@@ -533,7 +534,7 @@ class CDSAWorkspaceUserTableTest(TestCase):
         cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         self.assertIn(
             "question-circle-fill",
-            table.render_requires_study_review(cdsa_workspace.workspace),
+            table.render_cdsaworkspace__requires_study_review(cdsa_workspace.workspace),
         )
         # With a primary - no review required.
         agreement = factories.DataAffiliateAgreementFactory.create(
@@ -542,12 +543,13 @@ class CDSAWorkspaceUserTableTest(TestCase):
             study=cdsa_workspace.study,
         )
         self.assertEqual(
-            "", table.render_requires_study_review(cdsa_workspace.workspace)
+            "",
+            table.render_cdsaworkspace__requires_study_review(cdsa_workspace.workspace),
         )
         # With a primary - review required.
         agreement.requires_study_review = True
         agreement.save()
         self.assertIn(
             "dash-circle-fill",
-            table.render_requires_study_review(cdsa_workspace.workspace),
+            table.render_cdsaworkspace__requires_study_review(cdsa_workspace.workspace),
         )
