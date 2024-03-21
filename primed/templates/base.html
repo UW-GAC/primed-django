@@ -108,23 +108,26 @@
       </div>
     </nav>
 
+    <main class="flex-shrink-0">
+      <div class="container">
+
+    {% if request.user.is_authenticated and not request.user.account %}
+    <div class="alert alert-warning" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+      You must <a href="{% url 'anvil_consortium_manager:accounts:link' %}">link your AnVIL account</a> before you can access any data on AnVIL.
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    {% endfor %}
+{% endif %}
+
     {% block extra_navbar %}
     {% endblock %}
-    <main class="flex-shrink-0">
-    <div class="container">
 
-      {% if messages %}
-          {% for message in messages %}
-              <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-          {% endfor %}
-      {% endif %}
 
-      {% if request.user.is_authenticated and not request.user.account %}
-      <div class="alert alert-warning" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-1"></i>
-        You must <a href="{% url 'anvil_consortium_manager:accounts:link' %}">link your AnVIL account</a> before you can access any data on AnVIL.
-      </div>
-      {% endif %}
 
       {% block content %}
               <div class="my-3 alert alert-warning" role="alert">
