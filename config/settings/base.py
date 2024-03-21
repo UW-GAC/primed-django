@@ -86,6 +86,7 @@ THIRD_PARTY_APPS = [
     "dbbackup",
     "django_htmx",
     "constance",
+    "constance.backends.database",
 ]
 
 LOCAL_APPS = [
