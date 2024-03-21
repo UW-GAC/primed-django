@@ -2515,6 +2515,29 @@ class MemberAgreementDetailTest(TestCase):
             ),
         )
 
+    def test_response_is_primary(self):
+        """Response includes info about requires_study_review."""
+        instance = factories.MemberAgreementFactory.create(
+            is_primary=True,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Primary?")
+        self.assertContains(
+            response,
+            """<dt class="col-sm-2">Primary?</dt><dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",  # noqa: E501
+            html=True,
+        )
+        instance.is_primary = False
+        instance.save()
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Primary?")
+        self.assertContains(
+            response,
+            """<dt class="col-sm-2">Primary?</dt><dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",  # noqa: E501
+            html=True,
+        )
+
 
 class MemberAgreementListTest(TestCase):
     """Tests for the MemberAgreementList view."""
@@ -4232,6 +4255,29 @@ class DataAffiliateAgreementDetailTest(TestCase):
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertNotContains(response, "Additional limitations")
 
+    def test_response_is_primary(self):
+        """Response includes info about requires_study_review."""
+        instance = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Primary?")
+        self.assertContains(
+            response,
+            """<dt class="col-sm-2">Primary?</dt><dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",  # noqa: E501
+            html=True,
+        )
+        instance.is_primary = False
+        instance.save()
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertContains(response, "Primary?")
+        self.assertContains(
+            response,
+            """<dt class="col-sm-2">Primary?</dt><dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",  # noqa: E501
+            html=True,
+        )
+
     def test_response_requires_study_review(self):
         """Response includes info about requires_study_review."""
         instance = factories.DataAffiliateAgreementFactory.create(
@@ -4240,9 +4286,10 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertContains(response, "Study review required?")
+        # import ipdb; ipdb.set_trace()
         self.assertContains(
             response,
-            """<dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",
+            """<dt class="col-sm-2">Study review required?</dt> <dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",  # noqa: E501
             html=True,
         )
         instance.requires_study_review = False
@@ -4251,7 +4298,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(response, "Study review required?")
         self.assertContains(
             response,
-            """<dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",
+            """<dt class="col-sm-2">Study review required?</dt> <dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",  # noqa: E501
             html=True,
         )
 
