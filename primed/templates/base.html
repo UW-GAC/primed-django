@@ -120,12 +120,11 @@
       {% endif %}
 
       {% if not request.user.account %}
-      <div class="alert alert-info" role="alert">
+      <div class="alert alert-warning" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-1"></i>
         You must <a href="{% url 'anvil_consortium_manager:accounts:link' %}">link your AnVIL account</a> before you can access any data on AnVIL.
       </div>
       {% endif %}
-
 
       {% block content %}
               <div class="my-3 alert alert-warning" role="alert">
