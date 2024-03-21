@@ -133,6 +133,12 @@ class HomeTest(TestCase):
             response, reverse("anvil_consortium_manager:accounts:link")
         )
 
+    def test_unauthenticated_user_has_not_linked_account_message(self):
+        response = self.client.get(settings.LOGIN_URL, follow=True)
+        self.assertNotContains(
+            response, reverse("anvil_consortium_manager:accounts:link")
+        )
+
     def test_staff_view_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
