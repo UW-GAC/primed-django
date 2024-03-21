@@ -7620,6 +7620,30 @@ class CDSAWorkspaceDetailTest(TestCase):
         response = self.client.get(instance.get_absolute_url())
         self.assertNotContains(response, "Study review required")
 
+    def test_response_primary_cdsa(self):
+        """Response includes note about missing primary cdsa about study review required if true."""
+        agreement = factories.DataAffiliateAgreementFactory.create(
+            is_primary=True,
+        )
+        instance = factories.CDSAWorkspaceFactory.create(
+            study=agreement.study,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertContains(response, agreement.get_absolute_url())
+
+    def test_response_no_primary_cdsa(self):
+        """Response includes note about missing primary cdsa about study review required if true."""
+        instance = factories.CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertContains(
+            response,
+            # """<dt class="col-sm-2">Associated CDSA</dt><dd class="col-sm-9">mdash;</dd>"""
+            """No primary CDSA"""
+            # """<dt class="col-sm-2">Associated CDSA</dt> <dd class="col-sm-9">&mdash;</dd>""",  # noqa: E501
+        )
+
 
 class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's CDSAWorkspace model."""
