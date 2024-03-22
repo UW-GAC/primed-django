@@ -66,3 +66,6 @@ django-htmx
 certifi>=2023.7.22
 urllib3>=1.26.18
 sqlparse>=0.4.4
+
+# Dynamic settings
+django-constance
