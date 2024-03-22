@@ -1,4 +1,5 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
+{% load render_table from django_tables2%}
 
 {% block pills %}
   {% if workspace_data_object.gsr_restricted %}
@@ -92,6 +93,8 @@
     </div>
   </div>
 </div>
+
+{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
 
 {{block.super}}
 {% endblock after_panel %}

@@ -46,8 +46,6 @@ class SignedAgreementFactory(DjangoModelFactory):
         models.SignedAgreement.TYPE_CHOICES,
         getter=lambda c: c[0],
     )
-    # Assume is_primary=True for now.
-    is_primary = True
     version = SubFactory(AgreementVersionFactory)
     date_signed = Faker("date")
     anvil_access_group = SubFactory(
@@ -69,6 +67,7 @@ class MemberAgreementFactory(DjangoModelFactory):
         SignedAgreementFactory, type=models.SignedAgreement.MEMBER
     )
     study_site = SubFactory(StudySiteFactory)
+    is_primary = True
 
     class Meta:
         model = models.MemberAgreement
@@ -80,6 +79,7 @@ class DataAffiliateAgreementFactory(DjangoModelFactory):
         SignedAgreementFactory, type=models.SignedAgreement.DATA_AFFILIATE
     )
     study = SubFactory(StudyFactory)
+    is_primary = True
     anvil_upload_group = SubFactory(
         ManagedGroupFactory,
         name=LazyAttribute(
@@ -107,7 +107,6 @@ class NonDataAffiliateAgreementFactory(DjangoModelFactory):
 class CDSAWorkspaceFactory(DjangoModelFactory):
 
     study = SubFactory(StudyFactory)
-    data_use_limitations = Faker("paragraph")
     acknowledgments = Faker("paragraph")
     requested_by = SubFactory(UserFactory)
     data_use_permission = SubFactory(DataUsePermissionFactory)

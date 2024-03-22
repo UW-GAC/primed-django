@@ -322,7 +322,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -344,7 +344,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -366,7 +366,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study_site=study_site,
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
@@ -390,7 +390,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study_site=study_site,
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
@@ -417,7 +417,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__version__major_version__is_valid=False,
         )
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -442,7 +442,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__version__major_version__is_valid=False,
         )
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -467,7 +467,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -492,7 +492,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -513,7 +513,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         """Member component agreement, with valid version, with no primary, in CDSA group."""
         study_site = StudySiteFactory.create()
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -534,7 +534,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         """Member component agreement, with valid version, with no primary, not in CDSA group."""
         study_site = StudySiteFactory.create()
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False, study_site=study_site
+            is_primary=False, study_site=study_site
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -556,7 +556,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study_site=study_site,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -580,7 +580,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study_site=study_site,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -606,7 +606,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study_site=study_site,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -632,7 +632,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study_site = StudySiteFactory.create()
         factories.MemberAgreementFactory.create(study_site=study_site)
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study_site=study_site,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -654,7 +654,7 @@ class SignedAgreementAccessAuditTest(TestCase):
     def test_member_component_invalid_version_no_primary_in_group(self):
         """Member component agreement, with invalid version, with no primary, in CDSA group."""
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             signed_agreement__version__major_version__is_valid=False,
         )
         # Add the signed agreement access group to the CDSA group.
@@ -675,7 +675,7 @@ class SignedAgreementAccessAuditTest(TestCase):
     def test_member_component_invalid_version_no_primary_not_in_group(self):
         """Member component agreement, with invalid version, with no primary, not in CDSA group."""
         this_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             signed_agreement__version__major_version__is_valid=False,
         )
         # # Add the signed agreement access group to the CDSA group.
@@ -814,7 +814,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -836,7 +836,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -858,7 +858,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study=study,
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
@@ -882,7 +882,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study=study,
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
@@ -909,7 +909,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__version__major_version__is_valid=False,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -936,7 +936,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__version__major_version__is_valid=False,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -961,7 +961,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -986,7 +986,7 @@ class SignedAgreementAccessAuditTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN,
         )
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -1007,7 +1007,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         """Member component agreement, with valid version, with no primary, in CDSA group."""
         study = StudyFactory.create()
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # Add the signed agreement access group to the CDSA group.
         GroupGroupMembershipFactory.create(
@@ -1028,7 +1028,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         """Member component agreement, with valid version, with no primary, not in CDSA group."""
         study = StudyFactory.create()
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False, study=study
+            is_primary=False, study=study
         )
         # # Add the signed agreement access group to the CDSA group.
         # GroupGroupMembershipFactory.create(
@@ -1050,7 +1050,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study=study,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -1074,7 +1074,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study=study,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -1100,7 +1100,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study=study,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -1126,7 +1126,7 @@ class SignedAgreementAccessAuditTest(TestCase):
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             study=study,
             signed_agreement__version__major_version__is_valid=False,
         )
@@ -1148,7 +1148,7 @@ class SignedAgreementAccessAuditTest(TestCase):
     def test_data_affiliate_component_invalid_version_no_primary_in_group(self):
         """Member component agreement, with invalid version, with no primary, in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             signed_agreement__version__major_version__is_valid=False,
         )
         # Add the signed agreement access group to the CDSA group.
@@ -1169,7 +1169,7 @@ class SignedAgreementAccessAuditTest(TestCase):
     def test_data_affiliate_component_invalid_version_no_primary_not_in_group(self):
         """Member component agreement, with invalid version, with no primary, not in CDSA group."""
         this_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False,
+            is_primary=False,
             signed_agreement__version__major_version__is_valid=False,
         )
         # # Add the signed agreement access group to the CDSA group.
@@ -1302,46 +1302,6 @@ class SignedAgreementAccessAuditTest(TestCase):
         self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
         self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
-
-    def test_non_data_affiliate_component_in_cdsa_group(self):
-        """Non data affiliate component agreement."""
-        this_agreement = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
-        # Add the signed agreement access group to the CDSA group.
-        GroupGroupMembershipFactory.create(
-            parent_group=self.cdsa_group,
-            child_group=this_agreement.signed_agreement.anvil_access_group,
-        )
-        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
-        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
-        self.assertEqual(len(cdsa_audit.errors), 1)
-        record = cdsa_audit.errors[0]
-        self.assertIsInstance(record, signed_agreement_audit.OtherError)
-        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.ERROR_NON_DATA_AFFILIATE_COMPONENT)
-
-    def test_non_data_affiliate_component_not_in_cdsa_group(self):
-        """Non data affiliate component agreement."""
-        this_agreement = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
-        # Do not add the signed agreement access group to the CDSA group.
-        # GroupGroupMembershipFactory.create(
-        #     parent_group=self.cdsa_group,
-        #     child_group=this_agreement.signed_agreement.anvil_access_group,
-        # )
-        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
-        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
-        self.assertEqual(len(cdsa_audit.verified), 0)
-        self.assertEqual(len(cdsa_audit.needs_action), 0)
-        self.assertEqual(len(cdsa_audit.errors), 1)
-        record = cdsa_audit.errors[0]
-        self.assertIsInstance(record, signed_agreement_audit.OtherError)
-        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
-        self.assertEqual(record.note, cdsa_audit.ERROR_NON_DATA_AFFILIATE_COMPONENT)
 
 
 class SignedAgreementAccessAuditTableTest(TestCase):
@@ -1804,9 +1764,7 @@ class WorkspaceAccessAuditTest(TestCase):
     def test_component_agreement_not_in_auth_domain(self):
         study = StudyFactory.create()
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
-        factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__is_primary=False
-        )
+        factories.DataAffiliateAgreementFactory.create(study=study, is_primary=False)
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
         #     parent_group=workspace.workspace.authorization_domains.first(),
@@ -1826,9 +1784,7 @@ class WorkspaceAccessAuditTest(TestCase):
     def test_component_agreement_in_auth_domain(self):
         study = StudyFactory.create()
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
-        factories.DataAffiliateAgreementFactory.create(
-            study=study, signed_agreement__is_primary=False
-        )
+        factories.DataAffiliateAgreementFactory.create(study=study, is_primary=False)
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),

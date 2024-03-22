@@ -20,7 +20,20 @@
   </dd>
   <dt class="col-sm-2">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
   <dt class="col-sm-2">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
-  <dt class="col-sm-2">Primary?</dt> <dd class="col-sm-9">{{ object.signed_agreement.is_primary }}</dd>
+  <dt class="col-sm-2">Primary?</dt> <dd class="col-sm-9">
+    {% if object.is_primary %}
+      Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i>
+    {% else %}
+      No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i>
+    {% endif %}
+  </dd>
+  <dt class="col-sm-2">Study review required?</dt> <dd class="col-sm-9">
+    {% if object.requires_study_review %}
+      Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i>
+    {% else %}
+      No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i>
+    {% endif %}
+  </dd>
   <dt class="col-sm-2">Agreement version</dt> <dd class="col-sm-9">
     <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
   </dd>
@@ -44,6 +57,28 @@
 
 </dl>
 {% endblock panel %}
+
+{% block after_panel %}
+
+{% if object.additional_limitations %}
+<div>
+  <div class="card my-3">
+    <div class="card-header">
+      <span class="fa-solid fa-hand mx-2"></span>
+      Additional limitations
+    </div>
+    <div class="card-body">
+      <p>
+        {{ object.additional_limitations }}
+      </p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{{ block.super }}
+
+{% endblock after_panel %}
 
 
 {% block action_buttons %}

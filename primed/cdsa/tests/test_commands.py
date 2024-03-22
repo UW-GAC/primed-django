@@ -68,9 +68,7 @@ class CDSARecordsTest(TestCase):
         self.assertEqual(len(lines), 1)
 
     def test_study_records_one(self):
-        factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__is_primary=True
-        )
+        factories.DataAffiliateAgreementFactory.create(is_primary=True)
         out = StringIO()
         call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         with open(os.path.join(self.outdir, "study_records.tsv")) as f:
@@ -135,7 +133,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_run_audit_one_agreement_verified(self):
         """Test command output with one verified instance."""
-        factories.MemberAgreementFactory.create(signed_agreement__is_primary=False)
+        factories.MemberAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
@@ -174,9 +172,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_run_audit_one_agreement_error(self):
         """Test command output with one error instance."""
-        agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
+        agreement = factories.MemberAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=self.cdsa_group,
             child_group=agreement.signed_agreement.anvil_access_group,
@@ -197,7 +193,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_run_audit_one_agreement_verified_email(self):
         """No email is sent when there are no errors."""
-        factories.MemberAgreementFactory.create(signed_agreement__is_primary=False)
+        factories.MemberAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command(
             "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
@@ -233,9 +229,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_run_audit_one_agreement_error_email(self):
         """Test command output with one error instance."""
-        agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__is_primary=False
-        )
+        agreement = factories.MemberAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=self.cdsa_group,
             child_group=agreement.signed_agreement.anvil_access_group,

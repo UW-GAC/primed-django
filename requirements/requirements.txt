@@ -45,7 +45,7 @@ cryptography==42.0.5
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==4.2.10
+django==4.2.11
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -58,13 +58,16 @@ django==4.2.10
     #   django-filter
     #   django-htmx
     #   django-model-utils
+    #   django-picklefield
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.21
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.22
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
+django-constance==3.1.0
+    # via -r requirements/requirements.in
 django-crispy-forms==2.1
     # via
     #   -r requirements/requirements.in
@@ -88,6 +91,10 @@ django-maintenance-mode==0.21.1
     # via -r requirements/requirements.in
 django-model-utils==4.4.0
     # via -r requirements/requirements.in
+django-picklefield==3.1
+    # via
+    #   -r requirements/requirements.in
+    #   django-constance
 django-simple-history==3.5.0
     # via
     #   -r requirements/requirements.in
@@ -134,7 +141,7 @@ packaging==21.3
     #   plotly
 pandas==2.0.3
     # via -r requirements/requirements.in
-pip-tools==7.4.0
+pip-tools==7.4.1
     # via -r requirements/requirements.in
 pkgutil-resolve-name==1.3.10
     # via jsonschema
@@ -151,9 +158,7 @@ pyasn1-modules==0.3.0
 pycparser==2.21
     # via cffi
 pyjwt[crypto]==2.4.0
-    # via
-    #   django-allauth
-    #   pyjwt
+    # via django-allauth
 pyparsing==3.1.1
     # via packaging
 pyproject-hooks==1.0.0

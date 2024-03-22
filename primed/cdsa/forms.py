@@ -22,12 +22,6 @@ class AgreementMajorVersionIsValidForm(forms.ModelForm):
 class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SignedAgreement object."""
 
-    is_primary = forms.TypedChoiceField(
-        coerce=lambda x: x == "True",
-        choices=((True, "Primary"), (False, "Component")),
-        widget=forms.RadioSelect,
-        label="Agreement type",
-    )
     version = forms.ModelChoiceField(
         queryset=models.AgreementVersion.objects.filter(major_version__is_valid=True)
     )
@@ -41,7 +35,6 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "signing_institution",
             "version",
             "date_signed",
-            "is_primary",
         )
         widgets = {
             "representative": autocomplete.ModelSelect2(
@@ -63,20 +56,38 @@ class SignedAgreementStatusForm(forms.ModelForm):
 
 
 class MemberAgreementForm(forms.ModelForm):
+    is_primary = forms.TypedChoiceField(
+        coerce=lambda x: x == "True",
+        choices=((True, "Primary"), (False, "Component")),
+        widget=forms.RadioSelect,
+        label="Agreement type",
+    )
+
     class Meta:
         model = models.MemberAgreement
         fields = (
             "signed_agreement",
             "study_site",
+            "is_primary",
         )
 
 
 class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    is_primary = forms.TypedChoiceField(
+        coerce=lambda x: x == "True",
+        choices=((True, "Primary"), (False, "Component")),
+        widget=forms.RadioSelect,
+        label="Agreement type",
+    )
+
     class Meta:
         model = models.DataAffiliateAgreement
         fields = (
             "signed_agreement",
             "study",
+            "is_primary",
+            "additional_limitations",
+            "requires_study_review",
         )
         widgets = {
             "study": autocomplete.ModelSelect2(
@@ -114,7 +125,7 @@ class CDSAWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "data_use_permission",
             "data_use_modifiers",
             "disease_term",
-            "data_use_limitations",
+            "additional_limitations",
             "gsr_restricted",
             "acknowledgments",
             "available_data",

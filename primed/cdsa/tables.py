@@ -6,6 +6,7 @@ from anvil_consortium_manager.models import (
     Workspace,
     WorkspaceGroupSharing,
 )
+from django.utils.safestring import mark_safe
 
 from primed.primed_anvil.tables import (
     BooleanIconColumn,
@@ -43,9 +44,7 @@ class SignedAgreementTable(tables.Table):
         verbose_name="Representative",
     )
     representative_role = tables.Column(verbose_name="Role")
-    agreement_type = tables.Column(
-        accessor="combined_type", order_by=("type", "-is_primary")
-    )
+    agreement_type = tables.Column(accessor="combined_type", order_by=("type"))
     number_accessors = tables.Column(
         verbose_name="Number of accessors",
         accessor="anvil_access_group__groupaccountmembership_set__count",
@@ -79,7 +78,7 @@ class MemberAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study_site = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
+    is_primary = BooleanIconColumn(verbose_name="Primary?")
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -96,7 +95,7 @@ class MemberAgreementTable(tables.Table):
         fields = (
             "signed_agreement__cc_id",
             "study_site",
-            "signed_agreement__is_primary",
+            "is_primary",
             "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
@@ -113,7 +112,13 @@ class DataAffiliateAgreementTable(tables.Table):
 
     signed_agreement__cc_id = tables.Column(linkify=True)
     study = tables.Column(linkify=True)
-    signed_agreement__is_primary = BooleanIconColumn(verbose_name="Primary?")
+    is_primary = BooleanIconColumn(verbose_name="Primary?")
+    requires_study_review = BooleanIconColumn(
+        verbose_name="Study review required?",
+        orderable=False,
+        true_icon="dash-circle-fill",
+        true_color="#ffc107",
+    )
     signed_agreement__representative__name = tables.Column(
         linkify=lambda record: record.signed_agreement.representative.get_absolute_url(),
         verbose_name="Representative",
@@ -130,7 +135,8 @@ class DataAffiliateAgreementTable(tables.Table):
         fields = (
             "signed_agreement__cc_id",
             "study",
-            "signed_agreement__is_primary",
+            "is_primary",
+            "requires_study_review",
             "signed_agreement__representative__name",
             "signed_agreement__representative_role",
             "signed_agreement__signing_institution",
@@ -178,9 +184,7 @@ class RepresentativeRecordsTable(tables.Table):
 
     representative__name = tables.Column(verbose_name="Representative")
     signing_group = tables.Column(accessor="pk", orderable=False)
-    agreement_type = tables.Column(
-        accessor="combined_type", order_by=("type", "-is_primary")
-    )
+    agreement_type = tables.Column(accessor="combined_type", order_by=("type"))
 
     class Meta:
         model = models.SignedAgreement
@@ -310,6 +314,12 @@ class CDSAWorkspaceStaffTable(tables.Table):
         verbose_name="DUO modifiers",
         linkify_item=True,
     )
+    cdsaworkspace__requires_study_review = BooleanIconColumn(
+        verbose_name="Study review required?",
+        orderable=False,
+        true_icon="dash-circle-fill",
+        true_color="#ffc107",
+    )
     cdsaworkspace__gsr_restricted = BooleanIconColumn(
         orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
     )
@@ -323,9 +333,22 @@ class CDSAWorkspaceStaffTable(tables.Table):
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
+            "cdsaworkspace__requires_study_review",
             "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)
+
+    def render_cdsaworkspace__requires_study_review(self, record):
+        try:
+            if record.cdsaworkspace.get_primary_cdsa().requires_study_review:
+                icon = "dash-circle-fill"
+                color = "#ffc107"
+            else:
+                return ""
+        except models.DataAffiliateAgreement.DoesNotExist:
+            icon = "question-circle-fill"
+            color = "red"
+        return mark_safe(f'<i class="bi bi-{icon}" style="color: {color}"></i>')
 
 
 class CDSAWorkspaceUserTable(tables.Table):
@@ -341,6 +364,12 @@ class CDSAWorkspaceUserTable(tables.Table):
         transform=lambda x: x.abbreviation,
         verbose_name="DUO modifiers",
     )
+    cdsaworkspace__requires_study_review = BooleanIconColumn(
+        verbose_name="Study review required?",
+        orderable=False,
+        true_icon="dash-circle-fill",
+        true_color="#ffc107",
+    )
     cdsaworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
     is_shared = WorkspaceSharedWithConsortiumColumn()
 
@@ -352,6 +381,19 @@ class CDSAWorkspaceUserTable(tables.Table):
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
+            "cdsaworkspace__requires_study_review",
             "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)
+
+    def render_cdsaworkspace__requires_study_review(self, record):
+        try:
+            if record.cdsaworkspace.get_primary_cdsa().requires_study_review:
+                icon = "dash-circle-fill"
+                color = "#ffc107"
+            else:
+                return ""
+        except models.DataAffiliateAgreement.DoesNotExist:
+            icon = "question-circle-fill"
+            color = "red"
+        return mark_safe(f'<i class="bi bi-{icon}" style="color: {color}"></i>')

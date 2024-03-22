@@ -155,9 +155,6 @@ class SignedAgreement(
         max_length=31,
         choices=TYPE_CHOICES,
     )
-    is_primary = models.BooleanField(
-        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
-    )
     version = models.ForeignKey(
         AgreementVersion,
         help_text="The version of the Agreement that was signed.",
@@ -178,16 +175,15 @@ class SignedAgreement(
     def __str__(self):
         return "{}".format(self.cc_id)
 
-    def clean(self):
-        if self.type == self.NON_DATA_AFFILIATE and self.is_primary is False:
-            raise ValidationError(
-                "Non-data affiliate agreements must be primary agreements."
-            )
-
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
-        if not self.is_primary:
+        if self.type == self.MEMBER and not self.get_agreement_type().is_primary:
+            combined_type = combined_type + " component"
+        elif (
+            self.type == self.DATA_AFFILIATE
+            and not self.get_agreement_type().is_primary
+        ):
             combined_type = combined_type + " component"
         return combined_type
 
@@ -250,6 +246,9 @@ class MemberAgreement(TimeStampedModel, AgreementTypeModel, models.Model):
 
     AGREEMENT_TYPE = SignedAgreement.MEMBER
 
+    is_primary = models.BooleanField(
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
+    )
     study_site = models.ForeignKey(
         StudySite,
         on_delete=models.CASCADE,
@@ -271,18 +270,49 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
 
     AGREEMENT_TYPE = SignedAgreement.DATA_AFFILIATE
 
+    is_primary = models.BooleanField(
+        help_text="Indicator of whether this is a primary Agreement (and not a component Agreement).",
+    )
     study = models.ForeignKey(
         Study,
         on_delete=models.PROTECT,
         help_text="Study that this agreement is associated with.",
     )
     anvil_upload_group = models.ForeignKey(ManagedGroup, on_delete=models.PROTECT)
+    additional_limitations = models.TextField(
+        blank=True,
+        help_text="Additional limitations on data use as specified in the signed CDSA.",
+    )
+    requires_study_review = models.BooleanField(
+        default=False,
+        help_text=(
+            "Indicator of whether indicates investigators need to have an approved PRIMED paper proposal "
+            "where this dataset was selected and approved in order to work with data brought "
+            "under this CDSA."
+        ),
+    )
 
     def get_absolute_url(self):
         return reverse(
             "cdsa:signed_agreements:data_affiliates:detail",
             kwargs={"cc_id": self.signed_agreement.cc_id},
         )
+
+    def clean(self):
+        super().clean()
+        # Checks for fields only allowed for primary agreements.
+        errors = {}
+        if not self.is_primary:
+            if self.additional_limitations:
+                errors["additional_limitations"] = ValidationError(
+                    "Additional limitations are only allowed for primary agreements."
+                )
+            if self.requires_study_review:
+                errors["requires_study_review"] = ValidationError(
+                    "requires_study_review can only be True for primary agreements."
+                )
+        if errors:
+            raise ValidationError(errors)
 
     def get_agreement_group(self):
         return self.study
@@ -318,8 +348,9 @@ class CDSAWorkspace(
         on_delete=models.PROTECT,
         help_text="The study associated with data in this workspace.",
     )
-    data_use_limitations = models.TextField(
-        help_text="""The full data use limitations for this workspace."""
+    additional_limitations = models.TextField(
+        help_text="""Additional data use limitations that cannot be captured by DUO.""",
+        blank=True,
     )
     acknowledgments = models.TextField(
         help_text="Acknowledgments associated with data in this workspace."
@@ -337,3 +368,12 @@ class CDSAWorkspace(
     class Meta:
         verbose_name = " CDSA workspace"
         verbose_name_plural = " CDSA workspaces"
+
+    def get_primary_cdsa(self):
+        """Return the primary, valid CDSA associated with this workspace."""
+        cdsa = DataAffiliateAgreement.objects.get(
+            study=self.study,
+            is_primary=True,
+            signed_agreement__status=SignedAgreement.StatusChoices.ACTIVE,
+        )
+        return cdsa
