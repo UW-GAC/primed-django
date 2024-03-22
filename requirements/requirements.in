@@ -69,3 +69,4 @@ sqlparse>=0.4.4
 
 # Dynamic settings
 django-constance
+django-picklefield  # Required by django-constance for database backend
