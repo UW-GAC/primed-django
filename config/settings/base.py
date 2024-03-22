@@ -207,6 +207,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
+                "constance.context_processors.config",
                 "primed.utils.context_processors.settings_context",
             ],
         },
@@ -373,8 +374,9 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 # django-constance
 # ------------------------------------------------------------------------------
 CONSTANCE_CONFIG = {
-    "SITE_ANNOUNCEMENT": ("", "Site-wide announcement message", str),
+    "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
 }
+
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
 # CONSTANCE_DATABASE_CACHE_BACKEND = "default"

@@ -111,18 +111,25 @@
     <main class="flex-shrink-0">
       <div class="container">
 
-    {% if request.user.is_authenticated and not request.user.account %}
-    <div class="alert alert-warning" role="alert">
-      <i class="bi bi-exclamation-triangle-fill me-1"></i>
-      You must <a href="{% url 'anvil_consortium_manager:accounts:link' %}">link your AnVIL account</a> before you can access any data on AnVIL.
-    </div>
+      {% if config.ANNOUNCEMENT_TEXT %}
+        <div class="alert alert-info" role="alert" id="alert-announcement">
+          <i class="bi bi-megaphone-fill me-1"></i>
+          {{ config.ANNOUNCEMENT_TEXT }}
+        </div>
+      {% endif %}
+
+      {% if request.user.is_authenticated and not request.user.account %}
+      <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        You must <a href="{% url 'anvil_consortium_manager:accounts:link' %}">link your AnVIL account</a> before you can access any data on AnVIL.
+      </div>
     {% endif %}
 
     {% if messages %}
-    {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
-    {% endfor %}
-{% endif %}
+      {% for message in messages %}
+          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+      {% endfor %}
+    {% endif %}
 
     {% block extra_navbar %}
     {% endblock %}
