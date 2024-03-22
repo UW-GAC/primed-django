@@ -3,6 +3,7 @@ import json
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.tests.factories import AccountFactory
 from anvil_consortium_manager.views import AccountList
+from constance.test import override_config
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -133,6 +134,12 @@ class HomeTest(TestCase):
             response, reverse("anvil_consortium_manager:accounts:link")
         )
 
+    def test_unauthenticated_user_has_not_linked_account_message(self):
+        response = self.client.get(settings.LOGIN_URL, follow=True)
+        self.assertNotContains(
+            response, reverse("anvil_consortium_manager:accounts:link")
+        )
+
     def test_staff_view_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
@@ -162,6 +169,24 @@ class HomeTest(TestCase):
         self.assertNotContains(
             response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
         )
+
+    def test_site_announcement_no_text(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(response, """id="alert-announcement""")
+
+    @override_config(ANNOUNCEMENT_TEXT="This is a test announcement")
+    def test_site_announcement_text(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, """id="alert-announcement""")
+        self.assertContains(response, "This is a test announcement")
+
+    @override_config(ANNOUNCEMENT_TEXT="This is a test announcement")
+    def test_site_announcement_text_unauthenticated_user(self):
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertContains(response, """id="alert-announcement""")
+        self.assertContains(response, "This is a test announcement")
 
 
 class StudyDetailTest(TestCase):

@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -40,6 +42,12 @@ class DUOFields(models.Model):
         return "http://purl.obolibrary.org/obo/{}".format(
             self.identifier.replace("DUO:", "DUO_")
         )
+
+    def get_short_definition(self):
+        text = re.sub(r"This .+? indicates that ", "", self.definition)
+        # Only capitalize the first letter - keep the remaining text as is.
+        text = text[0].capitalize() + text[1:]
+        return text
 
 
 class DataUsePermission(DUOFields, TreeNode):

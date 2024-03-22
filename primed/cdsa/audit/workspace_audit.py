@@ -153,7 +153,7 @@ class WorkspaceAccessAudit(PRIMEDAudit):
             child_group=self.anvil_cdsa_group,
         ).exists()
         primary_qs = models.DataAffiliateAgreement.objects.filter(
-            study=workspace.study, signed_agreement__is_primary=True
+            study=workspace.study, is_primary=True
         )
         primary_exists = primary_qs.exists()
 
