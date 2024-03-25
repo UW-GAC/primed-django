@@ -32,6 +32,23 @@ repos:
     hooks:
       - id: gitleaks
 
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.4.1
+    hooks:
+      - id: pip-compile
+        stages: [pre-merge-commit]
+        name: pip-compile requirements.in
+        files: ^requirements/requirements\.(in|txt)$
+      - id: pip-compile
+        stages: [pre-merge-commit]
+        name: pip-compile test-requirements.in
+        args: [test-requirements.in]
+        files: ^requirements/test-requirements\.(in|txt)$
+      - id: pip-compile
+        stages: [pre-merge-commit]
+        name: pip-compile dev-requirements.in
+        args: [dev-requirements.in]
+        files: ^requirements/dev-requirements\.(in|txt)$
 
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
