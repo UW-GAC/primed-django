@@ -4,6 +4,11 @@ from io import StringIO
 
 import responses
 from allauth.socialaccount.models import SocialAccount
+from anvil_consortium_manager.models import (
+    Account,
+    GroupAccountMembership,
+    ManagedGroup,
+)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -11,13 +16,7 @@ from django.test import TestCase
 from marshmallow_jsonapi import Schema, fields
 
 from primed.drupal_oauth_provider.provider import CustomProvider
-from primed.users.audit import (
-    audit_drupal_study_sites,
-    drupal_data_study_site_audit,
-    drupal_data_user_audit,
-    get_drupal_json_api,
-    get_study_sites,
-)
+from primed.users import audit
 from primed.users.models import StudySite
 
 
@@ -169,7 +168,7 @@ class TestUserDataAudit(TestCase):
         user_data = UserSchema(
             include_data=("field_study_site_or_center",), many=True
         ).dump(TEST_USER_DATA)
-        print(f"USER DATA: {user_data}")
+
         responses.get(
             url=url_path,
             body=json.dumps(user_data),
@@ -181,7 +180,7 @@ class TestUserDataAudit(TestCase):
 
     def get_fake_json_api(self):
         self.add_fake_token_response()
-        return get_drupal_json_api()
+        return audit.get_drupal_json_api()
 
     @responses.activate
     def test_get_json_api(self):
@@ -195,7 +194,7 @@ class TestUserDataAudit(TestCase):
     def test_get_study_sites(self):
         json_api = self.get_fake_json_api()
         self.add_fake_study_sites_response()
-        study_sites = get_study_sites(json_api=json_api)
+        study_sites = audit.get_study_sites(json_api=json_api)
 
         for test_study_site in TEST_STUDY_SITE_DATA:
 
@@ -214,37 +213,35 @@ class TestUserDataAudit(TestCase):
 
     @responses.activate
     def test_audit_study_sites_no_update(self):
-        json_api = self.get_fake_json_api()
+        self.get_fake_json_api()
         self.add_fake_study_sites_response()
-        study_sites = get_study_sites(json_api=json_api)
-        audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, apply_changes=False
-        )
-        assert audit_results.encountered_issues() is False
-        assert StudySite.objects.all().count() == 0
-
-    @responses.activate
-    def test_full_site_audit(self):
-        self.add_fake_token_response()
-        self.add_fake_study_sites_response()
-        results = drupal_data_study_site_audit()
-        assert results.encountered_issues() is False
+        site_audit = audit.SiteAudit(apply_changes=False)
+        site_audit.run_audit()
+        self.assertFalse(site_audit.ok())
+        self.assertEqual(len(site_audit.errors), 0)
+        self.assertEqual(len(site_audit.needs_action), 2)
+        self.assertEqual(StudySite.objects.all().count(), 0)
 
     @responses.activate
     def test_audit_study_sites_with_new_sites(self):
-        json_api = self.get_fake_json_api()
+        self.get_fake_json_api()
         self.add_fake_study_sites_response()
-        study_sites = get_study_sites(json_api=json_api)
-        audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, apply_changes=True
+        site_audit = audit.SiteAudit(apply_changes=True)
+        site_audit.run_audit()
+        self.assertFalse(site_audit.ok())
+        self.assertEqual(len(site_audit.needs_action), 2)
+        self.assertEqual(StudySite.objects.all().count(), 2)
+
+        assert (
+            StudySite.objects.filter(
+                short_name__in=[
+                    TEST_STUDY_SITE_DATA[0].title,
+                    TEST_STUDY_SITE_DATA[1].title,
+                ]
+            ).count()
+            == 2
         )
-        assert audit_results.encountered_issues() is False
-        assert audit_results.count_new_rows() == 2
-        assert StudySite.objects.all().count() == 2
-        assert StudySite.objects.filter(
-            short_name=TEST_STUDY_SITE_DATA[0].title
-        ).exists()
-        self.assertRegex(audit_results.detailed_results(), "^new site")
+        assert len(site_audit.get_needs_action_table().rows) == 2
 
     @responses.activate
     def test_audit_study_sites_with_site_update(self):
@@ -253,16 +250,21 @@ class TestUserDataAudit(TestCase):
             short_name="WrongShortName",
             full_name="WrongTitle",
         )
-        json_api = self.get_fake_json_api()
-        self.add_fake_study_sites_response()
-        study_sites = get_study_sites(json_api=json_api)
-        audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, apply_changes=True
+        StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[1].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[1].title,
+            full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
         )
-        assert audit_results.encountered_issues() is False
-        assert audit_results.count_new_rows() == 1
-        assert audit_results.count_update_rows() == 1
-        assert StudySite.objects.all().count() == 2
+        self.get_fake_json_api()
+        self.add_fake_study_sites_response()
+        site_audit = audit.SiteAudit(apply_changes=True)
+        site_audit.run_audit()
+        self.assertFalse(site_audit.ok())
+        self.assertEqual(len(site_audit.needs_action), 1)
+        self.assertEqual(len(site_audit.verified), 1)
+        self.assertEqual(len(site_audit.errors), 0)
+        self.assertEqual(StudySite.objects.all().count(), 2)
+
         first_test_ss = StudySite.objects.get(short_name=TEST_STUDY_SITE_DATA[0].title)
         # did we update the long name
         assert first_test_ss.full_name == TEST_STUDY_SITE_DATA[0].field_long_name
@@ -273,13 +275,14 @@ class TestUserDataAudit(TestCase):
         StudySite.objects.create(
             drupal_node_id=99, short_name="ExtraSite", full_name="ExtraSiteLong"
         )
-        json_api = self.get_fake_json_api()
+        self.get_fake_json_api()
         self.add_fake_study_sites_response()
-        study_sites = get_study_sites(json_api=json_api)
-        audit_results = audit_drupal_study_sites(
-            study_sites=study_sites, apply_changes=True
-        )
-        assert audit_results.encountered_issues() is True
+        site_audit = audit.SiteAudit(apply_changes=True)
+        site_audit.run_audit()
+        self.assertFalse(site_audit.ok())
+        self.assertEqual(len(site_audit.errors), 1)
+        self.assertEqual(StudySite.objects.all().count(), 3)
+        assert len(site_audit.get_errors_table().rows) == 1
 
     @responses.activate
     def test_full_user_audit(self):
@@ -291,12 +294,11 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].title,
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
-        results = drupal_data_user_audit(apply_changes=True)
+        user_audit = audit.UserAudit(apply_changes=True)
+        user_audit.run_audit()
 
-        assert results.encountered_issues() is False
-        assert results.count_new_rows() == 1
-        assert results.count_update_rows() == 0
-        assert results.count_removal_rows() == 0
+        self.assertFalse(user_audit.ok())
+        self.assertEqual(len(user_audit.needs_action), 1)
 
         users = get_user_model().objects.all()
         assert users.count() == 1
@@ -308,7 +310,6 @@ class TestUserDataAudit(TestCase):
             users.first().study_sites.first().short_name
             == TEST_STUDY_SITE_DATA[0].title
         )
-        self.assertRegex(results.detailed_results(), "^new user")
 
     @responses.activate
     def test_full_user_audit_check_only(self):
@@ -320,12 +321,10 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].title,
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
-        results = drupal_data_user_audit(apply_changes=False)
-
-        assert results.encountered_issues() is False
-        assert results.count_new_rows() == 1
-        assert results.count_update_rows() == 0
-        assert results.count_removal_rows() == 0
+        user_audit = audit.UserAudit(apply_changes=False)
+        user_audit.run_audit()
+        self.assertFalse(user_audit.ok())
+        self.assertEqual(len(user_audit.needs_action), 1)
 
         # verify we did not actually create a user
         users = get_user_model().objects.all()
@@ -358,11 +357,11 @@ class TestUserDataAudit(TestCase):
             uid=TEST_USER_DATA[0].drupal_internal__uid,
             provider=CustomProvider.id,
         )
-        results = drupal_data_user_audit(apply_changes=True)
-        assert results.encountered_issues() is True
-        issue_rows = results.rows_by_result_type(results.RESULT_TYPE_ISSUE)
-        assert len(issue_rows) == 1
-        assert issue_rows[0]["issue_type"] == results.ISSUE_TYPE_USER_REMOVED_FROM_SITE
+        user_audit = audit.UserAudit(apply_changes=False)
+        user_audit.run_audit()
+        self.assertFalse(user_audit.ok())
+        self.assertEqual(len(user_audit.errors), 1)
+
         new_user.refresh_from_db()
         # assert we did not remove the site
         assert ss1 in new_user.study_sites.all()
@@ -395,9 +394,9 @@ class TestUserDataAudit(TestCase):
             provider=CustomProvider.id,
         )
         with self.settings(DRUPAL_DATA_AUDIT_REMOVE_USER_SITES=True):
-            results = drupal_data_user_audit(apply_changes=True)
-            assert results.encountered_issues() is False
-
+            user_audit = audit.UserAudit(apply_changes=True)
+            user_audit.run_audit()
+            self.assertFalse(user_audit.ok())
             new_user.refresh_from_db()
             # assert we did remove the site
             assert ss1 not in new_user.study_sites.all()
@@ -428,15 +427,13 @@ class TestUserDataAudit(TestCase):
             uid=TEST_USER_DATA[0].drupal_internal__uid,
             provider=CustomProvider.id,
         )
-        results = drupal_data_user_audit(apply_changes=True)
+        user_audit = audit.UserAudit(apply_changes=True)
+        user_audit.run_audit()
+        self.assertFalse(user_audit.ok())
         new_user.refresh_from_db()
 
-        assert new_user.name == drupal_fullname
-        assert results.encountered_issues() is False
-        assert results.count_new_rows() == 0
-        assert results.count_update_rows() == 1
-        assert results.count_removal_rows() == 0
-        self.assertRegex(results.detailed_results(), "^update user")
+        self.assertEqual(new_user.name, drupal_fullname)
+        self.assertEqual(len(user_audit.needs_action), 1)
 
     # test user removal
     @responses.activate
@@ -458,21 +455,12 @@ class TestUserDataAudit(TestCase):
             uid=999,
             provider=CustomProvider.id,
         )
-        results = drupal_data_user_audit(apply_changes=True)
+        user_audit = audit.UserAudit(apply_changes=True)
+        user_audit.run_audit()
+        self.assertFalse(user_audit.ok())
 
         new_user.refresh_from_db()
-        assert new_user.is_active is True
-        assert results.encountered_issues() is True
-        assert results.count_new_rows() == 1
-        assert results.count_update_rows() == 0
-        assert results.count_removal_rows() == 0
-        assert results.count_issue_rows() == 1
-        issue_rows = results.rows_by_result_type(results.RESULT_TYPE_ISSUE)
-        assert len(issue_rows) == 1
-        assert issue_rows[0]["issue_type"] == results.ISSUE_TYPE_USER_INACTIVE
-        # assert not empty
-        assert results.detailed_issues()
-        self.assertRegex(str(results), "Issues: 1")
+        self.assertTrue(new_user.is_active)
 
     # test user removal
     @responses.activate
@@ -494,26 +482,44 @@ class TestUserDataAudit(TestCase):
             uid=999,
             provider=CustomProvider.id,
         )
-        with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):
-            results = drupal_data_user_audit(apply_changes=True)
+        new_anvil_account = Account.objects.create(
+            user=new_user,
+            is_service_account=False,
+        )
+        new_anvil_managed_group = ManagedGroup.objects.create(
+            name="testgroup",
+            email="testgroup@testgroup.org",
+        )
+        GroupAccountMembership.objects.create(
+            group=new_anvil_managed_group,
+            account=new_anvil_account,
+            role=GroupAccountMembership.MEMBER,
+        )
 
+        with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):
+            user_audit = audit.UserAudit(apply_changes=True)
+            user_audit.run_audit()
+            self.assertFalse(user_audit.ok())
+            self.assertEqual(len(user_audit.errors), 1)
+            self.assertEqual(user_audit.errors[0].anvil_account, new_anvil_account)
+            self.assertIn(
+                "InactiveAnvilUser", user_audit.get_errors_table().render_to_text()
+            )
+            self.assertEqual(len(user_audit.needs_action), 2)
             new_user.refresh_from_db()
-            assert new_user.is_active is False
-            assert results.encountered_issues() is False
-            assert results.count_new_rows() == 1
-            assert results.count_update_rows() == 0
-            assert results.count_removal_rows() == 1
+            self.assertFalse(new_user.is_active)
 
     @responses.activate
     def test_sync_drupal_data_command(self):
         self.add_fake_token_response()
         self.add_fake_study_sites_response()
-        self.add_fake_token_response()
-        self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
         call_command("sync-drupal-data", stdout=out)
-        self.assertIn("sync-drupal-data audit complete", out.getvalue())
+        self.assertIn(
+            "SiteAudit summary: status ok: False verified: 0 needs_changes: 2",
+            out.getvalue(),
+        )
 
     @responses.activate
     def test_sync_drupal_data_command_with_issues(self):
@@ -534,9 +540,8 @@ class TestUserDataAudit(TestCase):
         )
         self.add_fake_token_response()
         self.add_fake_study_sites_response()
-        self.add_fake_token_response()
-        self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
         call_command("sync-drupal-data", "--verbose", stdout=out)
-        self.assertIn("sync-drupal-data audit complete", out.getvalue())
+        self.assertIn("SiteAudit summary: status ok: False", out.getvalue())
+        self.assertIn("UserAudit summary: status ok: False", out.getvalue())

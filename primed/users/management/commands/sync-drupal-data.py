@@ -1,8 +1,9 @@
 import logging
 
 from django.core.management.base import BaseCommand
+from django.utils.timezone import localtime
 
-from primed.users.audit import drupal_data_study_site_audit, drupal_data_user_audit
+from primed.users import audit
 
 logger = logging.getLogger(__name__)
 
@@ -39,44 +40,39 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         apply_changes = options.get("update")
         be_verbose = options.get("verbose")
-        notify_type = options.get("notify")
+        # notify_type = options.get("notify")
+        notification_content = f"Drupal data audit start: Applying Changes: {apply_changes} Start time: {localtime()}\n"
+        site_audit = audit.SiteAudit(apply_changes=apply_changes)
+        site_audit.run_audit()
 
-        site_audit_results = drupal_data_study_site_audit(apply_changes=apply_changes)
-        logger.info(
-            f"Site Audit (Update: {apply_changes}) Results summary: {site_audit_results}"
+        notification_content += (
+            f"SiteAudit summary: status ok: {site_audit.ok()} verified: {len(site_audit.verified)} "
+            f"needs_changes: {len(site_audit.needs_action)} errors: {len(site_audit.errors)}\n"
         )
-        detailed_site_audit_results = site_audit_results.detailed_results()
-
-        user_audit_results = drupal_data_user_audit(apply_changes=apply_changes)
-        logger.info(
-            f"User Audit (Update: {apply_changes}) Results summary: {user_audit_results}"
-        )
-        detailed_user_audit_results = user_audit_results.detailed_results()
+        if site_audit.needs_action:
+            notification_content += "Sites that need syncing:\n"
+            notification_content += site_audit.get_needs_action_table().render_to_text()
+        if site_audit.errors:
+            notification_content += "Sites requiring intervention:\n"
+            notification_content += site_audit.get_errors_table().render_to_text()
 
         if be_verbose:
-            logger.debug(
-                f"User Audit Results:\n{user_audit_results.detailed_results()}"
-            )
-            logger.debug(
-                f"Study Site Audit Results:\n{site_audit_results.detailed_results()}"
-            )
+            notification_content += site_audit.get_verified_table().render_to_text()
 
-        notification_content = ""
-        if user_audit_results.encountered_issues():
-            notification_content += "Encountered user audit issues:\n"
-            notification_content += user_audit_results.detailed_issues()
-        else:
-            notification_content += "No user audit issues.\n"
-
-        if site_audit_results.encountered_issues():
-            notification_content += "Encountered site audit issues:\n"
-            notification_content += site_audit_results.detailed_issues()
-        else:
-            notification_content += "No site audit issues.\n"
-
-        if notify_type == self.NOTIFY_ALL:
-            notification_content += detailed_site_audit_results
-            notification_content += detailed_user_audit_results
-        notification_content += "sync-drupal-data audit complete\n"
+        user_audit = audit.UserAudit(apply_changes=apply_changes)
+        user_audit.run_audit()
+        notification_content += (
+            "--------------------------------------\n"
+            f"UserAudit summary: status ok: {user_audit.ok()} verified: {len(user_audit.verified)} "
+            f"needs_changes: {len(user_audit.needs_action)} errors: {len(user_audit.errors)}\n"
+        )
+        if user_audit.needs_action:
+            notification_content += "Users that need syncing:\n"
+            notification_content += user_audit.get_needs_action_table().render_to_text()
+        if user_audit.errors:
+            notification_content += "Users that need intervention:\n"
+            notification_content += user_audit.get_errors_table().render_to_text()
+        if be_verbose:
+            notification_content += user_audit.get_verified_table().render_to_text()
 
         self.stdout.write(notification_content)
