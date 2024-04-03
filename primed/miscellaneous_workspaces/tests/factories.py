@@ -1,8 +1,5 @@
-import random
-
-from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
-from factory import Faker, SubFactory, lazy_attribute
+from factory import Faker, SubFactory
 from factory.django import DjangoModelFactory
 
 from primed.users.tests.factories import UserFactory
@@ -53,18 +50,10 @@ class TemplateWorkspaceFactory(DjangoModelFactory):
         WorkspaceFactory,
         workspace_type=adapters.TemplateWorkspaceAdapter().get_type(),
     )
+    intended_usage = Faker("sentence")
 
     class Meta:
         model = models.TemplateWorkspace
-
-    @lazy_attribute
-    def intended_workspace_type(self):
-        """Select a random registered workspace_type other than template."""
-        registered_types = list(
-            workspace_adapter_registry.get_registered_adapters().keys()
-        )
-        registered_types.remove(adapters.TemplateWorkspaceAdapter().get_type())
-        return random.choice(registered_types)
 
 
 class OpenAccessWorkspaceFactory(DjangoModelFactory):

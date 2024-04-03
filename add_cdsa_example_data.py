@@ -20,6 +20,11 @@ from primed.users.tests.factories import UserFactory
 # Load duos
 call_command("load_duo")
 
+# create the CDSA auth group
+cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
+# Add PRIMED ADMINS group
+cc_admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+
 # Create major versions
 major_version = factories.AgreementMajorVersionFactory.create(version=1)
 
@@ -35,9 +40,6 @@ v11 = factories.AgreementVersionFactory.create(
 dup = DataUsePermission.objects.get(abbreviation="GRU")
 dum = DataUseModifier.objects.get(abbreviation="NPU")
 
-# create the CDSA auth group
-cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
-
 # Create some study sites.
 StudySiteFactory.create(short_name="CC", full_name="Coordinating Center")
 StudySiteFactory.create(short_name="CARDINAL", full_name="CARDINAL")
@@ -51,7 +53,7 @@ cdsa_1001 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Ken Rice"),
     signed_agreement__signing_institution="UW",
     signed_agreement__representative_role="Contact PI",
-    signed_agreement__is_primary=True,
+    is_primary=True,
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CC"),
 )
@@ -64,7 +66,7 @@ cdsa_1002 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Sally Adebamowo"),
     signed_agreement__signing_institution="UM",
     signed_agreement__representative_role="Contact PI",
-    signed_agreement__is_primary=True,
+    is_primary=True,
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
@@ -77,7 +79,7 @@ cdsa_1003 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Bamidele Tayo"),
     signed_agreement__signing_institution="Loyola",
     signed_agreement__representative_role="Co-PI",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
@@ -90,7 +92,7 @@ cdsa_1004 = factories.MemberAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Brackie Mitchell"),
     signed_agreement__signing_institution="UM",
     signed_agreement__representative_role="Co-I",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     signed_agreement__version=v11,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
@@ -118,6 +120,7 @@ cdsa_1006 = factories.DataAffiliateAgreementFactory.create(
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
     additional_limitations="This data can only be used for testing the app.",
+    requires_study_review=True,
 )
 GroupGroupMembershipFactory.create(
     parent_group=cdsa_group, child_group=cdsa_1006.signed_agreement.anvil_access_group
@@ -128,7 +131,7 @@ cdsa_1007 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Wendy"),
     signed_agreement__signing_institution="JHU",
     signed_agreement__representative_role="Field Center PI",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
 )
@@ -141,7 +144,7 @@ cdsa_1008 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__representative=UserFactory.create(name="Jerry"),
     signed_agreement__signing_institution="Lundquist",
     signed_agreement__representative_role="Analysis Center PI",
-    signed_agreement__is_primary=False,
+    is_primary=False,
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
 )
@@ -227,3 +230,14 @@ cdsa_workspace_2 = factories.CDSAWorkspaceFactory.create(
     additional_limitations="Additional limitations for workspace.",
 )
 cdsa_workspace_2.data_use_modifiers.add(dum)
+
+
+# Add a workspace with no primary cdsa.
+cdsa_workspace_3 = factories.CDSAWorkspaceFactory.create(
+    workspace__billing_project__name="demo-primed-cdsa",
+    workspace__name="DEMO_PRIMED_CDSA_ARIC_1",
+    study=Study.objects.create(
+        short_name="ARIC", full_name="Atherosclerosis Risk in Communities"
+    ),
+    data_use_permission=dup,
+)

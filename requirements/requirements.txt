@@ -58,6 +58,7 @@ django==4.2.11
     #   django-filter
     #   django-htmx
     #   django-model-utils
+    #   django-picklefield
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
@@ -65,6 +66,8 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
+django-constance==3.1.0
+    # via -r requirements/requirements.in
 django-crispy-forms==2.1
     # via
     #   -r requirements/requirements.in
@@ -88,6 +91,10 @@ django-maintenance-mode==0.21.1
     # via -r requirements/requirements.in
 django-model-utils==4.4.0
     # via -r requirements/requirements.in
+django-picklefield==3.1
+    # via
+    #   -r requirements/requirements.in
+    #   django-constance
 django-simple-history==3.5.0
     # via
     #   -r requirements/requirements.in
@@ -154,9 +161,7 @@ pyasn1-modules==0.3.0
 pycparser==2.21
     # via cffi
 pyjwt[crypto]==2.4.0
-    # via
-    #   django-allauth
-    #   pyjwt
+    # via django-allauth
 pyparsing==3.1.1
     # via packaging
 pyproject-hooks==1.0.0
@@ -201,7 +206,7 @@ sqlparse==0.4.4
     # via
     #   -r requirements/requirements.in
     #   django
-tablib==3.5.0
+tablib==3.6.0
     # via -r requirements/requirements.in
 tenacity==8.2.1
     # via

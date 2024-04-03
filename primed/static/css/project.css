@@ -134,7 +134,6 @@ h3, .h3 {
 }
 
 h4, .h4 {
-  font-size: calc(1.275rem + 0.3vw);
 }
 
 @media (min-width: 1200px) {
@@ -12012,9 +12011,6 @@ a.navbar-brand:hover {
   background-color: unset;
 }
 
-.navbar {
-  min-height: 132px;
-}
 
 .navbar-brand {
   height: 100px;
