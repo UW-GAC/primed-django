@@ -303,7 +303,6 @@ class CDSAWorkspaceUserTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column(linkify=True)
-    billing_project = tables.Column()
     cdsaworkspace__data_use_permission__abbreviation = tables.Column(
         verbose_name="DUO permission",
         linkify=lambda record: record.cdsaworkspace.data_use_permission.get_absolute_url(),
@@ -329,7 +328,6 @@ class CDSAWorkspaceUserTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "billing_project",
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",

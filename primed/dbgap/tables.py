@@ -78,7 +78,6 @@ class dbGaPWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column()
     dbgap_accession = dbGaPAccessionColumn(
         accessor="dbgapworkspace__get_dbgap_accession",
         dbgap_link_accessor="dbgapworkspace__get_dbgap_link",
@@ -100,7 +99,6 @@ class dbGaPWorkspaceUserTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "billing_project",
             "dbgap_accession",
             "dbgapworkspace__dbgap_consent_abbreviation",
             "dbgapworkspace__gsr_restricted",

@@ -13,7 +13,6 @@ class OpenAccessWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column()
     is_shared = WorkspaceSharedWithConsortiumColumn()
     openaccessworkspace__studies = tables.ManyToManyColumn(
         linkify_item=True,
@@ -23,7 +22,6 @@ class OpenAccessWorkspaceUserTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "billing_project",
             "openaccessworkspace__studies",
             "is_shared",
         )

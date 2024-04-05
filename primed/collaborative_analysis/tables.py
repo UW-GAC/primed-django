@@ -6,7 +6,6 @@ class CollaborativeAnalysisWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with CollaborativeAnalysisWorkspace data."""
 
     name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column()
     number_source_workspaces = tables.columns.Column(
         accessor="pk",
         verbose_name="Number of source workspaces",
@@ -17,7 +16,6 @@ class CollaborativeAnalysisWorkspaceUserTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "billing_project",
             "collaborativeanalysisworkspace__custodian",
             "number_source_workspaces",
         )
