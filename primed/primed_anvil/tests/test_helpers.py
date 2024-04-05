@@ -59,7 +59,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_one_workspace_one_study_not_shared_with_one_available_data(self):
+    def test_one_dbgap_workspace_one_study_not_shared_with_one_available_data(self):
         available_data = AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
         dbgap_workspace = dbGaPWorkspaceFactory.create(
@@ -79,7 +79,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], True)
 
-    def test_one_workspace_one_study_not_shared_with_two_available_data(self):
+    def test_one_dbgap_workspace_one_study_not_shared_with_two_available_data(self):
         available_data_1 = AvailableDataFactory.create(name="Foo")
         available_data_2 = AvailableDataFactory.create(name="Bar")
         study = StudyFactory.create(short_name="TEST")
@@ -101,7 +101,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], True)
 
-    def test_one_workspace_two_studies_not_shared_no_available_data(self):
+    def test_one_dbgap_workspace_two_studies_not_shared_no_available_data(self):
         AvailableDataFactory.create(name="Foo")
         study_1 = StudyFactory.create(short_name="TEST")
         study_2 = StudyFactory.create(short_name="Other")
@@ -119,7 +119,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_one_workspace_one_study_shared_no_available_data(self):
+    def test_one_dbgap_workspace_one_study_shared_no_available_data(self):
         AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
         dbgap_workspace = dbGaPWorkspaceFactory.create(
@@ -141,7 +141,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_two_workspaces_one_study(self):
+    def test_two_dbgap_workspaces_one_study(self):
         AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
         dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
@@ -159,7 +159,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_two_workspaces_one_study_one_shared(self):
+    def test_two_dbgap_workspaces_one_study_one_shared(self):
         available_data_1 = AvailableDataFactory.create(name="Foo")
         available_data_2 = AvailableDataFactory.create(name="Bar")
         study = StudyFactory.create(short_name="TEST")
@@ -197,7 +197,7 @@ class GetSummaryTableDataTest(TestCase):
             res,
         )
 
-    def test_two_workspaces_multiple_studies(self):
+    def test_two_dbgap_workspaces_multiple_studies(self):
         AvailableDataFactory.create(name="Foo")
         study_1 = StudyFactory.create(short_name="TEST")
         study_2 = StudyFactory.create(short_name="Other")
