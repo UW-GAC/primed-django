@@ -2,7 +2,7 @@ from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 from anvil_consortium_manager.models import Workspace
 
-from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 
 from . import forms, models, tables
 
@@ -25,7 +25,7 @@ class dbGaPWorkspaceAdapter(BaseWorkspaceAdapter):
         associated_data_prep = Workspace.objects.filter(
             dataprepworkspace__target_workspace=workspace
         )
-        extra_context["associated_data_prep_workspaces"] = DataPrepWorkspaceTable(
+        extra_context["associated_data_prep_workspaces"] = DataPrepWorkspaceUserTable(
             associated_data_prep
         )
         extra_context["data_prep_active"] = associated_data_prep.filter(

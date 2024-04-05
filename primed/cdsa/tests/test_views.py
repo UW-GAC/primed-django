@@ -30,7 +30,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
@@ -7443,7 +7443,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertIn("associated_data_prep_workspaces", response.context_data)
         self.assertIsInstance(
             response.context_data["associated_data_prep_workspaces"],
-            DataPrepWorkspaceTable,
+            DataPrepWorkspaceUserTable,
         )
 
     def test_only_show_one_associated_data_prep_workspace(self):

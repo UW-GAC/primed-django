@@ -93,8 +93,8 @@ class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
     type = "data_prep"
     name = "Data prep workspace"
     description = "Workspaces used to prepare data for sharing or update data that is already shared"
-    list_table_class_staff_view = tables.DataPrepWorkspaceTable
-    list_table_class_view = tables.DataPrepWorkspaceTable
+    list_table_class_staff_view = tables.DataPrepWorkspaceStaffTable
+    list_table_class_view = tables.DataPrepWorkspaceUserTable
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.DataPrepWorkspace
     workspace_data_form_class = forms.DataPrepWorkspaceForm
