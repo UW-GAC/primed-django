@@ -9,12 +9,15 @@ from primed.primed_anvil.tables import (
 )
 
 
-class OpenAccessWorkspaceStaffTable(tables.Table):
+class OpenAccessWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column(linkify=True)
+    billing_project = tables.Column()
     is_shared = WorkspaceSharedWithConsortiumColumn()
+    openaccessworkspace__studies = tables.ManyToManyColumn(
+        linkify_item=True,
+    )
 
     class Meta:
         model = Workspace
@@ -27,12 +30,10 @@ class OpenAccessWorkspaceStaffTable(tables.Table):
         order_by = ("name",)
 
 
-class OpenAccessWorkspaceUserTable(tables.Table):
+class OpenAccessWorkspaceStaffTable(OpenAccessWorkspaceUserTable):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
-    name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column()
-    is_shared = WorkspaceSharedWithConsortiumColumn()
+    billing_project = tables.Column(linkify=True)
 
     class Meta:
         model = Workspace
