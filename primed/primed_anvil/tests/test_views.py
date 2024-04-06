@@ -1245,7 +1245,6 @@ class DataSummaryTableTest(TestCase):
         study = StudyFactory.create()
         open_workspace = OpenAccessWorkspaceFactory.create()
         open_workspace.studies.add(study)
-        open_workspace.available_data.add(self.available_data)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
@@ -1255,8 +1254,15 @@ class DataSummaryTableTest(TestCase):
         """dbGaP workspaces are included in the table."""
         # One open access workspace with one study, with one available data type.
         # One dbGaP workspae with two studies.
-        study = StudyFactory.create()
-        dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_cdsa_workspaces(self):
+        """CDSA workspaces are included in the table."""
+        CDSAWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
