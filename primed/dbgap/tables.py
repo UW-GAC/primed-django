@@ -74,11 +74,10 @@ class dbGaPStudyAccessionTable(tables.Table):
         return "phs{0:06d}".format(value)
 
 
-class dbGaPWorkspaceStaffTable(tables.Table):
+class dbGaPWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column(linkify=True)
     dbgap_accession = dbGaPAccessionColumn(
         accessor="dbgapworkspace__get_dbgap_accession",
         dbgap_link_accessor="dbgapworkspace__get_dbgap_link",
@@ -91,15 +90,32 @@ class dbGaPWorkspaceStaffTable(tables.Table):
     dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
         verbose_name="Consent"
     )
+    dbgapworkspace__gsr_restricted = BooleanIconColumn(
+        orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
+    )
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "dbgap_accession",
+            "dbgapworkspace__dbgap_consent_abbreviation",
+            "dbgapworkspace__gsr_restricted",
+            "is_shared",
+        )
+        order_by = ("name",)
+
+
+class dbGaPWorkspaceStaffTable(dbGaPWorkspaceUserTable):
+    """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
+
+    billing_project = tables.Column(linkify=True)
     number_approved_dars = tables.columns.Column(
         accessor="pk",
         verbose_name="Approved DARs",
         orderable=False,
     )
-    dbgapworkspace__gsr_restricted = BooleanIconColumn(
-        orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
-    )
-    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace
@@ -121,39 +137,6 @@ class dbGaPWorkspaceStaffTable(tables.Table):
             .count()
         )
         return n
-
-
-class dbGaPWorkspaceUserTable(tables.Table):
-    """Class to render a table of Workspace objects with dbGaPWorkspace workspace data."""
-
-    name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column()
-    dbgap_accession = dbGaPAccessionColumn(
-        accessor="dbgapworkspace__get_dbgap_accession",
-        dbgap_link_accessor="dbgapworkspace__get_dbgap_link",
-        order_by=(
-            "dbgapworkspace__dbgap_study_accession__dbgap_phs",
-            "dbgapworkspace__dbgap_version",
-            "dbgapworkspace__dbgap_participant_set",
-        ),
-    )
-    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
-        verbose_name="Consent"
-    )
-    dbgapworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
-    is_shared = WorkspaceSharedWithConsortiumColumn()
-
-    class Meta:
-        model = Workspace
-        fields = (
-            "name",
-            "billing_project",
-            "dbgap_accession",
-            "dbgapworkspace__dbgap_consent_abbreviation",
-            "dbgapworkspace__gsr_restricted",
-            "is_shared",
-        )
-        order_by = ("name",)
 
 
 class dbGaPApplicationTable(tables.Table):

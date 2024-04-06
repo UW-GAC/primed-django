@@ -30,7 +30,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
@@ -7436,6 +7436,29 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(response, modifiers[0].abbreviation)
         self.assertContains(response, modifiers[1].abbreviation)
 
+    def test_associated_data_prep_view_user(self):
+        """View users do not see the associated data prep section"""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+        obj = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertNotContains(response, "Associated data prep workspaces")
+
+    def test_associated_data_prep_staff_view_user(self):
+        """Staff view users do see the associated data prep section."""
+        obj = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertContains(response, "Associated data prep workspaces")
+
     def test_associated_data_prep_workspaces_context_exists(self):
         obj = factories.CDSAWorkspaceFactory.create()
         self.client.force_login(self.user)
@@ -7443,7 +7466,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertIn("associated_data_prep_workspaces", response.context_data)
         self.assertIsInstance(
             response.context_data["associated_data_prep_workspaces"],
-            DataPrepWorkspaceTable,
+            DataPrepWorkspaceUserTable,
         )
 
     def test_only_show_one_associated_data_prep_workspace(self):
