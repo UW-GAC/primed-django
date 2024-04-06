@@ -2,6 +2,7 @@ import pandas as pd
 from anvil_consortium_manager.models import WorkspaceGroupSharing
 from django.db.models import Exists, F, OuterRef, Value
 
+from primed.cdsa.models import CDSAWorkspace
 from primed.dbgap.models import dbGaPWorkspace
 from primed.miscellaneous_workspaces.models import OpenAccessWorkspace
 
@@ -34,7 +35,7 @@ def get_summary_table_data():
         "access_mechanism",
         # Rename columns to have the same names.
         workspace_name=F("workspace__name"),
-        study=F("dbgap_study_accession__studies__short_name"),
+        study_name=F("dbgap_study_accession__studies__short_name"),
         data=F("available_data__name"),
     )
     df_dbgap = pd.DataFrame.from_dict(dbgap)
@@ -48,10 +49,24 @@ def get_summary_table_data():
         "access_mechanism",
         # Rename columns to have the same names.
         workspace_name=F("workspace__name"),
-        study=F("studies__short_name"),
+        study_name=F("studies__short_name"),
         data=F("available_data__name"),
     )
     df_open = pd.DataFrame.from_dict(open)
+
+    # Query for CDSAWorkspaces.
+    cdsa = CDSAWorkspace.objects.annotate(
+        access_mechanism=Value("CDSA"),
+        is_shared=Exists(shared),
+    ).values(
+        "is_shared",
+        "access_mechanism",
+        # Rename columns to have the same names.
+        workspace_name=F("workspace__name"),
+        study_name=F("study__short_name"),
+        data=F("available_data__name"),
+    )
+    df_cdsa = pd.DataFrame.from_dict(cdsa)
 
     # This union may not work with MySQL < 10.3:
     # https://code.djangoproject.com/ticket/31445
@@ -65,20 +80,20 @@ def get_summary_table_data():
     # df = pd.DataFrame.from_dict(qs)
 
     # Instead combine in pandas.
-    df = pd.concat([df_dbgap, df_open])
+    df = pd.concat([df_cdsa, df_dbgap, df_open])
 
     # If there are no workspaces, return an empty list.
     if df.empty:
         return []
 
     # Sort by specific columns
-    df = df.sort_values(by=["study", "access_mechanism"])
+    df = df.sort_values(by=["study_name", "access_mechanism"])
     # Concatenate multiple studies into a single comma-delimited string.
     df = (
         df.groupby(
             ["workspace_name", "data", "is_shared", "access_mechanism"],
             dropna=False,
-        )["study"]
+        )["study_name"]
         .apply(lambda x: ", ".join(x))
         .reset_index()
         .drop("workspace_name", axis=1)
@@ -90,7 +105,7 @@ def get_summary_table_data():
     data = (
         pd.pivot_table(
             df,
-            index=["study", "is_shared", "access_mechanism"],
+            index=["study_name", "is_shared", "access_mechanism"],
             columns=["data"],
             # set this to len to count the number of workspaces instead of returning a boolean value.
             aggfunc=lambda x: len(x) > 0,
@@ -100,6 +115,7 @@ def get_summary_table_data():
         )
         .rename_axis(columns=None)
         .reset_index()
+        .rename(columns={"study_name": "study", "B": "c"})
     )
     # Remove the dummy "no_data" column if it exists.
     if "no_data" in data:

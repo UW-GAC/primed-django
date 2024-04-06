@@ -1239,3 +1239,31 @@ class DataSummaryTableTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
         self.assertEqual(len(response.context_data["summary_table"].rows), 2)
+
+    def test_includes_open_access_workspaces(self):
+        """Open access workspaces are included in the table."""
+        study = StudyFactory.create()
+        open_workspace = OpenAccessWorkspaceFactory.create()
+        open_workspace.studies.add(study)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_dbgap_workspaces(self):
+        """dbGaP workspaces are included in the table."""
+        # One open access workspace with one study, with one available data type.
+        # One dbGaP workspae with two studies.
+        dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_cdsa_workspaces(self):
+        """CDSA workspaces are included in the table."""
+        CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
