@@ -18,15 +18,31 @@
 
 <div class="card">
   <div class="card-body">
-    <h5 class="card-title">Input for the <code>workspaces</code> field</h5>
+    <h5 class="card-title">Input for the workspaces field</h5>
+    <h6 class="card-subtitle mb-2 text-muted"><button class="btn btn-primary copy-button" copy-target="workspaces-input">Copy input</button></h6>
     <p class="card-text">
-      <code>
-        <pre>{{ workspaces_input }}</pre>
-      </code>
-
+      <pre><code id="workspaces-input">{{ workspaces_input }}</code></pre>
     </p>
   </div>
 </div>
 
 
 {% endblock content %}
+
+
+{% block inline_javascript %}
+<script>
+function copyOnClick(e) {
+  copy_target = e.currentTarget.getAttribute("copy-target")
+	elementToCopy = document.getElementById(copy_target)
+  textToCopy = elementToCopy.innerText
+  navigator.clipboard.writeText(textToCopy)
+  console.log("Copied text:")
+  console.log(textToCopy)
+}
+
+const button = document.querySelector(".copy-button")
+console.log(button.getAttribute("copy-target"))
+button.addEventListener("click", copyOnClick);
+</script>
+{% endblock %}
