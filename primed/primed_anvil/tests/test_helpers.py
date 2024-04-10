@@ -1,10 +1,16 @@
 """Tests of helper functions in the `primed_anvil` app."""
 
-from anvil_consortium_manager.tests.factories import WorkspaceGroupSharingFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceGroupSharingFactory,
+)
 from django.test import TestCase
 
 from primed.cdsa.tests.factories import CDSAWorkspaceFactory
-from primed.dbgap.tests.factories import dbGaPWorkspaceFactory
+from primed.dbgap.tests.factories import (
+    dbGaPStudyAccessionFactory,
+    dbGaPWorkspaceFactory,
+)
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 
@@ -544,3 +550,290 @@ class GetSummaryTableDataTest(TestCase):
             },
             res,
         )
+
+
+class GetWorkspacesForPhenotypeInventoryTest(TestCase):
+    """Tests for the helpers.get_workspaces_for_phenotype_inventory method."""
+
+    def setUp(self):
+        """Set up the test case."""
+        super().setUp()
+        # Create the PRIMED_ALL group.
+        self.primed_all_group = ManagedGroupFactory.create(name="PRIMED_ALL")
+
+    def test_no_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with no workspaces."""
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_dbgap_workspace_not_shared(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        dbGaPWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_dbgap_workspace_shared_one_study(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        study = StudyFactory.create(short_name="TEST")
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            dbgap_study_accession__studies=[study],
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST")
+
+    def test_one_dbgap_workspace_shared_two_studies(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        study_1 = StudyFactory.create(short_name="TEST_2")
+        study_2 = StudyFactory.create(short_name="TEST_1")
+        study_accession = dbGaPStudyAccessionFactory.create(studies=[study_1, study_2])
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            dbgap_study_accession=study_accession,
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST_1, TEST_2")
+
+    def test_two_dbgap_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with two dbGaP workspaces."""
+        study_1 = StudyFactory.create(short_name="TEST 1")
+        workspace_1 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+            dbgap_study_accession__studies=[study_1],
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace_1.workspace, group=self.primed_all_group
+        )
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace_2 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+            dbgap_study_accession__studies=[study_2],
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace_2.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "TEST 1")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
+
+    def test_one_cdsa_workspace_not_shared(self):
+        """get_workspaces_for_phenotype_inventory with one CDSA workspace."""
+        CDSAWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_cdsa_workspace_shared_one_study(self):
+        """get_workspaces_for_phenotype_inventory with one CDSA workspace."""
+        study = StudyFactory.create(short_name="TEST")
+        workspace = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            study=study,
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST")
+
+    def test_two_cdsa_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with two CDSA workspaces."""
+        study_1 = StudyFactory.create(short_name="TEST 1")
+        workspace_1 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+            study=study_1,
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace_1.workspace, group=self.primed_all_group
+        )
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace_2 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+            study=study_2,
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace_2.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "TEST 1")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
+
+    def test_one_open_access_workspace_not_shared(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        OpenAccessWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_open_access_workspace_shared_no_study(self):
+        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "")
+
+    def test_one_open_access_workspace_shared_one_study(self):
+        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        study = StudyFactory.create(short_name="TEST")
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        workspace.studies.add(study)
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST")
+
+    def test_one_open_access_workspace_shared_two_studies(self):
+        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        study_1 = StudyFactory.create(short_name="TEST_2")
+        study_2 = StudyFactory.create(short_name="TEST_1")
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        workspace.studies.add(study_1, study_2)
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST_1, TEST_2")
+
+    def test_two_open_access_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with two Open access workspace."""
+        workspace_1 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace_1.workspace, group=self.primed_all_group
+        )
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace_2 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+        )
+        workspace_2.studies.add(study_2)
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace_2.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
+
+    def test_multiple_workspace_types_same_study(self):
+        study = StudyFactory.create(short_name="TEST")
+        # dbgap
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-dbgap",
+            workspace__name="test-ws-dbgap",
+            dbgap_study_accession__studies=[study],
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        # CDSA
+        workspace = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-cdsa",
+            workspace__name="test-ws-cdsa",
+            study=study,
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        # Open access
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-open",
+            workspace__name="test-ws-open",
+        )
+        workspace.studies.add(study)
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertIn("test-bp-dbgap/test-ws-dbgap", res)
+        self.assertEqual(res["test-bp-dbgap/test-ws-dbgap"], "TEST")
+        self.assertIn("test-bp-cdsa/test-ws-cdsa", res)
+        self.assertEqual(res["test-bp-cdsa/test-ws-cdsa"], "TEST")
+        self.assertIn("test-bp-open/test-ws-open", res)
+        self.assertEqual(res["test-bp-open/test-ws-open"], "TEST")
+
+    def test_multiple_workspace_types_separate_studies(self):
+        study_1 = StudyFactory.create(short_name="TEST 1")
+        # dbgap
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-dbgap",
+            workspace__name="test-ws-dbgap",
+            dbgap_study_accession__studies=[study_1],
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        # CDSA
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-cdsa",
+            workspace__name="test-ws-cdsa",
+            study=study_2,
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        # Open access
+        study_3 = StudyFactory.create(short_name="TEST 3")
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-open",
+            workspace__name="test-ws-open",
+        )
+        workspace.studies.add(study_3)
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all_group
+        )
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertIn("test-bp-dbgap/test-ws-dbgap", res)
+        self.assertEqual(res["test-bp-dbgap/test-ws-dbgap"], "TEST 1")
+        self.assertIn("test-bp-cdsa/test-ws-cdsa", res)
+        self.assertEqual(res["test-bp-cdsa/test-ws-cdsa"], "TEST 2")
+        self.assertIn("test-bp-open/test-ws-open", res)
+        self.assertEqual(res["test-bp-open/test-ws-open"], "TEST 3")
