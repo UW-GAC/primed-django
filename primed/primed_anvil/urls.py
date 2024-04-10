@@ -37,9 +37,21 @@ summary_patterns = (
     "summaries",
 )
 
+utilities_patterns = (
+    [
+        path(
+            "phenotype_inventory_inputs/",
+            views.PhenotypeInventoryInputsView.as_view(),
+            name="phenotype_inventory_inputs",
+        ),
+    ],
+    "utilities",
+)
+
 urlpatterns = [
     path("studies/", include(study_patterns)),
     path("study_sites/", include(study_site_patterns)),
     path("available_data/", include(available_data_patterns)),
     path("summaries/", include(summary_patterns)),
+    path("utilities/", include(utilities_patterns)),
 ]

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load render_table from django_tables2 %}
+
+{% block extra_navbar %}
+  {% include 'anvil_consortium_manager/navbar.html' %}
+{% endblock %}
+
+{% block content %}
+
+<h2>Phenotype inventory workflow</h2>
+
+<p>
+  This page creates the input for the "workspaces" field in the
+  <a href="https://dockstore.org/workflows/github.com/UW-GAC/primed-inventory-workflows/primed_phenotype_inventory:main?tab=info">PRIMED phenotype inventory workflow</a>.
+  Copy the text in the box below and paste it into the "workspaces" when running the workflow.
+</p>
+
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Input for the <code>workspaces</code> field</h5>
+    <p class="card-text">
+      <code>
+        <pre>{{ workspaces_input }}</pre>
+      </code>
+
+    </p>
+  </div>
+</div>
+
+
+{% endblock content %}
