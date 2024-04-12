@@ -299,11 +299,10 @@ class CDSAWorkspaceRecordsTable(tables.Table):
             return "—"
 
 
-class CDSAWorkspaceStaffTable(tables.Table):
+class CDSAWorkspaceUserTable(tables.Table):
     """A table for the CDSAWorkspace model."""
 
     name = tables.Column(linkify=True)
-    billing_project = tables.Column(linkify=True)
     cdsaworkspace__data_use_permission__abbreviation = tables.Column(
         verbose_name="DUO permission",
         linkify=lambda record: record.cdsaworkspace.data_use_permission.get_absolute_url(),
@@ -329,7 +328,6 @@ class CDSAWorkspaceStaffTable(tables.Table):
         model = Workspace
         fields = (
             "name",
-            "billing_project",
             "cdsaworkspace__study",
             "cdsaworkspace__data_use_permission__abbreviation",
             "cdsaworkspace__data_use_modifiers",
@@ -351,27 +349,10 @@ class CDSAWorkspaceStaffTable(tables.Table):
         return mark_safe(f'<i class="bi bi-{icon}" style="color: {color}"></i>')
 
 
-class CDSAWorkspaceUserTable(tables.Table):
+class CDSAWorkspaceStaffTable(CDSAWorkspaceUserTable):
     """A table for the CDSAWorkspace model."""
 
-    name = tables.Column(linkify=True)
-    billing_project = tables.Column()
-    cdsaworkspace__data_use_permission__abbreviation = tables.Column(
-        verbose_name="DUO permission",
-    )
-    cdsaworkspace__study = tables.Column()
-    cdsaworkspace__data_use_modifiers = tables.ManyToManyColumn(
-        transform=lambda x: x.abbreviation,
-        verbose_name="DUO modifiers",
-    )
-    cdsaworkspace__requires_study_review = BooleanIconColumn(
-        verbose_name="Study review required?",
-        orderable=False,
-        true_icon="dash-circle-fill",
-        true_color="#ffc107",
-    )
-    cdsaworkspace__gsr_restricted = BooleanIconColumn(orderable=False)
-    is_shared = WorkspaceSharedWithConsortiumColumn()
+    billing_project = tables.Column(linkify=True)
 
     class Meta:
         model = Workspace
@@ -385,15 +366,3 @@ class CDSAWorkspaceUserTable(tables.Table):
             "cdsaworkspace__gsr_restricted",
         )
         order_by = ("name",)
-
-    def render_cdsaworkspace__requires_study_review(self, record):
-        try:
-            if record.cdsaworkspace.get_primary_cdsa().requires_study_review:
-                icon = "dash-circle-fill"
-                color = "#ffc107"
-            else:
-                return ""
-        except models.DataAffiliateAgreement.DoesNotExist:
-            icon = "question-circle-fill"
-            color = "red"
-        return mark_safe(f'<i class="bi bi-{icon}" style="color: {color}"></i>')
