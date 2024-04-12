@@ -18,3 +18,5 @@ freezegun  # https://github.com/spulec/freezegun
 django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
 # Test coverage.
 coverage
+# Mock json api data
+marshmallow-jsonapi
