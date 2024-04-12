@@ -37,6 +37,9 @@ class UserAuditResultsTable(tables.Table, TextTable):
     note = tables.Column()
     anvil_groups = tables.Column()
 
+    class Meta:
+        orderable = False
+
 
 @dataclass
 class UserAuditResult(PRIMEDAuditResult):
@@ -323,6 +326,9 @@ class SiteAuditResultsTable(tables.Table, TextTable):
 
     def value_local_site_name(self, value):
         return value
+
+    class Meta:
+        orderable = False
 
 
 @dataclass
