@@ -110,12 +110,18 @@ class UpdateUser(UserAuditResult):
     pass
 
 
+@dataclass
+class OverDeactivateThresholdUser(UserAuditResult):
+    pass
+
+
 class UserAudit(PRIMEDAudit):
-    ISSUE_TYPE_USER_INACTIVE = "User is inactive"
+    ISSUE_TYPE_USER_INACTIVE = "User is inactive in drupal"
     ISSUE_TYPE_USER_REMOVED_FROM_SITE = "User removed from site"
+    USER_DEACTIVATE_THRESHOLD = 3
     results_table_class = UserAuditResultsTable
 
-    def __init__(self, apply_changes=False):
+    def __init__(self, apply_changes=False, ignore_deactivate_threshold=False):
         """Initialize the audit.
 
         Args:
@@ -123,6 +129,7 @@ class UserAudit(PRIMEDAudit):
         """
         super().__init__()
         self.apply_changes = apply_changes
+        self.ignore_deactivate_threshold = ignore_deactivate_threshold
 
     def _run_audit(self):
         """Run the audit on local and remote users."""
@@ -221,6 +228,10 @@ class UserAudit(PRIMEDAudit):
                         )
                         sa.user.email = drupal_email
 
+                    if sa.user.is_active is False:
+                        user_updates.update({"is_active": {"old": False, "new": True}})
+                        sa.user.is_active = True
+
                     prev_user_site_names = set(
                         sa.user.study_sites.all().values_list("short_name", flat=True)
                     )
@@ -286,16 +297,25 @@ class UserAudit(PRIMEDAudit):
             provider=CustomProvider.id, user__is_active=True
         ).exclude(uid__in=drupal_uids)
         user_ids_to_check = []
+        count_inactive = unaudited_drupal_accounts.count()
+        over_threshold = False
+        if self.ignore_deactivate_threshold is False:
+            if count_inactive > self.USER_DEACTIVATE_THRESHOLD:
+                over_threshold = True
+
         for uda in unaudited_drupal_accounts:
             user_ids_to_check.append(uda.user.id)
+            handled = False
             if settings.DRUPAL_DATA_AUDIT_DEACTIVATE_USERS is True:
                 uda.user.is_active = False
-                if self.apply_changes is True:
-                    uda.user.save()
-                self.needs_action.append(RemoveUser(local_user=uda))
-            else:
+                if over_threshold is False:
+                    if self.apply_changes is True:
+                        uda.user.save()
+                    handled = True
+                    self.needs_action.append(RemoveUser(local_user=uda))
+            if handled is False:
                 self.errors.append(
-                    RemoveUser(local_user=uda, note=self.ISSUE_TYPE_USER_INACTIVE)
+                    RemoveUser(local_user=uda, note=f"Over Threshold {over_threshold}")
                 )
 
         inactive_anvil_users = Account.objects.filter(
@@ -381,7 +401,7 @@ class UpdateSite(SiteAuditResult):
 
 
 class SiteAudit(PRIMEDAudit):
-    ISSUE_TYPE_LOCAL_SITE_INVALD = "Local site is invalid"
+    ISSUE_TYPE_LOCAL_SITE_INVALID = "Local site is invalid"
     results_table_class = SiteAuditResultsTable
 
     def __init__(self, apply_changes=False):
@@ -459,7 +479,7 @@ class SiteAudit(PRIMEDAudit):
 
         for iss in invalid_study_sites:
             self.errors.append(
-                RemoveSite(local_site=iss, note=self.ISSUE_TYPE_LOCAL_SITE_INVALD)
+                RemoveSite(local_site=iss, note=self.ISSUE_TYPE_LOCAL_SITE_INVALID)
             )
 
 

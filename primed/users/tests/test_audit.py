@@ -11,6 +11,7 @@ from anvil_consortium_manager.models import (
 )
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.management import call_command
 from django.test import TestCase
 from marshmallow_jsonapi import Schema, fields
@@ -421,6 +422,7 @@ class TestUserDataAudit(TestCase):
             username=drupal_username + "UPDATE",
             email=drupal_email + "UPDATE",
             name=drupal_fullname + "UPDATE",
+            is_active=False,
         )
         SocialAccount.objects.create(
             user=new_user,
@@ -509,6 +511,64 @@ class TestUserDataAudit(TestCase):
             new_user.refresh_from_db()
             self.assertFalse(new_user.is_active)
 
+    # test user removal
+    @responses.activate
+    def test_user_audit_remove_user_threshold(self):
+        self.add_fake_token_response()
+        self.add_fake_study_sites_response()
+        self.add_fake_users_response()
+        StudySite.objects.create(
+            drupal_node_id=TEST_STUDY_SITE_DATA[0].drupal_internal__nid,
+            short_name=TEST_STUDY_SITE_DATA[0].title,
+            full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
+        )
+
+        SocialAccount.objects.create(
+            user=get_user_model().objects.create(
+                username="username2", email="useremail2", name="user fullname2"
+            ),
+            uid=996,
+            provider=CustomProvider.id,
+        )
+
+        SocialAccount.objects.create(
+            user=get_user_model().objects.create(
+                username="username3", email="useremail3", name="user fullname3"
+            ),
+            uid=997,
+            provider=CustomProvider.id,
+        )
+
+        SocialAccount.objects.create(
+            user=get_user_model().objects.create(
+                username="username4", email="useremail4", name="user fullname4"
+            ),
+            uid=998,
+            provider=CustomProvider.id,
+        )
+        SocialAccount.objects.create(
+            user=get_user_model().objects.create(
+                username="username5", email="useremail5", name="user fullname5"
+            ),
+            uid=999,
+            provider=CustomProvider.id,
+        )
+        with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):
+            user_audit = audit.UserAudit(apply_changes=False)
+            user_audit.run_audit()
+            self.assertFalse(user_audit.ok())
+            self.assertEqual(len(user_audit.errors), 4)
+            self.assertEqual(len(user_audit.needs_action), 1)
+            self.assertEqual(user_audit.errors[0].note, "Over Threshold True")
+            # Run again with ignore threshold, should move from error to needs action
+            user_audit = audit.UserAudit(
+                apply_changes=False, ignore_deactivate_threshold=True
+            )
+            user_audit.run_audit()
+            self.assertFalse(user_audit.ok())
+            self.assertEqual(len(user_audit.errors), 0)
+            self.assertEqual(len(user_audit.needs_action), 5)
+
     @responses.activate
     def test_sync_drupal_data_command(self):
         self.add_fake_token_response()
@@ -542,6 +602,11 @@ class TestUserDataAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
-        call_command("sync-drupal-data", "--verbose", stdout=out)
+        call_command("sync-drupal-data", "--email=test@example.com", stdout=out)
         self.assertIn("SiteAudit summary: status ok: False", out.getvalue())
         self.assertIn("UserAudit summary: status ok: False", out.getvalue())
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ["test@example.com"])
+        self.assertEqual(email.subject, "[command:sync-drupal-data] report")

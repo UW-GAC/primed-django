@@ -22,6 +22,13 @@ class Command(BaseCommand):
             default=False,
             help="Make updates to sync local data with remote. If not set, will just report.",
         )
+        parser.add_argument(
+            "--ignore-threshold",
+            action="store_true",
+            dest="ignore_threshold",
+            default=False,
+            help="Ignore user deactivation threshold",
+        )
 
         parser.add_argument(
             "--email",
@@ -31,8 +38,10 @@ class Command(BaseCommand):
     def _send_email(self, user_audit, site_audit):
         # Send email if requested and there are problems.
         if user_audit.ok() is False or site_audit.ok() is False:
+            # django-tables2 requires request context, so we create an empty one
+            # if we wanted to linkify any of our data we would need to do more here
             request = HttpRequest()
-            subject = "SyncDrupalData Report"
+            subject = "[command:sync-drupal-data] report"
             html_body = render_to_string(
                 "users/drupal_data_audit_email.html",
                 context={
@@ -54,10 +63,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.apply_changes = options.get("update")
         self.email = options["email"]
+        self.ignore_threshold = options["ignore_threshold"]
 
         notification_content = (
             f"[sync-drupal-data] start: Applying Changes: {self.apply_changes} "
-            f"Start time: {localtime()}\n"
+            f"Ignoring Threshold: {self.ignore_threshold} Start time: {localtime()}\n"
         )
         site_audit = audit.SiteAudit(apply_changes=self.apply_changes)
         site_audit.run_audit()
@@ -73,7 +83,10 @@ class Command(BaseCommand):
             notification_content += "Sites requiring intervention:\n"
             notification_content += site_audit.get_errors_table().render_to_text()
 
-        user_audit = audit.UserAudit(apply_changes=self.apply_changes)
+        user_audit = audit.UserAudit(
+            apply_changes=self.apply_changes,
+            ignore_deactivate_threshold=self.ignore_threshold,
+        )
         user_audit.run_audit()
         notification_content += (
             "--------------------------------------\n"
