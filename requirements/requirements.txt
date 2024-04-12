@@ -208,7 +208,7 @@ sqlparse==0.4.4
     #   django
 tablib==3.6.1
     # via -r requirements/requirements.in
-tenacity==8.2.1
+tenacity==8.2.3
     # via
     #   jsonapi-requests
     #   plotly
