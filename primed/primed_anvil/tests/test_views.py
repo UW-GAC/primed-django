@@ -3,6 +3,7 @@ import json
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.tests.factories import AccountFactory
 from anvil_consortium_manager.views import AccountList
+from constance.test import override_config
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -133,6 +134,12 @@ class HomeTest(TestCase):
             response, reverse("anvil_consortium_manager:accounts:link")
         )
 
+    def test_unauthenticated_user_has_not_linked_account_message(self):
+        response = self.client.get(settings.LOGIN_URL, follow=True)
+        self.assertNotContains(
+            response, reverse("anvil_consortium_manager:accounts:link")
+        )
+
     def test_staff_view_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
@@ -162,6 +169,24 @@ class HomeTest(TestCase):
         self.assertNotContains(
             response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
         )
+
+    def test_site_announcement_no_text(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertNotContains(response, """id="alert-announcement""")
+
+    @override_config(ANNOUNCEMENT_TEXT="This is a test announcement")
+    def test_site_announcement_text(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertContains(response, """id="alert-announcement""")
+        self.assertContains(response, "This is a test announcement")
+
+    @override_config(ANNOUNCEMENT_TEXT="This is a test announcement")
+    def test_site_announcement_text_unauthenticated_user(self):
+        response = self.client.get(self.get_url(), follow=True)
+        self.assertContains(response, """id="alert-announcement""")
+        self.assertContains(response, "This is a test announcement")
 
 
 class StudyDetailTest(TestCase):
@@ -1214,3 +1239,31 @@ class DataSummaryTableTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
         self.assertEqual(len(response.context_data["summary_table"].rows), 2)
+
+    def test_includes_open_access_workspaces(self):
+        """Open access workspaces are included in the table."""
+        study = StudyFactory.create()
+        open_workspace = OpenAccessWorkspaceFactory.create()
+        open_workspace.studies.add(study)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_dbgap_workspaces(self):
+        """dbGaP workspaces are included in the table."""
+        # One open access workspace with one study, with one available data type.
+        # One dbGaP workspae with two studies.
+        dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_cdsa_workspaces(self):
+        """CDSA workspaces are included in the table."""
+        CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)

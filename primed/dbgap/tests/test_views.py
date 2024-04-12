@@ -32,6 +32,8 @@ from faker import Faker
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
+from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; DataUsePermissionFactory,
     StudyFactory,
 )
@@ -950,6 +952,118 @@ class dbGaPWorkspaceDetailTest(TestCase):
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
         )
+
+    def test_associated_data_prep_view_user(self):
+        """View users do not see the associated data prep section"""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+
+        obj = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertNotContains(response, "Associated data prep workspaces")
+
+    def test_associated_data_prep_staff_view_user(self):
+        """Staff view users do see the associated data prep section."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertContains(response, "Associated data prep workspaces")
+
+    def test_associated_data_prep_workspaces_context_exists(self):
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertIsInstance(
+            response.context_data["associated_data_prep_workspaces"],
+            DataPrepWorkspaceUserTable,
+        )
+
+    def test_only_show_one_associated_data_prep_workspace(self):
+        dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
+        dataPrep_obj = DataPrepWorkspaceFactory.create(
+            target_workspace=dbGaP_obj.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(dbGaP_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspaces"].rows), 1
+        )
+        self.assertIn(
+            dataPrep_obj.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+
+    def test_show_two_associated_data_prep_workspaces(self):
+        dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
+        dataPrep_obj1 = DataPrepWorkspaceFactory.create(
+            target_workspace=dbGaP_obj.workspace
+        )
+        dataPrep_obj2 = DataPrepWorkspaceFactory.create(
+            target_workspace=dbGaP_obj.workspace
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(dbGaP_obj.get_absolute_url())
+        self.assertIn("associated_data_prep_workspaces", response.context_data)
+        self.assertEqual(
+            len(response.context_data["associated_data_prep_workspaces"].rows), 2
+        )
+        self.assertIn(
+            dataPrep_obj1.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+        self.assertIn(
+            dataPrep_obj2.workspace,
+            response.context_data["associated_data_prep_workspaces"].data,
+        )
+
+    def test_context_data_prep_active_with_no_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_inactive_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=False
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertFalse(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
+
+    def test_context_data_prep_active_with_one_active_one_inactive_prep_workspace(self):
+        instance = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        DataPrepWorkspaceFactory.create(
+            target_workspace=instance.workspace, is_active=True
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(instance.get_absolute_url())
+        self.assertIn("data_prep_active", response.context_data)
+        self.assertTrue(response.context["data_prep_active"])
 
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):

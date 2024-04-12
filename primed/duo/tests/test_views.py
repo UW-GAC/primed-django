@@ -23,7 +23,7 @@ class DataUsePermissionListTest(TestCase):
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
 
@@ -180,7 +180,7 @@ class DataUseModifierListTest(TestCase):
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
             )
         )
 

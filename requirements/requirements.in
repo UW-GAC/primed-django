@@ -44,6 +44,9 @@ requests
 # For json schema validation.
 jsonschema
 
+# For interacting with drupal json api
+jsonapi-requests
+
 # For tree structures
 django-tree-queries
 
@@ -66,3 +69,7 @@ django-htmx
 certifi>=2023.7.22
 urllib3>=1.26.18
 sqlparse>=0.4.4
+
+# Dynamic settings
+django-constance
+django-picklefield  # Required by django-constance for database backend

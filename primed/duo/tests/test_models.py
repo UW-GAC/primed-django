@@ -87,6 +87,24 @@ class DataUsePermissionTest(TestCase):
         with self.assertRaises(IntegrityError):
             instance2.save()
 
+    def test_get_short_definition(self):
+        instance = factories.DataUsePermissionFactory.create(
+            definition="Test definition"
+        )
+        self.assertEqual(instance.get_short_definition(), "Test definition")
+
+    def test_get_short_definition_re_sub(self):
+        instance = factories.DataUsePermissionFactory.create(
+            definition="This XXX indicates that everything is fine."
+        )
+        self.assertEqual(instance.get_short_definition(), "Everything is fine.")
+
+    def test_get_short_definition_capitalization(self):
+        instance = factories.DataUsePermissionFactory.create(
+            definition="Test definition XyXy"
+        )
+        self.assertEqual(instance.get_short_definition(), "Test definition XyXy")
+
 
 class DataUseModifierTest(TestCase):
     """Tests for the DataUseModifier model."""
@@ -156,6 +174,16 @@ class DataUseModifierTest(TestCase):
         )
         with self.assertRaises(IntegrityError):
             instance2.save()
+
+    def test_get_short_definition(self):
+        instance = factories.DataUseModifierFactory.create(definition="Test definition")
+        self.assertEqual(instance.get_short_definition(), "Test definition")
+
+    def test_get_short_definition_re_sub(self):
+        instance = factories.DataUseModifierFactory.create(
+            definition="This XXX indicates that use is allowed."
+        )
+        self.assertEqual(instance.get_short_definition(), "Use is allowed.")
 
 
 class DataUseOntologyTestCase(TestCase):

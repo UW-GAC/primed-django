@@ -85,6 +85,7 @@ THIRD_PARTY_APPS = [
     "simple_history",
     "dbbackup",
     "django_htmx",
+    "constance",
 ]
 
 LOCAL_APPS = [
@@ -205,6 +206,7 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
+                "constance.context_processors.config",
                 "primed.utils.context_processors.settings_context",
             ],
         },
@@ -368,6 +370,17 @@ DCC_CONTACT_EMAIL = "primedconsortium@uw.edu"
 # https://django-tables2.readthedocs.io/en/latest/pages/custom-rendering.html?highlight=django_tables2_template#available-templates
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 
+# django-constance
+# ------------------------------------------------------------------------------
+CONSTANCE_CONFIG = {
+    "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
+}
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_IGNORE_ADMIN_VERSION_CHECK = True
+# CONSTANCE_DATABASE_CACHE_BACKEND = "default"
+CONSTANCE_DATABASE_CACHE_AUTOFILL_TIMEOUT = None
+
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
 ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
@@ -390,3 +403,13 @@ ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
 ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
+
+DRUPAL_API_CLIENT_ID = env("DRUPAL_API_CLIENT_ID", default="")
+DRUPAL_API_CLIENT_SECRET = env("DRUPAL_API_CLIENT_SECRET", default="")
+DRUPAL_API_REL_PATH = env("DRUPAL_API_REL_PATH", default="mockapi")
+DRUPAL_DATA_AUDIT_DEACTIVATE_USERS = env(
+    "DRUPAL_DATA_AUDIT_DEACTIVATE_USERS", default=False
+)
+DRUPAL_DATA_AUDIT_REMOVE_USER_SITES = env(
+    "DRUPAL_DATA_AUDIT_REMOVE_USER_SITES", default=False
+)

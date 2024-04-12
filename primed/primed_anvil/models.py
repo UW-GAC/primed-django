@@ -14,6 +14,7 @@ class Study(TimeStampedModel, models.Model):
     full_name = models.CharField(
         max_length=255, help_text="The full name for this Study."
     )
+
     history = HistoricalRecords()
 
     class Meta:
@@ -32,13 +33,16 @@ class Study(TimeStampedModel, models.Model):
 
 
 class StudySite(TimeStampedModel, models.Model):
-    """A model to track Research Centers."""
+    """A model to track Study Sites."""
 
     short_name = models.CharField(max_length=15, unique=True)
-    """The short name of the Research Center."""
+    """The short name of the Study Sites."""
 
     full_name = models.CharField(max_length=255)
-    """The full name of the Research Center."""
+    """The full name of the Study Sites."""
+
+    drupal_node_id = models.IntegerField(blank=True, null=True)
+    """Reference node ID for entity in drupal"""
 
     def __str__(self):
         """String method.

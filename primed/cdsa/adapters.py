@@ -1,5 +1,8 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
+from anvil_consortium_manager.models import Workspace
+
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 
 from . import forms, models, tables
 
@@ -18,3 +21,22 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_data_model = models.CDSAWorkspace
     workspace_data_form_class = forms.CDSAWorkspaceForm
     workspace_detail_template_name = "cdsa/cdsaworkspace_detail.html"
+
+    def get_extra_detail_context_data(self, workspace, request):
+        extra_context = {}
+        associated_data_prep = Workspace.objects.filter(
+            dataprepworkspace__target_workspace=workspace
+        )
+        extra_context["associated_data_prep_workspaces"] = DataPrepWorkspaceUserTable(
+            associated_data_prep
+        )
+        extra_context["data_prep_active"] = associated_data_prep.filter(
+            dataprepworkspace__is_active=True
+        ).exists()
+        # Get the primary CDSA for this study, assuming it exists.
+        try:
+            extra_context["primary_cdsa"] = workspace.cdsaworkspace.get_primary_cdsa()
+        except models.DataAffiliateAgreement.DoesNotExist:
+            extra_context["primary_cdsa"] = None
+
+        return extra_context
