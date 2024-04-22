@@ -1,6 +1,9 @@
 name: Run pip-compile
 on:
   workflow_dispatch: # allows you to manually trigger the workflow
+  push:
+    branches: [ "maint/pip-compile-github-action" ]
+
 
 jobs:
   pip-compile:
