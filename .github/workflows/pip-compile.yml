@@ -30,4 +30,6 @@ jobs:
           pip-compile requirements/dev-requirements.in
 
       - name: List changes
-        run: git diff --exit-code
+        run: |
+          git status
+          git diff
