@@ -36,9 +36,16 @@ function copyOnClick(e) {
   copy_target = e.currentTarget.getAttribute("copy-target")
 	elementToCopy = document.getElementById(copy_target)
   textToCopy = elementToCopy.innerText
-  navigator.clipboard.writeText(textToCopy)
+  var copied = false
+
   console.log("Copied text:")
   console.log(textToCopy)
+
+  navigator.clipboard.writeText(textToCopy)
+
+  e.currentTarget.innerText = "Copied!";
+  e.currentTarget.className += " disabled"
+
 }
 
 const button = document.querySelector(".copy-button")
