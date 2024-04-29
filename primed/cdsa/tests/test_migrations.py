@@ -1,11 +1,7 @@
 """Tests for data migrations in the app."""
-from datetime import date
 
-from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
-import factory
 
-from primed.primed_anvil.tests.factories import StudySiteFactory
 
 
 class AgreementMajorVersionMigrationsTest(MigratorTestCase):
