@@ -179,6 +179,8 @@ requests==2.31.0
     #   -c requirements.txt
     #   -c test-requirements.txt
     #   sphinx
+ruff==0.4.2
+    # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
     #   -c requirements.txt
