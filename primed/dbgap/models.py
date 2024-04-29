@@ -226,6 +226,15 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         """String method."""
         return "{}".format(self.created)
 
+    def get_absolute_url(self):
+        return reverse(
+            "dbgap:dbgap_applications:dbgap_data_access_snapshots:detail",
+            kwargs={
+                "dbgap_project_id": self.dbgap_application.dbgap_project_id,
+                "dbgap_data_access_snapshot_pk": self.pk,
+            },
+        )
+
     def clean(self):
         """Perform custom model cleaning.
 
@@ -247,15 +256,6 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                 raise ValidationError(
                     "Project_id in JSON does not match dbgap_application.dbgap_project_id."
                 )
-
-    def get_absolute_url(self):
-        return reverse(
-            "dbgap:dbgap_applications:dbgap_data_access_snapshots:detail",
-            kwargs={
-                "dbgap_project_id": self.dbgap_application.dbgap_project_id,
-                "dbgap_data_access_snapshot_pk": self.pk,
-            },
-        )
 
     def create_dars_from_json(self):
         """Add DARs for this application from the dbGaP json for this project snapshot.

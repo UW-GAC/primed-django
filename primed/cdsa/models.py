@@ -175,6 +175,9 @@ class SignedAgreement(
     def __str__(self):
         return "{}".format(self.cc_id)
 
+    def get_absolute_url(self):
+        return self.get_agreement_type().get_absolute_url()
+
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
@@ -186,9 +189,6 @@ class SignedAgreement(
         ):
             combined_type = combined_type + " component"
         return combined_type
-
-    def get_absolute_url(self):
-        return self.get_agreement_type().get_absolute_url()
 
     def get_agreement_type(self):
         if self.type == self.MEMBER:

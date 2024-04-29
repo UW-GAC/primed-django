@@ -90,7 +90,7 @@ class DataUseOntologyModel(models.Model):
         verbose_name="DUO disease term",
         max_length=255,
         blank=True,
-        null=True,
+        default="",
         help_text="The disease term if required by data_use_permission.",
     )
 

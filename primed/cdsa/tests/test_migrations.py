@@ -3,7 +3,6 @@
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
 
 
-
 class AgreementMajorVersionMigrationsTest(MigratorTestCase):
     """Tests for the migrations associated with creating the new AgreementMajorVersion model."""
 
