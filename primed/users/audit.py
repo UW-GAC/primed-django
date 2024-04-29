@@ -69,9 +69,7 @@ class UserAuditResult(PRIMEDAuditResult):
         if self.remote_user_data:
             row.update(
                 {
-                    "remote_user_id": self.remote_user_data.attributes.get(
-                        "drupal_internal__uid"
-                    ),
+                    "remote_user_id": self.remote_user_data.attributes.get("drupal_internal__uid"),
                     "remote_username": self.remote_user_data.attributes.get("name"),
                 }
             )
@@ -140,42 +138,29 @@ class UserAudit(PRIMEDAudit):
 
         user_count = 0
         while user_endpoint_url is not None:
-
             users_endpoint = json_api.endpoint(user_endpoint_url)
             users_endpoint_response = users_endpoint.get()
 
             # If there are more, there will be a 'next' link
 
-            user_endpoint_url = users_endpoint_response.content.links.get(
-                "next", {}
-            ).get("href")
+            user_endpoint_url = users_endpoint_response.content.links.get("next", {}).get("href")
 
             for user in users_endpoint_response.data:
                 drupal_uid = user.attributes.get("drupal_internal__uid")
                 drupal_username = user.attributes.get("name")
                 drupal_email = user.attributes.get("mail")
                 drupal_firstname = user.attributes.get("field_given_first_name_s_")
-                drupal_lastname = user.attributes.get(
-                    "field_examples_family_last_name_"
-                )
-                drupal_full_name = " ".join(
-                    part for part in (drupal_firstname, drupal_lastname) if part
-                )
-                drupal_study_sites_rel = user.relationships.get(
-                    "field_study_site_or_center"
-                )
+                drupal_lastname = user.attributes.get("field_examples_family_last_name_")
+                drupal_full_name = " ".join(part for part in (drupal_firstname, drupal_lastname) if part)
+                drupal_study_sites_rel = user.relationships.get("field_study_site_or_center")
                 drupal_user_study_site_shortnames = []
                 if drupal_study_sites_rel:
                     for dss in drupal_study_sites_rel.data:
                         study_site_uuid = dss.id
                         study_site_info = study_sites[study_site_uuid]
 
-                        drupal_user_study_site_shortnames.append(
-                            study_site_info["short_name"]
-                        )
-                new_user_sites = StudySite.objects.filter(
-                    short_name__in=drupal_user_study_site_shortnames
-                )
+                        drupal_user_study_site_shortnames.append(study_site_info["short_name"])
+                new_user_sites = StudySite.objects.filter(short_name__in=drupal_user_study_site_shortnames)
                 # no uid is blocked or anonymous
                 if not drupal_uid:
                     # potential blocked user, but will no longer have a drupal uid
@@ -201,16 +186,12 @@ class UserAudit(PRIMEDAudit):
                             uid=user.attributes["drupal_internal__uid"],
                             provider=CustomProvider.id,
                         )
-                    self.needs_action.append(
-                        NewUser(local_user=sa, remote_user_data=user)
-                    )
+                    self.needs_action.append(NewUser(local_user=sa, remote_user_data=user))
 
                 if sa:
                     user_updates = {}
                     if sa.user.name != drupal_full_name:
-                        user_updates.update(
-                            {"name": {"old": sa.user.name, "new": drupal_full_name}}
-                        )
+                        user_updates.update({"name": {"old": sa.user.name, "new": drupal_full_name}})
                         sa.user.name = drupal_full_name
                     if sa.user.username != drupal_username:
                         user_updates.update(
@@ -223,21 +204,16 @@ class UserAudit(PRIMEDAudit):
                         )
                         sa.user.username = drupal_username
                     if sa.user.email != drupal_email:
-                        user_updates.update(
-                            {"email": {"old": sa.user.email, "new": drupal_email}}
-                        )
+                        user_updates.update({"email": {"old": sa.user.email, "new": drupal_email}})
                         sa.user.email = drupal_email
 
                     if sa.user.is_active is False:
                         user_updates.update({"is_active": {"old": False, "new": True}})
                         sa.user.is_active = True
 
-                    prev_user_site_names = set(
-                        sa.user.study_sites.all().values_list("short_name", flat=True)
-                    )
+                    prev_user_site_names = set(sa.user.study_sites.all().values_list("short_name", flat=True))
                     new_user_site_names = set(drupal_user_study_site_shortnames)
                     if prev_user_site_names != new_user_site_names:
-
                         user_updates.update(
                             {
                                 "sites": {
@@ -247,9 +223,7 @@ class UserAudit(PRIMEDAudit):
                             }
                         )
                         # do not remove from sites by default
-                        removed_sites = prev_user_site_names.difference(
-                            new_user_site_names
-                        )
+                        removed_sites = prev_user_site_names.difference(new_user_site_names)
                         new_sites = new_user_site_names.difference(prev_user_site_names)
 
                         if settings.DRUPAL_DATA_AUDIT_REMOVE_USER_SITES is True:
@@ -282,9 +256,7 @@ class UserAudit(PRIMEDAudit):
                             )
                         )
                     else:
-                        self.verified.append(
-                            VerifiedUser(local_user=sa, remote_user_data=user)
-                        )
+                        self.verified.append(VerifiedUser(local_user=sa, remote_user_data=user))
 
                 drupal_uids.add(drupal_uid)
                 user_count += 1
@@ -314,9 +286,7 @@ class UserAudit(PRIMEDAudit):
                     handled = True
                     self.needs_action.append(RemoveUser(local_user=uda))
             if handled is False:
-                self.errors.append(
-                    RemoveUser(local_user=uda, note=f"Over Threshold {over_threshold}")
-                )
+                self.errors.append(RemoveUser(local_user=uda, note=f"Over Threshold {over_threshold}"))
 
         inactive_anvil_users = Account.objects.filter(
             Q(user__is_active=False) | Q(user__id__in=user_ids_to_check),
@@ -327,9 +297,7 @@ class UserAudit(PRIMEDAudit):
                 InactiveAnvilUser(
                     anvil_account=inactive_anvil_user,
                     anvil_groups=list(
-                        inactive_anvil_user.groupaccountmembership_set.all().values_list(
-                            "group__name", flat=True
-                        )
+                        inactive_anvil_user.groupaccountmembership_set.all().values_list("group__name", flat=True)
                     ),
                 )
             )
@@ -419,7 +387,6 @@ class SiteAudit(PRIMEDAudit):
         json_api = get_drupal_json_api()
         study_sites = get_study_sites(json_api=json_api)
         for study_site_info in study_sites.values():
-
             short_name = study_site_info["short_name"]
             full_name = study_site_info["full_name"]
             node_id = study_site_info["node_id"]
@@ -435,16 +402,12 @@ class SiteAudit(PRIMEDAudit):
                         short_name=short_name,
                         full_name=full_name,
                     )
-                self.needs_action.append(
-                    NewSite(remote_site_data=study_site_info, local_site=study_site)
-                )
+                self.needs_action.append(NewSite(remote_site_data=study_site_info, local_site=study_site))
             else:
                 study_site_updates = {}
 
                 if study_site.full_name != full_name:
-                    study_site_updates.update(
-                        {"full_name": {"old": study_site.full_name, "new": full_name}}
-                    )
+                    study_site_updates.update({"full_name": {"old": study_site.full_name, "new": full_name}})
                     study_site.full_name = full_name
 
                 if study_site.short_name != short_name:
@@ -469,22 +432,15 @@ class SiteAudit(PRIMEDAudit):
                         )
                     )
                 else:
-                    self.verified.append(
-                        VerifiedSite(
-                            local_site=study_site, remote_site_data=study_site_info
-                        )
-                    )
+                    self.verified.append(VerifiedSite(local_site=study_site, remote_site_data=study_site_info))
 
         invalid_study_sites = StudySite.objects.exclude(drupal_node_id__in=valid_nodes)
 
         for iss in invalid_study_sites:
-            self.errors.append(
-                RemoveSite(local_site=iss, note=self.ISSUE_TYPE_LOCAL_SITE_INVALID)
-            )
+            self.errors.append(RemoveSite(local_site=iss, note=self.ISSUE_TYPE_LOCAL_SITE_INVALID))
 
 
 def get_drupal_json_api():
-
     json_api_client_id = settings.DRUPAL_API_CLIENT_ID
     json_api_client_secret = settings.DRUPAL_API_CLIENT_SECRET
 

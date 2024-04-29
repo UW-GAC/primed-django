@@ -7,9 +7,7 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
-    path(
-        "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
-    ),
+    path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
@@ -20,17 +18,13 @@ urlpatterns = [
         "anvil/",
         include("anvil_consortium_manager.urls", namespace="anvil_consortium_manager"),
     ),
-    path(
-        "primed_anvil/", include("primed.primed_anvil.urls", namespace="primed_anvil")
-    ),
+    path("primed_anvil/", include("primed.primed_anvil.urls", namespace="primed_anvil")),
     path("dbgap/", include("primed.dbgap.urls", namespace="dbgap")),
     path("duo/", include("primed.duo.urls", namespace="duo")),
     path("cdsa/", include("primed.cdsa.urls", namespace="cdsa")),
     path(
         "collaborative_analysis/",
-        include(
-            "primed.collaborative_analysis.urls", namespace="collaborative_analysis"
-        ),
+        include("primed.collaborative_analysis.urls", namespace="collaborative_analysis"),
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

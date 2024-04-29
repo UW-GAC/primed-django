@@ -244,9 +244,7 @@ class MemberAgreementFormTest(TestCase):
 
     def setUp(self):
         """Create related objects for use in the form."""
-        self.signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        self.signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         self.study_site = StudySiteFactory.create()
 
     def test_valid(self):
@@ -317,9 +315,7 @@ class MemberAgreementFormTest(TestCase):
 
     def test_invalid_signed_agreement_wrong_type(self):
         """Form is invalid when the signed_agreement has the wrong type."""
-        obj = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE
-        )
+        obj = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
         form_data = {
             "signed_agreement": obj,
             "is_primary": True,
@@ -339,9 +335,7 @@ class DataAffiliateAgreementFormTest(TestCase):
 
     def setUp(self):
         """Create related objects for use in the form."""
-        self.signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE
-        )
+        self.signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
         self.study = StudyFactory.create()
 
     def test_valid(self):
@@ -412,9 +406,7 @@ class DataAffiliateAgreementFormTest(TestCase):
 
     def test_invalid_signed_agreement_wrong_type(self):
         """Form is invalid when the signed_agreement has the wrong type."""
-        obj = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        obj = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         form_data = {
             "signed_agreement": obj,
             "is_primary": True,
@@ -449,9 +441,7 @@ class DataAffiliateAgreementFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("additional_limitations", form.errors)
         self.assertEqual(len(form.errors["additional_limitations"]), 1)
-        self.assertIn(
-            "only allowed for primary", form.errors["additional_limitations"][0]
-        )
+        self.assertIn("only allowed for primary", form.errors["additional_limitations"][0])
 
     def test_valid_primary_with_requires_study_review_true(self):
         """Form is valid with necessary input."""
@@ -476,9 +466,7 @@ class DataAffiliateAgreementFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("requires_study_review", form.errors)
         self.assertEqual(len(form.errors["requires_study_review"]), 1)
-        self.assertIn(
-            "can only be True for primary", form.errors["requires_study_review"][0]
-        )
+        self.assertIn("can only be True for primary", form.errors["requires_study_review"][0])
 
 
 class NonDataAffiliateAgreementFormTest(TestCase):
@@ -488,9 +476,7 @@ class NonDataAffiliateAgreementFormTest(TestCase):
 
     def setUp(self):
         """Create related objects for use in the form."""
-        self.signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.NON_DATA_AFFILIATE
-        )
+        self.signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.NON_DATA_AFFILIATE)
 
     def test_valid(self):
         """Form is valid with necessary input."""
@@ -542,9 +528,7 @@ class NonDataAffiliateAgreementFormTest(TestCase):
 
     def test_invalid_signed_agreement_wrong_type(self):
         """Form is invalid when the signed_agreement has the wrong type."""
-        obj = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        obj = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         form_data = {
             "signed_agreement": obj,
             "affiliation": "Foo Bar",

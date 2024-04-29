@@ -39,12 +39,6 @@ workspace_open_access.studies.add(fhs)
 
 # Share workspaces with PRIMED_ALL
 primed_all = ManagedGroupFactory.create(name="PRIMED_ALL")
-WorkspaceGroupSharingFactory.create(
-    workspace=workspace_dbgap.workspace, group=primed_all
-)
-WorkspaceGroupSharingFactory.create(
-    workspace=workspace_cdsa.workspace, group=primed_all
-)
-WorkspaceGroupSharingFactory.create(
-    workspace=workspace_open_access.workspace, group=primed_all
-)
+WorkspaceGroupSharingFactory.create(workspace=workspace_dbgap.workspace, group=primed_all)
+WorkspaceGroupSharingFactory.create(workspace=workspace_cdsa.workspace, group=primed_all)
+WorkspaceGroupSharingFactory.create(workspace=workspace_open_access.workspace, group=primed_all)

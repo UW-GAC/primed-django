@@ -162,13 +162,9 @@ class TestUserDataAudit(TestCase):
         )
 
     def add_fake_users_response(self):
-        url_path = (
-            f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/user/user/"
-        )
+        url_path = f"{settings.DRUPAL_SITE_URL}/{settings.DRUPAL_API_REL_PATH}/user/user/"
         TEST_USER_DATA[0].field_study_site_or_center = [TEST_STUDY_SITE_DATA[0]]
-        user_data = UserSchema(
-            include_data=("field_study_site_or_center",), many=True
-        ).dump(TEST_USER_DATA)
+        user_data = UserSchema(include_data=("field_study_site_or_center",), many=True).dump(TEST_USER_DATA)
 
         responses.get(
             url=url_path,
@@ -186,10 +182,7 @@ class TestUserDataAudit(TestCase):
     @responses.activate
     def test_get_json_api(self):
         json_api = self.get_fake_json_api()
-        assert (
-            json_api.requests.config.AUTH._client.token["access_token"]
-            == self.token["access_token"]
-        )
+        assert json_api.requests.config.AUTH._client.token["access_token"] == self.token["access_token"]
 
     @responses.activate
     def test_get_study_sites(self):
@@ -198,19 +191,9 @@ class TestUserDataAudit(TestCase):
         study_sites = audit.get_study_sites(json_api=json_api)
 
         for test_study_site in TEST_STUDY_SITE_DATA:
-
-            assert (
-                test_study_site.field_long_name
-                == study_sites[test_study_site.drupal_internal__nid]["full_name"]
-            )
-            assert (
-                test_study_site.title
-                == study_sites[test_study_site.drupal_internal__nid]["short_name"]
-            )
-            assert (
-                test_study_site.drupal_internal__nid
-                == study_sites[test_study_site.drupal_internal__nid]["node_id"]
-            )
+            assert test_study_site.field_long_name == study_sites[test_study_site.drupal_internal__nid]["full_name"]
+            assert test_study_site.title == study_sites[test_study_site.drupal_internal__nid]["short_name"]
+            assert test_study_site.drupal_internal__nid == study_sites[test_study_site.drupal_internal__nid]["node_id"]
 
     @responses.activate
     def test_audit_study_sites_no_update(self):
@@ -273,9 +256,7 @@ class TestUserDataAudit(TestCase):
 
     @responses.activate
     def test_audit_study_sites_with_extra_site(self):
-        StudySite.objects.create(
-            drupal_node_id=99, short_name="ExtraSite", full_name="ExtraSiteLong"
-        )
+        StudySite.objects.create(drupal_node_id=99, short_name="ExtraSite", full_name="ExtraSiteLong")
         self.get_fake_json_api()
         self.add_fake_study_sites_response()
         site_audit = audit.SiteAudit(apply_changes=True)
@@ -307,10 +288,7 @@ class TestUserDataAudit(TestCase):
         assert users.first().email == TEST_USER_DATA[0].mail
         assert users.first().username == TEST_USER_DATA[0].name
         assert users.first().study_sites.count() == 1
-        assert (
-            users.first().study_sites.first().short_name
-            == TEST_STUDY_SITE_DATA[0].title
-        )
+        assert users.first().study_sites.first().short_name == TEST_STUDY_SITE_DATA[0].title
 
     @responses.activate
     def test_full_user_audit_check_only(self):
@@ -449,9 +427,7 @@ class TestUserDataAudit(TestCase):
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
 
-        new_user = get_user_model().objects.create(
-            username="username2", email="useremail2", name="user fullname2"
-        )
+        new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
         SocialAccount.objects.create(
             user=new_user,
             uid=999,
@@ -476,9 +452,7 @@ class TestUserDataAudit(TestCase):
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
 
-        new_user = get_user_model().objects.create(
-            username="username2", email="useremail2", name="user fullname2"
-        )
+        new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
         SocialAccount.objects.create(
             user=new_user,
             uid=999,
@@ -504,9 +478,7 @@ class TestUserDataAudit(TestCase):
             self.assertFalse(user_audit.ok())
             self.assertEqual(len(user_audit.errors), 1)
             self.assertEqual(user_audit.errors[0].anvil_account, new_anvil_account)
-            self.assertIn(
-                "InactiveAnvilUser", user_audit.get_errors_table().render_to_text()
-            )
+            self.assertIn("InactiveAnvilUser", user_audit.get_errors_table().render_to_text())
             self.assertEqual(len(user_audit.needs_action), 2)
             new_user.refresh_from_db()
             self.assertFalse(new_user.is_active)
@@ -524,32 +496,24 @@ class TestUserDataAudit(TestCase):
         )
 
         SocialAccount.objects.create(
-            user=get_user_model().objects.create(
-                username="username2", email="useremail2", name="user fullname2"
-            ),
+            user=get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2"),
             uid=996,
             provider=CustomProvider.id,
         )
 
         SocialAccount.objects.create(
-            user=get_user_model().objects.create(
-                username="username3", email="useremail3", name="user fullname3"
-            ),
+            user=get_user_model().objects.create(username="username3", email="useremail3", name="user fullname3"),
             uid=997,
             provider=CustomProvider.id,
         )
 
         SocialAccount.objects.create(
-            user=get_user_model().objects.create(
-                username="username4", email="useremail4", name="user fullname4"
-            ),
+            user=get_user_model().objects.create(username="username4", email="useremail4", name="user fullname4"),
             uid=998,
             provider=CustomProvider.id,
         )
         SocialAccount.objects.create(
-            user=get_user_model().objects.create(
-                username="username5", email="useremail5", name="user fullname5"
-            ),
+            user=get_user_model().objects.create(username="username5", email="useremail5", name="user fullname5"),
             uid=999,
             provider=CustomProvider.id,
         )
@@ -561,9 +525,7 @@ class TestUserDataAudit(TestCase):
             self.assertEqual(len(user_audit.needs_action), 1)
             self.assertEqual(user_audit.errors[0].note, "Over Threshold True")
             # Run again with ignore threshold, should move from error to needs action
-            user_audit = audit.UserAudit(
-                apply_changes=False, ignore_deactivate_threshold=True
-            )
+            user_audit = audit.UserAudit(apply_changes=False, ignore_deactivate_threshold=True)
             user_audit.run_audit()
             self.assertFalse(user_audit.ok())
             self.assertEqual(len(user_audit.errors), 0)
@@ -583,16 +545,13 @@ class TestUserDataAudit(TestCase):
 
     @responses.activate
     def test_sync_drupal_data_command_with_issues(self):
-
         StudySite.objects.create(
             drupal_node_id="999999",
             short_name=TEST_STUDY_SITE_DATA[0].title,
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
 
-        new_user = get_user_model().objects.create(
-            username="username2", email="useremail2", name="user fullname2"
-        )
+        new_user = get_user_model().objects.create(username="username2", email="useremail2", name="user fullname2")
         SocialAccount.objects.create(
             user=new_user,
             uid=999,

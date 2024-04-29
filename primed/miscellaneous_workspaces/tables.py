@@ -48,12 +48,8 @@ class DataPrepWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with DataPrepWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    dataprepworkspace__target_workspace__name = tables.columns.Column(
-        linkify=True, verbose_name="Target workspace"
-    )
-    dataprepworkspace__is_active = BooleanIconColumn(
-        verbose_name="Active?", show_false_icon=True
-    )
+    dataprepworkspace__target_workspace__name = tables.columns.Column(linkify=True, verbose_name="Target workspace")
+    dataprepworkspace__is_active = BooleanIconColumn(verbose_name="Active?", show_false_icon=True)
 
     class Meta:
         model = Workspace

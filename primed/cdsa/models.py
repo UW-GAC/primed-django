@@ -28,9 +28,7 @@ class AgreementMajorVersion(TimeStampedModel, models.Model):
         validators=[MinValueValidator(1)],
         unique=True,
     )
-    is_valid = models.BooleanField(
-        default=True, help_text="Boolean indicator of whether this version is valid."
-    )
+    is_valid = models.BooleanField(default=True, help_text="Boolean indicator of whether this version is valid.")
 
     history = HistoricalRecords()
 
@@ -114,9 +112,7 @@ class SignedAgreementStatusMixin:
     STATUS = StatusChoices.choices
 
 
-class SignedAgreement(
-    TimeStampedModel, SignedAgreementStatusMixin, StatusModel, models.Model
-):
+class SignedAgreement(TimeStampedModel, SignedAgreementStatusMixin, StatusModel, models.Model):
     """Model to track verified, signed consortium data sharing agreements."""
 
     MEMBER = "member"
@@ -183,10 +179,7 @@ class SignedAgreement(
         combined_type = self.get_type_display()
         if self.type == self.MEMBER and not self.get_agreement_type().is_primary:
             combined_type = combined_type + " component"
-        elif (
-            self.type == self.DATA_AFFILIATE
-            and not self.get_agreement_type().is_primary
-        ):
+        elif self.type == self.DATA_AFFILIATE and not self.get_agreement_type().is_primary:
             combined_type = combined_type + " component"
         return combined_type
 
@@ -217,9 +210,7 @@ class AgreementTypeModel(models.Model):
     AGREEMENT_TYPE = None
     ERROR_TYPE_DOES_NOT_MATCH = "The type of the SignedAgreement does not match the expected type for this model."
 
-    signed_agreement = models.OneToOneField(
-        SignedAgreement, on_delete=models.CASCADE, primary_key=True
-    )
+    signed_agreement = models.OneToOneField(SignedAgreement, on_delete=models.CASCADE, primary_key=True)
     history = HistoricalRecords(inherit=True)
 
     class Meta:
@@ -230,10 +221,7 @@ class AgreementTypeModel(models.Model):
 
     def clean(self):
         """Ensure that the SignedAgreement type is correct for the class."""
-        if (
-            hasattr(self, "signed_agreement")
-            and self.signed_agreement.type != self.AGREEMENT_TYPE
-        ):
+        if hasattr(self, "signed_agreement") and self.signed_agreement.type != self.AGREEMENT_TYPE:
             raise ValidationError({"signed_agreement": self.ERROR_TYPE_DOES_NOT_MATCH})
 
     def get_agreement_group(self):
@@ -323,9 +311,7 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
 
     AGREEMENT_TYPE = SignedAgreement.NON_DATA_AFFILIATE
 
-    affiliation = models.CharField(
-        max_length=255, help_text="The affiliation of the person signing this CDSA."
-    )
+    affiliation = models.CharField(max_length=255, help_text="The affiliation of the person signing this CDSA.")
 
     def get_absolute_url(self):
         return reverse(
@@ -337,9 +323,7 @@ class NonDataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Mod
         return self.affiliation
 
 
-class CDSAWorkspace(
-    TimeStampedModel, RequesterModel, DataUseOntologyModel, BaseWorkspaceData
-):
+class CDSAWorkspace(TimeStampedModel, RequesterModel, DataUseOntologyModel, BaseWorkspaceData):
     """A model to track additional data about a CDSA workspace."""
 
     # Only one study per workspace.
@@ -352,9 +336,7 @@ class CDSAWorkspace(
         help_text="""Additional data use limitations that cannot be captured by DUO.""",
         blank=True,
     )
-    acknowledgments = models.TextField(
-        help_text="Acknowledgments associated with data in this workspace."
-    )
+    acknowledgments = models.TextField(help_text="Acknowledgments associated with data in this workspace.")
     available_data = models.ManyToManyField(
         AvailableData,
         help_text="Data available in this accession.",

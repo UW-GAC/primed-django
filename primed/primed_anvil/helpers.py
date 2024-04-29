@@ -18,9 +18,7 @@ def get_summary_table_data():
     # If no available data objects exist, raise ???.
     available_data_types = AvailableData.objects.values_list("name", flat=True)
     if not len(available_data_types):
-        raise RuntimeError(
-            "get_summary_table_data requires at least one AvailableData object to exist."
-        )
+        raise RuntimeError("get_summary_table_data requires at least one AvailableData object to exist.")
 
     # This query will be used to add information about whether a study has workspaces
     # that are shared with the consortium.

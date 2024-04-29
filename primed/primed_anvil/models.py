@@ -8,12 +8,8 @@ from simple_history.models import HistoricalRecords
 class Study(TimeStampedModel, models.Model):
     """A model to track studies."""
 
-    short_name = models.CharField(
-        max_length=31, unique=True, help_text="The short name for this Study."
-    )
-    full_name = models.CharField(
-        max_length=255, help_text="The full name for this Study."
-    )
+    short_name = models.CharField(max_length=31, unique=True, help_text="The short name for this Study.")
+    full_name = models.CharField(max_length=255, help_text="The full name for this Study.")
 
     history = HistoricalRecords()
 

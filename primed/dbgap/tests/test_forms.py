@@ -579,13 +579,7 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
-            "dbgap_dar_data": json.dumps(
-                [
-                    factories.dbGaPJSONProjectFactory(
-                        dbgap_application=self.dbgap_application
-                    )
-                ]
-            ),
+            "dbgap_dar_data": json.dumps([factories.dbGaPJSONProjectFactory(dbgap_application=self.dbgap_application)]),
             "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
@@ -593,9 +587,7 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
 
     def test_missing_dbgap_application(self):
         """Form is invalid when dbgap_application is missing."""
-        form = self.form_class(
-            data={"dbgap_dar_data": json.dumps([factories.dbGaPJSONProjectFactory()])}
-        )
+        form = self.form_class(data={"dbgap_dar_data": json.dumps([factories.dbGaPJSONProjectFactory()])})
         from django.core.exceptions import ObjectDoesNotExist
 
         with self.assertRaises(ObjectDoesNotExist):
@@ -679,9 +671,7 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
 
     def test_dbgap_dar_data_missing_studies(self):
         """Form is invalid when studies is missing from the JSON."""
-        project_json = factories.dbGaPJSONProjectFactory.create(
-            dbgap_application=self.dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory.create(dbgap_application=self.dbgap_application)
         project_json.pop("studies")
         form_data = {
             "dbgap_dar_data": json.dumps([project_json]),
@@ -697,9 +687,7 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
 
     def test_dbgap_dar_data_missing_study_accession(self):
         """Form is invalid when study_accession is missing from the JSON."""
-        project_json = factories.dbGaPJSONProjectFactory.create(
-            dbgap_application=self.dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory.create(dbgap_application=self.dbgap_application)
         project_json["studies"][0].pop("study_accession")
         form_data = {
             "dbgap_dar_data": json.dumps([project_json]),
@@ -835,9 +823,7 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
     def test_dbgap_project_id_does_not_match(self):
         """Form is not valid when the dbgap_project_id does not match."""
         form_data = {
-            "dbgap_dar_data": json.dumps(
-                [factories.dbGaPJSONProjectFactory(Project_id=2)]
-            ),
+            "dbgap_dar_data": json.dumps([factories.dbGaPJSONProjectFactory(Project_id=2)]),
             "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
@@ -856,9 +842,7 @@ class dbGaPDataAccessSnapshotMultipleFormTest(TestCase):
     def test_valid_one_project(self):
         """Form is valid with necessary input."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         form_data = {
             "dbgap_dar_data": json.dumps([project_json]),
         }
@@ -867,13 +851,9 @@ class dbGaPDataAccessSnapshotMultipleFormTest(TestCase):
 
     def test_valid_two_projects(self):
         dbgap_application_1 = factories.dbGaPApplicationFactory.create()
-        project_json_1 = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application_1
-        )
+        project_json_1 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application_1)
         dbgap_application_2 = factories.dbGaPApplicationFactory.create()
-        project_json_2 = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application_2
-        )
+        project_json_2 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application_2)
         form_data = {
             "dbgap_dar_data": json.dumps([project_json_1, project_json_2]),
         }
@@ -1075,9 +1055,7 @@ class dbGaPDataAccessSnapshotMultipleFormTest(TestCase):
 
     def test_two_projects_one_does_not_exist(self):
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json_1 = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json_1 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         project_json_2 = factories.dbGaPJSONProjectFactory()
         form_data = {
             "dbgap_dar_data": json.dumps([project_json_1, project_json_2]),

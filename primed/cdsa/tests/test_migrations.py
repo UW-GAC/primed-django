@@ -130,7 +130,7 @@ class PopulateIsPrimaryMigrationsForwardTest(MigratorTestCase):
             type="member",
             version=agreement_version,
             anvil_access_group=ManagedGroup.objects.create(name="testaccess1", email="testaccess1@example.com"),
-            is_primary=True
+            is_primary=True,
         )
         self.member_agreement_1 = MemberAgreement.objects.create(
             signed_agreement=tmp,
@@ -144,7 +144,7 @@ class PopulateIsPrimaryMigrationsForwardTest(MigratorTestCase):
             type="member",
             version=agreement_version,
             anvil_access_group=ManagedGroup.objects.create(name="testaccess2", email="testaccess2@example.com"),
-            is_primary=False
+            is_primary=False,
         )
         self.member_agreement_2 = MemberAgreement.objects.create(
             signed_agreement=tmp,
@@ -158,7 +158,7 @@ class PopulateIsPrimaryMigrationsForwardTest(MigratorTestCase):
             type="data_affiliate",
             version=agreement_version,
             anvil_access_group=ManagedGroup.objects.create(name="testaccess3", email="testaccess3@example.com"),
-            is_primary=True
+            is_primary=True,
         )
         self.data_affiliate_agreement_1 = DataAffiliateAgreement.objects.create(
             signed_agreement=tmp,
@@ -173,7 +173,7 @@ class PopulateIsPrimaryMigrationsForwardTest(MigratorTestCase):
             type="data_affiliate",
             version=agreement_version,
             anvil_access_group=ManagedGroup.objects.create(name="testaccess4", email="testaccess4@example.com"),
-            is_primary=False
+            is_primary=False,
         )
         self.data_affiliate_agreement_2 = DataAffiliateAgreement.objects.create(
             signed_agreement=tmp,
@@ -188,14 +188,14 @@ class PopulateIsPrimaryMigrationsForwardTest(MigratorTestCase):
             type="non_data_affiliate",
             version=agreement_version,
             anvil_access_group=ManagedGroup.objects.create(name="testaccess5", email="testaccess5@example.com"),
-            is_primary=False
+            is_primary=False,
         )
         self.non_data_affiliate_agreement = NonDataAffiliateAgreement.objects.create(
             signed_agreement=tmp,
         )
 
     def test_is_primary_correctly_populated(self):
-#        import ipdb; ipdb.set_trace()
+        #        import ipdb; ipdb.set_trace()
         MemberAgreement = self.new_state.apps.get_model("cdsa", "MemberAgreement")
         DataAffiliateAgreement = self.new_state.apps.get_model("cdsa", "DataAffiliateAgreement")
         NonDataAffiliateAgreement = self.new_state.apps.get_model("cdsa", "NonDataAffiliateAgreement")

@@ -22,9 +22,7 @@ class AccessAuditResult(PRIMEDAuditResult):
     action: str = None
 
     def __post_init__(self):
-        self.anvil_cdsa_group = ManagedGroup.objects.get(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        self.anvil_cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -96,13 +94,9 @@ class WorkspaceAccessAuditTable(tables.Table):
 
     workspace = tables.Column(linkify=True)
     data_affiliate_agreement = tables.Column(linkify=True)
-    agreement_version = tables.Column(
-        accessor="data_affiliate_agreement__signed_agreement__version"
-    )
+    agreement_version = tables.Column(accessor="data_affiliate_agreement__signed_agreement__version")
     note = tables.Column()
-    action = tables.TemplateColumn(
-        template_name="cdsa/snippets/cdsa_workspace_audit_action_button.html"
-    )
+    action = tables.TemplateColumn(template_name="cdsa/snippets/cdsa_workspace_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
@@ -125,9 +119,7 @@ class WorkspaceAccessAudit(PRIMEDAudit):
 
     def __init__(self, cdsa_workspace_queryset=None):
         # Store the CDSA group for auditing membership.
-        self.anvil_cdsa_group = ManagedGroup.objects.get(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        self.anvil_cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
         self.completed = False
         # Set up lists to hold audit results.
         self.verified = []
@@ -137,12 +129,9 @@ class WorkspaceAccessAudit(PRIMEDAudit):
         if cdsa_workspace_queryset is None:
             cdsa_workspace_queryset = models.CDSAWorkspace.objects.all()
         if not (
-            isinstance(cdsa_workspace_queryset, QuerySet)
-            and cdsa_workspace_queryset.model is models.CDSAWorkspace
+            isinstance(cdsa_workspace_queryset, QuerySet) and cdsa_workspace_queryset.model is models.CDSAWorkspace
         ):
-            raise ValueError(
-                "cdsa_workspace_queryset must be a queryset of CDSAWorkspace objects."
-            )
+            raise ValueError("cdsa_workspace_queryset must be a queryset of CDSAWorkspace objects.")
         self.cdsa_workspace_queryset = cdsa_workspace_queryset
 
     def _audit_workspace(self, workspace):
@@ -152,9 +141,7 @@ class WorkspaceAccessAudit(PRIMEDAudit):
             parent_group=auth_domain,
             child_group=self.anvil_cdsa_group,
         ).exists()
-        primary_qs = models.DataAffiliateAgreement.objects.filter(
-            study=workspace.study, is_primary=True
-        )
+        primary_qs = models.DataAffiliateAgreement.objects.filter(study=workspace.study, is_primary=True)
         primary_exists = primary_qs.exists()
 
         if primary_exists:

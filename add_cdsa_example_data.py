@@ -29,12 +29,8 @@ cc_admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP
 major_version = factories.AgreementMajorVersionFactory.create(version=1)
 
 # Create some agreement versions
-v10 = factories.AgreementVersionFactory.create(
-    major_version=major_version, minor_version=0
-)
-v11 = factories.AgreementVersionFactory.create(
-    major_version=major_version, minor_version=1
-)
+v10 = factories.AgreementVersionFactory.create(major_version=major_version, minor_version=0)
+v11 = factories.AgreementVersionFactory.create(major_version=major_version, minor_version=1)
 
 # Create a couple signed CDSAs.
 dup = DataUsePermission.objects.get(abbreviation="GRU")
@@ -57,9 +53,7 @@ cdsa_1001 = factories.MemberAgreementFactory.create(
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CC"),
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1001.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1001.signed_agreement.anvil_access_group)
 
 cdsa_1002 = factories.MemberAgreementFactory.create(
     signed_agreement__cc_id=1002,
@@ -70,9 +64,7 @@ cdsa_1002 = factories.MemberAgreementFactory.create(
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1002.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1002.signed_agreement.anvil_access_group)
 
 cdsa_1003 = factories.MemberAgreementFactory.create(
     signed_agreement__cc_id=1003,
@@ -83,9 +75,7 @@ cdsa_1003 = factories.MemberAgreementFactory.create(
     signed_agreement__version=v10,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1003.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1003.signed_agreement.anvil_access_group)
 
 cdsa_1004 = factories.MemberAgreementFactory.create(
     signed_agreement__cc_id=1004,
@@ -96,9 +86,7 @@ cdsa_1004 = factories.MemberAgreementFactory.create(
     signed_agreement__version=v11,
     study_site=StudySite.objects.get(short_name="CARDINAL"),
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1004.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1004.signed_agreement.anvil_access_group)
 
 cdsa_1005 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__cc_id=1005,
@@ -108,9 +96,7 @@ cdsa_1005 = factories.DataAffiliateAgreementFactory.create(
     study=Study.objects.get(short_name="Amish"),
     signed_agreement__version=v10,
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1005.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1005.signed_agreement.anvil_access_group)
 
 cdsa_1006 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__cc_id=1006,
@@ -122,9 +108,7 @@ cdsa_1006 = factories.DataAffiliateAgreementFactory.create(
     additional_limitations="This data can only be used for testing the app.",
     requires_study_review=True,
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1006.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1006.signed_agreement.anvil_access_group)
 
 cdsa_1007 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__cc_id=1007,
@@ -135,9 +119,7 @@ cdsa_1007 = factories.DataAffiliateAgreementFactory.create(
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1007.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1007.signed_agreement.anvil_access_group)
 
 cdsa_1008 = factories.DataAffiliateAgreementFactory.create(
     signed_agreement__cc_id=1008,
@@ -148,9 +130,7 @@ cdsa_1008 = factories.DataAffiliateAgreementFactory.create(
     study=Study.objects.get(short_name="MESA"),
     signed_agreement__version=v10,
 )
-GroupGroupMembershipFactory.create(
-    parent_group=cdsa_group, child_group=cdsa_1008.signed_agreement.anvil_access_group
-)
+GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1008.signed_agreement.anvil_access_group)
 
 cdsa_1009 = factories.NonDataAffiliateAgreementFactory.create(
     signed_agreement__cc_id=1009,
@@ -236,8 +216,6 @@ cdsa_workspace_2.data_use_modifiers.add(dum)
 cdsa_workspace_3 = factories.CDSAWorkspaceFactory.create(
     workspace__billing_project__name="demo-primed-cdsa",
     workspace__name="DEMO_PRIMED_CDSA_ARIC_1",
-    study=Study.objects.create(
-        short_name="ARIC", full_name="Atherosclerosis Risk in Communities"
-    ),
+    study=Study.objects.create(short_name="ARIC", full_name="Atherosclerosis Risk in Communities"),
     data_use_permission=dup,
 )

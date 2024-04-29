@@ -53,14 +53,10 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         return "phs{phs:06d}".format(phs=self.dbgap_phs)
 
     def get_absolute_url(self):
-        return reverse(
-            "dbgap:dbgap_study_accessions:detail", kwargs={"dbgap_phs": self.dbgap_phs}
-        )
+        return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"dbgap_phs": self.dbgap_phs})
 
 
-class dbGaPWorkspace(
-    RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData
-):
+class dbGaPWorkspace(RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""
 
     # PositiveIntegerField allows 0 and we want this to be 1 or higher.
@@ -99,13 +95,9 @@ class dbGaPWorkspace(
     # Unfortunately, there are often legacy codes that don't fit into the current main/modifiers model.
     # We also need this field to match to dbGaP authorized access, so store it separately."""
 
-    data_use_limitations = models.TextField(
-        help_text="""The full data use limitations for this workspace."""
-    )
+    data_use_limitations = models.TextField(help_text="""The full data use limitations for this workspace.""")
 
-    acknowledgments = models.TextField(
-        help_text="Acknowledgments associated with data in this workspace."
-    )
+    acknowledgments = models.TextField(help_text="Acknowledgments associated with data in this workspace.")
     available_data = models.ManyToManyField(
         AvailableData,
         help_text="Data available in this accession.",
@@ -242,20 +234,13 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         """
         if self.dbgap_dar_data:
             try:
-                jsonschema.validate(
-                    self.dbgap_dar_data, constants.JSON_PROJECT_DAR_SCHEMA
-                )
+                jsonschema.validate(self.dbgap_dar_data, constants.JSON_PROJECT_DAR_SCHEMA)
             except jsonschema.exceptions.ValidationError as e:
                 # Replace the full json string because it will be very long
                 error_message = e.message.replace(str(e.instance), "JSON array")
                 raise ValidationError({"dbgap_dar_data": error_message})
-            if (
-                self.dbgap_dar_data["Project_id"]
-                != self.dbgap_application.dbgap_project_id
-            ):
-                raise ValidationError(
-                    "Project_id in JSON does not match dbgap_application.dbgap_project_id."
-                )
+            if self.dbgap_dar_data["Project_id"] != self.dbgap_application.dbgap_project_id:
+                raise ValidationError("Project_id in JSON does not match dbgap_application.dbgap_project_id.")
 
     def create_dars_from_json(self):
         """Add DARs for this application from the dbGaP json for this project snapshot.
@@ -280,19 +265,13 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         # Make sure that the dbgap_project_id matches.
         project_id = project_json["Project_id"]
         if project_id != self.dbgap_application.dbgap_project_id:
-            raise ValueError(
-                "project_id does not match dbgap_application.dbgap_project_id."
-            )
+            raise ValueError("project_id does not match dbgap_application.dbgap_project_id.")
         # Loop over studies and requests to create DARs.
         # Do not save them until everything has been successfully created.
         for study_json in project_json["studies"]:
             # Consider making this a model manager method for dbGaPStudyAccession, since it may be common.
             # Get the dbGaPStudyAccession associated with this phs.
-            phs = int(
-                re.match(constants.PHS_REGEX, study_json["study_accession"]).group(
-                    "phs"
-                )
-            )
+            phs = int(re.match(constants.PHS_REGEX, study_json["study_accession"]).group("phs"))
             # Create the DAR.
             for request_json in study_json["requests"]:
                 # dbGaP does not keep track of the original version and participant set associated with a DAR.
@@ -313,10 +292,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                         raise ValueError("dbgap_phs mismatch")
                     if previous_dar.dbgap_consent_code != request_json["consent_code"]:
                         raise ValueError("dbgap_consent_code mismatch")
-                    if (
-                        previous_dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id
-                        != project_id
-                    ):
+                    if previous_dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id != project_id:
                         raise ValueError("project_id mismatch")
                     # If everything looks good, pull the original version and participant set from the previous DAR.
                     original_version = previous_dar.original_version
@@ -340,9 +316,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     original_participant_set = int(match.group("participant_set"))
                 except ValueError as e:
                     # Log an error and re-raise.
-                    msg = "DAR ID mismatch for snapshot pk {} and DAR ID {}".format(
-                        self.pk, previous_dar.dbgap_dar_id
-                    )
+                    msg = "DAR ID mismatch for snapshot pk {} and DAR ID {}".format(self.pk, previous_dar.dbgap_dar_id)
                     logger.error(msg)
                     logger.error(str(e))
                     raise

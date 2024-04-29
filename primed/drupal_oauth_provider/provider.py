@@ -24,7 +24,6 @@ class CustomAccount(ProviderAccount):
 
 
 class CustomProvider(OAuth2Provider):
-
     id = "drupal_oauth_provider"
     name = OVERRIDE_NAME
     account_class = CustomAccount
@@ -74,9 +73,7 @@ class CustomProvider(OAuth2Provider):
             )
 
         if not isinstance(gregor_oauth_scopes, list):
-            raise ImproperlyConfigured(
-                "[get_provider_scope_config] provider setting SCOPES should be a list"
-            )
+            raise ImproperlyConfigured("[get_provider_scope_config] provider setting SCOPES should be a list")
 
         return gregor_oauth_scopes
 

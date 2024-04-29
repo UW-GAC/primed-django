@@ -32,8 +32,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user_changed = False
         if user.name != full_name:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_name] user {user} "
-                f"name updated from {user.name} to {full_name}"
+                f"[SocialAccountAdatpter:update_user_name] user {user} " f"name updated from {user.name} to {full_name}"
             )
             user.name = full_name
             user_changed = True
@@ -63,9 +62,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user_sites_updated = False
         if research_center_or_site:
             if not isinstance(research_center_or_site, list):
-                raise ImproperlyConfigured(
-                    "sociallogin.extra_data.study_site_or_center should be a list"
-                )
+                raise ImproperlyConfigured("sociallogin.extra_data.study_site_or_center should be a list")
             for rc_name in research_center_or_site:
                 try:
                     rc = StudySite.objects.get(short_name=rc_name)
@@ -106,14 +103,10 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             added_groups = []
             removed_groups = []
             if not isinstance(managed_scope_status, dict):
-                raise ImproperlyConfigured(
-                    "sociallogin.extra_data.managed_scope_status should be a dict"
-                )
+                raise ImproperlyConfigured("sociallogin.extra_data.managed_scope_status should be a dict")
             else:
                 for group_name, user_has_group in managed_scope_status.items():
-                    user_group, was_created = Group.objects.get_or_create(
-                        name=group_name
-                    )
+                    user_group, was_created = Group.objects.get_or_create(name=group_name)
                     if was_created:
                         logger.debug(
                             f"[SocialAccountAdatpter:update_user_data] created mapped user group: {group_name}"
@@ -134,7 +127,6 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                 )
 
     def update_user_data(self, sociallogin: Any):
-
         logger.debug(
             f"[SocialAccountAdatpter:update_user_data] account: {sociallogin.account} "
             f"extra_data {sociallogin.account.extra_data} "

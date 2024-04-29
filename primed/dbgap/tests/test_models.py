@@ -62,9 +62,7 @@ class dbGaPStudyAccessionTest(TestCase):
             instance.full_clean()
         self.assertIn("dbgap_phs", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["dbgap_phs"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["dbgap_phs"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["dbgap_phs"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance.save()
 
@@ -185,18 +183,14 @@ class dbGaPWorkspaceTest(TestCase):
             instance.full_clean()
         self.assertIn("__all__", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["__all__"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["__all__"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance.save()
 
     def test_dbgap_study_accession_protect(self):
         """Cannot delete a dbGaPStudyAccession if it has an associated dbGaPWorkspace."""
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession=dbgap_study_accession
-        )
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession=dbgap_study_accession)
         with self.assertRaises(ProtectedError):
             dbgap_study_accession.delete()
 
@@ -356,9 +350,7 @@ class dbGaPWorkspaceTest(TestCase):
 
     def test_get_data_access_requests_smaller_participant_set(self):
         """Does return a DAR where participant set is smaller than the workspace."""
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            dbgap_version=2, dbgap_participant_set=2
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=2, dbgap_participant_set=2)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=1,
@@ -383,9 +375,7 @@ class dbGaPWorkspaceTest(TestCase):
     def test_get_data_access_requests_one_application_one_snapshot_one_match(self):
         """Returns 1 results when there is one matching DARs."""
         workspace = factories.dbGaPWorkspaceFactory.create()
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(
-            dbgap_workspace=workspace
-        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=workspace)
         results = workspace.get_data_access_requests()
         self.assertEqual(len(results), 1)
         self.assertIn(dar, results)
@@ -551,9 +541,7 @@ class dbGaPApplicationTest(TestCase):
             instance.full_clean()
         self.assertIn("dbgap_project_id", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["dbgap_project_id"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["dbgap_project_id"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["dbgap_project_id"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance.save()
 
@@ -657,9 +645,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
     def test_dbgap_application_protect(self):
         """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessSnapshot."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=dbgap_application
-        )
+        factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=dbgap_application)
         with self.assertRaises(ProtectedError):
             dbgap_application.delete()
 
@@ -673,9 +659,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(studies=[study_json])
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application__dbgap_project_id=project_json["Project_id"],
@@ -686,9 +670,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             responses.GET,
             constants.DBGAP_STUDY_URL,
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         dars = dbgap_snapshot.create_dars_from_json()
         self.assertEqual(len(dars), 1)
@@ -722,9 +704,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1235,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json_1, dar_json_2]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json_1, dar_json_2])
         project_json = factories.dbGaPJSONProjectFactory(studies=[study_json])
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application__dbgap_project_id=project_json["Project_id"],
@@ -735,9 +715,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             responses.GET,
             constants.DBGAP_STUDY_URL,
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         dars = dbgap_snapshot.create_dars_from_json()
         self.assertEqual(len(dars), 2)
@@ -783,15 +761,9 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1235,
             current_DAR_status="approved",
         )
-        study_json_1 = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json_1]
-        )
-        study_json_2 = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000896", requests=[dar_json_2]
-        )
-        project_json = factories.dbGaPJSONProjectFactory(
-            studies=[study_json_1, study_json_2]
-        )
+        study_json_1 = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json_1])
+        study_json_2 = factories.dbGaPJSONStudyFactory(study_accession="phs000896", requests=[dar_json_2])
+        project_json = factories.dbGaPJSONProjectFactory(studies=[study_json_1, study_json_2])
 
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application__dbgap_project_id=project_json["Project_id"],
@@ -803,18 +775,14 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         responses.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000896"})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000896.v2.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000896.v2.p1"},
         )
         dars = dbgap_snapshot.create_dars_from_json()
         self.assertEqual(len(dars), 2)
@@ -879,9 +847,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="rejected",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(studies=[study_json])
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application__dbgap_project_id=project_json["Project_id"],
@@ -892,9 +858,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             responses.GET,
             constants.DBGAP_STUDY_URL,
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         dars = dbgap_snapshot.create_dars_from_json()
         self.assertEqual(len(dars), 1)
@@ -913,9 +877,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(
             Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
         )
@@ -950,9 +912,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertEqual(updated_dar.dbgap_data_access_snapshot, second_snapshot)
         # These should be pulled from the original dar.
         self.assertEqual(updated_dar.original_version, original_dar.original_version)
-        self.assertEqual(
-            updated_dar.original_participant_set, original_dar.original_participant_set
-        )
+        self.assertEqual(updated_dar.original_participant_set, original_dar.original_participant_set)
 
     @responses.activate
     def test_dbgap_create_dars_version_change_between_new_and_approved(self):
@@ -965,9 +925,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(
             Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
         )
@@ -999,9 +957,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             responses.GET,
             constants.DBGAP_STUDY_URL,
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v33.p19"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v33.p19"},
         )
         updated_dars = second_snapshot.create_dars_from_json()
         self.assertEqual(len(updated_dars), 1)
@@ -1025,9 +981,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000892", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000892", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(
             Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
         )
@@ -1069,9 +1023,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(
             Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
         )
@@ -1113,9 +1065,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             DAR=1234,
             current_DAR_status="approved",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
         project_json = factories.dbGaPJSONProjectFactory(
             Project_id=dbgap_application.dbgap_project_id, studies=[study_json]
         )
@@ -1185,9 +1135,7 @@ class dbGaPDataAccessRequestTest(TestCase):
             instance.full_clean()
         self.assertIn("__all__", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["__all__"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["__all__"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance.save()
 
@@ -1203,9 +1151,7 @@ class dbGaPDataAccessRequestTest(TestCase):
             instance.full_clean()
         self.assertIn("__all__", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["__all__"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["__all__"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance.save()
 
@@ -1220,18 +1166,14 @@ class dbGaPDataAccessRequestTest(TestCase):
             instance.full_clean()
         self.assertIn("__all__", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["__all__"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["__all__"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["__all__"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance.save()
 
     def test_dbgap_data_access_snapshot_protect(self):
         """Cannot delete a dbGaPApplication if it has an associated dbGaPDataAccessSnapshot."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=dbgap_snapshot
-        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_data_access_snapshot=dbgap_snapshot)
         dbgap_snapshot.delete()
         with self.assertRaises(models.dbGaPDataAccessSnapshot.DoesNotExist):
             dbgap_snapshot.refresh_from_db()
@@ -1409,9 +1351,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         expired_dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_current_status=models.dbGaPDataAccessRequest.EXPIRED
         )
-        new_dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_current_status=models.dbGaPDataAccessRequest.NEW
-        )
+        new_dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_current_status=models.dbGaPDataAccessRequest.NEW)
         qs = models.dbGaPDataAccessRequest.objects.approved()
         self.assertEqual(len(qs), 1)
         self.assertIn(approved_dar, qs)
@@ -1457,9 +1397,7 @@ class dbGaPDataAccessRequestTest(TestCase):
     def test_get_dbgap_workspaces_no_matches(self):
         """Returns an empty queryset when there is no matching workspace."""
         study_accession = factories.dbGaPStudyAccessionFactory.create()
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_phs=study_accession.dbgap_phs
-        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=study_accession.dbgap_phs)
         self.assertEqual(dar.get_dbgap_workspaces().count(), 0)
 
     def test_get_dbgap_workspaces_one_match(self):
@@ -1541,9 +1479,7 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_get_dbgap_workspaces_larger_participant_set(self):
         """Finds a matching workspace with a larger version and participant set."""
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            dbgap_version=2, dbgap_participant_set=2
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_version=2, dbgap_participant_set=2)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=workspace.dbgap_study_accession.dbgap_phs,
             original_version=1,
@@ -1556,9 +1492,7 @@ class dbGaPDataAccessRequestTest(TestCase):
 
     def test_get_dbgap_workspaces_different_dbgap_study_accession(self):
         """Raises ObjectNotFound for workspace with the same phs/version but different phs."""
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__dbgap_phs=1
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__dbgap_phs=1)
         dar = factories.dbGaPDataAccessRequestFactory.create(
             dbgap_phs=2,
             original_version=workspace.dbgap_version,

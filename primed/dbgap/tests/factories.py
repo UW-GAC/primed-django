@@ -91,9 +91,7 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create(
-            name="auth_{}".format(self.workspace.name)
-        )
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
         self.workspace.authorization_domains.add(auth_domain)
 
 
@@ -157,18 +155,12 @@ class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
     """A factory for the dbGaPApplication model to match a workspace."""
 
     dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
-    dbgap_phs = LazyAttribute(
-        lambda o: o.dbgap_workspace.dbgap_study_accession.dbgap_phs
-    )
+    dbgap_phs = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_study_accession.dbgap_phs)
     dbgap_dar_id = Sequence(lambda n: n + 1)
     original_version = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_version)
-    original_participant_set = LazyAttribute(
-        lambda o: o.dbgap_workspace.dbgap_participant_set
-    )
+    original_participant_set = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_participant_set)
     dbgap_consent_code = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_code)
-    dbgap_consent_abbreviation = LazyAttribute(
-        lambda o: o.dbgap_workspace.dbgap_consent_abbreviation
-    )
+    dbgap_consent_abbreviation = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_abbreviation)
     dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
     dbgap_dac = Faker("word")
 
@@ -211,6 +203,4 @@ class dbGaPJSONProjectFactory(DictFactory):
     studies = List([SubFactory(dbGaPJSONStudyFactory)])
 
     class Params:
-        dbgap_application = Trait(
-            Project_id=LazyAttribute(lambda o: o.dbgap_application.dbgap_project_id)
-        )
+        dbgap_application = Trait(Project_id=LazyAttribute(lambda o: o.dbgap_application.dbgap_project_id))

@@ -17,14 +17,9 @@ from . import models
 
 
 class AgreementVersionTable(tables.Table):
-
     major_version = tables.Column(linkify=True)
-    full_version = tables.Column(
-        linkify=True, order_by=("major_version", "minor_version")
-    )
-    major_version__is_valid = BooleanIconColumn(
-        verbose_name="Valid?", show_false_icon=True
-    )
+    full_version = tables.Column(linkify=True, order_by=("major_version", "minor_version"))
+    major_version__is_valid = BooleanIconColumn(verbose_name="Valid?", show_false_icon=True)
 
     class Meta:
         model = models.AgreementVersion
@@ -37,7 +32,6 @@ class AgreementVersionTable(tables.Table):
 
 
 class SignedAgreementTable(tables.Table):
-
     cc_id = tables.Column(linkify=True)
     representative__name = tables.Column(
         linkify=lambda record: record.representative.get_absolute_url(),
@@ -213,9 +207,7 @@ class RepresentativeRecordsTable(tables.Table):
 class StudyRecordsTable(tables.Table):
     """Table for a list of studies that have signed the CDSA."""
 
-    signed_agreement__representative__name = tables.Column(
-        verbose_name="Representative"
-    )
+    signed_agreement__representative__name = tables.Column(verbose_name="Representative")
     # This will only order properly if the order_by value is a column in the table.
     study__short_name = tables.Column(verbose_name="Study")
 
@@ -235,9 +227,7 @@ class UserAccessRecordsTable(tables.Table):
     group__signedagreement__representative__name = tables.Column(
         verbose_name="Signing representatitve",
     )
-    signing_group = tables.Column(
-        verbose_name="Signing group", accessor="group__signedagreement", orderable=False
-    )
+    signing_group = tables.Column(verbose_name="Signing group", accessor="group__signedagreement", orderable=False)
 
     class Meta:
         model = GroupAccountMembership
@@ -267,12 +257,8 @@ class CDSAWorkspaceRecordsTable(tables.Table):
     workspace__name = tables.Column()
     workspace__billing_project = tables.Column()
     study = tables.Column()
-    data_use_permission__abbreviation = tables.Column(
-        verbose_name="Data use permission"
-    )
-    data_use_modifiers = tables.ManyToManyColumn(
-        transform=lambda x: x.abbreviation, verbose_name="Data use modifiers"
-    )
+    data_use_permission__abbreviation = tables.Column(verbose_name="Data use permission")
+    data_use_modifiers = tables.ManyToManyColumn(transform=lambda x: x.abbreviation, verbose_name="Data use modifiers")
     workspace__created = tables.columns.Column(verbose_name="Date created")
     date_shared = tables.columns.Column(accessor="pk", verbose_name="Date shared")
 
@@ -291,9 +277,7 @@ class CDSAWorkspaceRecordsTable(tables.Table):
 
     def render_date_shared(self, record):
         try:
-            wgs = record.workspace.workspacegroupsharing_set.get(
-                group__name="PRIMED_ALL"
-            )
+            wgs = record.workspace.workspacegroupsharing_set.get(group__name="PRIMED_ALL")
             return wgs.created
         except WorkspaceGroupSharing.DoesNotExist:
             return "—"

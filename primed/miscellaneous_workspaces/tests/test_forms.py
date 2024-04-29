@@ -1,4 +1,4 @@
-""""Form tests for the `workspaces` app."""
+""" "Form tests for the `workspaces` app."""
 
 from anvil_consortium_manager.adapters.workspace import workspace_adapter_registry
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
@@ -12,7 +12,6 @@ from . import factories
 
 
 class SimulatedDataWorkspaceFormTest(TestCase):
-
     form_class = forms.SimulatedDataWorkspaceForm
 
     def setUp(self):
@@ -55,7 +54,6 @@ class SimulatedDataWorkspaceFormTest(TestCase):
 
 
 class ConsortiumDevelWorkspaceFormTest(TestCase):
-
     form_class = forms.ConsortiumDevelWorkspaceForm
 
     def setUp(self):
@@ -98,7 +96,6 @@ class ConsortiumDevelWorkspaceFormTest(TestCase):
 
 
 class ResourceWorkspaceFormTest(TestCase):
-
     form_class = forms.ResourceWorkspaceForm
 
     def setUp(self):
@@ -141,7 +138,6 @@ class ResourceWorkspaceFormTest(TestCase):
 
 
 class TemplateWorkspaceFormTest(TestCase):
-
     form_class = forms.TemplateWorkspaceForm
 
     def setUp(self):
@@ -196,7 +192,6 @@ class TemplateWorkspaceFormTest(TestCase):
 
 
 class OpenAccessWorkspaceFormTest(TestCase):
-
     form_class = forms.OpenAccessWorkspaceForm
 
     def setUp(self):
@@ -342,7 +337,6 @@ class OpenAccessWorkspaceFormTest(TestCase):
 
 
 class DataPrepWorkspaceFormTest(TestCase):
-
     form_class = forms.DataPrepWorkspaceForm
 
     def setUp(self):
@@ -412,9 +406,7 @@ class DataPrepWorkspaceFormTest(TestCase):
                 # Cannot create data prep workspaces for data prep workspace target_workspaces.
                 pass
             else:
-                target_workspace = WorkspaceFactory.create(
-                    workspace_type=workspace_type
-                )
+                target_workspace = WorkspaceFactory.create(workspace_type=workspace_type)
                 form_data = {
                     "workspace": self.workspace,
                     "target_workspace": target_workspace,
