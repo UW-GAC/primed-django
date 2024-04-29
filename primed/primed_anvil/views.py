@@ -1,3 +1,5 @@
+import json
+
 from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffEditRequired,
     AnVILConsortiumManagerStaffViewRequired,
@@ -182,4 +184,18 @@ class DataSummaryView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         table_data = helpers.get_summary_table_data()
         context["summary_table"] = tables.DataSummaryTable(table_data)
+        return context
+
+
+class PhenotypeInventoryInputsView(
+    AnVILConsortiumManagerStaffViewRequired, TemplateView
+):
+
+    template_name = "primed_anvil/phenotype_inventory_inputs.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["workspaces_input"] = json.dumps(
+            helpers.get_workspaces_for_phenotype_inventory(), indent=2
+        )
         return context

@@ -1,7 +1,11 @@
 import json
 
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager.tests.factories import AccountFactory
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    ManagedGroupFactory,
+    WorkspaceGroupSharingFactory,
+)
 from anvil_consortium_manager.views import AccountList
 from constance.test import override_config
 from django.conf import settings
@@ -1267,3 +1271,81 @@ class DataSummaryTableTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
         self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+
+class PhenotypeInventoryInputsViewTest(TestCase):
+    """Tests for the PhenotypeInventoryInputsView view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+            )
+        )
+        self.primed_all = ManagedGroupFactory.create(name="PRIMED_ALL")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:utilities:phenotype_inventory_inputs", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.PhenotypeInventoryInputsView.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
+        )
+
+    def test_status_code_with_authenticated_user(self):
+        """Redirects to login view when user has no perms."""
+        user_no_perms = User.objects.create_user(
+            username="test-none", password="test-none"
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_view_user(self):
+        """Redirects to login view when user has view perm."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
+            )
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_workspaces_input_no_workspaces(self):
+        """workspaces_input exists in the context and is correct with no workspaces."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("workspaces_input", response.context_data)
+        self.assertEqual(response.context_data["workspaces_input"], "{}")
+
+    def test_context_workspaces_input_one_workspace(self):
+        """workspaces_input exists in the context and is correct with one shared workspace."""
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace.workspace, group=self.primed_all
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("workspaces_input", response.context_data)
+        self.assertEqual(
+            response.context_data["workspaces_input"],
+            """{\n  "test-bp/test-ws": ""\n}""",
+        )
