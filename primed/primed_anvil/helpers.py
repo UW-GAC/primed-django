@@ -220,6 +220,6 @@ def get_workspaces_for_phenotype_inventory():
         study_names = [x["study_names"] if x["study_names"] else "" for x in group]
         if not study_names:
             study_names = ""
-        json[key] = ", ".join(study_names)
+        json[key] = ", ".join(sorted(study_names))
 
     return json
