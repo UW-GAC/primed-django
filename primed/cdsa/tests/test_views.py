@@ -7663,7 +7663,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(
             response,
             # """<dt class="col-sm-2">Associated CDSA</dt><dd class="col-sm-9">mdash;</dd>"""
-            """No primary CDSA"""
+            """No primary CDSA""",
             # """<dt class="col-sm-2">Associated CDSA</dt> <dd class="col-sm-9">&mdash;</dd>""",  # noqa: E501
         )
 

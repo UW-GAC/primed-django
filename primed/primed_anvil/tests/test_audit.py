@@ -1,4 +1,5 @@
 """Tests for the `audit.py` module."""
+
 from dataclasses import dataclass
 from unittest import TestCase
 

@@ -489,10 +489,10 @@ class dbGaPDataAccessSnapshotDetail(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "data_access_request_table"
-        ] = tables.dbGaPDataAccessRequestBySnapshotTable(
-            self.object.dbgapdataaccessrequest_set.all()
+        context["data_access_request_table"] = (
+            tables.dbGaPDataAccessRequestBySnapshotTable(
+                self.object.dbgapdataaccessrequest_set.all()
+            )
         )
         context["summary_table"] = tables.dbGaPDataAccessRequestSummaryTable(
             self.object.dbgapdataaccessrequest_set.all()

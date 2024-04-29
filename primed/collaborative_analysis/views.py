@@ -166,9 +166,9 @@ class CollaborativeAnalysisAuditResolve(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "collaborative_analysis_workspace"
-        ] = self.collaborative_analysis_workspace
+        context["collaborative_analysis_workspace"] = (
+            self.collaborative_analysis_workspace
+        )
         context["member"] = self.member
         context["audit_result"] = self.audit_result
         return context

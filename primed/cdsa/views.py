@@ -67,10 +67,9 @@ class AgreementMajorVersionDetail(
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
-        context[
-            "show_invalidate_button"
-        ] = self.object.is_valid and self.request.user.has_perm(
-            edit_permission_codename
+        context["show_invalidate_button"] = (
+            self.object.is_valid
+            and self.request.user.has_perm(edit_permission_codename)
         )
         return context
 
@@ -397,9 +396,9 @@ class MemberAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "show_deprecation_message"
-        ] = not self.object.signed_agreement.version.major_version.is_valid
+        context["show_deprecation_message"] = (
+            not self.object.signed_agreement.version.major_version.is_valid
+        )
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
@@ -460,9 +459,9 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, Deta
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "show_deprecation_message"
-        ] = not self.object.signed_agreement.version.major_version.is_valid
+        context["show_deprecation_message"] = (
+            not self.object.signed_agreement.version.major_version.is_valid
+        )
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
@@ -519,9 +518,9 @@ class NonDataAffiliateAgreementDetail(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "show_deprecation_message"
-        ] = not self.object.signed_agreement.version.major_version.is_valid
+        context["show_deprecation_message"] = (
+            not self.object.signed_agreement.version.major_version.is_valid
+        )
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
