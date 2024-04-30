@@ -1,4 +1,4 @@
-""""Model tests for the `miscellaneous_workspaces` app."""
+""" "Model tests for the `miscellaneous_workspaces` app."""
 
 from anvil_consortium_manager.tests.factories import WorkspaceFactory
 from django.core.exceptions import ValidationError
@@ -23,9 +23,7 @@ class SimulatedDataWorkspaceTest(TestCase):
         self.assertIsInstance(instance, models.SimulatedDataWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.SimulatedDataWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
@@ -38,16 +36,12 @@ class ConsortiumDevelWorkspaceTest(TestCase):
         """Creation using the model constructor and .save() works."""
         workspace = WorkspaceFactory.create()
         user = UserFactory.create()
-        instance = models.ConsortiumDevelWorkspace(
-            workspace=workspace, requested_by=user
-        )
+        instance = models.ConsortiumDevelWorkspace(workspace=workspace, requested_by=user)
         instance.save()
         self.assertIsInstance(instance, models.ConsortiumDevelWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.ConsortiumDevelWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
@@ -65,9 +59,7 @@ class ResourceWorkspaceTest(TestCase):
         self.assertIsInstance(instance, models.ResourceWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.ResourceWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
@@ -84,9 +76,7 @@ class TemplateWorkspaceTest(TestCase):
         self.assertIsInstance(instance, models.TemplateWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.TemplateWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
@@ -104,9 +94,7 @@ class OpenAccessWorkspaceTest(TestCase):
         self.assertIsInstance(instance, models.OpenAccessWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.OpenAccessWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
@@ -144,9 +132,7 @@ class OpenAccessWorkspaceTest(TestCase):
     def test_data_url(self):
         workspace = WorkspaceFactory.create()
         user = UserFactory.create()
-        instance = models.OpenAccessWorkspace(
-            workspace=workspace, requested_by=user, data_url="http://www.example.com"
-        )
+        instance = models.OpenAccessWorkspace(workspace=workspace, requested_by=user, data_url="http://www.example.com")
         self.assertEqual(instance.data_url, "http://www.example.com")
 
 
@@ -158,28 +144,20 @@ class DataPrepWorkspaceTest(TestCase):
         workspace = WorkspaceFactory.create()
         target_workspace = WorkspaceFactory.create()
         user = UserFactory.create()
-        instance = models.DataPrepWorkspace(
-            workspace=workspace, target_workspace=target_workspace, requested_by=user
-        )
+        instance = models.DataPrepWorkspace(workspace=workspace, target_workspace=target_workspace, requested_by=user)
         instance.save()
         self.assertIsInstance(instance, models.DataPrepWorkspace)
 
     def test_str_method(self):
-        workspace = WorkspaceFactory.create(
-            billing_project__name="test-bp", name="test-ws"
-        )
+        workspace = WorkspaceFactory.create(billing_project__name="test-bp", name="test-ws")
         instance = factories.DataPrepWorkspaceFactory.create(workspace=workspace)
         self.assertIsInstance(str(instance), str)
         self.assertEqual(str(instance), "test-bp/test-ws")
 
     def test_two_update_workspaces_for_same_final_workspace(self):
         target_workspace = WorkspaceFactory.create()
-        instance_1 = factories.DataPrepWorkspaceFactory.create(
-            target_workspace=target_workspace
-        )
-        instance_2 = factories.DataPrepWorkspaceFactory.create(
-            target_workspace=target_workspace
-        )
+        instance_1 = factories.DataPrepWorkspaceFactory.create(target_workspace=target_workspace)
+        instance_2 = factories.DataPrepWorkspaceFactory.create(target_workspace=target_workspace)
         self.assertEqual(target_workspace.data_prep_workspaces.count(), 2)
         self.assertIn(instance_1, target_workspace.data_prep_workspaces.all())
         self.assertIn(instance_2, target_workspace.data_prep_workspaces.all())
@@ -188,9 +166,7 @@ class DataPrepWorkspaceTest(TestCase):
         """Clean method raises ValidationError when workspace is the same as original_workspace."""
         workspace = WorkspaceFactory.create()
         user = UserFactory.create()
-        instance = models.DataPrepWorkspace(
-            requested_by=user, workspace=workspace, target_workspace=workspace
-        )
+        instance = models.DataPrepWorkspace(requested_by=user, workspace=workspace, target_workspace=workspace)
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertEqual(len(e.exception.message_dict), 1)

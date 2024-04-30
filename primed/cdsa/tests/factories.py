@@ -51,9 +51,7 @@ class SignedAgreementFactory(DjangoModelFactory):
     anvil_access_group = SubFactory(
         ManagedGroupFactory,
         name=LazyAttribute(
-            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX
-            + "_CDSA_ACCESS_"
-            + str(o.factory_parent.cc_id)
+            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX + "_CDSA_ACCESS_" + str(o.factory_parent.cc_id)
         ),
     )
 
@@ -62,10 +60,7 @@ class SignedAgreementFactory(DjangoModelFactory):
 
 
 class MemberAgreementFactory(DjangoModelFactory):
-
-    signed_agreement = SubFactory(
-        SignedAgreementFactory, type=models.SignedAgreement.MEMBER
-    )
+    signed_agreement = SubFactory(SignedAgreementFactory, type=models.SignedAgreement.MEMBER)
     study_site = SubFactory(StudySiteFactory)
     is_primary = True
 
@@ -74,10 +69,7 @@ class MemberAgreementFactory(DjangoModelFactory):
 
 
 class DataAffiliateAgreementFactory(DjangoModelFactory):
-
-    signed_agreement = SubFactory(
-        SignedAgreementFactory, type=models.SignedAgreement.DATA_AFFILIATE
-    )
+    signed_agreement = SubFactory(SignedAgreementFactory, type=models.SignedAgreement.DATA_AFFILIATE)
     study = SubFactory(StudyFactory)
     is_primary = True
     anvil_upload_group = SubFactory(
@@ -94,10 +86,7 @@ class DataAffiliateAgreementFactory(DjangoModelFactory):
 
 
 class NonDataAffiliateAgreementFactory(DjangoModelFactory):
-
-    signed_agreement = SubFactory(
-        SignedAgreementFactory, type=models.SignedAgreement.NON_DATA_AFFILIATE
-    )
+    signed_agreement = SubFactory(SignedAgreementFactory, type=models.SignedAgreement.NON_DATA_AFFILIATE)
     affiliation = Faker("company")
 
     class Meta:
@@ -105,7 +94,6 @@ class NonDataAffiliateAgreementFactory(DjangoModelFactory):
 
 
 class CDSAWorkspaceFactory(DjangoModelFactory):
-
     study = SubFactory(StudyFactory)
     acknowledgments = Faker("paragraph")
     requested_by = SubFactory(UserFactory)
@@ -121,9 +109,7 @@ class CDSAWorkspaceFactory(DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create(
-            name="auth_{}".format(self.workspace.name)
-        )
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
         self.workspace.authorization_domains.add(auth_domain)
 
     class Meta:

@@ -19,7 +19,7 @@ class dbGaPAccessionColumn(tables.Column):
         accessor="get_dbgap_accession",
         dbgap_link_accessor="get_dbgap_link",
         verbose_name="dbGaP accession",
-        **kwargs
+        **kwargs,
     ):
         self.dbgap_link_accessor = dbgap_link_accessor
         super().__init__(accessor=accessor, verbose_name=verbose_name, **kwargs)
@@ -29,9 +29,7 @@ class dbGaPAccessionColumn(tables.Column):
         if self.dbgap_link_accessor:
             url = tables.A(self.dbgap_link_accessor).resolve(record)
             return format_html(
-                """<a href="{}" target="_blank">{} <i class="bi bi-box-arrow-up-right"></i></a>""".format(
-                    url, value
-                )
+                """<a href="{}" target="_blank">{} <i class="bi bi-box-arrow-up-right"></i></a>""".format(url, value)
             )
         else:
             return value
@@ -46,9 +44,7 @@ class ManyToManyDateTimeColumn(tables.columns.ManyToManyColumn):
     def transform(self, obj):
         context = Context()
         context.update({"value": obj.created, "default": self.default})
-        return Template(
-            """{{ value|date:"DATETIME_FORMAT"|default:default }}"""
-        ).render(context)
+        return Template("""{{ value|date:"DATETIME_FORMAT"|default:default }}""").render(context)
 
 
 class dbGaPStudyAccessionTable(tables.Table):
@@ -87,9 +83,7 @@ class dbGaPWorkspaceUserTable(tables.Table):
             "dbgapworkspace__dbgap_participant_set",
         ),
     )
-    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(
-        verbose_name="Consent"
-    )
+    dbgapworkspace__dbgap_consent_abbreviation = tables.columns.Column(verbose_name="Consent")
     dbgapworkspace__gsr_restricted = BooleanIconColumn(
         orderable=False, true_icon="dash-circle-fill", true_color="#ffc107"
     )
@@ -266,9 +260,7 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
 
     dbgap_data_access_snapshot__dbgap_application__dbgap_project_id = None
     dbgap_data_access_snapshot__created = None
-    matching_workspaces = tables.columns.Column(
-        accessor="get_dbgap_workspaces", orderable=False, default=" "
-    )
+    matching_workspaces = tables.columns.Column(accessor="get_dbgap_workspaces", orderable=False, default=" ")
 
     class Meta:
         model = models.dbGaPDataAccessRequest

@@ -29,12 +29,9 @@ class AuditResult(PRIMEDAuditResult):
 
     def __post_init__(self):
         if self.data_access_request and (
-            self.data_access_request.dbgap_data_access_snapshot.dbgap_application
-            != self.dbgap_application
+            self.data_access_request.dbgap_data_access_snapshot.dbgap_application != self.dbgap_application
         ):
-            raise ValueError(
-                "data_access_request application and dbgap_application do not match."
-            )
+            raise ValueError("data_access_request application and dbgap_application do not match.")
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -128,16 +125,13 @@ class dbGaPAccessAuditTable(tables.Table):
     dar_consent = tables.Column(verbose_name="DAR consent")
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.TemplateColumn(
-        template_name="dbgap/snippets/dbgap_audit_action_button.html"
-    )
+    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
 
 
 class dbGaPAccessAudit(PRIMEDAudit):
-
     # Access verified.
     APPROVED_DAR = "Approved DAR."
 
@@ -161,22 +155,14 @@ class dbGaPAccessAudit(PRIMEDAudit):
         if dbgap_application_queryset is None:
             dbgap_application_queryset = dbGaPApplication.objects.all()
         if not (
-            isinstance(dbgap_application_queryset, QuerySet)
-            and dbgap_application_queryset.model is dbGaPApplication
+            isinstance(dbgap_application_queryset, QuerySet) and dbgap_application_queryset.model is dbGaPApplication
         ):
-            raise ValueError(
-                "dbgap_application_queryset must be a queryset of dbGaPApplication objects."
-            )
+            raise ValueError("dbgap_application_queryset must be a queryset of dbGaPApplication objects.")
         self.dbgap_application_queryset = dbgap_application_queryset
         if dbgap_workspace_queryset is None:
             dbgap_workspace_queryset = dbGaPWorkspace.objects.all()
-        if not (
-            isinstance(dbgap_workspace_queryset, QuerySet)
-            and dbgap_workspace_queryset.model is dbGaPWorkspace
-        ):
-            raise ValueError(
-                "dbgap_workspace_queryset must be a queryset of dbGaPWorkspace objects."
-            )
+        if not (isinstance(dbgap_workspace_queryset, QuerySet) and dbgap_workspace_queryset.model is dbGaPWorkspace):
+            raise ValueError("dbgap_workspace_queryset must be a queryset of dbGaPWorkspace objects.")
         self.dbgap_workspace_queryset = dbgap_workspace_queryset
 
     def _run_audit(self):
@@ -186,15 +172,11 @@ class dbGaPAccessAudit(PRIMEDAudit):
 
     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
         """Audit access for a specific dbGaP application and a specific workspace."""
-        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(
-            dbgap_application.anvil_access_group
-        )
+        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(dbgap_application.anvil_access_group)
 
         # Get the most recent snapshot.
         try:
-            dar_snapshot = dbgap_application.dbgapdataaccesssnapshot_set.get(
-                is_most_recent=True
-            )
+            dar_snapshot = dbgap_application.dbgapdataaccesssnapshot_set.get(is_most_recent=True)
         except dbGaPDataAccessSnapshot.DoesNotExist:
             if in_auth_domain:
                 # Error!
@@ -219,9 +201,7 @@ class dbGaPAccessAudit(PRIMEDAudit):
 
         try:
             # There should only be one DAR from this snapshot associated with a given workspace.
-            dar = dbgap_workspace.get_data_access_requests().get(
-                dbgap_data_access_snapshot=dar_snapshot
-            )
+            dar = dbgap_workspace.get_data_access_requests().get(dbgap_data_access_snapshot=dar_snapshot)
         except dbGaPDataAccessRequest.DoesNotExist:
             # No matching DAR exists for this application.
             if in_auth_domain:

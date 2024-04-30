@@ -10,23 +10,13 @@ from primed.users.tests.factories import UserFactory
 
 # Studies
 fhs = StudyFactory.create(short_name="FHS", full_name="Framingham Heart Study")
-mesa = StudyFactory.create(
-    short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis"
-)
-aric = StudyFactory.create(
-    short_name="ARIC", full_name="Atherosclerosis Risk in Communities"
-)
+mesa = StudyFactory.create(short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis")
+aric = StudyFactory.create(short_name="ARIC", full_name="Atherosclerosis Risk in Communities")
 
 # dbGaP study accessions
-dbgap_study_accession_fhs = factories.dbGaPStudyAccessionFactory.create(
-    dbgap_phs=7, studies=[fhs]
-)
-dbgap_study_accession_mesa = factories.dbGaPStudyAccessionFactory.create(
-    dbgap_phs=209, studies=[mesa]
-)
-dbgap_study_accession_aric = factories.dbGaPStudyAccessionFactory.create(
-    dbgap_phs=280, studies=[aric]
-)
+dbgap_study_accession_fhs = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=7, studies=[fhs])
+dbgap_study_accession_mesa = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=209, studies=[mesa])
+dbgap_study_accession_aric = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=280, studies=[aric])
 
 
 # Create some dbGaP workspaces.
@@ -78,9 +68,7 @@ dbgap_application_1 = factories.dbGaPApplicationFactory.create(
     dbgap_project_id=33119,
 )
 # Add a snapshot
-dar_snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
-    dbgap_application=dbgap_application_1
-)
+dar_snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=dbgap_application_1)
 # Add some data access requests.
 dar_1_1 = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
     dbgap_workspace=workspace_fhs_1,
@@ -112,9 +100,7 @@ dbgap_application_2 = factories.dbGaPApplicationFactory.create(
     dbgap_project_id=33371,
 )
 # Add a snapshot
-dar_snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
-    dbgap_application=dbgap_application_2
-)
+dar_snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=dbgap_application_2)
 # Add some data access requests, only for FHS.
 dar_1_1 = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
     dbgap_workspace=workspace_fhs_1,

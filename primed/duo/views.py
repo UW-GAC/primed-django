@@ -6,7 +6,6 @@ from . import models
 
 
 class DataUsePermissionList(AnVILConsortiumManagerViewRequired, ListView):
-
     model = models.DataUsePermission
 
     def get_context_data(self, **kwargs):
@@ -19,7 +18,6 @@ class DataUsePermissionList(AnVILConsortiumManagerViewRequired, ListView):
 
 
 class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
-
     model = models.DataUsePermission
 
     def get_object(self):
@@ -27,8 +25,7 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))
         except self.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": self.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
             )
         return obj
 
@@ -39,7 +36,6 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
 
 
 class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
-
     model = models.DataUseModifier
 
     def get_context_data(self, **kwargs):
@@ -52,7 +48,6 @@ class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
 
 
 class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
-
     model = models.DataUseModifier
 
     def get_object(self):
@@ -60,8 +55,7 @@ class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))
         except self.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": self.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
             )
         return obj
 

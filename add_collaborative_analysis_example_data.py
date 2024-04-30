@@ -55,27 +55,15 @@ collaborative_analysis_workspace_3.source_workspaces.add(source_workspace_3_1.wo
 
 
 # Add accounts to the auth domains.
-account_1 = AccountFactory.create(
-    user__name="Adrienne", verified=True, email="adrienne@example.com"
-)
-account_2 = AccountFactory.create(
-    user__name="Ben", verified=True, email="ben@example.com"
-)
-account_3 = AccountFactory.create(
-    user__name="Matt", verified=True, email="matt@example.com"
-)
-account_4 = AccountFactory.create(
-    user__name="Stephanie", verified=True, email="stephanie@example.com"
-)
+account_1 = AccountFactory.create(user__name="Adrienne", verified=True, email="adrienne@example.com")
+account_2 = AccountFactory.create(user__name="Ben", verified=True, email="ben@example.com")
+account_3 = AccountFactory.create(user__name="Matt", verified=True, email="matt@example.com")
+account_4 = AccountFactory.create(user__name="Stephanie", verified=True, email="stephanie@example.com")
 
 # Set up collab analysis workspace one
 # analyst group
-GroupAccountMembershipFactory.create(
-    account=account_1, group=collaborative_analysis_workspace_1.analyst_group
-)
-GroupAccountMembershipFactory.create(
-    account=account_2, group=collaborative_analysis_workspace_1.analyst_group
-)
+GroupAccountMembershipFactory.create(account=account_1, group=collaborative_analysis_workspace_1.analyst_group)
+GroupAccountMembershipFactory.create(account=account_2, group=collaborative_analysis_workspace_1.analyst_group)
 # auth domains
 GroupAccountMembershipFactory.create(
     account=account_1,
@@ -84,12 +72,8 @@ GroupAccountMembershipFactory.create(
 
 # Set up collab analysis workspace two
 # analyst group
-GroupAccountMembershipFactory.create(
-    account=account_3, group=collaborative_analysis_workspace_2.analyst_group
-)
-GroupAccountMembershipFactory.create(
-    account=account_4, group=collaborative_analysis_workspace_2.analyst_group
-)
+GroupAccountMembershipFactory.create(account=account_3, group=collaborative_analysis_workspace_2.analyst_group)
+GroupAccountMembershipFactory.create(account=account_4, group=collaborative_analysis_workspace_2.analyst_group)
 # auth domains
 GroupAccountMembershipFactory.create(
     account=account_3,

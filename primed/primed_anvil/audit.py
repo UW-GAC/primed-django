@@ -90,9 +90,7 @@ class PRIMEDAudit(ABC):
 
     def _check_completed(self):
         if not self.completed:
-            raise ValueError(
-                "Audit has not been completed. Use run_audit() to run the audit."
-            )
+            raise ValueError("Audit has not been completed. Use run_audit() to run the audit.")
 
     def get_verified_table(self):
         """Return a table of verified audit results.
@@ -103,9 +101,7 @@ class PRIMEDAudit(ABC):
             results_table_class: A table of verified results.
         """
         self._check_completed()
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.verified]
-        )
+        return self.results_table_class([x.get_table_dictionary() for x in self.verified])
 
     def get_needs_action_table(self):
         """Return a table of needs_action audit results.
@@ -116,9 +112,7 @@ class PRIMEDAudit(ABC):
             results_table_class: A table of need action results.
         """
         self._check_completed()
-        return self.results_table_class(
-            [x.get_table_dictionary() for x in self.needs_action]
-        )
+        return self.results_table_class([x.get_table_dictionary() for x in self.needs_action])
 
     def get_errors_table(self):
         """Return a table of error audit results.

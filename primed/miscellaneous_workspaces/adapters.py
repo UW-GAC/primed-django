@@ -22,9 +22,7 @@ class SimulatedDataWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.SimulatedDataWorkspace
     workspace_data_form_class = forms.SimulatedDataWorkspaceForm
-    workspace_detail_template_name = (
-        "miscellaneous_workspaces/simulateddataworkspace_detail.html"
-    )
+    workspace_detail_template_name = "miscellaneous_workspaces/simulateddataworkspace_detail.html"
 
 
 class ConsortiumDevelWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -60,9 +58,7 @@ class TemplateWorkspaceAdapter(BaseWorkspaceAdapter):
 
     type = "template"
     name = "Template workspace"
-    description = (
-        "Template workspaces that will be cloned by the CC to create other workspaces"
-    )
+    description = "Template workspaces that will be cloned by the CC to create other workspaces"
     list_table_class_staff_view = DefaultWorkspaceStaffTable
     list_table_class_view = DefaultWorkspaceUserTable
     workspace_form_class = WorkspaceForm
@@ -82,9 +78,7 @@ class OpenAccessWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.OpenAccessWorkspace
     workspace_data_form_class = forms.OpenAccessWorkspaceForm
-    workspace_detail_template_name = (
-        "miscellaneous_workspaces/openaccessworkspace_detail.html"
-    )
+    workspace_detail_template_name = "miscellaneous_workspaces/openaccessworkspace_detail.html"
 
 
 class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
@@ -98,6 +92,4 @@ class DataPrepWorkspaceAdapter(BaseWorkspaceAdapter):
     workspace_form_class = WorkspaceForm
     workspace_data_model = models.DataPrepWorkspace
     workspace_data_form_class = forms.DataPrepWorkspaceForm
-    workspace_detail_template_name = (
-        "miscellaneous_workspaces/dataprepworkspace_detail.html"
-    )
+    workspace_detail_template_name = "miscellaneous_workspaces/dataprepworkspace_detail.html"

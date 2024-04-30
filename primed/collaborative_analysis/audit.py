@@ -114,9 +114,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
     DCC_ACCESS = "CC groups are allowed access."
 
     # Allowed reasons for no access.
-    NOT_IN_SOURCE_AUTH_DOMAINS = (
-        "Account is not in all source auth domains for this workspace."
-    )
+    NOT_IN_SOURCE_AUTH_DOMAINS = "Account is not in all source auth domains for this workspace."
     NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
     INACTIVE_ACCOUNT = "Account is inactive."
     NON_DCC_GROUP = "Non-CC groups are not allowed access."
@@ -149,9 +147,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # Get a list of accounts in the auth domain.
         auth_domain_membership = [
             x.account
-            for x in GroupAccountMembership.objects.filter(
-                group=workspace.workspace.authorization_domains.first()
-            )
+            for x in GroupAccountMembership.objects.filter(group=workspace.workspace.authorization_domains.first())
         ]
         for membership in analyst_memberships:
             self._audit_workspace_and_account(workspace, membership.account)
@@ -199,15 +195,9 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         access_allowed = group.name in [
             "PRIMED_CC_WRITERS",
         ]
-        in_auth_domain = (
-            collaborative_analysis_workspace.workspace.authorization_domains.first()
-        )
-        auth_domain = (
-            collaborative_analysis_workspace.workspace.authorization_domains.first()
-        )
-        in_auth_domain = GroupGroupMembership.objects.filter(
-            parent_group=auth_domain, child_group=group
-        ).exists()
+        in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.first()
+        auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.first()
+        in_auth_domain = GroupGroupMembership.objects.filter(parent_group=auth_domain, child_group=group).exists()
         if access_allowed and in_auth_domain:
             self.verified.append(
                 VerifiedAccess(
@@ -254,22 +244,15 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # Get all groups for the account.
         account_groups = account.get_all_groups()
         # Check whether the account is in the analyst group.
-        in_analyst_group = (
-            collaborative_analysis_workspace.analyst_group in account_groups
-        )
+        in_analyst_group = collaborative_analysis_workspace.analyst_group in account_groups
         # Check whether the account is in the auth domain of the collab workspace.
-        in_auth_domain = (
-            collaborative_analysis_workspace.workspace.authorization_domains.first()
-            in account_groups
-        )
+        in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.first() in account_groups
         if in_analyst_group:
             # Check whether access is allowed. Start by assuming yes, and then
             # set to false if the account should not have access.
             access_allowed = True
             # Loop over all source workspaces.
-            for (
-                source_workspace
-            ) in collaborative_analysis_workspace.source_workspaces.all():
+            for source_workspace in collaborative_analysis_workspace.source_workspaces.all():
                 # Loop over all auth domains for that source workspace.
                 for source_auth_domain in source_workspace.authorization_domains.all():
                     # If the user is not in the auth domain, they are not allowed to have access to the workspace.

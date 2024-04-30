@@ -53,14 +53,10 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
     # context_table_name = "dbgap_workspace_table"
 
     def get_tables(self):
-        dbgap_qs = Workspace.objects.filter(
-            dbgapworkspace__dbgap_study_accession__studies=self.object
-        )
+        dbgap_qs = Workspace.objects.filter(dbgapworkspace__dbgap_study_accession__studies=self.object)
         cdsa_qs = Workspace.objects.filter(cdsaworkspace__study=self.object)
         agreement_qs = DataAffiliateAgreement.objects.filter(study=self.object)
-        open_access_qs = Workspace.objects.filter(
-            openaccessworkspace__studies=self.object
-        )
+        open_access_qs = Workspace.objects.filter(openaccessworkspace__studies=self.object)
         # Check permissions to determine table type.
         apm_content_type = ContentType.objects.get_for_model(AnVILProjectManagerAccess)
         full_view_perm = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME}"
@@ -88,9 +84,7 @@ class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
     table_class = tables.StudyTable
 
 
-class StudyCreate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
-):
+class StudyCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):
     """View to create a new `Study`."""
 
     model = models.Study
@@ -101,9 +95,7 @@ class StudyCreate(
         return self.object.get_absolute_url()
 
 
-class StudyAutocomplete(
-    AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView
-):
+class StudyAutocomplete(AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView):
     """View to provide autocompletion for `Study`s. Match either the `short_name` or `full_name`."""
 
     def get_result_label(self, result):
@@ -118,16 +110,12 @@ class StudyAutocomplete(
         qs = models.Study.objects.order_by("short_name")
 
         if self.q:
-            qs = qs.filter(
-                Q(short_name__icontains=self.q) | Q(full_name__icontains=self.q)
-            )
+            qs = qs.filter(Q(short_name__icontains=self.q) | Q(full_name__icontains=self.q))
 
         return qs
 
 
-class StudySiteDetail(
-    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
-):
+class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
@@ -141,9 +129,7 @@ class StudySiteDetail(
     #     return UserTable(User.objects.filter(study_sites=self.object))
     def get_tables_data(self):
         user_qs = User.objects.filter(study_sites=self.object)
-        dbgap_qs = dbGaPApplication.objects.filter(
-            principal_investigator__study_sites=self.object
-        )
+        dbgap_qs = dbGaPApplication.objects.filter(principal_investigator__study_sites=self.object)
         cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
         return [user_qs, dbgap_qs, cdsa_qs]
 
@@ -162,9 +148,7 @@ class AvailableDataList(AnVILConsortiumManagerStaffViewRequired, SingleTableView
     table_class = tables.AvailableDataTable
 
 
-class AvailableDataDetail(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
-):
+class AvailableDataDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `AvailableData`."""
 
     model = models.AvailableData
@@ -177,7 +161,6 @@ class AvailableDataDetail(
 
 
 class DataSummaryView(LoginRequiredMixin, TemplateView):
-
     template_name = "primed_anvil/data_summary.html"
 
     def get_context_data(self, **kwargs):
@@ -187,15 +170,10 @@ class DataSummaryView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PhenotypeInventoryInputsView(
-    AnVILConsortiumManagerStaffViewRequired, TemplateView
-):
-
+class PhenotypeInventoryInputsView(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     template_name = "primed_anvil/phenotype_inventory_inputs.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["workspaces_input"] = json.dumps(
-            helpers.get_workspaces_for_phenotype_inventory(), indent=2
-        )
+        context["workspaces_input"] = json.dumps(helpers.get_workspaces_for_phenotype_inventory(), indent=2)
         return context

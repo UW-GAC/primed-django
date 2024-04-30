@@ -31,9 +31,7 @@ from .audit import signed_agreement_audit, workspace_audit
 logger = logging.getLogger(__name__)
 
 
-class AgreementMajorVersionDetail(
-    AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView
-):
+class AgreementMajorVersionDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, DetailView):
     """Display a "detail" page for an agreement major version (e.g., 1.x)."""
 
     model = models.AgreementMajorVersion
@@ -47,18 +45,13 @@ class AgreementMajorVersionDetail(
             obj = queryset.get(version=major_version)
         except (KeyError, self.model.DoesNotExist):
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_tables_data(self):
-        agreement_version_qs = models.AgreementVersion.objects.filter(
-            major_version=self.object
-        )
-        signed_agreement_qs = models.SignedAgreement.objects.filter(
-            version__major_version=self.object
-        )
+        agreement_version_qs = models.AgreementVersion.objects.filter(major_version=self.object)
+        signed_agreement_qs = models.SignedAgreement.objects.filter(version__major_version=self.object)
         return [agreement_version_qs, signed_agreement_qs]
 
     def get_context_data(self, **kwargs):
@@ -67,17 +60,13 @@ class AgreementMajorVersionDetail(
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
-        context[
-            "show_invalidate_button"
-        ] = self.object.is_valid and self.request.user.has_perm(
+        context["show_invalidate_button"] = self.object.is_valid and self.request.user.has_perm(
             edit_permission_codename
         )
         return context
 
 
-class AgreementMajorVersionInvalidate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
-):
+class AgreementMajorVersionInvalidate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
     """A view to invalidate an AgreementMajorVersion instance.
 
     This view sets the is_valid field to False. It also sets the status of all associated
@@ -99,8 +88,7 @@ class AgreementMajorVersionInvalidate(
             obj = queryset.get(version=major_version)
         except (KeyError, self.model.DoesNotExist):
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -137,9 +125,7 @@ class AgreementMajorVersionInvalidate(
     # Change status for CDSAs to lapsed when their major version is invalidated.
 
 
-class AgreementVersionDetail(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
-):
+class AgreementVersionDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
     """Display a "detail" page for an agreement major/minor version (e.g., 1.3)."""
 
     model = models.AgreementVersion
@@ -156,13 +142,10 @@ class AgreementVersionDetail(
         try:
             major_version = self.kwargs["major_version"]
             minor_version = self.kwargs["minor_version"]
-            obj = queryset.get(
-                major_version__version=major_version, minor_version=minor_version
-            )
+            obj = queryset.get(major_version__version=major_version, minor_version=minor_version)
         except (KeyError, self.model.DoesNotExist):
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -237,16 +220,12 @@ class AgreementTypeCreateMixin:
             settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
             form.instance.cc_id,
         )
-        access_group = ManagedGroup(
-            name=access_group_name, email=access_group_name + "@firecloud.org"
-        )
+        access_group = ManagedGroup(name=access_group_name, email=access_group_name + "@firecloud.org")
         # Make sure the group doesn't exist already.
         access_group.full_clean()
         access_group.save()
         # Add the cc admins group as a member.
-        cc_admins_group = ManagedGroup.objects.get(
-            name=settings.ANVIL_CC_ADMINS_GROUP_NAME
-        )
+        cc_admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
         self.admin_access_membership = GroupGroupMembership(
             parent_group=access_group,
             child_group=cc_admins_group,
@@ -290,22 +269,16 @@ class AgreementTypeCreateMixin:
         except ValidationError as e:
             # log the error.
             logger.error(str(e))
-            messages.add_message(
-                self.request, messages.ERROR, self.ERROR_CREATING_GROUP
-            )
+            messages.add_message(self.request, messages.ERROR, self.ERROR_CREATING_GROUP)
             return self.render_to_response(self.get_context_data(form=form))
         except AnVILAPIError as e:
             # log the error.
             logger.error(str(e))
-            messages.add_message(
-                self.request, messages.ERROR, "AnVIL API Error: " + str(e)
-            )
+            messages.add_message(self.request, messages.ERROR, "AnVIL API Error: " + str(e))
             return self.render_to_response(self.get_context_data(form=form))
 
     def form_invalid(self, form, formset):
-        return self.render_to_response(
-            self.get_context_data(form=form, formset=formset)
-        )
+        return self.render_to_response(self.get_context_data(form=form, formset=formset))
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -357,16 +330,12 @@ class DataAffiliateAgreementCreate(
             settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
             form.instance.cc_id,
         )
-        upload_group = ManagedGroup(
-            name=upload_group_name, email=upload_group_name + "@firecloud.org"
-        )
+        upload_group = ManagedGroup(name=upload_group_name, email=upload_group_name + "@firecloud.org")
         # Make sure the group doesn't exist already.
         upload_group.full_clean()
         upload_group.save()
         # Add the cc admins group as a member.
-        cc_admins_group = ManagedGroup.objects.get(
-            name=settings.ANVIL_CC_ADMINS_GROUP_NAME
-        )
+        cc_admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
         self.admin_upload_membership = GroupGroupMembership(
             parent_group=upload_group,
             child_group=cc_admins_group,
@@ -390,22 +359,17 @@ class MemberAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView)
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "show_deprecation_message"
-        ] = not self.object.signed_agreement.version.major_version.is_valid
+        context["show_deprecation_message"] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
-        context["show_update_button"] = self.request.user.has_perm(
-            edit_permission_codename
-        )
+        context["show_update_button"] = self.request.user.has_perm(edit_permission_codename)
         return context
 
 
@@ -416,10 +380,7 @@ class MemberAgreementList(AnVILConsortiumManagerStaffViewRequired, SingleTableVi
     table_class = tables.MemberAgreementTable
 
 
-class SignedAgreementStatusUpdate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
-):
-
+class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
     model = models.SignedAgreement
     form_class = forms.SignedAgreementStatusForm
     template_name = "cdsa/signedagreement_status_update.html"
@@ -430,13 +391,10 @@ class SignedAgreementStatusUpdate(
         """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
         queryset = self.get_queryset()
         try:
-            obj = queryset.get(
-                cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type")
-            )
+            obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -453,28 +411,21 @@ class DataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, Deta
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "show_deprecation_message"
-        ] = not self.object.signed_agreement.version.major_version.is_valid
+        context["show_deprecation_message"] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
-        context["show_update_button"] = self.request.user.has_perm(
-            edit_permission_codename
-        )
+        context["show_update_button"] = self.request.user.has_perm(edit_permission_codename)
         return context
 
 
-class DataAffiliateAgreementList(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableView
-):
+class DataAffiliateAgreementList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """Display a list of DataAffiliateAgreement objects."""
 
     model = models.DataAffiliateAgreement
@@ -498,9 +449,7 @@ class NonDataAffiliateAgreementCreate(
     ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
 
 
-class NonDataAffiliateAgreementDetail(
-    AnVILConsortiumManagerStaffViewRequired, DetailView
-):
+class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show details about a `NonDataAffiliateAgreement`."""
 
     model = models.NonDataAffiliateAgreement
@@ -512,28 +461,21 @@ class NonDataAffiliateAgreementDetail(
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "show_deprecation_message"
-        ] = not self.object.signed_agreement.version.major_version.is_valid
+        context["show_deprecation_message"] = not self.object.signed_agreement.version.major_version.is_valid
         edit_permission_codename = "anvil_consortium_manager." + (
             AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         )
-        context["show_update_button"] = self.request.user.has_perm(
-            edit_permission_codename
-        )
+        context["show_update_button"] = self.request.user.has_perm(edit_permission_codename)
         return context
 
 
-class NonDataAffiliateAgreementList(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableView
-):
+class NonDataAffiliateAgreementList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
     """Display a list of NonDataAffiliateAgreement objects."""
 
     model = models.NonDataAffiliateAgreement
@@ -544,19 +486,13 @@ class SignedAgreementAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView
     """View to show audit results for `SignedAgreements`."""
 
     template_name = "cdsa/signedagreement_audit.html"
-    ERROR_CDSA_GROUP_DOES_NOT_EXIST = (
-        """The CDSA group "{}" does not exist in the app."""
-    )
+    ERROR_CDSA_GROUP_DOES_NOT_EXIST = """The CDSA group "{}" does not exist in the app."""
 
     def get(self, request, *args, **kwargs):
-        if not models.ManagedGroup.objects.filter(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        ).exists():
+        if not models.ManagedGroup.objects.filter(name=settings.ANVIL_CDSA_GROUP_NAME).exists():
             messages.error(
                 self.request,
-                self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(
-                    settings.ANVIL_CDSA_GROUP_NAME
-                ),
+                self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(settings.ANVIL_CDSA_GROUP_NAME),
             )
             return HttpResponseRedirect(reverse("anvil_consortium_manager:index"))
         return super().get(request, *args, **kwargs)
@@ -572,10 +508,7 @@ class SignedAgreementAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView
         return context
 
 
-class SignedAgreementAuditResolve(
-    AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView
-):
-
+class SignedAgreementAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView):
     model = models.SignedAgreement
     form_class = Form
     template_name = "cdsa/signedagreement_audit_resolve.html"
@@ -589,16 +522,13 @@ class SignedAgreementAuditResolve(
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_audit_result(self):
         audit = signed_agreement_audit.SignedAgreementAccessAudit(
-            signed_agreement_queryset=models.SignedAgreement.objects.filter(
-                pk=self.object.pk
-            )
+            signed_agreement_queryset=models.SignedAgreement.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
         return audit.get_all_results()[0]
@@ -664,9 +594,7 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show audit results for `CDSAWorkspaces`."""
 
     template_name = "cdsa/cdsaworkspace_audit.html"
-    ERROR_CDSA_GROUP_DOES_NOT_EXIST = (
-        """The CDSA group "{}" does not exist in the app."""
-    )
+    ERROR_CDSA_GROUP_DOES_NOT_EXIST = """The CDSA group "{}" does not exist in the app."""
 
     def get(self, request, *args, **kwargs):
         try:
@@ -674,9 +602,7 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         except models.ManagedGroup.DoesNotExist:
             messages.error(
                 self.request,
-                self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(
-                    settings.ANVIL_CDSA_GROUP_NAME
-                ),
+                self.ERROR_CDSA_GROUP_DOES_NOT_EXIST.format(settings.ANVIL_CDSA_GROUP_NAME),
             )
             return HttpResponseRedirect(reverse("anvil_consortium_manager:index"))
         return super().get(request, *args, **kwargs)
@@ -692,10 +618,7 @@ class CDSAWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class CDSAWorkspaceAuditResolve(
-    AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView
-):
-
+class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleObjectMixin, FormView):
     model = models.CDSAWorkspace
     form_class = Form
     template_name = "cdsa/cdsaworkspace_audit_resolve.html"
@@ -707,23 +630,18 @@ class CDSAWorkspaceAuditResolve(
         queryset = self.get_queryset()
         try:
             obj = queryset.get(
-                workspace__billing_project__name=self.kwargs.get(
-                    "billing_project_slug"
-                ),
+                workspace__billing_project__name=self.kwargs.get("billing_project_slug"),
                 workspace__name=self.kwargs.get("workspace_slug"),
             )
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_audit_result(self):
         audit = workspace_audit.WorkspaceAccessAudit(
-            cdsa_workspace_queryset=models.CDSAWorkspace.objects.filter(
-                pk=self.object.pk
-            )
+            cdsa_workspace_queryset=models.CDSAWorkspace.objects.filter(pk=self.object.pk)
         )
         audit.run_audit()
         return audit.get_all_results()[0]
