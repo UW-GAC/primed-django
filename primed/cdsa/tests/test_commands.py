@@ -95,9 +95,7 @@ class CDSARecordsTest(TestCase):
         os.mkdir(self.outdir)
         out = StringIO()
         with self.assertRaises(CommandError) as e:
-            call_command(
-                "cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out
-            )
+            call_command("cdsa_records", "--outdir", self.outdir, "--no-color", stdout=out)
         self.assertIn("already exists", str(e.exception))
 
 
@@ -106,26 +104,18 @@ class RunCDSAAuditTest(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.cdsa_group = ManagedGroupFactory.create(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        self.cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
 
     def test_command_output_no_records(self):
         """Test command output."""
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... ok!\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         expected_output = (
-            "Running CDSAWorkspace access audit... ok!\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -137,17 +127,11 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... ok!\n"
-            "* Verified: 1\n"
-            "* Needs action: 0\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         expected_output = (
-            "Running CDSAWorkspace access audit... ok!\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -195,9 +179,7 @@ class RunCDSAAuditTest(TestCase):
         """No email is sent when there are no errors."""
         factories.MemberAgreementFactory.create(is_primary=False)
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running CDSAWorkspace access audit... ok!", out.getvalue())
         self.assertIn("Running SignedAgreement access audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
@@ -207,9 +189,7 @@ class RunCDSAAuditTest(TestCase):
         """Email is sent for one needs_action instance."""
         factories.MemberAgreementFactory.create()
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
             "Running SignedAgreement access audit... problems found.\n"
             "* Verified: 0\n"
@@ -223,9 +203,7 @@ class RunCDSAAuditTest(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
-        self.assertIn(
-            reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0]
-        )
+        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0])
 
     def test_command_run_audit_one_agreement_error_email(self):
         """Test command output with one error instance."""
@@ -235,9 +213,7 @@ class RunCDSAAuditTest(TestCase):
             child_group=agreement.signed_agreement.anvil_access_group,
         )
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
             "Running SignedAgreement access audit... problems found.\n"
             "* Verified: 0\n"
@@ -252,9 +228,7 @@ class RunCDSAAuditTest(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
-        self.assertIn(
-            reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0]
-        )
+        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0])
 
     def test_command_run_audit_one_workspace_verified(self):
         """Test command output with one verified instance."""
@@ -262,17 +236,11 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... ok!\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         expected_output = (
-            "Running CDSAWorkspace access audit... ok!\n"
-            "* Verified: 1\n"
-            "* Needs action: 0\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -325,9 +293,7 @@ class RunCDSAAuditTest(TestCase):
         """No email is sent when there are no errors."""
         factories.CDSAWorkspaceFactory.create()
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running CDSAWorkspace access audit... ok!", out.getvalue())
         self.assertIn("Running SignedAgreement access audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
@@ -342,9 +308,7 @@ class RunCDSAAuditTest(TestCase):
         )
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
             "Running CDSAWorkspace access audit... problems found.\n"
             "* Verified: 0\n"
@@ -368,9 +332,7 @@ class RunCDSAAuditTest(TestCase):
             child_group=self.cdsa_group,
         )
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
             "Running CDSAWorkspace access audit... problems found.\n"
             "* Verified: 0\n"
@@ -413,9 +375,7 @@ class RunCDSAAuditTest(TestCase):
         agreement = factories.DataAffiliateAgreementFactory.create()
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
         out = StringIO()
-        call_command(
-            "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
             "Running CDSAWorkspace access audit... problems found.\n"
             "* Verified: 0\n"
@@ -435,9 +395,7 @@ class RunCDSAAuditTest(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
-        self.assertIn(
-            reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0]
-        )
+        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0])
         email = mail.outbox[1]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA WorkspaceAccessAudit errors")
@@ -450,9 +408,7 @@ class RunCDSAAuditTest(TestCase):
         factories.MemberAgreementFactory.create()
         with self.settings(SITE_ID=site.id):
             out = StringIO()
-            call_command(
-                "run_cdsa_audit", "--no-color", email="test@example.com", stdout=out
-            )
+            call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
             self.assertIn(
                 "Running SignedAgreement access audit... problems found.",
                 out.getvalue(),

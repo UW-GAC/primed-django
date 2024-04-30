@@ -30,7 +30,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
@@ -62,9 +62,7 @@ class NavbarTest(TestCase):
         """Returns successful response code."""
         user = User.objects.create_user(username="test", password="test")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -74,25 +72,17 @@ class NavbarTest(TestCase):
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
         self.assertNotContains(response, reverse("cdsa:signed_agreements:members:new"))
-        self.assertNotContains(
-            response, reverse("cdsa:signed_agreements:data_affiliates:new")
-        )
-        self.assertNotContains(
-            response, reverse("cdsa:signed_agreements:non_data_affiliates:new")
-        )
+        self.assertNotContains(response, reverse("cdsa:signed_agreements:data_affiliates:new"))
+        self.assertNotContains(response, reverse("cdsa:signed_agreements:non_data_affiliates:new"))
 
     def test_links_for_staff_edit(self):
         """Returns successful response code."""
         user = User.objects.create_user(username="test", password="test")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -102,12 +92,8 @@ class NavbarTest(TestCase):
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
         self.assertContains(response, reverse("cdsa:signed_agreements:members:new"))
-        self.assertContains(
-            response, reverse("cdsa:signed_agreements:data_affiliates:new")
-        )
-        self.assertContains(
-            response, reverse("cdsa:signed_agreements:non_data_affiliates:new")
-        )
+        self.assertContains(response, reverse("cdsa:signed_agreements:data_affiliates:new"))
+        self.assertContains(response, reverse("cdsa:signed_agreements:non_data_affiliates:new"))
 
 
 class AgreementVersionListTest(TestCase):
@@ -119,9 +105,7 @@ class AgreementVersionListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -149,9 +133,7 @@ class AgreementVersionListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -162,9 +144,7 @@ class AgreementVersionListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.AgreementVersionTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.AgreementVersionTable)
 
     def test_workspace_table_none(self):
         """No rows are shown if there are no AgreementVersion objects."""
@@ -191,9 +171,7 @@ class AgreementMajorVersionDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.AgreementMajorVersionFactory.create()
@@ -223,9 +201,7 @@ class AgreementMajorVersionDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(2))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -254,12 +230,8 @@ class AgreementMajorVersionDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("tables", response.context_data)
         self.assertEqual(len(response.context_data["tables"]), 2)
-        self.assertIsInstance(
-            response.context_data["tables"][0], tables.AgreementVersionTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][1], tables.SignedAgreementTable
-        )
+        self.assertIsInstance(response.context_data["tables"][0], tables.AgreementVersionTable)
+        self.assertIsInstance(response.context_data["tables"][1], tables.SignedAgreementTable)
 
     def test_response_includes_agreement_version_table(self):
         """agreement_version_table includes agreement_versions with this major version."""
@@ -270,9 +242,7 @@ class AgreementMajorVersionDetailTest(TestCase):
 
     def test_response_includes_agreement_version_table_other_major_version(self):
         """agreement_version_table includes only agreement_versions with this major version."""
-        other_agreement = factories.AgreementVersionFactory.create(
-            major_version__version=self.obj.version + 1
-        )
+        other_agreement = factories.AgreementVersionFactory.create(major_version__version=self.obj.version + 1)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(len(response.context_data["tables"][0].rows), 0)
@@ -280,9 +250,7 @@ class AgreementMajorVersionDetailTest(TestCase):
 
     def test_response_signed_agreement_table_three_agreements(self):
         """signed_agreement_table includes all types of agreements."""
-        factories.MemberAgreementFactory.create(
-            signed_agreement__version__major_version__version=self.obj.version
-        )
+        factories.MemberAgreementFactory.create(signed_agreement__version__major_version__version=self.obj.version)
         factories.DataAffiliateAgreementFactory.create(
             signed_agreement__version__major_version__version=self.obj.version
         )
@@ -328,14 +296,10 @@ class AgreementMajorVersionDetailTest(TestCase):
         """Invalidate button appears when the user has edit permission and the instance is valid."""
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(self.obj.version))
@@ -365,14 +329,10 @@ class AgreementMajorVersionDetailTest(TestCase):
         self.obj.save()
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(self.obj.version))
@@ -409,14 +369,10 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -431,9 +387,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -444,9 +398,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -455,13 +407,9 @@ class AgreementMajorVersionInvalidateTest(TestCase):
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has only view permission."""
         instance = factories.AgreementMajorVersionFactory.create()
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url(instance.version))
         request.user = user_view_perm
@@ -494,9 +442,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         instance = factories.AgreementMajorVersionFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.version))
-        self.assertIsInstance(
-            response.context_data["form"], forms.AgreementMajorVersionIsValidForm
-        )
+        self.assertIsInstance(response.context_data["form"], forms.AgreementMajorVersionIsValidForm)
 
     def test_invalidates_instance(self):
         """Can invalidate the instance."""
@@ -510,37 +456,25 @@ class AgreementMajorVersionInvalidateTest(TestCase):
     def test_sets_one_signed_agreement_to_lapsed(self):
         """Sets SignedAgreements associated with this major version to LAPSED."""
         instance = factories.AgreementMajorVersionFactory.create()
-        signed_agreement = factories.SignedAgreementFactory.create(
-            version__major_version=instance
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(version__major_version=instance)
         self.client.force_login(self.user)
         response = self.client.post(self.get_url(instance.version), {})
         self.assertEqual(response.status_code, 302)
         signed_agreement.refresh_from_db()
-        self.assertEqual(
-            signed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED
-        )
+        self.assertEqual(signed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED)
 
     def test_sets_two_signed_agreements_to_lapsed(self):
         """Sets SignedAgreements associated with this major version to LAPSED."""
         instance = factories.AgreementMajorVersionFactory.create()
-        signed_agreement_1 = factories.SignedAgreementFactory.create(
-            version__major_version=instance
-        )
-        signed_agreement_2 = factories.SignedAgreementFactory.create(
-            version__major_version=instance
-        )
+        signed_agreement_1 = factories.SignedAgreementFactory.create(version__major_version=instance)
+        signed_agreement_2 = factories.SignedAgreementFactory.create(version__major_version=instance)
         self.client.force_login(self.user)
         response = self.client.post(self.get_url(instance.version), {})
         self.assertEqual(response.status_code, 302)
         signed_agreement_1.refresh_from_db()
-        self.assertEqual(
-            signed_agreement_1.status, models.SignedAgreement.StatusChoices.LAPSED
-        )
+        self.assertEqual(signed_agreement_1.status, models.SignedAgreement.StatusChoices.LAPSED)
         signed_agreement_2.refresh_from_db()
-        self.assertEqual(
-            signed_agreement_2.status, models.SignedAgreement.StatusChoices.LAPSED
-        )
+        self.assertEqual(signed_agreement_2.status, models.SignedAgreement.StatusChoices.LAPSED)
 
     def test_only_sets_active_signed_agreements_to_lapsed(self):
         """Does not set SignedAgreements with a different status to LAPSED."""
@@ -561,17 +495,11 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         response = self.client.post(self.get_url(instance.version), {})
         self.assertEqual(response.status_code, 302)
         lapsed_agreement.refresh_from_db()
-        self.assertEqual(
-            lapsed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED
-        )
+        self.assertEqual(lapsed_agreement.status, models.SignedAgreement.StatusChoices.LAPSED)
         withdrawn_agreement.refresh_from_db()
-        self.assertEqual(
-            withdrawn_agreement.status, models.SignedAgreement.StatusChoices.WITHDRAWN
-        )
+        self.assertEqual(withdrawn_agreement.status, models.SignedAgreement.StatusChoices.WITHDRAWN)
         replaced_agreement.refresh_from_db()
-        self.assertEqual(
-            replaced_agreement.status, models.SignedAgreement.StatusChoices.REPLACED
-        )
+        self.assertEqual(replaced_agreement.status, models.SignedAgreement.StatusChoices.REPLACED)
 
     def test_only_sets_associated_signed_agreements_to_lapsed(self):
         """Does not set SignedAgreements associated with a different version to LAPSED."""
@@ -581,9 +509,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         response = self.client.post(self.get_url(instance.version), {})
         self.assertEqual(response.status_code, 302)
         signed_agreement.refresh_from_db()
-        self.assertEqual(
-            signed_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
-        )
+        self.assertEqual(signed_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE)
 
     def test_redirect_url(self):
         """Redirects to successful url."""
@@ -599,9 +525,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
         response = self.client.post(self.get_url(instance.version), {})
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.AgreementMajorVersionInvalidate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.AgreementMajorVersionInvalidate.success_message, str(messages[0]))
 
     def test_version_already_invalid_get(self):
         instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
@@ -635,9 +559,7 @@ class AgreementVersionDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.AgreementVersionFactory.create()
@@ -662,16 +584,12 @@ class AgreementVersionDetailTest(TestCase):
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(2, 5))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -681,16 +599,12 @@ class AgreementVersionDetailTest(TestCase):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
 
     def test_view_status_code_with_invalid_version(self):
         """Raises a 404 error with an invalid major and minor version."""
-        request = self.factory.get(
-            self.get_url(self.obj.major_version.version + 1, self.obj.minor_version + 1)
-        )
+        request = self.factory.get(self.get_url(self.obj.major_version.version + 1, self.obj.minor_version + 1))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -701,9 +615,7 @@ class AgreementVersionDetailTest(TestCase):
 
     def test_view_status_code_with_other_major_version(self):
         """Raises a 404 error with an invalid object major version."""
-        request = self.factory.get(
-            self.get_url(self.obj.major_version.version + 1, self.obj.minor_version)
-        )
+        request = self.factory.get(self.get_url(self.obj.major_version.version + 1, self.obj.minor_version))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -714,9 +626,7 @@ class AgreementVersionDetailTest(TestCase):
 
     def test_view_status_code_with_other_minor_version(self):
         """Raises a 404 error with an invalid object minor version."""
-        request = self.factory.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version + 1)
-        )
+        request = self.factory.get(self.get_url(self.obj.major_version.version, self.obj.minor_version + 1))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -736,30 +646,18 @@ class AgreementVersionDetailTest(TestCase):
     def test_response_includes_signed_agreement_table(self):
         """Response includes a table of SignedAgreements."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
         self.assertIn("signed_agreement_table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["signed_agreement_table"], tables.SignedAgreementTable
-        )
+        self.assertIsInstance(response.context_data["signed_agreement_table"], tables.SignedAgreementTable)
 
     def test_response_signed_agreement_table_three_agreements(self):
         """signed_agreement_table includes all types of agreements."""
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__version=self.obj
-        )
-        da_agreement = factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__version=self.obj
-        )
-        nda_agreement = factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__version=self.obj
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__version=self.obj)
+        da_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__version=self.obj)
+        nda_agreement = factories.NonDataAffiliateAgreementFactory.create(signed_agreement__version=self.obj)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 3)
         self.assertIn(
@@ -781,9 +679,7 @@ class AgreementVersionDetailTest(TestCase):
         da_agreement = factories.DataAffiliateAgreementFactory.create()
         nda_agreement = factories.NonDataAffiliateAgreementFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context_data["signed_agreement_table"].rows), 0)
         self.assertNotIn(
@@ -802,9 +698,7 @@ class AgreementVersionDetailTest(TestCase):
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
         self.assertIn("show_deprecation_message", response.context_data)
         self.assertFalse(response.context_data["show_deprecation_message"])
@@ -815,9 +709,7 @@ class AgreementVersionDetailTest(TestCase):
         self.obj.major_version.is_valid = False
         self.obj.major_version.save()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.obj.major_version.version, self.obj.minor_version)
-        )
+        response = self.client.get(self.get_url(self.obj.major_version.version, self.obj.minor_version))
         self.assertEqual(response.status_code, 200)
         self.assertIn("show_deprecation_message", response.context_data)
         self.assertTrue(response.context_data["show_deprecation_message"])
@@ -833,9 +725,7 @@ class SignedAgreementListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -863,9 +753,7 @@ class SignedAgreementListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -876,9 +764,7 @@ class SignedAgreementListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.SignedAgreementTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.SignedAgreementTable)
 
     def test_workspace_table_none(self):
         """No rows are shown if there are no SignedAgreement objects."""
@@ -908,14 +794,10 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -930,9 +812,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -943,13 +823,9 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
 
     def test_access_with_view_permission(self):
         """Raises permission denied if user has only view permission."""
-        user_with_view_perm = User.objects.create_user(
-            username="test-other", password="test-other"
-        )
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
         user_with_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url(1))
         request.user = user_with_view_perm
@@ -958,9 +834,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -987,9 +861,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertTrue("form" in response.context_data)
-        self.assertIsInstance(
-            response.context_data["form"], forms.SignedAgreementStatusForm
-        )
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementStatusForm)
 
     def test_can_modify_status(self):
         """Can change the status."""
@@ -1014,9 +886,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
         )
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.signed_agreement.cc_id), {"status": "foo"}
-        )
+        response = self.client.post(self.get_url(instance.signed_agreement.cc_id), {"status": "foo"})
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
         form = response.context_data["form"]
@@ -1042,9 +912,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.SignedAgreementStatusUpdate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.SignedAgreementStatusUpdate.success_message, str(messages[0]))
 
     def test_redirects_to_object_detail(self):
         """After successfully creating an object, view redirects to the object's detail page."""
@@ -1068,14 +936,10 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1090,9 +954,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -1103,13 +965,9 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
 
     def test_access_with_view_permission(self):
         """Raises permission denied if user has only view permission."""
-        user_with_view_perm = User.objects.create_user(
-            username="test-other", password="test-other"
-        )
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
         user_with_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url(1))
         request.user = user_with_view_perm
@@ -1118,9 +976,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1147,9 +1003,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertTrue("form" in response.context_data)
-        self.assertIsInstance(
-            response.context_data["form"], forms.SignedAgreementStatusForm
-        )
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementStatusForm)
 
     def test_can_modify_status(self):
         """Can change the status."""
@@ -1174,9 +1028,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
         )
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.signed_agreement.cc_id), {"status": "foo"}
-        )
+        response = self.client.post(self.get_url(instance.signed_agreement.cc_id), {"status": "foo"})
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
         form = response.context_data["form"]
@@ -1202,9 +1054,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.SignedAgreementStatusUpdate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.SignedAgreementStatusUpdate.success_message, str(messages[0]))
 
     def test_redirects_to_object_detail(self):
         """After successfully creating an object, view redirects to the object's detail page."""
@@ -1228,14 +1078,10 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1250,9 +1096,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -1263,13 +1107,9 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
 
     def test_access_with_view_permission(self):
         """Raises permission denied if user has only view permission."""
-        user_with_view_perm = User.objects.create_user(
-            username="test-other", password="test-other"
-        )
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
         user_with_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url(1))
         request.user = user_with_view_perm
@@ -1278,9 +1118,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1307,9 +1145,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertTrue("form" in response.context_data)
-        self.assertIsInstance(
-            response.context_data["form"], forms.SignedAgreementStatusForm
-        )
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementStatusForm)
 
     def test_can_modify_status(self):
         """Can change the status."""
@@ -1334,9 +1170,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
             signed_agreement__status=models.SignedAgreement.StatusChoices.ACTIVE
         )
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.signed_agreement.cc_id), {"status": "foo"}
-        )
+        response = self.client.post(self.get_url(instance.signed_agreement.cc_id), {"status": "foo"})
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
         form = response.context_data["form"]
@@ -1362,9 +1196,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.SignedAgreementStatusUpdate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.SignedAgreementStatusUpdate.success_message, str(messages[0]))
 
     def test_redirects_to_object_detail(self):
         """After successfully creating an object, view redirects to the object's detail page."""
@@ -1388,14 +1220,10 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Create the admins group.
         self.cc_admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
@@ -1412,9 +1240,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -1424,9 +1250,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1434,13 +1258,9 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has only view permission."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -1460,9 +1280,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         response = self.client.get(self.get_url())
         self.assertIsInstance(response.context_data["form"], forms.SignedAgreementForm)
         self.assertEqual(len(response.context_data["formset"].forms), 1)
-        self.assertIsInstance(
-            response.context_data["formset"].forms[0], forms.MemberAgreementForm
-        )
+        self.assertIsInstance(response.context_data["formset"].forms[0], forms.MemberAgreementForm)
 
     def test_can_create_object(self):
         """Can create an object."""
@@ -1471,13 +1289,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1515,12 +1328,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement.type, new_agreement.MEMBER)
         # AnVIL group was set correctly.
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
-        self.assertEqual(
-            new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.assertEqual(
-            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
-        )
+        self.assertEqual(new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234")
+        self.assertEqual(new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE)
         # Check the agreement type.
         self.assertEqual(models.MemberAgreement.objects.count(), 1)
         new_agreement_type = models.MemberAgreement.objects.latest("pk")
@@ -1535,13 +1344,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1576,13 +1380,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -2068,12 +1867,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
-        self.assertEqual(
-            models.SignedAgreement.objects.count(), 1
-        )  # One already existed.
-        self.assertEqual(
-            models.MemberAgreement.objects.count(), 1
-        )  # One already existed.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)  # One already existed.
+        self.assertEqual(models.MemberAgreement.objects.count(), 1)  # One already existed.
         # Form has errors in the correct field.
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
@@ -2096,13 +1891,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -2148,12 +1938,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -2195,18 +1981,12 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
             status=204,
         )
         response = self.client.post(
@@ -2241,12 +2021,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=500, json={"message": "other error"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=500, json={"message": "other error"})
         response = self.client.post(
             self.get_url(),
             {
@@ -2311,9 +2087,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # ...but there was an error with the group name.
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.MemberAgreementCreate.ERROR_CREATING_GROUP, str(messages[0])
-        )
+        self.assertEqual(views.MemberAgreementCreate.ERROR_CREATING_GROUP, str(messages[0]))
         # No dbGaPApplication was created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
 
@@ -2322,13 +2096,8 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         study_site = StudySiteFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -2378,9 +2147,7 @@ class MemberAgreementDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.MemberAgreementFactory.create()
@@ -2410,9 +2177,7 @@ class MemberAgreementDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -2436,9 +2201,7 @@ class MemberAgreementDetailTest(TestCase):
         """Response includes a link to the user profile page."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(
-            response, self.obj.signed_agreement.representative.get_absolute_url()
-        )
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
 
     def test_response_includes_link_to_study_site(self):
         """Response includes a link to the study site detail page."""
@@ -2450,9 +2213,7 @@ class MemberAgreementDetailTest(TestCase):
         """Response includes a link to the AnVIL access group detail page."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(
-            response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
-        )
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -2478,14 +2239,10 @@ class MemberAgreementDetailTest(TestCase):
         """Invalidate button appears when the user has edit permission and the instance is valid."""
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
@@ -2548,9 +2305,7 @@ class MemberAgreementListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -2578,9 +2333,7 @@ class MemberAgreementListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -2591,9 +2344,7 @@ class MemberAgreementListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.MemberAgreementTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.MemberAgreementTable)
 
     def test_workspace_table_none(self):
         """No rows are shown if there are no MemberAgreement objects."""
@@ -2621,14 +2372,10 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Create the admins group.
         self.cc_admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
@@ -2645,9 +2392,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -2657,9 +2402,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -2667,13 +2410,9 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has only view permission."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -2692,9 +2431,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIsInstance(response.context_data["form"], forms.SignedAgreementForm)
-        self.assertIsInstance(
-            response.context_data["formset"].forms[0], forms.DataAffiliateAgreementForm
-        )
+        self.assertIsInstance(response.context_data["formset"].forms[0], forms.DataAffiliateAgreementForm)
 
     def test_can_create_object(self):
         """Can create an object."""
@@ -2705,15 +2442,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -2760,12 +2495,8 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement.type, new_agreement.DATA_AFFILIATE)
         # AnVIL group was set correctly.
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
-        self.assertEqual(
-            new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.assertEqual(
-            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
-        )
+        self.assertEqual(new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234")
+        self.assertEqual(new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE)
         # Check the agreement type.
         self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)
         new_agreement_type = models.DataAffiliateAgreement.objects.latest("pk")
@@ -2773,9 +2504,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement_type.is_primary, True)
         self.assertEqual(new_agreement_type.study, study)
         self.assertIsInstance(new_agreement_type.anvil_upload_group, ManagedGroup)
-        self.assertEqual(
-            new_agreement_type.anvil_upload_group.name, "TEST_PRIMED_CDSA_UPLOAD_1234"
-        )
+        self.assertEqual(new_agreement_type.anvil_upload_group.name, "TEST_PRIMED_CDSA_UPLOAD_1234")
 
     def test_redirect_url(self):
         """Redirects to successful url."""
@@ -2786,15 +2515,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -2840,15 +2567,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -2884,9 +2609,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.DataAffiliateAgreementCreate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.DataAffiliateAgreementCreate.success_message, str(messages[0]))
 
     def test_can_create_primary_with_requires_study_review(self):
         """Can create an object."""
@@ -2897,15 +2620,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -2995,15 +2716,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -3541,12 +3260,8 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
-        self.assertEqual(
-            models.SignedAgreement.objects.count(), 1
-        )  # One already existed.
-        self.assertEqual(
-            models.DataAffiliateAgreement.objects.count(), 1
-        )  # One already existed.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)  # One already existed.
+        self.assertEqual(models.DataAffiliateAgreement.objects.count(), 1)  # One already existed.
         # Form has errors in the correct field.
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
@@ -3571,15 +3286,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         study = StudyFactory.create()
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345",
             status=201,
             json={"message": "mock message"},
         )
@@ -3615,18 +3328,14 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(response.status_code, 302)
         new_object = models.SignedAgreement.objects.latest("pk")
         # An access group was created.
-        self.assertEqual(
-            new_object.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_2345"
-        )
+        self.assertEqual(new_object.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_2345")
         self.assertTrue(new_object.anvil_access_group.is_managed_by_app)
         # An upload group was created.
         self.assertEqual(
             new_object.dataaffiliateagreement.anvil_upload_group.name,
             "TEST_PRIMED_CDSA_UPLOAD_2345",
         )
-        self.assertTrue(
-            new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app
-        )
+        self.assertTrue(new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app)
         # Group-group memberships was created with PRIMED_CC_ADMINS as an admin of the access/uploader group.
         new_membership_1 = GroupGroupMembership.objects.get(
             parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
@@ -3698,9 +3407,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             new_object.dataaffiliateagreement.anvil_upload_group.name,
             "foo_CDSA_UPLOAD_2345",
         )
-        self.assertTrue(
-            new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app
-        )
+        self.assertTrue(new_object.dataaffiliateagreement.anvil_upload_group.is_managed_by_app)
 
     @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foo")
     def test_creates_anvil_groups_different_setting_cc_admins_group_name(self):
@@ -3712,29 +3419,25 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         study = StudyFactory.create()
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345",
             status=201,
             json={"message": "mock message"},
         )
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
             status=204,
         )
         self.anvil_response_mock.add(
             responses.PUT,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345/admin/foo@firecloud.org",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_2345/admin/foo@firecloud.org",
             status=204,
         )
         response = self.client.post(
@@ -3776,8 +3479,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1",
             status=500,
             json={"message": "other error"},
         )
@@ -3822,8 +3524,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1",
             status=201,
             json={"message": "mock message"},
         )
@@ -3836,8 +3537,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1",
             status=500,
             json={"message": "other error"},
         )
@@ -3905,9 +3605,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # ...but there was an error with the group name.
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.DataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0])
-        )
+        self.assertEqual(views.DataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0]))
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
 
     def test_upload_group_already_exists_in_app(self):
@@ -3942,9 +3640,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # ...but there was an error with the group name.
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.DataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0])
-        )
+        self.assertEqual(views.DataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0]))
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
 
     def test_admin_group_membership_access_api_error(self):
@@ -3956,8 +3652,7 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -4022,15 +3717,13 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -4089,9 +3782,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.DataAffiliateAgreementFactory.create()
@@ -4121,9 +3812,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -4147,9 +3836,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         """Response includes a link to the user profile page."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(
-            response, self.obj.signed_agreement.representative.get_absolute_url()
-        )
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
 
     def test_response_includes_link_to_study(self):
         """Response includes a link to the study detail page."""
@@ -4161,9 +3848,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         """Response includes a link to the AnVIL access group detail page."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(
-            response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
-        )
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
 
     def test_response_includes_link_to_anvil_upload_group(self):
         """Response includes a link to the AnVIL access group detail page."""
@@ -4195,14 +3880,10 @@ class DataAffiliateAgreementDetailTest(TestCase):
         """Invalidate button appears when the user has edit permission and the instance is valid."""
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
@@ -4241,9 +3922,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertContains(response, "Additional limitations")
-        self.assertContains(
-            response, "Test limitations for this data affiliate agreement"
-        )
+        self.assertContains(response, "Test limitations for this data affiliate agreement")
 
     def test_response_with_no_additional_limitations(self):
         """Response includes a link to the study detail page."""
@@ -4280,9 +3959,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
 
     def test_response_requires_study_review(self):
         """Response includes info about requires_study_review."""
-        instance = factories.DataAffiliateAgreementFactory.create(
-            is_primary=True, requires_study_review=True
-        )
+        instance = factories.DataAffiliateAgreementFactory.create(is_primary=True, requires_study_review=True)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
         self.assertContains(response, "Study review required?")
@@ -4312,9 +3989,7 @@ class DataAffiliateAgreementListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -4342,9 +4017,7 @@ class DataAffiliateAgreementListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -4355,9 +4028,7 @@ class DataAffiliateAgreementListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.DataAffiliateAgreementTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.DataAffiliateAgreementTable)
 
     def test_workspace_table_none(self):
         """No rows are shown if there are no DataAffiliateAgreement objects."""
@@ -4385,14 +4056,10 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Create the admins group.
         self.cc_admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
@@ -4409,9 +4076,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -4421,9 +4086,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -4431,13 +4094,9 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has only view permission."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -4469,8 +4128,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
             status=201,
             json={"message": "mock message"},
         )
@@ -4510,12 +4168,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_agreement.type, new_agreement.NON_DATA_AFFILIATE)
         # AnVIL group was set correctly.
         self.assertIsInstance(new_agreement.anvil_access_group, ManagedGroup)
-        self.assertEqual(
-            new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.assertEqual(
-            new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE
-        )
+        self.assertEqual(new_agreement.anvil_access_group.name, "TEST_PRIMED_CDSA_ACCESS_1234")
+        self.assertEqual(new_agreement.status, models.SignedAgreement.StatusChoices.ACTIVE)
         # Check the agreement type.
         self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 1)
         new_agreement_type = models.NonDataAffiliateAgreement.objects.latest("pk")
@@ -4528,13 +4182,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -4567,13 +4216,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -4599,9 +4243,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.NonDataAffiliateAgreementCreate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.NonDataAffiliateAgreementCreate.success_message, str(messages[0]))
 
     def test_error_missing_cc_id(self):
         """Form shows an error when cc_id is missing."""
@@ -4964,12 +4606,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
-        self.assertEqual(
-            models.SignedAgreement.objects.count(), 1
-        )  # One already existed.
-        self.assertEqual(
-            models.NonDataAffiliateAgreement.objects.count(), 1
-        )  # One already existed.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)  # One already existed.
+        self.assertEqual(models.NonDataAffiliateAgreement.objects.count(), 1)  # One already existed.
         # Form has errors in the correct field.
         form = response.context_data["form"]
         self.assertFalse(form.is_valid())
@@ -4991,13 +4629,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -5041,12 +4674,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -5086,18 +4715,12 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_2345/admin/foo@firecloud.org",
             status=204,
         )
         response = self.client.post(
@@ -5130,12 +4753,8 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=500, json={"message": "other error"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=500, json={"message": "other error"})
         response = self.client.post(
             self.get_url(),
             {
@@ -5197,9 +4816,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         # ...but there was an error with the group name.
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.NonDataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0])
-        )
+        self.assertEqual(views.NonDataAffiliateAgreementCreate.ERROR_CREATING_GROUP, str(messages[0]))
         # No dbGaPApplication was created.
         self.assertEqual(models.SignedAgreement.objects.count(), 0)
 
@@ -5213,9 +4830,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.NonDataAffiliateAgreementFactory.create()
@@ -5245,9 +4860,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -5271,17 +4884,13 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         """Response includes a link to the user profile page."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(
-            response, self.obj.signed_agreement.representative.get_absolute_url()
-        )
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
 
     def test_response_includes_link_to_anvil_access_group(self):
         """Response includes a link to the AnVIL access group detail page."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(
-            response, self.obj.signed_agreement.anvil_access_group.get_absolute_url()
-        )
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -5307,14 +4916,10 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         """Invalidate button appears when the user has edit permission and the instance is valid."""
         user = User.objects.create_user(username="test_edit", password="test_edit")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
@@ -5354,9 +4959,7 @@ class NonDataAffiliateAgreementListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -5384,9 +4987,7 @@ class NonDataAffiliateAgreementListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -5397,9 +4998,7 @@ class NonDataAffiliateAgreementListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.NonDataAffiliateAgreementTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.NonDataAffiliateAgreementTable)
 
     def test_workspace_table_none(self):
         """No rows are shown if there are no NonDataAffiliateAgreement objects."""
@@ -5482,9 +5081,7 @@ class RepresentativeRecordsList(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.RepresentativeRecordsTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.RepresentativeRecordsTable)
 
     def test_table_no_rows(self):
         """No rows are shown if there are no SignedAgreement objects."""
@@ -5534,9 +5131,7 @@ class SignedAgreementAuditTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create the test group.
         self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
@@ -5569,9 +5164,7 @@ class SignedAgreementAuditTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -5712,14 +5305,10 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Create the test group.
         self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
@@ -5745,9 +5334,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Returns forbidden response code if the user only has view permission."""
         user_view = User.objects.create_user(username="test-view", password="test-view")
         user_view.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url(1))
         request.user = user_view
@@ -5756,9 +5343,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -5773,9 +5358,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """The data_access_audit exists in the context."""
         member_agreement = factories.MemberAgreementFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(member_agreement.signed_agreement.cc_id)
-        )
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id))
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
@@ -5791,9 +5374,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the audit_result in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(member_agreement.signed_agreement.cc_id)
-        )
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, signed_agreement_audit.VerifiedAccess)
@@ -5811,9 +5392,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Check the audit_result in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(member_agreement.signed_agreement.cc_id)
-        )
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, signed_agreement_audit.VerifiedNoAccess)
@@ -5831,9 +5410,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the audit_result in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(member_agreement.signed_agreement.cc_id)
-        )
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, signed_agreement_audit.RemoveAccess)
@@ -5849,9 +5426,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Check the audit_result in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(member_agreement.signed_agreement.cc_id)
-        )
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, signed_agreement_audit.GrantAccess)
@@ -5869,9 +5444,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertRedirects(response, member_agreement.get_absolute_url())
         # Make sure the membership hasn't changed.
         membership.refresh_from_db()
@@ -5888,9 +5461,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertRedirects(response, member_agreement.get_absolute_url())
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
 
@@ -5916,9 +5487,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertRedirects(response, member_agreement.get_absolute_url())
         # Make sure the membership hasn't changed.
         with self.assertRaises(GroupGroupMembership.DoesNotExist):
@@ -5947,21 +5516,15 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
-        )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {}, **header)
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_success)
         # Make sure the membership hasn't changed.
         with self.assertRaises(GroupGroupMembership.DoesNotExist):
             membership.refresh_from_db()
 
     def test_post_context_grant_access(self):
         """Context with GrantAccess."""
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__cc_id=2345
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2345)
         # GroupGroupMembershipFactory.create(
         #     parent_group=self.anvil_cdsa_group,
         #     child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -5978,9 +5541,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertRedirects(response, member_agreement.get_absolute_url())
         membership = GroupGroupMembership.objects.get(
             parent_group=self.anvil_cdsa_group,
@@ -5990,9 +5551,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_htmx_grant_access(self):
         """Context with GrantAccess."""
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__cc_id=2345
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2345)
         # GroupGroupMembershipFactory.create(
         #     parent_group=self.anvil_cdsa_group,
         #     child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -6010,12 +5569,8 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
-        )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {}, **header)
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_success)
         membership = GroupGroupMembership.objects.get(
             parent_group=self.anvil_cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -6027,9 +5582,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
         member_agreement = factories.MemberAgreementFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(member_agreement.signed_agreement.cc_id)
-        )
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id))
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
@@ -6043,9 +5596,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_post_only_this_signed_agreement(self):
         """Only runs on the specified signed_agreement."""
         factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__cc_id=2345
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2345)
         # GroupGroupMembershipFactory.create(
         #     parent_group=self.anvil_cdsa_group,
         #     child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -6062,9 +5613,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertRedirects(response, member_agreement.get_absolute_url())
         membership = GroupGroupMembership.objects.get(
             parent_group=self.anvil_cdsa_group,
@@ -6074,9 +5623,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_api_error_grant(self):
         """AnVIL API errors are properly handled."""
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__cc_id=2345
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2345)
         # GroupGroupMembershipFactory.create(
         #     parent_group=self.anvil_cdsa_group,
         #     child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -6094,9 +5641,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertEqual(response.status_code, 200)
         # No group membership was created.
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
@@ -6111,9 +5656,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_api_error_grant_htmx(self):
         """AnVIL API errors are properly handled."""
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__cc_id=2345
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2345)
         # GroupGroupMembershipFactory.create(
         #     parent_group=self.anvil_cdsa_group,
         #     child_group=member_agreement.signed_agreement.anvil_access_group,
@@ -6132,12 +5675,8 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
-        )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {}, **header)
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_error)
         # No group membership was created.
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
         # No messages waere added.
@@ -6167,9 +5706,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertEqual(response.status_code, 200)
         # The group-group membership still exists.
         membership.refresh_from_db()
@@ -6206,12 +5743,8 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}, **header
-        )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {}, **header)
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_error)
         # The group-group membership still exists.
         membership.refresh_from_db()
         # No messages was added.
@@ -6222,17 +5755,14 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_anvil_cdsa_group_does_not_exist(self):
         """Settings file has a different CDSA group name."""
         cdsa_group = ManagedGroupFactory.create(name="FOOBAR")
-        member_agreement = factories.MemberAgreementFactory.create(
-            signed_agreement__cc_id=2345
-        )
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=2345)
         # GroupGroupMembershipFactory.create(
         #     parent_group=self.anvil_cdsa_group,
         #     child_group=member_agreement.signed_agreement.anvil_access_group,
         # )
         # Add API response
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/FOOBAR/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/FOOBAR/member/TEST_PRIMED_CDSA_ACCESS_2345@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -6241,9 +5771,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the response.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(member_agreement.signed_agreement.cc_id), {}
-        )
+        response = self.client.post(self.get_url(member_agreement.signed_agreement.cc_id), {})
         self.assertRedirects(response, member_agreement.get_absolute_url())
         membership = GroupGroupMembership.objects.get(
             parent_group=cdsa_group,
@@ -6261,9 +5789,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
 
@@ -6295,9 +5821,7 @@ class CDSAWorkspaceAuditTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -6447,14 +5971,10 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Create the test group.
         self.anvil_cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
@@ -6480,9 +6000,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Returns forbidden response code if the user only has view permission."""
         user_view = User.objects.create_user(username="test-view", password="test-view")
         user_view.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url("foo", "bar"))
         request.user = user_view
@@ -6491,9 +6009,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url("foo", "bar"))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -6508,20 +6024,14 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_workspace_name_does_not_exist(self):
         cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(cdsa_workspace.workspace.billing_project.name, "foo")
-        )
+        response = self.client.get(self.get_url(cdsa_workspace.workspace.billing_project.name, "foo"))
         self.assertEqual(response.status_code, 404)
 
     def test_get_context_audit_result(self):
         """The data_access_audit exists in the context."""
         workspace = factories.CDSAWorkspaceFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name))
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
@@ -6539,11 +6049,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Check the table in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(
@@ -6563,11 +6069,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         workspace = factories.CDSAWorkspaceFactory.create()
         # Check the table in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(
@@ -6576,9 +6078,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(audit_result.workspace, workspace)
         self.assertIsNone(audit_result.data_affiliate_agreement)
-        self.assertEqual(
-            audit_result.note, workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT
-        )
+        self.assertEqual(audit_result.note, workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT)
         self.assertIsNone(audit_result.action)
 
     def test_get_grant_access(self):
@@ -6588,11 +6088,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         # Check the table in the context.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(
@@ -6615,19 +6111,13 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             child_group=self.anvil_cdsa_group,
         )
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name))
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, workspace_audit.RemoveAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertIsNone(audit_result.data_affiliate_agreement)
-        self.assertEqual(
-            audit_result.note, workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT
-        )
+        self.assertEqual(audit_result.note, workspace_audit.WorkspaceAccessAudit.NO_PRIMARY_AGREEMENT)
         self.assertEqual(audit_result.action, "Remove access")
 
     def test_post_verified_access(self):
@@ -6644,18 +6134,14 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertRedirects(response, workspace.get_absolute_url())
         # Make sure the membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(
-            membership.parent_group, workspace.workspace.authorization_domains.first()
-        )
+        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.first())
         self.assertEqual(membership.child_group, self.anvil_cdsa_group)
 
     def test_post_verified_no_access(self):
@@ -6669,9 +6155,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertRedirects(response, workspace.get_absolute_url())
@@ -6681,14 +6165,11 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Context with GrantAccess."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(
-            study=study, workspace__name="TEST_CDSA"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(study=study, workspace__name="TEST_CDSA")
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -6698,9 +6179,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertRedirects(response, workspace.get_absolute_url())
@@ -6714,14 +6193,11 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Context with GrantAccess."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(
-            study=study, workspace__name="TEST_CDSA"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(study=study, workspace__name="TEST_CDSA")
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -6732,15 +6208,9 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
-            {},
-            **header
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name), {}, **header
         )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_success
-        )
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_success)
         # Membership has been created.
         membership = GroupGroupMembership.objects.get(
             parent_group=workspace.workspace.authorization_domains.first(),
@@ -6750,17 +6220,14 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_remove_access(self):
         """Get request with RemoveAccess audit result."""
-        workspace = factories.CDSAWorkspaceFactory.create(
-            workspace__name="TEST_WORKSPACE"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -6769,9 +6236,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertRedirects(response, workspace.get_absolute_url())
@@ -6781,17 +6246,14 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_htmx_remove_access_htmx(self):
         """HTMX post request with RemoveAccess audit result."""
-        workspace = factories.CDSAWorkspaceFactory.create(
-            workspace__name="TEST_WORKSPACE"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -6801,15 +6263,9 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
-            {},
-            **header
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name), {}, **header
         )
-        self.assertEqual(
-            response.content.decode(), views.CDSAWorkspaceAuditResolve.htmx_success
-        )
+        self.assertEqual(response.content.decode(), views.CDSAWorkspaceAuditResolve.htmx_success)
         # Make sure the membership has been deleted.
         with self.assertRaises(GroupGroupMembership.DoesNotExist):
             membership.refresh_from_db()
@@ -6819,11 +6275,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         factories.CDSAWorkspaceFactory.create()
         workspace = factories.CDSAWorkspaceFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            )
-        )
+        response = self.client.get(self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name))
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
@@ -6835,14 +6287,11 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """AnVIL API errors are properly handled."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(
-            study=study, workspace__name="TEST_CDSA"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(study=study, workspace__name="TEST_CDSA")
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -6853,9 +6302,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertEqual(response.status_code, 200)
@@ -6874,14 +6321,11 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """AnVIL API errors are properly handled with htmx."""
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(
-            study=study, workspace__name="TEST_CDSA"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(study=study, workspace__name="TEST_CDSA")
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_CDSA/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -6893,15 +6337,9 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
-            {},
-            **header
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name), {}, **header
         )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
-        )
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_error)
         # No group membership was created.
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
         # No messages were added.
@@ -6910,17 +6348,14 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_api_error_remove(self):
         """AnVIL API errors are properly handled."""
-        workspace = factories.CDSAWorkspaceFactory.create(
-            workspace__name="TEST_WORKSPACE"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -6930,9 +6365,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertEqual(response.status_code, 200)
@@ -6949,17 +6382,14 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_api_error_remove_htmx(self):
         """AnVIL API errors are properly handled."""
-        workspace = factories.CDSAWorkspaceFactory.create(
-            workspace__name="TEST_WORKSPACE"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_WORKSPACE/member/TEST_PRIMED_CDSA@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.DELETE,
@@ -6970,15 +6400,9 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         header = {"HTTP_HX-Request": "true"}
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
-            {},
-            **header
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name), {}, **header
         )
-        self.assertEqual(
-            response.content.decode(), views.SignedAgreementAuditResolve.htmx_error
-        )
+        self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_error)
         # The group-group membership still exists.
         membership.refresh_from_db()
         # No messages was added.
@@ -6991,15 +6415,10 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         cdsa_group = ManagedGroupFactory.create(name="FOOBAR")
         study = StudyFactory.create()
         factories.DataAffiliateAgreementFactory.create(study=study)
-        workspace = factories.CDSAWorkspaceFactory.create(
-            study=study, workspace__name="TEST_CDSA"
-        )
+        workspace = factories.CDSAWorkspaceFactory.create(study=study, workspace__name="TEST_CDSA")
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_CDSA/member/FOOBAR@firecloud.org"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_CDSA/member/FOOBAR@firecloud.org"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -7008,9 +6427,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Check the response.
         self.client.force_login(self.user)
         response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name, workspace.workspace.name
-            ),
+            self.get_url(workspace.workspace.billing_project.name, workspace.workspace.name),
             {},
         )
         self.assertRedirects(response, workspace.get_absolute_url())
@@ -7070,12 +6487,8 @@ class StudyRecordsList(TestCase):
 
     def test_only_shows_data_affiliate_records(self):
         member_agreement = factories.MemberAgreementFactory.create(is_primary=True)
-        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(
-            is_primary=True
-        )
-        non_data_affiliate_agreement = (
-            factories.NonDataAffiliateAgreementFactory.create()
-        )
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(is_primary=True)
+        non_data_affiliate_agreement = factories.NonDataAffiliateAgreementFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         table = response.context_data["table"]
@@ -7085,12 +6498,8 @@ class StudyRecordsList(TestCase):
         self.assertNotIn(non_data_affiliate_agreement, table.data)
 
     def test_only_shows_primary_data_affiliate_records(self):
-        primary_agreement = factories.DataAffiliateAgreementFactory.create(
-            is_primary=True
-        )
-        component_agreement = factories.DataAffiliateAgreementFactory.create(
-            is_primary=False
-        )
+        primary_agreement = factories.DataAffiliateAgreementFactory.create(is_primary=True)
+        component_agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         table = response.context_data["table"]
@@ -7150,9 +6559,7 @@ class UserAccessRecordsList(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.UserAccessRecordsTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.UserAccessRecordsTable)
 
     def test_table_no_rows(self):
         """No rows are shown if there are no users in CDSA access groups."""
@@ -7172,9 +6579,7 @@ class UserAccessRecordsList(TestCase):
     def test_table_one_agreement_one_member(self):
         """One row is shown if there is one agreement and one account group member."""
         agreement = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create(
-            group=agreement.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=agreement.signed_agreement.anvil_access_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -7183,9 +6588,7 @@ class UserAccessRecordsList(TestCase):
     def test_table_one_agreements_two_members(self):
         """Two rows are shown if there is one agreement with two account group members."""
         agreement = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create_batch(
-            2, group=agreement.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(2, group=agreement.signed_agreement.anvil_access_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -7194,13 +6597,9 @@ class UserAccessRecordsList(TestCase):
     def test_table_two_agreements(self):
         """Multiple rows is shown if there are two agreements and multiple account group members."""
         agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create_batch(
-            2, group=agreement_1.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(2, group=agreement_1.signed_agreement.anvil_access_group)
         agreement_2 = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create_batch(
-            3, group=agreement_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(3, group=agreement_2.signed_agreement.anvil_access_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
@@ -7208,17 +6607,11 @@ class UserAccessRecordsList(TestCase):
 
     def test_only_shows_records_for_all_agreement_types(self):
         agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create(
-            group=agreement_1.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=agreement_1.signed_agreement.anvil_access_group)
         agreement_2 = factories.DataAffiliateAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create(
-            group=agreement_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=agreement_2.signed_agreement.anvil_access_group)
         agreement_3 = factories.NonDataAffiliateAgreementFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=agreement_3.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=agreement_3.signed_agreement.anvil_access_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         table = response.context_data["table"]
@@ -7226,13 +6619,9 @@ class UserAccessRecordsList(TestCase):
 
     def test_shows_includes_component_agreements(self):
         agreement_1 = factories.MemberAgreementFactory.create(is_primary=False)
-        GroupAccountMembershipFactory.create(
-            group=agreement_1.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=agreement_1.signed_agreement.anvil_access_group)
         agreement_2 = factories.DataAffiliateAgreementFactory.create(is_primary=False)
-        GroupAccountMembershipFactory.create(
-            group=agreement_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=agreement_2.signed_agreement.anvil_access_group)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         table = response.context_data["table"]
@@ -7256,15 +6645,11 @@ class UserAccessRecordsList(TestCase):
 
     def test_only_includes_active_agreements(self):
         active_agreement = factories.MemberAgreementFactory.create()
-        active_member = GroupAccountMembershipFactory.create(
-            group=active_agreement.signed_agreement.anvil_access_group
-        )
+        active_member = GroupAccountMembershipFactory.create(group=active_agreement.signed_agreement.anvil_access_group)
         lapsed_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__status=models.SignedAgreement.StatusChoices.LAPSED
         )
-        lapsed_member = GroupAccountMembershipFactory.create(
-            group=lapsed_agreement.signed_agreement.anvil_access_group
-        )
+        lapsed_member = GroupAccountMembershipFactory.create(group=lapsed_agreement.signed_agreement.anvil_access_group)
         withdrawn_agreement = factories.MemberAgreementFactory.create(
             signed_agreement__status=models.SignedAgreement.StatusChoices.WITHDRAWN
         )
@@ -7318,9 +6703,7 @@ class CDSAWorkspaceRecordsList(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.CDSAWorkspaceRecordsTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.CDSAWorkspaceRecordsTable)
 
     def test_table_no_rows(self):
         """No rows are shown if there are no CDSAWorkspaces objects."""
@@ -7380,9 +6763,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -7436,6 +6817,25 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(response, modifiers[0].abbreviation)
         self.assertContains(response, modifiers[1].abbreviation)
 
+    def test_associated_data_prep_view_user(self):
+        """View users do not see the associated data prep section"""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+
+        obj = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertNotContains(response, "Associated data prep workspaces")
+
+    def test_associated_data_prep_staff_view_user(self):
+        """Staff view users do see the associated data prep section."""
+        obj = factories.CDSAWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertContains(response, "Associated data prep workspaces")
+
     def test_associated_data_prep_workspaces_context_exists(self):
         obj = factories.CDSAWorkspaceFactory.create()
         self.client.force_login(self.user)
@@ -7443,20 +6843,16 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertIn("associated_data_prep_workspaces", response.context_data)
         self.assertIsInstance(
             response.context_data["associated_data_prep_workspaces"],
-            DataPrepWorkspaceTable,
+            DataPrepWorkspaceUserTable,
         )
 
     def test_only_show_one_associated_data_prep_workspace(self):
         cdsa_obj = factories.CDSAWorkspaceFactory.create()
-        dataPrep_obj = DataPrepWorkspaceFactory.create(
-            target_workspace=cdsa_obj.workspace
-        )
+        dataPrep_obj = DataPrepWorkspaceFactory.create(target_workspace=cdsa_obj.workspace)
         self.client.force_login(self.user)
         response = self.client.get(cdsa_obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspaces", response.context_data)
-        self.assertEqual(
-            len(response.context_data["associated_data_prep_workspaces"].rows), 1
-        )
+        self.assertEqual(len(response.context_data["associated_data_prep_workspaces"].rows), 1)
         self.assertIn(
             dataPrep_obj.workspace,
             response.context_data["associated_data_prep_workspaces"].data,
@@ -7464,18 +6860,12 @@ class CDSAWorkspaceDetailTest(TestCase):
 
     def test_show_two_associated_data_prep_workspaces(self):
         cdsa_obj = factories.CDSAWorkspaceFactory.create()
-        dataPrep_obj1 = DataPrepWorkspaceFactory.create(
-            target_workspace=cdsa_obj.workspace
-        )
-        dataPrep_obj2 = DataPrepWorkspaceFactory.create(
-            target_workspace=cdsa_obj.workspace
-        )
+        dataPrep_obj1 = DataPrepWorkspaceFactory.create(target_workspace=cdsa_obj.workspace)
+        dataPrep_obj2 = DataPrepWorkspaceFactory.create(target_workspace=cdsa_obj.workspace)
         self.client.force_login(self.user)
         response = self.client.get(cdsa_obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspaces", response.context_data)
-        self.assertEqual(
-            len(response.context_data["associated_data_prep_workspaces"].rows), 2
-        )
+        self.assertEqual(len(response.context_data["associated_data_prep_workspaces"].rows), 2)
         self.assertIn(
             dataPrep_obj1.workspace,
             response.context_data["associated_data_prep_workspaces"].data,
@@ -7494,9 +6884,7 @@ class CDSAWorkspaceDetailTest(TestCase):
 
     def test_context_data_prep_active_with_one_inactive_prep_workspace(self):
         instance = factories.CDSAWorkspaceFactory.create()
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=False
-        )
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=False)
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
@@ -7504,9 +6892,7 @@ class CDSAWorkspaceDetailTest(TestCase):
 
     def test_context_data_prep_active_with_one_active_prep_workspace(self):
         instance = factories.CDSAWorkspaceFactory.create()
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=True
-        )
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=True)
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
@@ -7514,12 +6900,8 @@ class CDSAWorkspaceDetailTest(TestCase):
 
     def test_context_data_prep_active_with_one_active_one_inactive_prep_workspace(self):
         instance = factories.CDSAWorkspaceFactory.create()
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=True
-        )
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=True
-        )
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=True)
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=True)
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
@@ -7548,9 +6930,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
-        self.assertContains(
-            response, "Test limitations for this data affiliate agreement"
-        )
+        self.assertContains(response, "Test limitations for this data affiliate agreement")
 
     def test_response_data_use_limitations(self):
         """All data use limitations appear in the response content."""
@@ -7559,12 +6939,8 @@ class CDSAWorkspaceDetailTest(TestCase):
             data_use_permission__abbreviation="P",
             additional_limitations="Test additional limitations for workspace",
         )
-        modifier_1 = DataUseModifierFactory.create(
-            abbreviation="M1", definition="Test modifier 1."
-        )
-        modifier_2 = DataUseModifierFactory.create(
-            abbreviation="M2", definition="Test modifier 2."
-        )
+        modifier_1 = DataUseModifierFactory.create(abbreviation="M1", definition="Test modifier 1.")
+        modifier_2 = DataUseModifierFactory.create(abbreviation="M2", definition="Test modifier 2.")
         instance.data_use_modifiers.add(modifier_1, modifier_2)
         # Create an agreement with data use limitations.
         factories.DataAffiliateAgreementFactory.create(
@@ -7640,7 +7016,7 @@ class CDSAWorkspaceDetailTest(TestCase):
         self.assertContains(
             response,
             # """<dt class="col-sm-2">Associated CDSA</dt><dd class="col-sm-9">mdash;</dd>"""
-            """No primary CDSA"""
+            """No primary CDSA""",
             # """<dt class="col-sm-2">Associated CDSA</dt> <dd class="col-sm-9">&mdash;</dd>""",  # noqa: E501
         )
 
@@ -7657,14 +7033,10 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "cdsa"
@@ -7774,9 +7146,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_upload_workspace_with_disease_term(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         study = factories.StudyFactory.create()
-        data_use_permission = DataUsePermissionFactory.create(
-            requires_disease_term=True
-        )
+        data_use_permission = DataUsePermissionFactory.create(requires_disease_term=True)
         # Create an extra that won't be specified.
         billing_project = BillingProjectFactory.create(name="test-billing-project")
         url = self.api_client.rawls_entry_point + "/api/workspaces"

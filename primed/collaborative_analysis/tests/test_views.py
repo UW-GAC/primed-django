@@ -58,9 +58,7 @@ class NavbarTest(TestCase):
         """Returns successful response code."""
         user = User.objects.create_user(username="test", password="test")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -69,11 +67,7 @@ class NavbarTest(TestCase):
     def test_links_for_view(self):
         """Returns successful response code."""
         user = User.objects.create_user(username="test", password="test")
-        user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
-        )
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertNotContains(response, reverse("collaborative_analysis:audit:all"))
@@ -86,9 +80,7 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         """Set up test class."""
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -114,29 +106,21 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertIn(dbgap_workspace.get_absolute_url(), response.content.decode())
         self.assertIn(cdsa_workspace.get_absolute_url(), response.content.decode())
-        self.assertIn(
-            open_access_workspace.get_absolute_url(), response.content.decode()
-        )
+        self.assertIn(open_access_workspace.get_absolute_url(), response.content.decode())
 
     def test_link_to_custodian(self):
         """Links to the custodian's user profile appear on the detail page."""
         custodian = UserFactory.create()
-        obj = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            custodian=custodian
-        )
+        obj = factories.CollaborativeAnalysisWorkspaceFactory.create(custodian=custodian)
         self.client.force_login(self.user)
         response = self.client.get(obj.workspace.get_absolute_url())
         self.assertIn(custodian.get_absolute_url(), response.content.decode())
 
     def test_link_to_analyst_group_staff_view(self):
         """Links to the analyst group's detail page appear on the detail page for staff_viewers."""
-        user = User.objects.create_user(
-            username="test-staff-view", password="test-staff-view"
-        )
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
         self.client.force_login(user)
@@ -149,20 +133,14 @@ class CollaborativeAnalysisWorkspaceDetailTest(TestCase):
         obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(obj.workspace.get_absolute_url())
-        self.assertNotIn(
-            obj.analyst_group.get_absolute_url(), response.content.decode()
-        )
+        self.assertNotIn(obj.analyst_group.get_absolute_url(), response.content.decode())
         self.assertNotIn(obj.analyst_group.name, response.content.decode())
 
     def test_link_to_audit_staff_view(self):
         """Links to the audit view page do appear on the detail page for staff viewers."""
-        user = User.objects.create_user(
-            username="test-staff-view", password="test-staff-view"
-        )
+        user = User.objects.create_user(username="test-staff-view", password="test-staff-view")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         obj = factories.CollaborativeAnalysisWorkspaceFactory.create()
         self.client.force_login(user)
@@ -199,14 +177,10 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "collab_analysis"
         self.custodian = UserFactory.create()
@@ -270,14 +244,10 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.custodian = UserFactory.create()
         self.source_workspace = dbGaPWorkspaceFactory.create().workspace
@@ -290,25 +260,15 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -326,9 +286,7 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -398,13 +356,9 @@ class WorkspaceAuditTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
-        self.collaborative_analysis_workspace = (
-            factories.CollaborativeAnalysisWorkspaceFactory.create()
-        )
+        self.collaborative_analysis_workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -444,9 +398,7 @@ class WorkspaceAuditTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(
             self.get_url(
                 self.collaborative_analysis_workspace.workspace.billing_project.name,
@@ -463,9 +415,7 @@ class WorkspaceAuditTest(TestCase):
 
     def test_invalid_billing_project_name(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(
-            self.get_url("foo", self.collaborative_analysis_workspace.workspace.name)
-        )
+        request = self.factory.get(self.get_url("foo", self.collaborative_analysis_workspace.workspace.name))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -476,9 +426,7 @@ class WorkspaceAuditTest(TestCase):
 
     def test_invalid_workspace_name(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(
-            self.get_url(self.collaborative_analysis_workspace.workspace.name, "foo")
-        )
+        request = self.factory.get(self.get_url(self.collaborative_analysis_workspace.workspace.name, "foo"))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -512,13 +460,9 @@ class WorkspaceAuditTest(TestCase):
         account = AccountFactory.create()
         # Set up source workspaces.
         source_workspace = dbGaPWorkspaceFactory.create()
-        self.collaborative_analysis_workspace.source_workspaces.add(
-            source_workspace.workspace
-        )
+        self.collaborative_analysis_workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=self.collaborative_analysis_workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
@@ -561,13 +505,9 @@ class WorkspaceAuditTest(TestCase):
         account = AccountFactory.create()
         # Set up source workspaces.
         source_workspace = dbGaPWorkspaceFactory.create()
-        self.collaborative_analysis_workspace.source_workspaces.add(
-            source_workspace.workspace
-        )
+        self.collaborative_analysis_workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=self.collaborative_analysis_workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(),
@@ -609,13 +549,9 @@ class WorkspaceAuditTest(TestCase):
         account = AccountFactory.create()
         # Set up source workspaces.
         source_workspace = dbGaPWorkspaceFactory.create()
-        self.collaborative_analysis_workspace.source_workspaces.add(
-            source_workspace.workspace
-        )
+        self.collaborative_analysis_workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=self.collaborative_analysis_workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
@@ -657,13 +593,9 @@ class WorkspaceAuditTest(TestCase):
         account = AccountFactory.create()
         # Set up source workspaces.
         source_workspace = dbGaPWorkspaceFactory.create()
-        self.collaborative_analysis_workspace.source_workspaces.add(
-            source_workspace.workspace
-        )
+        self.collaborative_analysis_workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=self.collaborative_analysis_workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(),
@@ -744,9 +676,7 @@ class WorkspaceAuditAllTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -778,9 +708,7 @@ class WorkspaceAuditAllTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -840,9 +768,7 @@ class WorkspaceAuditAllTest(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         instance.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=instance.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
@@ -883,9 +809,7 @@ class WorkspaceAuditAllTest(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         instance.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=instance.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(),
@@ -925,9 +849,7 @@ class WorkspaceAuditAllTest(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         instance.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=instance.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
@@ -967,9 +889,7 @@ class WorkspaceAuditAllTest(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         instance.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=instance.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(),
@@ -1042,14 +962,10 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1069,9 +985,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         response = self.client.get(self.get_url("foo", "bar", "test@example.com"))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL)
-            + "?next="
-            + self.get_url("foo", "bar", "test@example.com"),
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url("foo", "bar", "test@example.com"),
         )
 
     def test_status_code_account_with_user_permission_view(self):
@@ -1104,9 +1018,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url("foo", "bar", "test@example.com"))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1117,9 +1029,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         collab_workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url("foo", collab_workspace.workspace.name, account.email)
-        )
+        response = self.client.get(self.get_url("foo", collab_workspace.workspace.name, account.email))
         self.assertEqual(response.status_code, 404)
 
     def test_invalid_workspace_name(self):
@@ -1127,11 +1037,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         collab_workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                collab_workspace.workspace.billing_project.name, "foo", account.email
-            )
-        )
+        response = self.client.get(self.get_url(collab_workspace.workspace.billing_project.name, "foo", account.email))
         self.assertEqual(response.status_code, 404)
 
     def test_invalid_email(self):
@@ -1544,9 +1450,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_grant_access_account(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         GroupAccountMembershipFactory.create(
@@ -1560,10 +1464,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -1588,9 +1489,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_grant_access_group(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
@@ -1600,8 +1499,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1627,9 +1525,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_remove_access_account(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         # GroupAccountMembershipFactory.create(
@@ -1643,10 +1539,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -1667,9 +1560,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_remove_access_group(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
@@ -1678,10 +1569,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -1702,9 +1590,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_grant_access_account_htmx(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         GroupAccountMembershipFactory.create(
@@ -1718,10 +1604,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -1736,7 +1619,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 account.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -1751,9 +1634,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_grant_access_group_htmx(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
@@ -1763,8 +1644,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1780,7 +1660,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 group.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -1795,9 +1675,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_remove_access_account_htmx(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         # GroupAccountMembershipFactory.create(
@@ -1811,10 +1689,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -1829,7 +1704,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 account.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -1840,9 +1715,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_post_remove_access_group_htmx(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
@@ -1851,10 +1724,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -1869,7 +1739,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 group.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -1880,9 +1750,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_grant_access_account(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         GroupAccountMembershipFactory.create(
@@ -1896,10 +1764,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -1929,9 +1794,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_grant_access_group(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
@@ -1941,8 +1804,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1973,9 +1835,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_remove_access_account(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         # GroupAccountMembershipFactory.create(
@@ -1989,10 +1849,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -2022,9 +1879,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_remove_access_group(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
@@ -2033,10 +1888,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -2066,9 +1918,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_grant_access_account_htmx(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         GroupAccountMembershipFactory.create(
@@ -2082,10 +1932,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -2101,7 +1948,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 account.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -2115,9 +1962,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_grant_access_group_htmx(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
@@ -2127,8 +1972,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
         api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
+            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
         )
         self.anvil_response_mock.add(
             responses.PUT,
@@ -2145,7 +1989,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 group.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -2159,9 +2003,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_remove_access_account_htmx(self):
         """Get request with verified access."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         account = AccountFactory.create(email="test@example.com")
         # Analyst group membership.
         # GroupAccountMembershipFactory.create(
@@ -2175,10 +2017,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test@example.com"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -2194,7 +2033,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 account.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),
@@ -2208,9 +2047,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_anvil_error_remove_access_group_htmx(self):
         """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(
-            workspace__name="TEST_COLLAB"
-        )
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
@@ -2219,10 +2056,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/test-group@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -2238,7 +2072,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 group.email,
             ),
             {},
-            **header
+            **header,
         )
         self.assertEqual(
             response.content.decode(),

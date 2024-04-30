@@ -26,9 +26,7 @@ CACHES = {
 # EMAIL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
-)
+EMAIL_BACKEND = env("DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 
 # WhiteNoise
 # ------------------------------------------------------------------------------
@@ -73,10 +71,6 @@ ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
 # ANVIL_CDSA_GROUP_PREFIX = env(
 #     "ANVIL_CDSA_GROUP_PREFIX", default="DEV_PRIMED_CDSA_ACCESS"
 # )
-ANVIL_DATA_ACCESS_GROUP_PREFIX = env(
-    "ANVIL_DATA_ACCESS_GROUP_PREFIX", default="DEV_PRIMED"
-)
+ANVIL_DATA_ACCESS_GROUP_PREFIX = env("ANVIL_DATA_ACCESS_GROUP_PREFIX", default="DEV_PRIMED")
 ANVIL_CDSA_GROUP_NAME = env("ANVIL_CDSA_GROUP_NAME", default="DEV_PRIMED_CDSA")
-ANVIL_CC_ADMINS_GROUP_NAME = env(
-    "ANVIL_CC_ADMINS_GROUP_NAME", default="DEV_PRIMED_CC_ADMINS"
-)
+ANVIL_CC_ADMINS_GROUP_NAME = env("ANVIL_CC_ADMINS_GROUP_NAME", default="DEV_PRIMED_CC_ADMINS")

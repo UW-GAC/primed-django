@@ -25,9 +25,7 @@ class Command(BaseCommand):
         # Report errors and needs access.
         audit_ok = data_access_audit.ok()
         # Construct the url for handling errors.
-        url = (
-            "https://" + Site.objects.get_current().domain + reverse("dbgap:audit:all")
-        )
+        url = "https://" + Site.objects.get_current().domain + reverse("dbgap:audit:all")
         if audit_ok:
             self.stdout.write(self.style.SUCCESS("ok!"))
         else:
@@ -35,15 +33,11 @@ class Command(BaseCommand):
 
         # Print results
         self.stdout.write("* Verified: {}".format(len(data_access_audit.verified)))
-        self.stdout.write(
-            "* Needs action: {}".format(len(data_access_audit.needs_action))
-        )
+        self.stdout.write("* Needs action: {}".format(len(data_access_audit.needs_action)))
         self.stdout.write("* Errors: {}".format(len(data_access_audit.errors)))
 
         if not audit_ok:
-            self.stdout.write(
-                self.style.ERROR(f"Please visit {url} to resolve these issues.")
-            )
+            self.stdout.write(self.style.ERROR(f"Please visit {url} to resolve these issues."))
 
             # Send email if requested and there are problems.
             email = options["email"]

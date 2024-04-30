@@ -1,4 +1,5 @@
 """Tests for the `audit.py` module."""
+
 from dataclasses import dataclass
 from unittest import TestCase
 
@@ -9,7 +10,6 @@ from .. import audit
 
 @dataclass
 class TempAuditResult(audit.PRIMEDAuditResult):
-
     value: str
 
     def get_table_dictionary(self):

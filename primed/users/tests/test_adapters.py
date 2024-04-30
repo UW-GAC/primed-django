@@ -53,9 +53,7 @@ class TestsUserSocialLoginAdapter(object):
         sociallogin = SocialLogin(user=user, account=account)
         complete_social_login(request, sociallogin)
 
-        user = User.objects.get(
-            **{account_settings.USER_MODEL_USERNAME_FIELD: old_username}
-        )
+        user = User.objects.get(**{account_settings.USER_MODEL_USERNAME_FIELD: old_username})
         assert SocialAccount.objects.filter(user=user, uid=account.uid).exists() is True
         assert user.name == old_name
         assert user.username == old_username
@@ -101,9 +99,7 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
 
-        adapter.update_user_study_sites(
-            user, dict(study_site_or_center=[rc1.short_name])
-        )
+        adapter.update_user_study_sites(user, dict(study_site_or_center=[rc1.short_name]))
         assert user.study_sites.filter(pk=rc1.pk).exists()
         assert user.study_sites.all().count() == 1
 
@@ -121,9 +117,7 @@ class TestsUserSocialLoginAdapter(object):
         user.study_sites.add(rc1, rc2)
         assert user.study_sites.all().count() == 2
 
-        adapter.update_user_study_sites(
-            user, dict(study_site_or_center=[rc1.short_name])
-        )
+        adapter.update_user_study_sites(user, dict(study_site_or_center=[rc1.short_name]))
         assert user.study_sites.filter(pk=rc1.pk).exists()
         assert user.study_sites.all().count() == 1
 
@@ -135,10 +129,7 @@ class TestsUserSocialLoginAdapter(object):
         adapter.update_user_study_sites(user, dict(study_site_or_center=["UNKNOWN"]))
         assert user.study_sites.all().count() == 0
         assert len(mail.outbox) == 1
-        assert (
-            mail.outbox[0].subject
-            == f"{settings.EMAIL_SUBJECT_PREFIX}Missing StudySite"
-        )
+        assert mail.outbox[0].subject == f"{settings.EMAIL_SUBJECT_PREFIX}Missing StudySite"
 
     def test_update_study_sites_malformed(self):
         adapter = SocialAccountAdapter()
@@ -157,9 +148,7 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
 
-        adapter.update_user_groups(
-            user, extra_data=dict(managed_scope_status={rc1.name: True})
-        )
+        adapter.update_user_groups(user, extra_data=dict(managed_scope_status={rc1.name: True}))
         assert user.groups.filter(pk=rc1.pk).exists()
         assert user.groups.all().count() == 1
 
@@ -173,9 +162,7 @@ class TestsUserSocialLoginAdapter(object):
 
         user.save()
         new_group_name = "NEW_GROUP"
-        adapter.update_user_groups(
-            user, extra_data=dict(managed_scope_status={new_group_name: True})
-        )
+        adapter.update_user_groups(user, extra_data=dict(managed_scope_status={new_group_name: True}))
         assert user.groups.filter(name=new_group_name).exists()
         assert user.groups.all().count() == 1
 

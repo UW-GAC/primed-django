@@ -32,16 +32,12 @@ class StudyTest(TestCase):
     def test_unique_short_name(self):
         """Saving a model with a duplicate short name fails."""
         factories.StudyFactory.create(short_name="FOO")
-        instance2 = factories.StudyFactory.build(
-            short_name="FOO", full_name="full name"
-        )
+        instance2 = factories.StudyFactory.build(short_name="FOO", full_name="full name")
         with self.assertRaises(ValidationError) as e:
             instance2.full_clean()
         self.assertIn("short_name", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["short_name"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["short_name"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["short_name"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance2.save()
 

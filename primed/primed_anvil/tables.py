@@ -7,7 +7,6 @@ from . import models
 
 
 class BooleanIconColumn(tables.BooleanColumn):
-
     #    attrs = {"td": {"align": "center"}}
     # attrs = {"th": {"class": "center"}}
 
@@ -53,16 +52,28 @@ class WorkspaceSharedWithConsortiumColumn(BooleanIconColumn):
         # Check if it is a workspace
         if not isinstance(record, Workspace):
             raise ImproperlyConfigured("record must be a Workspace")
-        is_shared = record.workspacegroupsharing_set.filter(
-            group__name="PRIMED_ALL"
-        ).exists()
+        is_shared = record.workspacegroupsharing_set.filter(group__name="PRIMED_ALL").exists()
         return is_shared
 
 
-class DefaultWorkspaceStaffTable(tables.Table):
+class DefaultWorkspaceUserTable(tables.Table):
     """Class to use for default workspace tables in PRIMED."""
 
     name = tables.Column(linkify=True, verbose_name="Workspace")
+    is_shared = WorkspaceSharedWithConsortiumColumn()
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "is_shared",
+        )
+        order_by = ("name",)
+
+
+class DefaultWorkspaceStaffTable(DefaultWorkspaceUserTable):
+    """Class to use for default workspace tables in PRIMED."""
+
     billing_project = tables.Column(linkify=True)
     number_groups = tables.Column(
         verbose_name="Number of groups shared with",
@@ -70,7 +81,6 @@ class DefaultWorkspaceStaffTable(tables.Table):
         orderable=False,
         accessor="workspacegroupsharing_set__count",
     )
-    is_shared = WorkspaceSharedWithConsortiumColumn()
 
     class Meta:
         model = Workspace
@@ -78,23 +88,6 @@ class DefaultWorkspaceStaffTable(tables.Table):
             "name",
             "billing_project",
             "number_groups",
-            "is_shared",
-        )
-        order_by = ("name",)
-
-
-class DefaultWorkspaceUserTable(tables.Table):
-    """Class to use for default workspace tables in PRIMED."""
-
-    name = tables.Column(linkify=True, verbose_name="Workspace")
-    billing_project = tables.Column()
-    is_shared = WorkspaceSharedWithConsortiumColumn()
-
-    class Meta:
-        model = Workspace
-        fields = (
-            "name",
-            "billing_project",
             "is_shared",
         )
         order_by = ("name",)
@@ -150,18 +143,11 @@ class AvailableDataTable(tables.Table):
 
 
 class DataSummaryTable(tables.Table):
-
     study = tables.Column()
     access_mechanism = tables.Column()
-    is_shared = tables.BooleanColumn(
-        verbose_name="Status", yesno="Shared,Preparing data"
-    )
+    is_shared = tables.BooleanColumn(verbose_name="Status", yesno="Shared,Preparing data")
 
     def __init__(self, *args, **kwargs):
-        available_data_types = models.AvailableData.objects.values_list(
-            "name", flat=True
-        )
-        extra_columns = [
-            (x, BooleanIconColumn(default=False)) for x in available_data_types
-        ]
+        available_data_types = models.AvailableData.objects.values_list("name", flat=True)
+        extra_columns = [(x, BooleanIconColumn(default=False)) for x in available_data_types]
         super().__init__(*args, extra_columns=extra_columns, **kwargs)

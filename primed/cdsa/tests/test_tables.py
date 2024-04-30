@@ -58,13 +58,9 @@ class SignedAgreementTableTest(TestCase):
         """Table shows correct count for number of accessors."""
         factories.MemberAgreementFactory.create()
         obj = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=obj.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=obj.signed_agreement.anvil_access_group)
         obj_2 = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(
-            2, group=obj_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(2, group=obj_2.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell("number_accessors"), 0)
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
@@ -102,13 +98,9 @@ class MemberAgreementTableTest(TestCase):
         """Table shows correct count for number of accessors."""
         self.model_factory.create()
         obj = self.model_factory.create()
-        GroupAccountMembershipFactory.create(
-            group=obj.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=obj.signed_agreement.anvil_access_group)
         obj_2 = self.model_factory.create()
-        GroupAccountMembershipFactory.create_batch(
-            2, group=obj_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(2, group=obj_2.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell("number_accessors"), 0)
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
@@ -146,13 +138,9 @@ class DataAffiliateAgreementTableTest(TestCase):
         """Table shows correct count for number of accessors."""
         self.model_factory.create()
         obj = self.model_factory.create()
-        GroupAccountMembershipFactory.create(
-            group=obj.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=obj.signed_agreement.anvil_access_group)
         obj_2 = self.model_factory.create()
-        GroupAccountMembershipFactory.create_batch(
-            2, group=obj_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(2, group=obj_2.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell("number_accessors"), 0)
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
@@ -190,13 +178,9 @@ class NonDataAffiliateAgreementTableTest(TestCase):
         """Table shows correct count for number of accessors."""
         self.model_factory.create()
         obj = self.model_factory.create()
-        GroupAccountMembershipFactory.create(
-            group=obj.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create(group=obj.signed_agreement.anvil_access_group)
         obj_2 = self.model_factory.create()
-        GroupAccountMembershipFactory.create_batch(
-            2, group=obj_2.signed_agreement.anvil_access_group
-        )
+        GroupAccountMembershipFactory.create_batch(2, group=obj_2.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.rows[0].get_cell("number_accessors"), 0)
         self.assertEqual(table.rows[1].get_cell("number_accessors"), 1)
@@ -238,32 +222,22 @@ class RepresentativeRecordsTableTest(TestCase):
         # Members.
         study_site = StudySiteFactory.create(short_name="Test Site")
         record = factories.MemberAgreementFactory(study_site=study_site)
-        self.assertEqual(
-            table.render_signing_group(record.signed_agreement), "Test Site"
-        )
+        self.assertEqual(table.render_signing_group(record.signed_agreement), "Test Site")
         # Data affiliates.
         study = StudyFactory.create(short_name="Test Study")
         record = factories.DataAffiliateAgreementFactory(study=study)
-        self.assertEqual(
-            table.render_signing_group(record.signed_agreement), "Test Study"
-        )
+        self.assertEqual(table.render_signing_group(record.signed_agreement), "Test Study")
         # Non-data affiliates.
         record = factories.NonDataAffiliateAgreementFactory(affiliation="Test Affil")
-        self.assertEqual(
-            table.render_signing_group(record.signed_agreement), "Test Affil"
-        )
+        self.assertEqual(table.render_signing_group(record.signed_agreement), "Test Affil")
         # Other catch-all case that shouldn't happen.
         record = factories.SignedAgreementFactory()
         self.assertIsNone(table.render_signing_group(record))
 
     def test_ordering(self):
         """Instances are ordered alphabetically by representative name."""
-        instance_1 = factories.MemberAgreementFactory.create(
-            signed_agreement__representative__name="zzz"
-        )
-        instance_2 = factories.MemberAgreementFactory.create(
-            signed_agreement__representative__name="aaa"
-        )
+        instance_1 = factories.MemberAgreementFactory.create(signed_agreement__representative__name="zzz")
+        instance_2 = factories.MemberAgreementFactory.create(signed_agreement__representative__name="aaa")
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.data[0], instance_2.signed_agreement)
         self.assertEqual(table.data[1], instance_1.signed_agreement)
@@ -312,41 +286,29 @@ class UserAccessRecordsTableTest(TestCase):
 
     def test_row_count_with_one_agreement(self):
         member_agreement = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create(
-            group__signedagreement=member_agreement.signed_agreement
-        )
+        GroupAccountMembershipFactory.create(group__signedagreement=member_agreement.signed_agreement)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 1)
 
     def test_row_count_with_one_agreement_multiple_members(self):
         member_agreement = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(
-            5, group__signedagreement=member_agreement.signed_agreement
-        )
+        GroupAccountMembershipFactory.create_batch(5, group__signedagreement=member_agreement.signed_agreement)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 5)
 
     def test_row_count_with_two_agreements_multiple_members(self):
         member_agreement_1 = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(
-            2, group__signedagreement=member_agreement_1.signed_agreement
-        )
+        GroupAccountMembershipFactory.create_batch(2, group__signedagreement=member_agreement_1.signed_agreement)
         member_agreement_2 = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(
-            3, group__signedagreement=member_agreement_2.signed_agreement
-        )
+        GroupAccountMembershipFactory.create_batch(3, group__signedagreement=member_agreement_2.signed_agreement)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 5)
 
     def test_includes_components(self):
         agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement_1.signed_agreement
-        )
+        GroupAccountMembershipFactory.create(group__signedagreement=agreement_1.signed_agreement)
         agreement_2 = factories.MemberAgreementFactory.create(is_primary=False)
-        GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement_2.signed_agreement
-        )
+        GroupAccountMembershipFactory.create(group__signedagreement=agreement_2.signed_agreement)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
@@ -354,23 +316,15 @@ class UserAccessRecordsTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         # Members.
         agreement = factories.MemberAgreementFactory(study_site__short_name="Test Site")
-        record = GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement.signed_agreement
-        )
+        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement.signed_agreement)
         self.assertEqual(table.render_signing_group(record), "Test Site")
         # Data affiliates.
-        agreement = factories.DataAffiliateAgreementFactory(
-            study__short_name="Test Study"
-        )
-        record = GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement.signed_agreement
-        )
+        agreement = factories.DataAffiliateAgreementFactory(study__short_name="Test Study")
+        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement.signed_agreement)
         self.assertEqual(table.render_signing_group(record), "Test Study")
         # Non-data affiliates.
         agreement = factories.NonDataAffiliateAgreementFactory(affiliation="Test affil")
-        record = GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement.signed_agreement
-        )
+        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement.signed_agreement)
         self.assertEqual(table.render_signing_group(record), "Test affil")
         # Other catch-all case that shouldn't happen.
         agreement = factories.SignedAgreementFactory()
@@ -424,20 +378,14 @@ class CDSAWorkspaceRecordsTableTest(TestCase):
         cdsa_workspace = factories.CDSAWorkspaceFactory.create()
         self.assertEqual(table.render_date_shared(cdsa_workspace), "—")
         # Shared.
-        WorkspaceGroupSharingFactory.create(
-            workspace=cdsa_workspace.workspace, group__name="PRIMED_ALL"
-        )
+        WorkspaceGroupSharingFactory.create(workspace=cdsa_workspace.workspace, group__name="PRIMED_ALL")
         self.assertNotEqual(table.render_date_shared(cdsa_workspace), "—")
 
     def test_ordering(self):
         """Instances are ordered alphabetically by user name."""
         agreement = factories.DataAffiliateAgreementFactory.create()
-        instance_1 = factories.CDSAWorkspaceFactory.create(
-            study=agreement.study, workspace__name="zzz"
-        )
-        instance_2 = factories.CDSAWorkspaceFactory.create(
-            study=agreement.study, workspace__name="aaa"
-        )
+        instance_1 = factories.CDSAWorkspaceFactory.create(study=agreement.study, workspace__name="zzz")
+        instance_2 = factories.CDSAWorkspaceFactory.create(study=agreement.study, workspace__name="aaa")
         table = self.table_class(self.model.objects.all())
         self.assertEqual(table.data[0], instance_2)
         self.assertEqual(table.data[1], instance_1)

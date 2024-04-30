@@ -1,9 +1,16 @@
 """Tests of helper functions in the `primed_anvil` app."""
 
-from anvil_consortium_manager.tests.factories import WorkspaceGroupSharingFactory
+from anvil_consortium_manager.tests.factories import (
+    ManagedGroupFactory,
+    WorkspaceGroupSharingFactory,
+)
 from django.test import TestCase
 
-from primed.dbgap.tests.factories import dbGaPWorkspaceFactory
+from primed.cdsa.tests.factories import CDSAWorkspaceFactory
+from primed.dbgap.tests.factories import (
+    dbGaPStudyAccessionFactory,
+    dbGaPWorkspaceFactory,
+)
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 
@@ -44,8 +51,8 @@ class GetSummaryTableDataTest(TestCase):
     def test_one_open_access_workspace_one_study_not_shared_no_available_data(self):
         AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
-        open_access_workspace = OpenAccessWorkspaceFactory.create()
-        open_access_workspace.studies.add(study)
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 1)
         self.assertEqual(len(res[0]), 4)
@@ -59,13 +66,11 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_one_workspace_one_study_not_shared_with_one_available_data(self):
+    def test_one_dbgap_workspace_one_study_not_shared_with_one_available_data(self):
         available_data = AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
-        dbgap_workspace = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__studies=[study]
-        )
-        dbgap_workspace.available_data.add(available_data)
+        workspace = dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        workspace.available_data.add(available_data)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 1)
         self.assertEqual(len(res[0]), 4)
@@ -79,15 +84,13 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], True)
 
-    def test_one_workspace_one_study_not_shared_with_two_available_data(self):
+    def test_one_dbgap_workspace_one_study_not_shared_with_two_available_data(self):
         available_data_1 = AvailableDataFactory.create(name="Foo")
         available_data_2 = AvailableDataFactory.create(name="Bar")
         study = StudyFactory.create(short_name="TEST")
-        dbgap_workspace = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__studies=[study]
-        )
-        dbgap_workspace.available_data.add(available_data_1)
-        dbgap_workspace.available_data.add(available_data_2)
+        workspace = dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        workspace.available_data.add(available_data_1)
+        workspace.available_data.add(available_data_2)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 1)
         self.assertEqual(len(res[0]), 5)
@@ -101,7 +104,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], True)
 
-    def test_one_workspace_two_studies_not_shared_no_available_data(self):
+    def test_one_dbgap_workspace_two_studies_not_shared_no_available_data(self):
         AvailableDataFactory.create(name="Foo")
         study_1 = StudyFactory.create(short_name="TEST")
         study_2 = StudyFactory.create(short_name="Other")
@@ -119,15 +122,11 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_one_workspace_one_study_shared_no_available_data(self):
+    def test_one_dbgap_workspace_one_study_shared_no_available_data(self):
         AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
-        dbgap_workspace = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__studies=[study]
-        )
-        WorkspaceGroupSharingFactory.create(
-            workspace=dbgap_workspace.workspace, group__name="PRIMED_ALL"
-        )
+        workspace = dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group__name="PRIMED_ALL")
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 1)
         self.assertEqual(len(res[0]), 4)
@@ -141,7 +140,7 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_two_workspaces_one_study(self):
+    def test_two_dbgap_workspaces_one_study(self):
         AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
         dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
@@ -159,21 +158,15 @@ class GetSummaryTableDataTest(TestCase):
         self.assertIn("Foo", res[0])
         self.assertEqual(res[0]["Foo"], False)
 
-    def test_two_workspaces_one_study_one_shared(self):
+    def test_two_dbgap_workspaces_one_study_one_shared(self):
         available_data_1 = AvailableDataFactory.create(name="Foo")
         available_data_2 = AvailableDataFactory.create(name="Bar")
         study = StudyFactory.create(short_name="TEST")
-        dbgap_workspace_1 = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__studies=[study]
-        )
-        dbgap_workspace_1.available_data.add(available_data_1)
-        WorkspaceGroupSharingFactory.create(
-            workspace=dbgap_workspace_1.workspace, group__name="PRIMED_ALL"
-        )
-        dbgap_workspace_2 = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__studies=[study]
-        )
-        dbgap_workspace_2.available_data.add(available_data_2)
+        workspace_1 = dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        workspace_1.available_data.add(available_data_1)
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group__name="PRIMED_ALL")
+        workspace_2 = dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        workspace_2.available_data.add(available_data_2)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 2)
         self.assertIn(
@@ -197,7 +190,7 @@ class GetSummaryTableDataTest(TestCase):
             res,
         )
 
-    def test_two_workspaces_multiple_studies(self):
+    def test_two_dbgap_workspaces_multiple_studies(self):
         AvailableDataFactory.create(name="Foo")
         study_1 = StudyFactory.create(short_name="TEST")
         study_2 = StudyFactory.create(short_name="Other")
@@ -229,8 +222,8 @@ class GetSummaryTableDataTest(TestCase):
         study_1 = StudyFactory.create(short_name="TEST")
         dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study_1])
         study_2 = StudyFactory.create(short_name="Other")
-        open_access_workspace = OpenAccessWorkspaceFactory.create()
-        open_access_workspace.studies.add(study_2)
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study_2)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 2)
         self.assertIn(
@@ -256,8 +249,8 @@ class GetSummaryTableDataTest(TestCase):
         AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
         dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
-        open_access_workspace = OpenAccessWorkspaceFactory.create()
-        open_access_workspace.studies.add(study)
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 2)
         self.assertIn(
@@ -284,12 +277,10 @@ class GetSummaryTableDataTest(TestCase):
     ):
         available_data_1 = AvailableDataFactory.create(name="Foo")
         study = StudyFactory.create(short_name="TEST")
-        dbgap_workspace = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__studies=[study]
-        )
-        dbgap_workspace.available_data.add(available_data_1)
-        open_access_workspace = OpenAccessWorkspaceFactory.create()
-        open_access_workspace.studies.add(study)
+        workspace = dbGaPWorkspaceFactory.create(dbgap_study_accession__studies=[study])
+        workspace.available_data.add(available_data_1)
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study)
         res = helpers.get_summary_table_data()
         self.assertEqual(len(res), 2)
         self.assertIn(
@@ -310,3 +301,491 @@ class GetSummaryTableDataTest(TestCase):
             },
             res,
         )
+
+    def test_one_cdsa_workspace_not_shared_no_available_data(self):
+        AvailableDataFactory.create(name="Foo")
+        study = StudyFactory.create(short_name="TEST")
+        CDSAWorkspaceFactory.create(study=study)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "CDSA")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_one_cdsa_workspace_not_shared_with_one_available_data(self):
+        available_data = AvailableDataFactory.create(name="Foo")
+        study = StudyFactory.create(short_name="TEST")
+        workspace = CDSAWorkspaceFactory.create(study=study)
+        workspace.available_data.add(available_data)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "CDSA")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], True)
+
+    def test_one_cdsa_workspace_not_shared_with_two_available_data(self):
+        available_data_1 = AvailableDataFactory.create(name="Foo")
+        available_data_2 = AvailableDataFactory.create(name="Bar")
+        study = StudyFactory.create(short_name="TEST")
+        workspace = CDSAWorkspaceFactory.create(
+            study=study,
+        )
+        workspace.available_data.add(available_data_1)
+        workspace.available_data.add(available_data_2)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 5)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "CDSA")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], True)
+
+    def test_one_cdsa_workspace_one_study_shared_no_available_data(self):
+        AvailableDataFactory.create(name="Foo")
+        study = StudyFactory.create(short_name="TEST")
+        workspace = CDSAWorkspaceFactory.create(study=study)
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group__name="PRIMED_ALL")
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "CDSA")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], True)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_two_cdsa_workspaces_one_study(self):
+        AvailableDataFactory.create(name="Foo")
+        study = StudyFactory.create(short_name="TEST")
+        CDSAWorkspaceFactory.create(study=study)
+        CDSAWorkspaceFactory.create(study=study)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res[0]), 4)
+        self.assertIn("study", res[0])
+        self.assertEqual(res[0]["study"], "TEST")
+        self.assertIn("access_mechanism", res[0])
+        self.assertEqual(res[0]["access_mechanism"], "CDSA")
+        self.assertIn("is_shared", res[0])
+        self.assertEqual(res[0]["is_shared"], False)
+        # Available data columns.
+        self.assertIn("Foo", res[0])
+        self.assertEqual(res[0]["Foo"], False)
+
+    def test_two_cdsa_workspaces_one_study_one_shared(self):
+        available_data_1 = AvailableDataFactory.create(name="Foo")
+        available_data_2 = AvailableDataFactory.create(name="Bar")
+        study = StudyFactory.create(short_name="TEST")
+        workspace_1 = CDSAWorkspaceFactory.create(study=study)
+        workspace_1.available_data.add(available_data_1)
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group__name="PRIMED_ALL")
+        workspace_2 = CDSAWorkspaceFactory.create(study=study)
+        workspace_2.available_data.add(available_data_2)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": True,
+                "access_mechanism": "CDSA",
+                "Foo": True,
+                "Bar": False,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "CDSA",
+                "Foo": False,
+                "Bar": True,
+            },
+            res,
+        )
+
+    def test_two_cdsa_workspaces(self):
+        AvailableDataFactory.create(name="Foo")
+        study_1 = StudyFactory.create(short_name="TEST")
+        study_2 = StudyFactory.create(short_name="Other")
+        CDSAWorkspaceFactory.create(study=study_1)
+        CDSAWorkspaceFactory.create(study=study_2)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "Other",
+                "is_shared": False,
+                "access_mechanism": "CDSA",
+                "Foo": False,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "CDSA",
+                "Foo": False,
+            },
+            res,
+        )
+
+    def test_one_cdsa_workspace_one_open_access_workspace_different_studies(self):
+        AvailableDataFactory.create(name="Foo")
+        study_1 = StudyFactory.create(short_name="TEST")
+        CDSAWorkspaceFactory.create(study=study_1)
+        study_2 = StudyFactory.create(short_name="Other")
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study_2)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "CDSA",
+                "Foo": False,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "Other",
+                "is_shared": False,
+                "access_mechanism": "Open access",
+                "Foo": False,
+            },
+            res,
+        )
+
+    def test_one_cdsa_workspace_one_open_access_workspace_same_study(self):
+        AvailableDataFactory.create(name="Foo")
+        study = StudyFactory.create(short_name="TEST")
+        CDSAWorkspaceFactory.create(study=study)
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "CDSA",
+                "Foo": False,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "Open access",
+                "Foo": False,
+            },
+            res,
+        )
+
+    def test_one_cdsa_workspace_one_open_access_workspace_different_available_data(
+        self,
+    ):
+        available_data_1 = AvailableDataFactory.create(name="Foo")
+        study = StudyFactory.create(short_name="TEST")
+        workspace = CDSAWorkspaceFactory.create(study=study)
+        workspace.available_data.add(available_data_1)
+        workspace = OpenAccessWorkspaceFactory.create()
+        workspace.studies.add(study)
+        res = helpers.get_summary_table_data()
+        self.assertEqual(len(res), 2)
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "CDSA",
+                "Foo": True,
+            },
+            res,
+        )
+        self.assertIn(
+            {
+                "study": "TEST",
+                "is_shared": False,
+                "access_mechanism": "Open access",
+                "Foo": False,
+            },
+            res,
+        )
+
+
+class GetWorkspacesForPhenotypeInventoryTest(TestCase):
+    """Tests for the helpers.get_workspaces_for_phenotype_inventory method."""
+
+    def setUp(self):
+        """Set up the test case."""
+        super().setUp()
+        # Create the PRIMED_ALL group.
+        self.primed_all_group = ManagedGroupFactory.create(name="PRIMED_ALL")
+
+    def test_no_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with no workspaces."""
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_dbgap_workspace_not_shared(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        dbGaPWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_dbgap_workspace_shared_one_study(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        study = StudyFactory.create(short_name="TEST")
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            dbgap_study_accession__studies=[study],
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST")
+
+    def test_one_dbgap_workspace_shared_two_studies(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        study_1 = StudyFactory.create(short_name="TEST_2")
+        study_2 = StudyFactory.create(short_name="TEST_1")
+        study_accession = dbGaPStudyAccessionFactory.create(studies=[study_1, study_2])
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            dbgap_study_accession=study_accession,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST_1, TEST_2")
+
+    def test_two_dbgap_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with two dbGaP workspaces."""
+        study_1 = StudyFactory.create(short_name="TEST 1")
+        workspace_1 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+            dbgap_study_accession__studies=[study_1],
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace_2 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+            dbgap_study_accession__studies=[study_2],
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "TEST 1")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
+
+    def test_one_cdsa_workspace_not_shared(self):
+        """get_workspaces_for_phenotype_inventory with one CDSA workspace."""
+        CDSAWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_cdsa_workspace_shared_one_study(self):
+        """get_workspaces_for_phenotype_inventory with one CDSA workspace."""
+        study = StudyFactory.create(short_name="TEST")
+        workspace = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+            study=study,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST")
+
+    def test_two_cdsa_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with two CDSA workspaces."""
+        study_1 = StudyFactory.create(short_name="TEST 1")
+        workspace_1 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+            study=study_1,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace_2 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+            study=study_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "TEST 1")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
+
+    def test_one_open_access_workspace_not_shared(self):
+        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        OpenAccessWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(res, {})
+
+    def test_one_open_access_workspace_shared_no_study(self):
+        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "")
+
+    def test_one_open_access_workspace_shared_one_study(self):
+        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        study = StudyFactory.create(short_name="TEST")
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        workspace.studies.add(study)
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST")
+
+    def test_one_open_access_workspace_shared_two_studies(self):
+        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        study_1 = StudyFactory.create(short_name="TEST_2")
+        study_2 = StudyFactory.create(short_name="TEST_1")
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        workspace.studies.add(study_1, study_2)
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "TEST_1, TEST_2")
+
+    def test_two_open_access_workspaces(self):
+        """get_workspaces_for_phenotype_inventory with two Open access workspace."""
+        workspace_1 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace_2 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+        )
+        workspace_2.studies.add(study_2)
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
+
+    def test_multiple_workspace_types_same_study(self):
+        study = StudyFactory.create(short_name="TEST")
+        # dbgap
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-dbgap",
+            workspace__name="test-ws-dbgap",
+            dbgap_study_accession__studies=[study],
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        # CDSA
+        workspace = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-cdsa",
+            workspace__name="test-ws-cdsa",
+            study=study,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        # Open access
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-open",
+            workspace__name="test-ws-open",
+        )
+        workspace.studies.add(study)
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertIn("test-bp-dbgap/test-ws-dbgap", res)
+        self.assertEqual(res["test-bp-dbgap/test-ws-dbgap"], "TEST")
+        self.assertIn("test-bp-cdsa/test-ws-cdsa", res)
+        self.assertEqual(res["test-bp-cdsa/test-ws-cdsa"], "TEST")
+        self.assertIn("test-bp-open/test-ws-open", res)
+        self.assertEqual(res["test-bp-open/test-ws-open"], "TEST")
+
+    def test_multiple_workspace_types_separate_studies(self):
+        study_1 = StudyFactory.create(short_name="TEST 1")
+        # dbgap
+        workspace = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-dbgap",
+            workspace__name="test-ws-dbgap",
+            dbgap_study_accession__studies=[study_1],
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        # CDSA
+        study_2 = StudyFactory.create(short_name="TEST 2")
+        workspace = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-cdsa",
+            workspace__name="test-ws-cdsa",
+            study=study_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        # Open access
+        study_3 = StudyFactory.create(short_name="TEST 3")
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-open",
+            workspace__name="test-ws-open",
+        )
+        workspace.studies.add(study_3)
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertIn("test-bp-dbgap/test-ws-dbgap", res)
+        self.assertEqual(res["test-bp-dbgap/test-ws-dbgap"], "TEST 1")
+        self.assertIn("test-bp-cdsa/test-ws-cdsa", res)
+        self.assertEqual(res["test-bp-cdsa/test-ws-cdsa"], "TEST 2")
+        self.assertIn("test-bp-open/test-ws-open", res)
+        self.assertEqual(res["test-bp-open/test-ws-open"], "TEST 3")

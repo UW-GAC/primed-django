@@ -53,9 +53,7 @@ class AgreementMajorVersionTest(TestCase):
         self.assertEqual(len(e.exception.message_dict), 1)
         self.assertIn("version", e.exception.message_dict)
         self.assertEqual(len(e.exception.message_dict["version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["version"][0]
-        )
+        self.assertIn("greater than or equal to", e.exception.message_dict["version"][0])
 
     def test_version_negative(self):
         """ValidationError raised when version is negative."""
@@ -65,9 +63,7 @@ class AgreementMajorVersionTest(TestCase):
         self.assertEqual(len(e.exception.message_dict), 1)
         self.assertIn("version", e.exception.message_dict)
         self.assertEqual(len(e.exception.message_dict["version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["version"][0]
-        )
+        self.assertIn("greater than or equal to", e.exception.message_dict["version"][0])
 
     def test_str(self):
         """__str__ method works as expected."""
@@ -85,20 +81,14 @@ class AgreementVersionTest(TestCase):
 
     def test_model_saving(self):
         major_version = factories.AgreementMajorVersionFactory.create()
-        instance = models.AgreementVersion(
-            major_version=major_version, minor_version=0, date_approved=datetime.today()
-        )
+        instance = models.AgreementVersion(major_version=major_version, minor_version=0, date_approved=datetime.today())
         instance.save()
         self.assertIsInstance(instance, models.AgreementVersion)
 
     def test_unique(self):
         major_version = factories.AgreementMajorVersionFactory.create()
-        factories.AgreementVersionFactory.create(
-            major_version=major_version, minor_version=0
-        )
-        instance = factories.AgreementVersionFactory.build(
-            major_version=major_version, minor_version=0
-        )
+        factories.AgreementVersionFactory.create(major_version=major_version, minor_version=0)
+        instance = factories.AgreementVersionFactory.build(major_version=major_version, minor_version=0)
         with self.assertRaisesMessage(ValidationError, "already exists"):
             instance.full_clean()
         with self.assertRaises(IntegrityError):
@@ -107,50 +97,36 @@ class AgreementVersionTest(TestCase):
     def test_minor_version_zero(self):
         """full_clean raises no exception when minor_version is zero."""
         major_version = factories.AgreementMajorVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(
-            major_version=major_version, minor_version=0
-        )
+        instance = factories.AgreementVersionFactory.build(major_version=major_version, minor_version=0)
         instance.full_clean()
 
     def test_minor_version_negative(self):
         """ValidationError raised when minor_version is negative."""
         major_version = factories.AgreementMajorVersionFactory.create()
-        instance = factories.AgreementVersionFactory.build(
-            major_version=major_version, minor_version=-1
-        )
+        instance = factories.AgreementVersionFactory.build(major_version=major_version, minor_version=-1)
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertEqual(len(e.exception.message_dict), 1)
         self.assertIn("minor_version", e.exception.message_dict)
         self.assertEqual(len(e.exception.message_dict["minor_version"]), 1)
-        self.assertIn(
-            "greater than or equal to", e.exception.message_dict["minor_version"][0]
-        )
+        self.assertIn("greater than or equal to", e.exception.message_dict["minor_version"][0])
 
     def test_full_version(self):
         """full_version property works as expected."""
         self.assertEqual(
-            factories.AgreementVersionFactory(
-                major_version__version=1, minor_version=0
-            ).full_version,
+            factories.AgreementVersionFactory(major_version__version=1, minor_version=0).full_version,
             "v1.0",
         )
         self.assertEqual(
-            factories.AgreementVersionFactory(
-                major_version__version=1, minor_version=5
-            ).full_version,
+            factories.AgreementVersionFactory(major_version__version=1, minor_version=5).full_version,
             "v1.5",
         )
         self.assertEqual(
-            factories.AgreementVersionFactory(
-                major_version__version=1, minor_version=10
-            ).full_version,
+            factories.AgreementVersionFactory(major_version__version=1, minor_version=10).full_version,
             "v1.10",
         )
         self.assertEqual(
-            factories.AgreementVersionFactory(
-                major_version__version=2, minor_version=3
-            ).full_version,
+            factories.AgreementVersionFactory(major_version__version=2, minor_version=3).full_version,
             "v2.3",
         )
 
@@ -196,31 +172,19 @@ class SignedAgreementTest(TestCase):
     def test_get_absolute_url(self):
         """get_absolute_url method works correctly."""
         instance = factories.MemberAgreementFactory.create()
-        self.assertEqual(
-            instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
-        )
+        self.assertEqual(instance.signed_agreement.get_absolute_url(), instance.get_absolute_url())
         instance = factories.DataAffiliateAgreementFactory.create()
-        self.assertEqual(
-            instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
-        )
+        self.assertEqual(instance.signed_agreement.get_absolute_url(), instance.get_absolute_url())
         instance = factories.NonDataAffiliateAgreementFactory.create()
-        self.assertEqual(
-            instance.signed_agreement.get_absolute_url(), instance.get_absolute_url()
-        )
+        self.assertEqual(instance.signed_agreement.get_absolute_url(), instance.get_absolute_url())
 
     def test_member_choices(self):
         """Can create instances with all of the member choices."""
-        instance = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        instance = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         self.assertEqual(instance.type, models.SignedAgreement.MEMBER)
-        instance = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE
-        )
+        instance = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
         self.assertEqual(instance.type, models.SignedAgreement.DATA_AFFILIATE)
-        instance = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.NON_DATA_AFFILIATE
-        )
+        instance = factories.SignedAgreementFactory.create(type=models.SignedAgreement.NON_DATA_AFFILIATE)
         self.assertEqual(instance.type, models.SignedAgreement.NON_DATA_AFFILIATE)
 
     def test_unique_cc_id(self):
@@ -293,19 +257,13 @@ class SignedAgreementTest(TestCase):
         self.assertEqual(instance.status, instance.StatusChoices.ACTIVE)
         instance.full_clean()
         # other choices
-        instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.WITHDRAWN
-        )
+        instance = factories.SignedAgreementFactory.create(status=models.SignedAgreement.StatusChoices.WITHDRAWN)
         self.assertEqual(instance.status, instance.StatusChoices.WITHDRAWN)
         instance.full_clean()
-        instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.LAPSED
-        )
+        instance = factories.SignedAgreementFactory.create(status=models.SignedAgreement.StatusChoices.LAPSED)
         self.assertEqual(instance.status, instance.StatusChoices.LAPSED)
         instance.full_clean()
-        instance = factories.SignedAgreementFactory.create(
-            status=models.SignedAgreement.StatusChoices.REPLACED
-        )
+        instance = factories.SignedAgreementFactory.create(status=models.SignedAgreement.StatusChoices.REPLACED)
         self.assertEqual(instance.status, instance.StatusChoices.REPLACED)
         instance.full_clean()
 
@@ -352,9 +310,7 @@ class SignedAgreementTest(TestCase):
         cdsa_group = ManagedGroupFactory.create(name="TEST_PRIMED_CDSA")
         self.assertFalse(obj.is_in_cdsa_group())
         # Add agreement and check again,
-        GroupGroupMembershipFactory.create(
-            parent_group=cdsa_group, child_group=obj.anvil_access_group
-        )
+        GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=obj.anvil_access_group)
         self.assertTrue(obj.is_in_cdsa_group())
 
     @override_settings(ANVIL_CDSA_GROUP_NAME="FOO")
@@ -368,9 +324,7 @@ class SignedAgreementTest(TestCase):
         cdsa_group = ManagedGroupFactory.create(name="FOO")
         self.assertFalse(obj.is_in_cdsa_group())
         # Add agreement and check again,
-        GroupGroupMembershipFactory.create(
-            parent_group=cdsa_group, child_group=obj.anvil_access_group
-        )
+        GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=obj.anvil_access_group)
         self.assertTrue(obj.is_in_cdsa_group())
 
 
@@ -379,9 +333,7 @@ class MemberAgreementTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         study_site = StudySiteFactory.create()
         instance = models.MemberAgreement(
             signed_agreement=signed_agreement,
@@ -399,12 +351,8 @@ class MemberAgreementTest(TestCase):
         self.assertEqual(instance.is_primary, False)
 
     def test_clean_incorrect_type(self):
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE
-        )
-        instance = factories.MemberAgreementFactory.build(
-            signed_agreement=signed_agreement
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
+        instance = factories.MemberAgreementFactory.build(signed_agreement=signed_agreement)
         with self.assertRaises(ValidationError) as e:
             instance.full_clean()
         self.assertIn("signed_agreement", e.exception.error_dict)
@@ -437,9 +385,7 @@ class MemberAgreementTest(TestCase):
             instance_2.full_clean()
         self.assertIn("signed_agreement", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["signed_agreement"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["signed_agreement"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["signed_agreement"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance_2.save()
 
@@ -453,9 +399,7 @@ class DataAffiliateAgreementTest(TestCase):
 
     def test_defaults(self):
         upload_group = ManagedGroupFactory.create()
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
         study = StudyFactory.create()
         instance = models.DataAffiliateAgreement(
             signed_agreement=signed_agreement,
@@ -468,9 +412,7 @@ class DataAffiliateAgreementTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         upload_group = ManagedGroupFactory.create()
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.DATA_AFFILIATE
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
         study = StudyFactory.create()
         instance = models.DataAffiliateAgreement(
             signed_agreement=signed_agreement,
@@ -489,9 +431,7 @@ class DataAffiliateAgreementTest(TestCase):
         self.assertEqual(instance.is_primary, False)
 
     def test_clean_incorrect_type(self):
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         study = StudyFactory.create()
         upload_group = ManagedGroupFactory.create()
         instance = factories.DataAffiliateAgreementFactory.build(
@@ -555,9 +495,7 @@ class DataAffiliateAgreementTest(TestCase):
             instance_2.full_clean()
         self.assertIn("signed_agreement", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["signed_agreement"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["signed_agreement"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["signed_agreement"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance_2.save()
 
@@ -567,9 +505,7 @@ class DataAffiliateAgreementTest(TestCase):
 
     def test_requires_study_review_primary(self):
         """Can set requires_study_review"""
-        instance = factories.DataAffiliateAgreementFactory.create(
-            requires_study_review=True
-        )
+        instance = factories.DataAffiliateAgreementFactory.create(requires_study_review=True)
         self.assertTrue(instance.requires_study_review)
 
     def test_requires_study_review_not_primary(self):
@@ -594,9 +530,7 @@ class NonDataAffiliateAgreementTest(TestCase):
 
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.NON_DATA_AFFILIATE
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.NON_DATA_AFFILIATE)
         instance = models.NonDataAffiliateAgreement(
             signed_agreement=signed_agreement,
             affiliation="Foo",
@@ -605,9 +539,7 @@ class NonDataAffiliateAgreementTest(TestCase):
         self.assertIsInstance(instance, models.NonDataAffiliateAgreement)
 
     def test_clean_incorrect_type(self):
-        signed_agreement = factories.SignedAgreementFactory.create(
-            type=models.SignedAgreement.MEMBER
-        )
+        signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)
         instance = factories.NonDataAffiliateAgreementFactory.build(
             signed_agreement=signed_agreement,
             affiliation="Foo Bar",
@@ -642,9 +574,7 @@ class NonDataAffiliateAgreementTest(TestCase):
             instance_2.full_clean()
         self.assertIn("signed_agreement", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["signed_agreement"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["signed_agreement"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["signed_agreement"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance_2.save()
 

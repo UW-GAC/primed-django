@@ -1,7 +1,11 @@
 import json
 
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager.tests.factories import AccountFactory
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    ManagedGroupFactory,
+    WorkspaceGroupSharingFactory,
+)
 from anvil_consortium_manager.views import AccountList
 from constance.test import override_config
 from django.conf import settings
@@ -51,9 +55,7 @@ class ACMNavbarTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -63,9 +65,7 @@ class ACMNavbarTest(TestCase):
     def test_staff_view_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -74,14 +74,10 @@ class ACMNavbarTest(TestCase):
     def test_staff_edit_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -98,9 +94,7 @@ class HomeTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -111,9 +105,7 @@ class HomeTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_logged_in(self):
         """Returns successful response code."""
@@ -130,45 +122,33 @@ class HomeTest(TestCase):
         self.client.force_login(self.user)
         AccountFactory.create(user=self.user, verified=True)
         response = self.client.get(self.get_url())
-        self.assertNotContains(
-            response, reverse("anvil_consortium_manager:accounts:link")
-        )
+        self.assertNotContains(response, reverse("anvil_consortium_manager:accounts:link"))
 
     def test_unauthenticated_user_has_not_linked_account_message(self):
         response = self.client.get(settings.LOGIN_URL, follow=True)
-        self.assertNotContains(
-            response, reverse("anvil_consortium_manager:accounts:link")
-        )
+        self.assertNotContains(response, reverse("anvil_consortium_manager:accounts:link"))
 
     def test_staff_view_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         # Note: we need quotes around the link because anvil/accounts/link does appear in the response,
         # so we can't test if "anvil/" is in the response. We need to test if '"anvil/"' is in the response.
-        self.assertContains(
-            response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
-        )
+        self.assertContains(response, '"{}"'.format(reverse("anvil_consortium_manager:index")))
 
     def test_view_links(self):
         user = UserFactory.create()
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         # Note: we need quotes around the link because anvil/accounts/link does appear in the response,
         # so we can't test if "anvil/" is in the response. We need to test if '"anvil/"' is in the response.
-        self.assertNotContains(
-            response, '"{}"'.format(reverse("anvil_consortium_manager:index"))
-        )
+        self.assertNotContains(response, '"{}"'.format(reverse("anvil_consortium_manager:index")))
 
     def test_site_announcement_no_text(self):
         self.client.force_login(self.user)
@@ -199,9 +179,7 @@ class StudyDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -216,9 +194,7 @@ class StudyDetailTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -230,9 +206,7 @@ class StudyDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -251,9 +225,7 @@ class StudyDetailTest(TestCase):
         obj = self.model_factory.create()
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(obj.pk))
@@ -269,9 +241,7 @@ class StudyDetailTest(TestCase):
         obj = self.model_factory.create()
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url(obj.pk))
@@ -282,45 +252,29 @@ class StudyDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
-        self.assertIsInstance(
-            response.context_data["tables"][0], dbGaPWorkspaceStaffTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][1], CDSAWorkspaceStaffTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][3], OpenAccessWorkspaceStaffTable
-        )
+        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceStaffTable)
+        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceStaffTable)
+        self.assertIsInstance(response.context_data["tables"][3], OpenAccessWorkspaceStaffTable)
 
     def test_table_classes_limited_view_permission(self):
         """Table classes are correct when the user has limited view permission."""
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         obj = self.model_factory.create()
         self.client.force_login(user)
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
-        self.assertIsInstance(
-            response.context_data["tables"][0], dbGaPWorkspaceUserTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][1], CDSAWorkspaceUserTable
-        )
-        self.assertIsInstance(
-            response.context_data["tables"][3], OpenAccessWorkspaceUserTable
-        )
+        self.assertIsInstance(response.context_data["tables"][0], dbGaPWorkspaceUserTable)
+        self.assertIsInstance(response.context_data["tables"][1], CDSAWorkspaceUserTable)
+        self.assertIsInstance(response.context_data["tables"][3], OpenAccessWorkspaceUserTable)
 
     def test_dbgap_workspace_table(self):
         """Contains a table of dbGaPWorkspaces with the correct studies."""
         obj = self.model_factory.create()
         dbgap_study_accession = dbGaPStudyAccessionFactory.create(studies=[obj])
-        dbgap_workspace = dbGaPWorkspaceFactory.create(
-            dbgap_study_accession=dbgap_study_accession
-        )
+        dbgap_workspace = dbGaPWorkspaceFactory.create(dbgap_study_accession=dbgap_study_accession)
         other_workspace = dbGaPWorkspaceFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(obj.pk))
@@ -374,9 +328,7 @@ class StudyAutocompleteTest(TestCase):
         # Create a user with the correct permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -391,9 +343,7 @@ class StudyAutocompleteTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -404,9 +354,7 @@ class StudyAutocompleteTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -418,139 +366,92 @@ class StudyAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 10)
-        self.assertEqual(
-            sorted(returned_ids), sorted([object.pk for object in objects])
-        )
+        self.assertEqual(sorted(returned_ids), sorted([object.pk for object in objects]))
 
     def test_returns_correct_object_match_short_name(self):
         """Queryset returns the correct objects when query matches the short_name."""
-        object = factories.StudyFactory.create(
-            short_name="test", full_name="other study"
-        )
+        object = factories.StudyFactory.create(short_name="test", full_name="other study")
         request = self.factory.get(self.get_url(), {"q": "test"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_starting_with_query_short_name(self):
         """Queryset returns the correct objects when query matches the beginning of the short_name."""
-        object = factories.StudyFactory.create(
-            short_name="test", full_name="other study"
-        )
+        object = factories.StudyFactory.create(short_name="test", full_name="other study")
         request = self.factory.get(self.get_url(), {"q": "test"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_containing_query_short_name(self):
         """Queryset returns the correct objects when the short_name contains the query."""
-        object = factories.StudyFactory.create(
-            short_name="test", full_name="other study"
-        )
+        object = factories.StudyFactory.create(short_name="test", full_name="other study")
         request = self.factory.get(self.get_url(), {"q": "es"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_case_insensitive_short_name(self):
         """Queryset returns the correct objects when query matches the beginning of the short_name."""
-        object = factories.StudyFactory.create(
-            short_name="TEST", full_name="other study"
-        )
+        object = factories.StudyFactory.create(short_name="TEST", full_name="other study")
         request = self.factory.get(self.get_url(), {"q": "test"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_match_full_name(self):
         """Queryset returns the correct objects when query matches the full_name."""
-        object = factories.StudyFactory.create(
-            short_name="other", full_name="test study"
-        )
+        object = factories.StudyFactory.create(short_name="other", full_name="test study")
         request = self.factory.get(self.get_url(), {"q": "test study"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_starting_with_query_full_name(self):
         """Queryset returns the correct objects when query matches the beginning of the full_name."""
-        object = factories.StudyFactory.create(
-            short_name="other", full_name="test study"
-        )
+        object = factories.StudyFactory.create(short_name="other", full_name="test study")
         request = self.factory.get(self.get_url(), {"q": "test"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_containing_query_full_name(self):
         """Queryset returns the correct objects when the full_name contains the query."""
-        object = factories.StudyFactory.create(
-            short_name="other", full_name="test study"
-        )
+        object = factories.StudyFactory.create(short_name="other", full_name="test study")
         request = self.factory.get(self.get_url(), {"q": "stu"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_returns_correct_object_case_insensitive_full_name(self):
         """Queryset returns the correct objects when query matches the beginning of the full_name."""
-        object = factories.StudyFactory.create(
-            short_name="other", full_name="TEST STUDY"
-        )
+        object = factories.StudyFactory.create(short_name="other", full_name="TEST STUDY")
         request = self.factory.get(self.get_url(), {"q": "test study"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
     def test_get_result_label(self):
-        instance = factories.StudyFactory.create(
-            full_name="Test Name", short_name="TEST"
-        )
+        instance = factories.StudyFactory.create(full_name="Test Name", short_name="TEST")
         request = self.factory.get(self.get_url())
         request.user = self.user
         view = views.StudyAutocomplete()
@@ -558,9 +459,7 @@ class StudyAutocompleteTest(TestCase):
         self.assertEqual(view.get_result_label(instance), "Test Name (TEST)")
 
     def test_get_selected_result_label(self):
-        instance = factories.StudyFactory.create(
-            full_name="Test Name", short_name="TEST"
-        )
+        instance = factories.StudyFactory.create(full_name="Test Name", short_name="TEST")
         request = self.factory.get(self.get_url())
         request.user = self.user
         view = views.StudyAutocomplete()
@@ -578,14 +477,10 @@ class StudyCreateTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -600,9 +495,7 @@ class StudyCreateTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -613,9 +506,7 @@ class StudyCreateTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -623,13 +514,9 @@ class StudyCreateTest(TestCase):
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has no permissions."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -646,9 +533,7 @@ class StudyCreateTest(TestCase):
     def test_can_create_object(self):
         """Can create an object."""
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"short_name": "TEST", "full_name": "Test study"}
-        )
+        response = self.client.post(self.get_url(), {"short_name": "TEST", "full_name": "Test study"})
         self.assertEqual(response.status_code, 302)
         # A new object was created.
         self.assertEqual(models.Study.objects.count(), 1)
@@ -659,9 +544,7 @@ class StudyCreateTest(TestCase):
     def test_redirect_url(self):
         """Redirects to successful url."""
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"short_name": "TEST", "full_name": "Test study"}
-        )
+        response = self.client.post(self.get_url(), {"short_name": "TEST", "full_name": "Test study"})
         new_object = models.Study.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
 
@@ -714,9 +597,7 @@ class StudyCreateTest(TestCase):
         """Form shows an error when trying to create a duplicate short name."""
         factories.StudyFactory.create(short_name="TEST", full_name="Test study")
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"short_name": "TEST", "full_name": "Test study 2"}
-        )
+        response = self.client.post(self.get_url(), {"short_name": "TEST", "full_name": "Test study 2"})
         self.assertEqual(response.status_code, 200)
         # No new objects were created.
         self.assertEqual(models.Study.objects.count(), 1)
@@ -756,9 +637,7 @@ class StudyListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -773,9 +652,7 @@ class StudyListTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_view_render(self):
         obj = self.model_factory.create()
@@ -796,9 +673,7 @@ class StudyListTest(TestCase):
         """Returns successful response code."""
         user = User.objects.create_user(username="test-2", password="test-2")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -806,9 +681,7 @@ class StudyListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -862,9 +735,7 @@ class StudySiteDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -879,9 +750,7 @@ class StudySiteDetailTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_view_render(self):
         obj = self.model_factory.create()
@@ -900,9 +769,7 @@ class StudySiteDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -967,9 +834,7 @@ class StudySiteListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -984,9 +849,7 @@ class StudySiteListTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_view_render(self):
         obj = self.model_factory.create()
@@ -1005,9 +868,7 @@ class StudySiteListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1061,9 +922,7 @@ class AccountListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self):
@@ -1118,9 +977,7 @@ class AvailableDataTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1135,9 +992,7 @@ class AvailableDataTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -1149,9 +1004,7 @@ class AvailableDataTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1204,9 +1057,7 @@ class DataSummaryTableTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_authenticated_user(self):
         """Returns successful response code."""
@@ -1220,9 +1071,7 @@ class DataSummaryTableTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["summary_table"], tables.DataSummaryTable
-        )
+        self.assertIsInstance(response.context_data["summary_table"], tables.DataSummaryTable)
 
     def test_table_rows(self):
         """A summary table exists."""
@@ -1239,3 +1088,99 @@ class DataSummaryTableTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("summary_table", response.context_data)
         self.assertEqual(len(response.context_data["summary_table"].rows), 2)
+
+    def test_includes_open_access_workspaces(self):
+        """Open access workspaces are included in the table."""
+        study = StudyFactory.create()
+        open_workspace = OpenAccessWorkspaceFactory.create()
+        open_workspace.studies.add(study)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_dbgap_workspaces(self):
+        """dbGaP workspaces are included in the table."""
+        # One open access workspace with one study, with one available data type.
+        # One dbGaP workspae with two studies.
+        dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+    def test_includes_cdsa_workspaces(self):
+        """CDSA workspaces are included in the table."""
+        CDSAWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("summary_table", response.context_data)
+        self.assertEqual(len(response.context_data["summary_table"].rows), 1)
+
+
+class PhenotypeInventoryInputsViewTest(TestCase):
+    """Tests for the PhenotypeInventoryInputsView view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.primed_all = ManagedGroupFactory.create(name="PRIMED_ALL")
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("primed_anvil:utilities:phenotype_inventory_inputs", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.PhenotypeInventoryInputsView.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
+
+    def test_status_code_with_authenticated_user(self):
+        """Redirects to login view when user has no perms."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_view_user(self):
+        """Redirects to login view when user has view perm."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(codename=acm_models.AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(self.get_url())
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_workspaces_input_no_workspaces(self):
+        """workspaces_input exists in the context and is correct with no workspaces."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("workspaces_input", response.context_data)
+        self.assertEqual(response.context_data["workspaces_input"], "{}")
+
+    def test_context_workspaces_input_one_workspace(self):
+        """workspaces_input exists in the context and is correct with one shared workspace."""
+        workspace = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp", workspace__name="test-ws"
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("workspaces_input", response.context_data)
+        self.assertEqual(
+            response.context_data["workspaces_input"],
+            """{\n  "test-bp/test-ws": ""\n}""",
+        )

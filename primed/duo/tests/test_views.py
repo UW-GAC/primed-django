@@ -22,9 +22,7 @@ class DataUsePermissionListTest(TestCase):
         # Create a user with staff view permission.
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -125,9 +123,7 @@ class DataUsePermissionDetailTest(TestCase):
         # Create a user with view permission.
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -179,9 +175,7 @@ class DataUseModifierListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -281,9 +275,7 @@ class DataUseModifierDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = UserFactory.create(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):

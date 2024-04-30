@@ -39,9 +39,7 @@ from . import audit, forms, helpers, models, tables
 logger = logging.getLogger(__name__)
 
 
-class dbGaPStudyAccessionDetail(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
-):
+class dbGaPStudyAccessionDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `dbGaPStudyAccession`."""
 
     model = models.dbGaPStudyAccession
@@ -53,8 +51,7 @@ class dbGaPStudyAccessionDetail(
             obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -70,12 +67,8 @@ class dbGaPStudyAccessionDetail(
     def get_context_data(self, **kwargs):
         """Add show_edit_links to context data."""
         context = super().get_context_data(**kwargs)
-        edit_permission_codename = (
-            AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-        )
-        context["show_edit_links"] = self.request.user.has_perm(
-            "anvil_consortium_manager." + edit_permission_codename
-        )
+        edit_permission_codename = AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+        context["show_edit_links"] = self.request.user.has_perm("anvil_consortium_manager." + edit_permission_codename)
         return context
 
 
@@ -86,9 +79,7 @@ class dbGaPStudyAccessionList(AnVILConsortiumManagerStaffViewRequired, SingleTab
     table_class = tables.dbGaPStudyAccessionTable
 
 
-class dbGaPStudyAccessionCreate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
-):
+class dbGaPStudyAccessionCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):
     """View to create a new dbGaPStudyAccession."""
 
     model = models.dbGaPStudyAccession
@@ -97,9 +88,7 @@ class dbGaPStudyAccessionCreate(
     template_name = "dbgap/dbgapstudyaccession_create.html"
 
 
-class dbGaPStudyAccessionUpdate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView
-):
+class dbGaPStudyAccessionUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
     """View to update a dbGaPStudyAccession."""
 
     model = models.dbGaPStudyAccession
@@ -113,15 +102,12 @@ class dbGaPStudyAccessionUpdate(
             obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
 
-class dbGaPStudyAccessionAutocomplete(
-    AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView
-):
+class dbGaPStudyAccessionAutocomplete(AnVILConsortiumManagerStaffViewRequired, autocomplete.Select2QuerySetView):
     """View to provide autocompletion for dbGaPStudyAccessions."""
 
     def get_queryset(self):
@@ -138,9 +124,7 @@ class dbGaPStudyAccessionAutocomplete(
         return qs
 
 
-class dbGaPApplicationDetail(
-    AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView
-):
+class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
@@ -153,8 +137,7 @@ class dbGaPApplicationDetail(
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -171,9 +154,7 @@ class dbGaPApplicationDetail(
             return None
 
     def get_table_data(self):
-        return models.dbGaPDataAccessSnapshot.objects.filter(
-            dbgap_application=self.object
-        ).order_by("-created")
+        return models.dbGaPDataAccessSnapshot.objects.filter(dbgap_application=self.object).order_by("-created")
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.
@@ -196,9 +177,7 @@ class dbGaPApplicationList(AnVILConsortiumManagerStaffViewRequired, SingleTableV
     table_class = tables.dbGaPApplicationTable
 
 
-class dbGaPApplicationCreate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView
-):
+class dbGaPApplicationCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):
     """View to create a new dbGaPApplication."""
 
     model = models.dbGaPApplication
@@ -210,25 +189,17 @@ class dbGaPApplicationCreate(
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
         project_id = form.cleaned_data["dbgap_project_id"]
-        group_name = "{}_DBGAP_ACCESS_{}".format(
-            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX, project_id
-        )
-        managed_group = ManagedGroup(
-            name=group_name, email=group_name + "@firecloud.org"
-        )
+        group_name = "{}_DBGAP_ACCESS_{}".format(settings.ANVIL_DATA_ACCESS_GROUP_PREFIX, project_id)
+        managed_group = ManagedGroup(name=group_name, email=group_name + "@firecloud.org")
         try:
             managed_group.full_clean()
         except ValidationError:
-            messages.add_message(
-                self.request, messages.ERROR, self.ERROR_CREATING_GROUP
-            )
+            messages.add_message(self.request, messages.ERROR, self.ERROR_CREATING_GROUP)
             return self.render_to_response(self.get_context_data(form=form))
         try:
             managed_group.anvil_create()
         except AnVILAPIError as e:
-            messages.add_message(
-                self.request, messages.ERROR, "AnVIL API Error: " + str(e)
-            )
+            messages.add_message(self.request, messages.ERROR, "AnVIL API Error: " + str(e))
             return self.render_to_response(self.get_context_data(form=form))
         # Need to wrap this entire block in a transaction because we are creating multiple objects, and don't want
         # any of them to be saved if the API call fails.
@@ -236,9 +207,7 @@ class dbGaPApplicationCreate(
             with transaction.atomic():
                 managed_group.save()
                 # Create the dbgap access group.
-                cc_admins_group = ManagedGroup.objects.get(
-                    name=settings.ANVIL_CC_ADMINS_GROUP_NAME
-                )
+                cc_admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
                 membership = GroupGroupMembership.objects.create(
                     parent_group=managed_group,
                     child_group=cc_admins_group,
@@ -248,37 +217,24 @@ class dbGaPApplicationCreate(
                 membership.anvil_create()
                 membership.save()
         except AnVILAPIError as e:
-            messages.add_message(
-                self.request, messages.ERROR, "AnVIL API Error: " + str(e)
-            )
+            messages.add_message(self.request, messages.ERROR, "AnVIL API Error: " + str(e))
             return self.render_to_response(self.get_context_data(form=form))
         form.instance.anvil_access_group = managed_group
         return super().form_valid(form)
 
 
-class dbGaPDataAccessSnapshotCreate(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView
-):
-
+class dbGaPDataAccessSnapshotCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView):
     form_class = forms.dbGaPDataAccessSnapshotForm
     template_name = "dbgap/dbgapdataaccesssnapshot_form.html"
-    ERROR_DARS_ALREADY_ADDED = (
-        "Data Access Requests have already been added for this application."
-    )
-    ERROR_PROJECT_ID_DOES_NOT_MATCH = (
-        "Project id in JSON does not match dbGaP application project id."
-    )
+    ERROR_DARS_ALREADY_ADDED = "Data Access Requests have already been added for this application."
+    ERROR_PROJECT_ID_DOES_NOT_MATCH = "Project id in JSON does not match dbGaP application project id."
     ERROR_STUDY_ACCESSION_NOT_FOUND = "Study accession(s) not found in app."
     ERROR_CREATING_DARS = "Error creating Data Access Requests."
-    success_message = (
-        "Successfully added Data Access Requests for this dbGaP application."
-    )
+    success_message = "Successfully added Data Access Requests for this dbGaP application."
 
     def get_dbgap_application(self):
         try:
-            dbgap_application = models.dbGaPApplication.objects.get(
-                dbgap_project_id=self.kwargs["dbgap_project_id"]
-            )
+            dbgap_application = models.dbGaPApplication.objects.get(dbgap_project_id=self.kwargs["dbgap_project_id"])
         except models.dbGaPApplication.DoesNotExist:
             raise Http404(
                 "No %(verbose_name)s found matching the query"
@@ -344,10 +300,7 @@ class dbGaPDataAccessSnapshotCreate(
         return super().get_context_data(*args, **kwargs)
 
 
-class dbGaPDataAccessSnapshotCreateMultiple(
-    AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView
-):
-
+class dbGaPDataAccessSnapshotCreateMultiple(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView):
     form_class = forms.dbGaPDataAccessSnapshotMultipleForm
     template_name = "dbgap/dbgapdataaccesssnapshot_form_multiple.html"
     # ERROR_DARS_ALREADY_ADDED = (
@@ -364,12 +317,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
         """Add to the context data."""
         context = super().get_context_data(**kwargs)
         # The URL for updating all applications.
-        project_ids = [
-            x
-            for x in models.dbGaPApplication.objects.values_list(
-                "dbgap_project_id", flat=True
-            )
-        ]
+        project_ids = [x for x in models.dbGaPApplication.objects.values_list("dbgap_project_id", flat=True)]
         context["dbgap_dar_json_url"] = helpers.get_dbgap_dar_json_url(project_ids)
         return context
 
@@ -386,9 +334,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
                 # Loop over projects.
                 for project_json in dbgap_dar_data:
                     dbgap_project_id = project_json["Project_id"]
-                    dbgap_application = models.dbGaPApplication.objects.get(
-                        dbgap_project_id=dbgap_project_id
-                    )
+                    dbgap_application = models.dbGaPApplication.objects.get(dbgap_project_id=dbgap_project_id)
                     try:
                         previous_snapshot = models.dbGaPDataAccessSnapshot.objects.get(
                             dbgap_application=dbgap_application,
@@ -455,9 +401,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(
         return super().form_valid(form)
 
 
-class dbGaPDataAccessSnapshotDetail(
-    AnVILConsortiumManagerStaffViewRequired, DetailView
-):
+class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show details about a `dbGaPDataAccessSnapshot`."""
 
     model = models.dbGaPDataAccessSnapshot
@@ -466,9 +410,7 @@ class dbGaPDataAccessSnapshotDetail(
     def get_dbgap_application(self):
         model = models.dbGaPApplication
         try:
-            application = model.objects.get(
-                dbgap_project_id=self.kwargs.get("dbgap_project_id")
-            )
+            application = model.objects.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except model.DoesNotExist:
             raise Http404(
                 "No %(verbose_name)s found matching the query"
@@ -483,15 +425,11 @@ class dbGaPDataAccessSnapshotDetail(
         self.dbgap_application = self.get_dbgap_application()
         if not queryset:
             queryset = self.model.objects
-        return super().get_object(
-            queryset=queryset.filter(dbgap_application=self.dbgap_application)
-        )
+        return super().get_object(queryset=queryset.filter(dbgap_application=self.dbgap_application))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "data_access_request_table"
-        ] = tables.dbGaPDataAccessRequestBySnapshotTable(
+        context["data_access_request_table"] = tables.dbGaPDataAccessRequestBySnapshotTable(
             self.object.dbgapdataaccessrequest_set.all()
         )
         context["summary_table"] = tables.dbGaPDataAccessRequestSummaryTable(
@@ -503,9 +441,7 @@ class dbGaPDataAccessSnapshotDetail(
         return context
 
 
-class dbGaPDataAccessRequestList(
-    AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView
-):
+class dbGaPDataAccessRequestList(AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView):
     """View to show current DARs."""
 
     model = models.dbGaPDataAccessRequest
@@ -513,14 +449,10 @@ class dbGaPDataAccessRequestList(
     export_name = "dars_table"
 
     def get_table_data(self):
-        return self.get_queryset().filter(
-            dbgap_data_access_snapshot__is_most_recent=True
-        )
+        return self.get_queryset().filter(dbgap_data_access_snapshot__is_most_recent=True)
 
 
-class dbGaPDataAccessRequestHistory(
-    AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView
-):
+class dbGaPDataAccessRequestHistory(AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView):
     """View to show the history of a given DAR."""
 
     model = models.dbGaPDataAccessRequest
@@ -582,8 +514,7 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except queryset.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -641,8 +572,7 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
             obj = queryset.get()
         except queryset.model.DoesNotExist:
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -661,7 +591,6 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
 
 
 class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
-
     form_class = Form
     template_name = "dbgap/audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
@@ -681,29 +610,22 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
             obj = queryset.get()
         except queryset.model.DoesNotExist:
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_dbgap_application(self, queryset=None):
         """Look up the dbGaPApplication by dbgap_project_id."""
         try:
-            obj = models.dbGaPApplication.objects.get(
-                dbgap_project_id=self.kwargs.get("dbgap_project_id")
-            )
+            obj = models.dbGaPApplication.objects.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except models.dbGaPApplication.DoesNotExist:
             raise Http404("No dbGaPApplications found matching the query")
         return obj
 
     def get_audit_result(self):
         instance = audit.dbGaPAccessAudit(
-            dbgap_workspace_queryset=models.dbGaPWorkspace.objects.filter(
-                pk=self.dbgap_workspace.pk
-            ),
-            dbgap_application_queryset=models.dbGaPApplication.objects.filter(
-                pk=self.dbgap_application.pk
-            ),
+            dbgap_workspace_queryset=models.dbGaPWorkspace.objects.filter(pk=self.dbgap_workspace.pk),
+            dbgap_application_queryset=models.dbGaPApplication.objects.filter(pk=self.dbgap_application.pk),
         )
         instance.run_audit()
         return instance.get_all_results()[0]

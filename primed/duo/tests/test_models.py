@@ -27,9 +27,7 @@ class DataUsePermissionTest(TestCase):
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        instance = factories.DataUsePermissionFactory.create(
-            term="test group", identifier="foo"
-        )
+        instance = factories.DataUsePermissionFactory.create(term="test group", identifier="foo")
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "test group")
@@ -81,28 +79,20 @@ class DataUsePermissionTest(TestCase):
             instance2.full_clean()
         self.assertIn("identifier", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["identifier"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["identifier"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["identifier"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance2.save()
 
     def test_get_short_definition(self):
-        instance = factories.DataUsePermissionFactory.create(
-            definition="Test definition"
-        )
+        instance = factories.DataUsePermissionFactory.create(definition="Test definition")
         self.assertEqual(instance.get_short_definition(), "Test definition")
 
     def test_get_short_definition_re_sub(self):
-        instance = factories.DataUsePermissionFactory.create(
-            definition="This XXX indicates that everything is fine."
-        )
+        instance = factories.DataUsePermissionFactory.create(definition="This XXX indicates that everything is fine.")
         self.assertEqual(instance.get_short_definition(), "Everything is fine.")
 
     def test_get_short_definition_capitalization(self):
-        instance = factories.DataUsePermissionFactory.create(
-            definition="Test definition XyXy"
-        )
+        instance = factories.DataUsePermissionFactory.create(definition="Test definition XyXy")
         self.assertEqual(instance.get_short_definition(), "Test definition XyXy")
 
 
@@ -123,9 +113,7 @@ class DataUseModifierTest(TestCase):
 
     def test_str_method(self):
         """The custom __str__ method returns the correct string."""
-        instance = factories.DataUseModifierFactory.create(
-            term="test group", identifier="foo"
-        )
+        instance = factories.DataUseModifierFactory.create(term="test group", identifier="foo")
         instance.save()
         self.assertIsInstance(instance.__str__(), str)
         self.assertEqual(instance.__str__(), "test group")
@@ -169,9 +157,7 @@ class DataUseModifierTest(TestCase):
             instance2.full_clean()
         self.assertIn("identifier", e.exception.error_dict)
         self.assertEqual(len(e.exception.error_dict["identifier"]), 1)
-        self.assertIn(
-            "already exists", e.exception.error_dict["identifier"][0].messages[0]
-        )
+        self.assertIn("already exists", e.exception.error_dict["identifier"][0].messages[0])
         with self.assertRaises(IntegrityError):
             instance2.save()
 
@@ -180,9 +166,7 @@ class DataUseModifierTest(TestCase):
         self.assertEqual(instance.get_short_definition(), "Test definition")
 
     def test_get_short_definition_re_sub(self):
-        instance = factories.DataUseModifierFactory.create(
-            definition="This XXX indicates that use is allowed."
-        )
+        instance = factories.DataUseModifierFactory.create(definition="This XXX indicates that use is allowed.")
         self.assertEqual(instance.get_short_definition(), "Use is allowed.")
 
 
@@ -193,42 +177,28 @@ class DataUseOntologyTestCase(TestCase):
 
     def test_clean_requires_disease_term_false_with_no_disease_term(self):
         """Clean succeeds if disease_term is not set and requires_disease_term is False."""
-        data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_term=False
-        )
-        workspace = dbGaPWorkspaceFactory.create(
-            data_use_permission=data_use_permission
-        )
+        data_use_permission = factories.DataUsePermissionFactory.create(requires_disease_term=False)
+        workspace = dbGaPWorkspaceFactory.create(data_use_permission=data_use_permission)
         # No errors should be raised.
         workspace.clean()
 
     def test_clean_requires_disease_term_true_with_disease_term(self):
         """Clean succeeds if disease_term is set and requires_disease_term is True."""
-        data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_term=True
-        )
-        workspace = dbGaPWorkspaceFactory.create(
-            data_use_permission=data_use_permission, disease_term="foo"
-        )
+        data_use_permission = factories.DataUsePermissionFactory.create(requires_disease_term=True)
+        workspace = dbGaPWorkspaceFactory.create(data_use_permission=data_use_permission, disease_term="foo")
         workspace.clean()
 
     def test_clean_requires_disease_term_false_with_disease_term(self):
         """Clean fails if disease_term is set when requires_disease_term is False."""
-        data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_term=False
-        )
-        workspace = dbGaPWorkspaceFactory.create(
-            data_use_permission=data_use_permission, disease_term="foo"
-        )
+        data_use_permission = factories.DataUsePermissionFactory.create(requires_disease_term=False)
+        workspace = dbGaPWorkspaceFactory.create(data_use_permission=data_use_permission, disease_term="foo")
         with self.assertRaises(ValidationError) as e:
             workspace.clean()
         self.assertIn("does not require a disease restriction", str(e.exception))
 
     def test_clean_requires_disease_term_true_with_no_disease_term(self):
         """Clean fails if disease_term is not set when requires_disease_term is True."""
-        data_use_permission = factories.DataUsePermissionFactory.create(
-            requires_disease_term=True
-        )
+        data_use_permission = factories.DataUsePermissionFactory.create(requires_disease_term=True)
         workspace = dbGaPWorkspaceFactory.create(
             data_use_permission=data_use_permission,
         )

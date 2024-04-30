@@ -116,9 +116,7 @@ class dbGaPDataAccessSnapshotForm(forms.ModelForm):
         except jsonschema.exceptions.ValidationError as e:
             # Replace the full json string because it will be very long
             error_message = e.message.replace(str(e.instance), "JSON array")
-            raise ValidationError(
-                self.ERROR_JSON_VALIDATION, params={"error": error_message}
-            )
+            raise ValidationError(self.ERROR_JSON_VALIDATION, params={"error": error_message})
         # Verify that there is only one project in the json.
         if len(data) > 1:
             raise ValidationError("JSON array includes more than one project ID.")
@@ -131,9 +129,7 @@ class dbGaPDataAccessSnapshotForm(forms.ModelForm):
 class dbGaPDataAccessSnapshotMultipleForm(forms.Form):
     """Form to create new dbGaPDataAccessSnapshots for multiple dbGaPApplications at once."""
 
-    ERROR_PROJECT_ID_DOES_NOT_EXIST = (
-        "dbGaP Application(s) for some project id(s) do not exist in app."
-    )
+    ERROR_PROJECT_ID_DOES_NOT_EXIST = "dbGaP Application(s) for some project id(s) do not exist in app."
     ERROR_JSON_VALIDATION = "JSON validation error: %(error)s"
 
     dbgap_dar_data = forms.JSONField()
@@ -145,16 +141,12 @@ class dbGaPDataAccessSnapshotMultipleForm(forms.Form):
         except jsonschema.exceptions.ValidationError as e:
             # Replace the full json string because it will be very long
             error_message = e.message.replace(str(e.instance), "JSON array")
-            raise ValidationError(
-                self.ERROR_JSON_VALIDATION, params={"error": error_message}
-            )
+            raise ValidationError(self.ERROR_JSON_VALIDATION, params={"error": error_message})
         # Verify that all projects exist.
         missing_ids = []
         for project_json in data:
             project_id = project_json["Project_id"]
-            if not models.dbGaPApplication.objects.filter(
-                dbgap_project_id=project_id
-            ).exists():
+            if not models.dbGaPApplication.objects.filter(dbgap_project_id=project_id).exists():
                 missing_ids.append(str(project_id))
         if missing_ids:
             raise ValidationError(self.ERROR_PROJECT_ID_DOES_NOT_EXIST)

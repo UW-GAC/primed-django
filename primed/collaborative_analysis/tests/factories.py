@@ -19,9 +19,7 @@ class CollaborativeAnalysisWorkspaceFactory(DjangoModelFactory):
     custodian = SubFactory(UserFactory)
     analyst_group = SubFactory(
         ManagedGroupFactory,
-        name=LazyAttribute(
-            lambda o: "analysts_{}".format(o.factory_parent.workspace.name)
-        ),
+        name=LazyAttribute(lambda o: "analysts_{}".format(o.factory_parent.workspace.name)),
     )
 
     @post_generation
@@ -32,9 +30,7 @@ class CollaborativeAnalysisWorkspaceFactory(DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create(
-            name="auth_{}".format(self.workspace.name)
-        )
+        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
         print(auth_domain)
         self.workspace.authorization_domains.add(auth_domain)
 
