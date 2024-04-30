@@ -39,9 +39,7 @@ class DUOFields(models.Model):
         return "{}".format(self.term)
 
     def get_ols_url(self):
-        return "http://purl.obolibrary.org/obo/{}".format(
-            self.identifier.replace("DUO:", "DUO_")
-        )
+        return "http://purl.obolibrary.org/obo/{}".format(self.identifier.replace("DUO:", "DUO_"))
 
     def get_short_definition(self):
         text = re.sub(r"This .+? indicates that ", "", self.definition)
@@ -90,7 +88,7 @@ class DataUseOntologyModel(models.Model):
         verbose_name="DUO disease term",
         max_length=255,
         blank=True,
-        null=True,
+        default="",
         help_text="The disease term if required by data_use_permission.",
     )
 
@@ -103,8 +101,7 @@ class DataUseOntologyModel(models.Model):
         if hasattr(self, "data_use_permission") and self.data_use_permission:
             if self.data_use_permission.requires_disease_term and not self.disease_term:
                 raise ValidationError(
-                    "`disease_term` must not be None "
-                    "because data_use_permission requires a disease restriction."
+                    "`disease_term` must not be None " "because data_use_permission requires a disease restriction."
                 )
             if not self.data_use_permission.requires_disease_term and self.disease_term:
                 raise ValidationError(

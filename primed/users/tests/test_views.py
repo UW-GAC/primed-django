@@ -113,14 +113,10 @@ class TestUserDetailView:
 
         assert response.status_code == 200
 
-    def test_authenticated_with_verified_account(
-        self, client, user: User, rf: RequestFactory
-    ):
+    def test_authenticated_with_verified_account(self, client, user: User, rf: RequestFactory):
         client.force_login(user)
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         AccountFactory.create(email="foo@bar.com", user=user, verified=True)
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
@@ -128,14 +124,10 @@ class TestUserDetailView:
 
         assert response.status_code == 200
 
-    def test_authenticated_with_user_email_entry(
-        self, client, user: User, rf: RequestFactory
-    ):
+    def test_authenticated_with_user_email_entry(self, client, user: User, rf: RequestFactory):
         client.force_login(user)
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         UserEmailEntryFactory.create(email="foo@bar.com", user=user)
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
@@ -143,9 +135,7 @@ class TestUserDetailView:
 
         assert response.status_code == 200
 
-    def test_authenticated_with_unverified_account(
-        self, client, user: User, rf: RequestFactory
-    ):
+    def test_authenticated_with_unverified_account(self, client, user: User, rf: RequestFactory):
         client.force_login(user)
         AccountFactory.create(email="foo@bar.com", user=user, verified=False)
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
@@ -153,9 +143,7 @@ class TestUserDetailView:
 
         assert response.status_code == 200
 
-    def test_authenticated_with_study_sites(
-        self, client, user: User, rf: RequestFactory
-    ):
+    def test_authenticated_with_study_sites(self, client, user: User, rf: RequestFactory):
         client.force_login(user)
         study_site = StudySiteFactory.create()
         user.study_sites.add(study_site)
@@ -177,9 +165,7 @@ class TestUserDetailView:
     def test_staff_view_links(self, client, user: User, rf: RequestFactory):
         """Link to ACM account page is in response for users with STAFF_VIEW permission."""
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         client.force_login(user)
         account = AccountFactory.create(email="foo@bar.com", user=user, verified=True)
@@ -189,11 +175,7 @@ class TestUserDetailView:
 
     def test_view_links(self, client, user: User, rf: RequestFactory):
         """Link to ACM account page is not in response for users with VIEW permission."""
-        user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
-        )
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
         client.force_login(user)
         account = AccountFactory.create(email="foo@bar.com", user=user, verified=True)
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
@@ -220,9 +202,7 @@ class UserAutocompleteTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -237,10 +217,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         # The test user plus the ones we created in this test.
         self.assertEqual(len(returned_ids), 10)
         self.assertEqual(
@@ -255,10 +232,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "First Last"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -269,10 +243,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "Firs"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -283,10 +254,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "ast"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -297,10 +265,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "first last"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -311,10 +276,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "foo@bar.com"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -325,10 +287,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "foo"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -339,10 +298,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "bar"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -353,10 +309,7 @@ class UserAutocompleteTest(TestCase):
         request = self.factory.get(self.get_url(), {"q": "FOO@BAR.COM"})
         request.user = self.user
         response = self.get_view()(request)
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], instance.pk)
 
@@ -376,9 +329,7 @@ class UserAutocompleteTest(TestCase):
         request.user = self.user
         view = UserAutocompleteView()
         view.setup(request)
-        self.assertEqual(
-            view.get_selected_result_label(instance), "First Last (foo@bar.com)"
-        )
+        self.assertEqual(view.get_selected_result_label(instance), "First Last (foo@bar.com)")
 
 
 class UserLookup(TestCase):
@@ -405,9 +356,7 @@ class UserLookup(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""

@@ -1,11 +1,7 @@
 """Tests for migrations in the miscellaneous_workspaces app."""
 
-from anvil_consortium_manager.tests.factories import BillingProjectFactory, WorkspaceFactory
 from django_test_migrations.contrib.unittest_case import MigratorTestCase
-from primed.users.tests.factories import UserFactory
-import factory
 
-from . import factories
 
 class ExampleToResourceWorkspaceForwardMigrationTest(MigratorTestCase):
     """Tests for the migrations associated with renaming the ExampleWorkspace to ResourceWorkspace."""
@@ -53,7 +49,7 @@ class ExampleToResourceWorkspaceForwardMigrationTest(MigratorTestCase):
     def test_workspace_updates(self):
         """Test updates to the workspace model."""
         Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
-        ResourceWorkspace = self.new_state.apps.get_model("miscellaneous_workspaces", "ResourceWorkspace")
+        self.new_state.apps.get_model("miscellaneous_workspaces", "ResourceWorkspace")
         workspace = Workspace.objects.get(pk=self.workspace_1.pk)
         self.assertEqual(workspace.workspace_type, "resource")
         workspace.full_clean()
@@ -66,7 +62,6 @@ class ExampleToResourceWorkspaceForwardMigrationTest(MigratorTestCase):
 
     def test_resource_workspace_updates(self):
         """Test updates to the ResourceWorkspace model."""
-        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
         ResourceWorkspace = self.new_state.apps.get_model("miscellaneous_workspaces", "ResourceWorkspace")
         resource_workspace = ResourceWorkspace.objects.get(pk=self.example_workspace_1.pk)
         resource_workspace.full_clean()
@@ -135,7 +130,6 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
     def test_workspace_updates(self):
         """Test updates to the workspace model."""
         Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
-        ExampleWorkspace = self.new_state.apps.get_model("miscellaneous_workspaces", "ExampleWorkspace")
         workspace = Workspace.objects.get(pk=self.workspace_1.pk)
         self.assertEqual(workspace.workspace_type, "example")
         workspace.full_clean()
@@ -148,7 +142,6 @@ class ExampleToResourceWorkspaceReverseMigrationTest(MigratorTestCase):
 
     def test_resource_workspace_updates(self):
         """Test updates to the ResourceWorkspace model."""
-        Workspace = self.new_state.apps.get_model("anvil_consortium_manager", "Workspace")
         ExampleWorkspace = self.new_state.apps.get_model("miscellaneous_workspaces", "ExampleWorkspace")
         example_workspace = ExampleWorkspace.objects.get(pk=self.resource_workspace_1.pk)
         example_workspace.full_clean()

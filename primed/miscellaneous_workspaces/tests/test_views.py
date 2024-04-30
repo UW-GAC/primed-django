@@ -29,9 +29,7 @@ class SimulatedDataWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -54,14 +52,10 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "simulated_data"
@@ -120,14 +114,10 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "simulated_data"
@@ -138,25 +128,15 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -174,9 +154,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -242,9 +220,7 @@ class ConsortiumDevelWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -267,14 +243,10 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "devel"
@@ -333,14 +305,10 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "devel"
@@ -351,25 +319,15 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -387,9 +345,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -455,9 +411,7 @@ class ResourceWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -480,14 +434,10 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "resource"
@@ -546,14 +496,10 @@ class ResourceWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "resource"
@@ -564,25 +510,15 @@ class ResourceWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -600,9 +536,7 @@ class ResourceWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -668,9 +602,7 @@ class TemplateWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -693,14 +625,10 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "template"
 
@@ -734,7 +662,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-intended_workspace_type": "resource",
+                "workspacedata-0-intended_usage": "Test usage",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -744,7 +672,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.TemplateWorkspace.objects.count(), 1)
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.intended_workspace_type, "resource")
+        self.assertEqual(new_workspace_data.intended_usage, "Test usage")
 
 
 class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -759,14 +687,10 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "template"
 
@@ -776,25 +700,15 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -812,9 +726,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -860,7 +772,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 "workspacedata-INITIAL_FORMS": 0,
                 "workspacedata-MIN_NUM_FORMS": 1,
                 "workspacedata-MAX_NUM_FORMS": 1,
-                "workspacedata-0-intended_workspace_type": "resource",
+                "workspacedata-0-intended_usage": "Test usage",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -870,7 +782,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.TemplateWorkspace.objects.count(), 1)
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(new_workspace_data.intended_workspace_type, "resource")
+        self.assertEqual(new_workspace_data.intended_usage, "Test usage")
 
 
 class OpenAccessWorkspaceDetailTest(TestCase):
@@ -881,9 +793,7 @@ class OpenAccessWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -910,14 +820,10 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "open_access"
         self.requester = UserFactory.create()
@@ -983,14 +889,10 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "open_access"
         self.requester = UserFactory.create()
@@ -1002,25 +904,15 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -1038,9 +930,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -1112,9 +1002,7 @@ class DataPrepWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -1155,14 +1043,10 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.target_workspace = WorkspaceFactory.create()
@@ -1223,14 +1107,10 @@ class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.target_workspace = WorkspaceFactory.create()
@@ -1242,25 +1122,15 @@ class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -1278,9 +1148,7 @@ class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],

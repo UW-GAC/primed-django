@@ -38,9 +38,7 @@ class CollaborativeAnalysisWorkspaceStaffTableTest(TestCase):
         source_workspace = WorkspaceFactory.create()
         obj = self.model_factory.create()
         obj.source_workspaces.add(source_workspace)
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="collab_analysis")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="collab_analysis"))
         self.assertEqual(table.rows[0].get_cell("number_source_workspaces"), 1)
 
     def test_number_source_workspaces_two(self):
@@ -50,9 +48,7 @@ class CollaborativeAnalysisWorkspaceStaffTableTest(TestCase):
         obj = self.model_factory.create()
         obj.source_workspaces.add(source_workspace_1)
         obj.source_workspaces.add(source_workspace_2)
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="collab_analysis")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="collab_analysis"))
         self.assertEqual(table.rows[0].get_cell("number_source_workspaces"), 2)
 
 
@@ -86,9 +82,7 @@ class CollaborativeAnalysisWorkspaceUserTableTest(TestCase):
         source_workspace = WorkspaceFactory.create()
         obj = self.model_factory.create()
         obj.source_workspaces.add(source_workspace)
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="collab_analysis")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="collab_analysis"))
         self.assertEqual(table.rows[0].get_cell("number_source_workspaces"), 1)
 
     def test_number_source_workspaces_two(self):
@@ -98,7 +92,5 @@ class CollaborativeAnalysisWorkspaceUserTableTest(TestCase):
         obj = self.model_factory.create()
         obj.source_workspaces.add(source_workspace_1)
         obj.source_workspaces.add(source_workspace_2)
-        table = self.table_class(
-            self.model.objects.filter(workspace_type="collab_analysis")
-        )
+        table = self.table_class(self.model.objects.filter(workspace_type="collab_analysis"))
         self.assertEqual(table.rows[0].get_cell("number_source_workspaces"), 2)

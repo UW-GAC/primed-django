@@ -1,6 +1,7 @@
 """
 Base settings to build other settings files upon.
 """
+
 from pathlib import Path
 
 import environ
@@ -135,9 +136,7 @@ PASSWORD_HASHERS = [
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -264,12 +263,7 @@ MANAGERS = ADMINS
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s "
-            "%(process)d %(thread)d %(message)s"
-        }
-    },
+    "formatters": {"verbose": {"format": "%(levelname)s %(asctime)s %(module)s " "%(process)d %(thread)d %(message)s"}},
     "handlers": {
         "console": {
             "level": "DEBUG",
@@ -403,3 +397,9 @@ ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
 # Specify the subject for AnVIL account verification emails.
 ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
 ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
+
+DRUPAL_API_CLIENT_ID = env("DRUPAL_API_CLIENT_ID", default="")
+DRUPAL_API_CLIENT_SECRET = env("DRUPAL_API_CLIENT_SECRET", default="")
+DRUPAL_API_REL_PATH = env("DRUPAL_API_REL_PATH", default="mockapi")
+DRUPAL_DATA_AUDIT_DEACTIVATE_USERS = env("DRUPAL_DATA_AUDIT_DEACTIVATE_USERS", default=False)
+DRUPAL_DATA_AUDIT_REMOVE_USER_SITES = env("DRUPAL_DATA_AUDIT_REMOVE_USER_SITES", default=False)

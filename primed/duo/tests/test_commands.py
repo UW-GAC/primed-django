@@ -29,9 +29,7 @@ class LoadDUOTestCase(TestCase):
         """Raises exception when specified permissions-code is not in the ontology."""
         with self.assertRaises(CommandError) as e:
             call_command("load_duo", permissions_code="foo")
-        self.assertIn(
-            "permissions-code 'foo' not in available terms.", str(e.exception)
-        )
+        self.assertIn("permissions-code 'foo' not in available terms.", str(e.exception))
 
     def test_command_modifiers_code_not_in_ontology(self):
         """Raises exception when specified modifiers-code is not in the ontology."""
@@ -49,6 +47,4 @@ class LoadDUOTestCase(TestCase):
         """Correct output."""
         out = StringIO()
         call_command("load_duo", stdout=out)
-        self.assertIn(
-            "5 DataUsePermissions and 18 DataUseModifiers loaded.", out.getvalue()
-        )
+        self.assertIn("5 DataUsePermissions and 18 DataUseModifiers loaded.", out.getvalue())

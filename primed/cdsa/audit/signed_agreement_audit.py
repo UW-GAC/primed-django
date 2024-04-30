@@ -22,9 +22,7 @@ class AccessAuditResult(PRIMEDAuditResult):
     action: str = None
 
     def __post_init__(self):
-        self.anvil_cdsa_group = ManagedGroup.objects.get(
-            name=settings.ANVIL_CDSA_GROUP_NAME
-        )
+        self.anvil_cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
 
     def get_action_url(self):
         """The URL that handles the action needed."""
@@ -97,9 +95,7 @@ class SignedAgreementAccessAuditTable(tables.Table):
     agreement_type = tables.Column(accessor="signed_agreement__combined_type")
     agreement_version = tables.Column(accessor="signed_agreement__version")
     note = tables.Column()
-    action = tables.TemplateColumn(
-        template_name="cdsa/snippets/cdsa_signedagreement_audit_action_button.html"
-    )
+    action = tables.TemplateColumn(template_name="cdsa/snippets/cdsa_signedagreement_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
@@ -132,9 +128,7 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
             isinstance(signed_agreement_queryset, QuerySet)
             and signed_agreement_queryset.model is models.SignedAgreement
         ):
-            raise ValueError(
-                "signed_agreement_queryset must be a queryset of SignedAgreement objects."
-            )
+            raise ValueError("signed_agreement_queryset must be a queryset of SignedAgreement objects.")
         self.signed_agreement_queryset = signed_agreement_queryset
 
     def _audit_primary_agreement(self, signed_agreement):
@@ -147,9 +141,7 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         This audit does *not* check if the AgreementMajorVersion associated with the SignedAgreement is valid.
         """
         in_cdsa_group = signed_agreement.is_in_cdsa_group()
-        is_active = (
-            signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
-        )
+        is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
 
         if is_active:
             if in_cdsa_group:
@@ -189,9 +181,7 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         # If we made it this far in audit, some other case happened - log it as an error.
         # Haven't figured out a test for this because it is unexpected.
         self.errors.append(  # pragma: no cover
-            OtherError(
-                signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE
-            )  # pragma: no cover
+            OtherError(signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE)  # pragma: no cover
         )  # pragma: no cover
 
     def _audit_component_agreement(self, signed_agreement):
@@ -207,9 +197,7 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         SignedAgreement or its component is valid.
         """
         in_cdsa_group = signed_agreement.is_in_cdsa_group()
-        is_active = (
-            signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
-        )
+        is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
 
         # Get the set of potential primary agreements for this component.
         if hasattr(signed_agreement, "memberagreement"):
@@ -303,9 +291,7 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         # If we made it this far in audit, some other case happened - log it as an error.
         # Haven't figured out a test for this because it is unexpected.
         self.errors.append(  # pragma: no cover
-            OtherError(
-                signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE
-            )  # pragma: no cover
+            OtherError(signed_agreement=signed_agreement, note=self.ERROR_OTHER_CASE)  # pragma: no cover
         )  # pragma: no cover
 
     def _audit_signed_agreement(self, signed_agreement):

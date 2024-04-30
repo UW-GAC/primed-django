@@ -7,7 +7,6 @@ from ... import helpers
 
 
 class Command(BaseCommand):
-
     help = """Management command to generate CDSA records."""
 
     def add_arguments(self, parser):
@@ -23,7 +22,6 @@ class Command(BaseCommand):
             f.write(exporter.export())
 
     def handle(self, *args, **options):
-
         # Create directory.
         outdir = options["outdir"]
         try:
@@ -40,9 +38,7 @@ class Command(BaseCommand):
         )
 
         # Studies.
-        self._export_table(
-            helpers.get_study_records_table(), os.path.join(outdir, "study_records.tsv")
-        )
+        self._export_table(helpers.get_study_records_table(), os.path.join(outdir, "study_records.tsv"))
 
         # CDSA workspaces.
         self._export_table(

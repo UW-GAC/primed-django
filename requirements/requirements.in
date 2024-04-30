@@ -44,6 +44,9 @@ requests
 # For json schema validation.
 jsonschema
 
+# For interacting with drupal json api
+jsonapi-requests
+
 # For tree structures
 django-tree-queries
 

@@ -32,7 +32,7 @@ from faker import Faker
 from freezegun import freeze_time
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
-from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceTable
+from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
 from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; DataUsePermissionFactory,
     StudyFactory,
@@ -52,9 +52,7 @@ class dbGaPResponseTestMixin:
 
     def setUp(self):
         super().setUp()
-        self.dbgap_response_mock = responses.RequestsMock(
-            assert_all_requests_are_fired=True
-        )
+        self.dbgap_response_mock = responses.RequestsMock(assert_all_requests_are_fired=True)
         self.dbgap_response_mock.start()
 
     def tearDown(self):
@@ -79,9 +77,7 @@ class NavbarTest(TestCase):
         """Returns successful response code."""
         user = User.objects.create_user(username="test", password="test")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -90,22 +86,16 @@ class NavbarTest(TestCase):
         # Links to add dbGaP info.
         self.assertNotContains(response, reverse("dbgap:dbgap_study_accessions:new"))
         self.assertNotContains(response, reverse("dbgap:dbgap_applications:new"))
-        self.assertNotContains(
-            response, reverse("dbgap:dbgap_applications:update_dars")
-        )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update_dars"))
 
     def test_links_for_staff_edit(self):
         """Returns successful response code."""
         user = User.objects.create_user(username="test", password="test")
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(user)
         response = self.client.get(self.get_url())
@@ -126,9 +116,7 @@ class dbGaPStudyAccessionListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -157,9 +145,7 @@ class dbGaPStudyAccessionListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -171,9 +157,7 @@ class dbGaPStudyAccessionListTest(TestCase):
         request.user = self.user
         response = self.get_view()(request)
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPStudyAccessionTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.dbGaPStudyAccessionTable)
 
     def test_workspace_table_none(self):
         """No rows are shown if there are no dbGaPStudyAccession objects."""
@@ -209,9 +193,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.dbGaPStudyAccessionFactory.create()
@@ -230,9 +212,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         response = self.client.get(self.get_url(self.obj.dbgap_phs))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL)
-            + "?next="
-            + self.get_url(self.obj.dbgap_phs),
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.obj.dbgap_phs),
         )
 
     def test_status_code_with_user_permission(self):
@@ -244,9 +224,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -272,9 +250,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
         request.user = self.user
         response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
         self.assertIn("workspace_table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["workspace_table"], tables.dbGaPWorkspaceStaffTable
-        )
+        self.assertIsInstance(response.context_data["workspace_table"], tables.dbGaPWorkspaceStaffTable)
 
     def test_workspace_table_none(self):
         """No workspaces are shown if the dbGaPStudyAccession does not have any workspaces."""
@@ -305,9 +281,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
     def test_shows_workspace_for_only_this_dbGaPStudyAccession(self):
         """Only shows workspaces for this dbGaPStudyAccession."""
         other_dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
-        factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession=other_dbgap_study_accession
-        )
+        factories.dbGaPWorkspaceFactory.create(dbgap_study_accession=other_dbgap_study_accession)
         request = self.factory.get(self.get_url(self.obj.dbgap_phs))
         request.user = self.user
         response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
@@ -317,12 +291,8 @@ class dbGaPStudyAccessionDetailTest(TestCase):
     def test_context_show_edit_links_with_edit_permission(self):
         edit_user = User.objects.create_user(username="edit", password="test")
         edit_user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            ),
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            ),
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME),
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME),
         )
         self.client.force_login(edit_user)
         account = factories.dbGaPStudyAccessionFactory.create()
@@ -340,9 +310,7 @@ class dbGaPStudyAccessionDetailTest(TestCase):
     def test_context_show_edit_links_with_view_permission(self):
         view_user = User.objects.create_user(username="edit", password="test")
         view_user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            ),
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME),
         )
         self.client.force_login(view_user)
         account = factories.dbGaPStudyAccessionFactory.create()
@@ -368,14 +336,10 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -390,9 +354,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -403,9 +365,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -413,13 +373,9 @@ class dbGaPStudyAccessionCreateTest(TestCase):
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has no permissions."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -438,17 +394,13 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         request = self.factory.get(self.get_url())
         request.user = self.user
         response = self.get_view()(request)
-        self.assertIsInstance(
-            response.context_data["form"], forms.dbGaPStudyAccessionForm
-        )
+        self.assertIsInstance(response.context_data["form"], forms.dbGaPStudyAccessionForm)
 
     def test_can_create_object(self):
         """Can create an object."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(
-            self.get_url(), {"studies": [study.pk], "dbgap_phs": 1}
-        )
+        response = self.client.post(self.get_url(), {"studies": [study.pk], "dbgap_phs": 1})
         self.assertEqual(response.status_code, 302)
         # A new object was created.
         self.assertEqual(models.dbGaPStudyAccession.objects.count(), 1)
@@ -461,9 +413,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         """Redirects to successful url."""
         self.client.force_login(self.user)
         study = StudyFactory.create()
-        response = self.client.post(
-            self.get_url(), {"studies": [study.pk], "dbgap_phs": 1}
-        )
+        response = self.client.post(self.get_url(), {"studies": [study.pk], "dbgap_phs": 1})
         new_object = models.dbGaPStudyAccession.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
 
@@ -479,9 +429,7 @@ class dbGaPStudyAccessionCreateTest(TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.dbGaPStudyAccessionCreate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.dbGaPStudyAccessionCreate.success_message, str(messages[0]))
 
     def test_error_missing_studies(self):
         """Form shows an error when studies is missing."""
@@ -565,14 +513,10 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -586,9 +530,7 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         response = self.client.get(self.get_url(1))
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1)
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -600,13 +542,9 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
     def test_access_with_view_permission(self):
         """Raises permission denied if user has only view permission."""
         instance = factories.dbGaPStudyAccessionFactory.create()
-        user_with_view_perm = User.objects.create_user(
-            username="test-other", password="test-other"
-        )
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
         user_with_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url(instance.dbgap_phs))
         request.user = user_with_view_perm
@@ -616,9 +554,7 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
         instance = factories.dbGaPStudyAccessionFactory.create()
-        user_no_perms = User.objects.create_user(
-            username="test-other", password="test-other"
-        )
+        user_no_perms = User.objects.create_user(username="test-other", password="test-other")
         request = self.factory.get(self.get_url(instance.dbgap_phs))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -644,9 +580,7 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
         study_2 = StudyFactory.create()
         instance = factories.dbGaPStudyAccessionFactory.create(studies=[study_1])
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.dbgap_phs), {"studies": [study_1.pk, study_2.pk]}
-        )
+        response = self.client.post(self.get_url(instance.dbgap_phs), {"studies": [study_1.pk, study_2.pk]})
         self.assertEqual(response.status_code, 302)
         instance.refresh_from_db()
         self.assertEqual(instance.studies.count(), 2)
@@ -656,13 +590,9 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
     def test_does_not_modify_phs(self):
         """Does not modify phs when updating a dbGaPStudyAccession."""
         study = StudyFactory.create()
-        instance = factories.dbGaPStudyAccessionFactory.create(
-            dbgap_phs=1234, studies=[study]
-        )
+        instance = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=1234, studies=[study])
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.dbgap_phs), {"dbgap_phs": 2345, "studies": [study.pk]}
-        )
+        response = self.client.post(self.get_url(instance.dbgap_phs), {"dbgap_phs": 2345, "studies": [study.pk]})
         self.assertEqual(response.status_code, 302)
         instance.refresh_from_db()
         self.assertEqual(instance.dbgap_phs, 1234)
@@ -670,30 +600,20 @@ class dbGaPStudyAccessionUpdateTest(TestCase):
     def test_success_message(self):
         """Response includes a success message if successful."""
         study = StudyFactory.create()
-        instance = factories.dbGaPStudyAccessionFactory.create(
-            dbgap_phs=1234, studies=[study]
-        )
+        instance = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=1234, studies=[study])
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.dbgap_phs), {"studies": [study.pk]}, follow=True
-        )
+        response = self.client.post(self.get_url(instance.dbgap_phs), {"studies": [study.pk]}, follow=True)
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.dbGaPStudyAccessionUpdate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.dbGaPStudyAccessionUpdate.success_message, str(messages[0]))
 
     def test_redirects_to_object_detail(self):
         """After successfully creating an object, view redirects to the object's detail page."""
         study = StudyFactory.create()
-        instance = factories.dbGaPStudyAccessionFactory.create(
-            dbgap_phs=1234, studies=[study]
-        )
+        instance = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=1234, studies=[study])
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(instance.dbgap_phs), {"studies": [study.pk]}
-        )
+        response = self.client.post(self.get_url(instance.dbgap_phs), {"studies": [study.pk]})
         self.assertRedirects(response, instance.get_absolute_url())
 
 
@@ -704,9 +624,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         # Create a user with the correct permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -721,9 +639,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission(self):
         """Returns successful response code."""
@@ -733,9 +649,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -746,14 +660,9 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         objects = factories.dbGaPStudyAccessionFactory.create_batch(10)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 10)
-        self.assertEqual(
-            sorted(returned_ids), sorted([object.pk for object in objects])
-        )
+        self.assertEqual(sorted(returned_ids), sorted([object.pk for object in objects]))
 
     def test_returns_correct_object_match(self):
         """Queryset returns the correct objects when query matches the phs."""
@@ -761,10 +670,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         factories.dbGaPStudyAccessionFactory.create(dbgap_phs=8)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "7"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -774,10 +680,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         factories.dbGaPStudyAccessionFactory.create(dbgap_phs=8)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "7"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -787,10 +690,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         factories.dbGaPStudyAccessionFactory.create(dbgap_phs=754)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "6"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -799,10 +699,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         object = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=7)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "phs7"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -811,10 +708,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         object = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=7)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "0007"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -824,10 +718,7 @@ class dbGaPStudyAccessionAutocompleteTest(TestCase):
         factories.dbGaPStudyAccessionFactory.create(dbgap_phs=71)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(), {"q": "700"})
-        returned_ids = [
-            int(x["id"])
-            for x in json.loads(response.content.decode("utf-8"))["results"]
-        ]
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
         self.assertEqual(len(returned_ids), 1)
         self.assertEqual(returned_ids[0], object.pk)
 
@@ -841,9 +732,7 @@ class dbGaPWorkspaceListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.workspace_type = "dbgap"
 
@@ -861,9 +750,7 @@ class dbGaPWorkspaceListTest(TestCase):
         request.user = self.user
         response = self.get_view()(request, workspace_type=self.workspace_type)
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPWorkspaceStaffTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.dbGaPWorkspaceStaffTable)
 
 
 class dbGaPWorkspaceDetailTest(TestCase):
@@ -874,9 +761,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def test_status_code_with_user_permission(self):
@@ -920,9 +805,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
     def test_links_audit_access_staff_view(self):
         user = UserFactory.create()
         user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         obj = factories.dbGaPWorkspaceFactory.create()
         self.client.force_login(user)
@@ -937,11 +820,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
 
     def test_links_audit_access_view_permission(self):
         user = UserFactory.create()
-        user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
-        )
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
         obj = factories.dbGaPWorkspaceFactory.create()
         self.client.force_login(user)
         response = self.client.get(obj.get_absolute_url())
@@ -953,6 +832,25 @@ class dbGaPWorkspaceDetailTest(TestCase):
             ),
         )
 
+    def test_associated_data_prep_view_user(self):
+        """View users do not see the associated data prep section"""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+
+        obj = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertNotContains(response, "Associated data prep workspaces")
+
+    def test_associated_data_prep_staff_view_user(self):
+        """Staff view users do see the associated data prep section."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertContains(response, "Associated data prep workspaces")
+
     def test_associated_data_prep_workspaces_context_exists(self):
         obj = factories.dbGaPWorkspaceFactory.create()
         self.client.force_login(self.user)
@@ -960,20 +858,16 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.assertIn("associated_data_prep_workspaces", response.context_data)
         self.assertIsInstance(
             response.context_data["associated_data_prep_workspaces"],
-            DataPrepWorkspaceTable,
+            DataPrepWorkspaceUserTable,
         )
 
     def test_only_show_one_associated_data_prep_workspace(self):
         dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
-        dataPrep_obj = DataPrepWorkspaceFactory.create(
-            target_workspace=dbGaP_obj.workspace
-        )
+        dataPrep_obj = DataPrepWorkspaceFactory.create(target_workspace=dbGaP_obj.workspace)
         self.client.force_login(self.user)
         response = self.client.get(dbGaP_obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspaces", response.context_data)
-        self.assertEqual(
-            len(response.context_data["associated_data_prep_workspaces"].rows), 1
-        )
+        self.assertEqual(len(response.context_data["associated_data_prep_workspaces"].rows), 1)
         self.assertIn(
             dataPrep_obj.workspace,
             response.context_data["associated_data_prep_workspaces"].data,
@@ -981,18 +875,12 @@ class dbGaPWorkspaceDetailTest(TestCase):
 
     def test_show_two_associated_data_prep_workspaces(self):
         dbGaP_obj = factories.dbGaPWorkspaceFactory.create()
-        dataPrep_obj1 = DataPrepWorkspaceFactory.create(
-            target_workspace=dbGaP_obj.workspace
-        )
-        dataPrep_obj2 = DataPrepWorkspaceFactory.create(
-            target_workspace=dbGaP_obj.workspace
-        )
+        dataPrep_obj1 = DataPrepWorkspaceFactory.create(target_workspace=dbGaP_obj.workspace)
+        dataPrep_obj2 = DataPrepWorkspaceFactory.create(target_workspace=dbGaP_obj.workspace)
         self.client.force_login(self.user)
         response = self.client.get(dbGaP_obj.get_absolute_url())
         self.assertIn("associated_data_prep_workspaces", response.context_data)
-        self.assertEqual(
-            len(response.context_data["associated_data_prep_workspaces"].rows), 2
-        )
+        self.assertEqual(len(response.context_data["associated_data_prep_workspaces"].rows), 2)
         self.assertIn(
             dataPrep_obj1.workspace,
             response.context_data["associated_data_prep_workspaces"].data,
@@ -1011,9 +899,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
 
     def test_context_data_prep_active_with_one_inactive_prep_workspace(self):
         instance = factories.dbGaPWorkspaceFactory.create()
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=False
-        )
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=False)
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
@@ -1021,9 +907,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
 
     def test_context_data_prep_active_with_one_active_prep_workspace(self):
         instance = factories.dbGaPWorkspaceFactory.create()
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=True
-        )
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=True)
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
@@ -1031,12 +915,8 @@ class dbGaPWorkspaceDetailTest(TestCase):
 
     def test_context_data_prep_active_with_one_active_one_inactive_prep_workspace(self):
         instance = factories.dbGaPWorkspaceFactory.create()
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=True
-        )
-        DataPrepWorkspaceFactory.create(
-            target_workspace=instance.workspace, is_active=True
-        )
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=True)
+        DataPrepWorkspaceFactory.create(target_workspace=instance.workspace, is_active=True)
         self.client.force_login(self.user)
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
@@ -1055,14 +935,10 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "dbgap"
@@ -1073,13 +949,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
     def test_creates_upload_workspace_without_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -1128,9 +998,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(
-            new_workspace_data.dbgap_study_accession, dbgap_study_accession
-        )
+        self.assertEqual(new_workspace_data.dbgap_study_accession, dbgap_study_accession)
         self.assertEqual(new_workspace_data.dbgap_version, 2)
         self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
         self.assertEqual(new_workspace_data.dbgap_consent_abbreviation, "GRU-TEST")
@@ -1207,14 +1075,10 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permissions.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.requester = UserFactory.create()
         self.workspace_type = "dbgap"
@@ -1225,25 +1089,15 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_api_url(self, billing_project_name, workspace_name):
         """Return the Terra API url for a given billing project and workspace."""
-        return (
-            self.api_client.rawls_entry_point
-            + "/api/workspaces/"
-            + billing_project_name
-            + "/"
-            + workspace_name
-        )
+        return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(
-        self, billing_project, workspace, authorization_domains=[], access="OWNER"
-    ):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
             "owners": [],
             "workspace": {
-                "authorizationDomain": [
-                    {"membersGroupName": x} for x in authorization_domains
-                ],
+                "authorizationDomain": [{"membersGroupName": x} for x in authorization_domains],
                 "name": workspace,
                 "namespace": billing_project,
                 "isLocked": False,
@@ -1264,9 +1118,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -1330,9 +1182,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.dbGaPWorkspace.objects.count(), 1)
         new_workspace_data = models.dbGaPWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
-        self.assertEqual(
-            new_workspace_data.dbgap_study_accession, dbgap_study_accession
-        )
+        self.assertEqual(new_workspace_data.dbgap_study_accession, dbgap_study_accession)
         self.assertEqual(new_workspace_data.dbgap_version, 2)
         self.assertEqual(new_workspace_data.dbgap_participant_set, 3)
         self.assertEqual(new_workspace_data.dbgap_consent_abbreviation, "GRU-TEST")
@@ -1357,9 +1207,7 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             responses.GET,
             workspace_list_url,
             match=[
-                responses.matchers.query_param_matcher(
-                    {"fields": "workspace.namespace,workspace.name,accessLevel"}
-                )
+                responses.matchers.query_param_matcher({"fields": "workspace.namespace,workspace.name,accessLevel"})
             ],
             status=200,
             json=[self.get_api_json_response(billing_project.name, workspace_name)],
@@ -1438,9 +1286,7 @@ class dbGaPApplicationListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -1469,9 +1315,7 @@ class dbGaPApplicationListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1483,9 +1327,7 @@ class dbGaPApplicationListTest(TestCase):
         request.user = self.user
         response = self.get_view()(request)
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPApplicationTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.dbGaPApplicationTable)
 
 
 class dbGaPApplicationDetailTest(TestCase):
@@ -1495,9 +1337,7 @@ class dbGaPApplicationDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         # Create an object test this with.
         self.obj = factories.dbGaPApplicationFactory.create()
@@ -1516,9 +1356,7 @@ class dbGaPApplicationDetailTest(TestCase):
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL)
-            + "?next="
-            + self.get_url(self.obj.dbgap_project_id),
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.obj.dbgap_project_id),
         )
 
     def test_status_code_with_user_permission(self):
@@ -1530,9 +1368,7 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1554,9 +1390,7 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_staff_edit_links(self):
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
@@ -1606,9 +1440,7 @@ class dbGaPApplicationDetailTest(TestCase):
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_snapshot_table"].rows), 0
-        )
+        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 0)
 
     def test_snapshot_table_one(self):
         """One snapshots is shown if the dbGaPApplication has one snapshots."""
@@ -1617,37 +1449,27 @@ class dbGaPApplicationDetailTest(TestCase):
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_snapshot_table"].rows), 1
-        )
+        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 1)
 
     def test_snapshot_table_two(self):
         """Two snapshots are shown if the dbGaPApplication has two snapshots."""
-        factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.obj, is_most_recent=False
-        )
+        factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj, is_most_recent=False)
         factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_snapshot_table"].rows), 2
-        )
+        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 2)
 
     def test_shows_snapshots_for_only_this_application(self):
         """Only shows snapshots for this dbGaPApplication."""
         other_dbgap_application = factories.dbGaPApplicationFactory.create()
-        factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=other_dbgap_application
-        )
+        factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=other_dbgap_application)
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
         self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_snapshot_table"].rows), 0
-        )
+        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 0)
 
     def test_context_latest_snapshot_no_snapshot(self):
         """latest_snapshot is None in context when there are no dbGaPDataAccessSnapshots for this application."""
@@ -1659,9 +1481,7 @@ class dbGaPApplicationDetailTest(TestCase):
 
     def test_context_latest_snapshot_one_snapshot(self):
         """latest_snapshot is correct in context when there is one dbGaPDataAccessSnapshot for this application."""
-        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.obj
-        )
+        dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
@@ -1691,9 +1511,7 @@ class dbGaPApplicationDetailTest(TestCase):
             created=timezone.now() - timedelta(weeks=4),
             is_most_recent=False,
         )
-        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.obj, created=timezone.now()
-        )
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj, created=timezone.now())
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
@@ -1713,14 +1531,10 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         # Create the admin group.
         self.cc_admin_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
@@ -1737,9 +1551,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
         response = self.client.get(self.get_url())
-        self.assertRedirects(
-            response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url()
-        )
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url())
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
@@ -1750,9 +1562,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -1760,13 +1570,9 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has no permissions."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -1792,13 +1598,8 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1806,9 +1607,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
             status=204,
         )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
-        )
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1})
         self.assertEqual(response.status_code, 302)
         # A new object was created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 1)
@@ -1821,22 +1620,15 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
             api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
             status=204,
         )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
-        )
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1})
         new_object = models.dbGaPApplication.objects.latest("pk")
         self.assertRedirects(response, new_object.get_absolute_url())
 
@@ -1845,13 +1637,8 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1966,22 +1753,15 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
             api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
             status=204,
         )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
-        )
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498})
         self.assertEqual(response.status_code, 302)
         new_object = models.dbGaPApplication.objects.latest("pk")
         # A new group was created.
@@ -2004,21 +1784,15 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/foo_DBGAP_ACCESS_12498"
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/foo_DBGAP_ACCESS_12498"
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
             api_url + "/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
             status=204,
         )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
-        )
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498})
         self.assertEqual(response.status_code, 302)
         new_object = models.dbGaPApplication.objects.latest("pk")
         # A new group was created.
@@ -2040,22 +1814,15 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "mock message"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_12498"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
             api_url + "/admin/foo@firecloud.org",
             status=204,
         )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498}
-        )
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 12498})
         self.assertEqual(response.status_code, 302)
         new_object = models.dbGaPApplication.objects.latest("pk")
         # A new group was created.
@@ -2075,16 +1842,9 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=500, json={"message": "other error"}
-        )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=500, json={"message": "other error"})
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1})
         self.assertEqual(response.status_code, 200)
         # The form is valid...
         form = response.context["form"]
@@ -2103,9 +1863,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         pi = UserFactory.create()
         # Create a group with the same name.
         ManagedGroupFactory.create(name="TEST_PRIMED_DBGAP_ACCESS_1")
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
-        )
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1})
         self.assertEqual(response.status_code, 200)
         # The form is valid...
         form = response.context["form"]
@@ -2113,9 +1871,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         # ...but there was an error with the group name.
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.dbGaPApplicationCreate.ERROR_CREATING_GROUP, str(messages[0])
-        )
+        self.assertEqual(views.dbGaPApplicationCreate.ERROR_CREATING_GROUP, str(messages[0]))
         # No dbGaPApplication was created.
         self.assertEqual(models.dbGaPApplication.objects.count(), 0)
 
@@ -2124,13 +1880,8 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         pi = UserFactory.create()
         # API response to create the associated anvil_access_group.
-        api_url = (
-            self.api_client.sam_entry_point
-            + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
-        )
-        self.anvil_response_mock.add(
-            responses.POST, api_url, status=201, json={"message": "other error"}
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_DBGAP_ACCESS_1"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "other error"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -2138,9 +1889,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=404,
             json={"message": "other error"},
         )
-        response = self.client.post(
-            self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1}
-        )
+        response = self.client.post(self.get_url(), {"principal_investigator": pi.pk, "dbgap_project_id": 1})
         self.assertEqual(response.status_code, 200)
         # The form is valid...
         form = response.context["form"]
@@ -2165,14 +1914,10 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.dbgap_application = factories.dbGaPApplicationFactory.create()
         self.pi_name = fake.name()
@@ -2191,99 +1936,63 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
-        response = self.client.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        response = self.client.get(self.get_url(self.dbgap_application.dbgap_project_id))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL)
-            + "?next="
-            + self.get_url(self.dbgap_application.dbgap_project_id),
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.dbgap_application.dbgap_project_id),
         )
 
     def test_status_code_with_user_permission_edit(self):
         """Returns successful response code."""
-        request = self.factory.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        request = self.factory.get(self.get_url(self.dbgap_application.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(
-            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
-        )
+        response = self.get_view()(request, dbgap_project_id=self.dbgap_application.dbgap_project_id)
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
-        request = self.factory.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(self.dbgap_application.dbgap_project_id))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
-            self.get_view()(
-                request, dbgap_project_id=self.dbgap_application.dbgap_project_id
-            )
+            self.get_view()(request, dbgap_project_id=self.dbgap_application.dbgap_project_id)
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has no permissions."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
-        request = self.factory.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        request = self.factory.get(self.get_url(self.dbgap_application.dbgap_project_id))
         request.user = user_view_perm
         with self.assertRaises(PermissionDenied):
-            self.get_view()(
-                request, dbgap_project_id=self.dbgap_application.dbgap_project_id
-            )
+            self.get_view()(request, dbgap_project_id=self.dbgap_application.dbgap_project_id)
 
     def test_has_form_in_context(self):
         """Response includes a form."""
-        request = self.factory.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        request = self.factory.get(self.get_url(self.dbgap_application.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(
-            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
-        )
+        response = self.get_view()(request, dbgap_project_id=self.dbgap_application.dbgap_project_id)
         self.assertTrue("form" in response.context_data)
 
     def test_form_class(self):
         """Form is the expected class."""
-        request = self.factory.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        request = self.factory.get(self.get_url(self.dbgap_application.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(
-            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
-        )
-        self.assertIsInstance(
-            response.context_data["form"], forms.dbGaPDataAccessSnapshotForm
-        )
+        response = self.get_view()(request, dbgap_project_id=self.dbgap_application.dbgap_project_id)
+        self.assertIsInstance(response.context_data["form"], forms.dbGaPDataAccessSnapshotForm)
 
     def test_can_create_object(self):
         """Can create a dbGaPSnapshot and related dbGaPDataAccessRequests for this dbGaPApplication."""
         phs = "phs{phs:06d}".format(phs=fake.random_int())
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=self.dbgap_application, studies=[study_json]
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=self.dbgap_application, studies=[study_json])
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -2313,21 +2022,15 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             was_approved="yes",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession="phs000421", requests=[dar_json]
-        )
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=self.dbgap_application, studies=[study_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession="phs000421", requests=[dar_json])
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=self.dbgap_application, studies=[study_json])
         # Add responses with the study version and participant_set.
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": "phs000421"})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -2370,10 +2073,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL
-                + "?study_id={}.v32.p18".format(phs)
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id={}.v32.p18".format(phs)},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -2399,10 +2099,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL
-                + "?study_id={}.v32.p18".format(phs)
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id={}.v32.p18".format(phs)},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -2417,9 +2114,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.dbGaPDataAccessSnapshotCreate.success_message, str(messages[0])
-        )
+        self.assertEqual(views.dbGaPDataAccessSnapshotCreate.success_message, str(messages[0]))
 
     def test_error_missing_json(self):
         """Form shows an error when dbgap_dar_data is missing."""
@@ -2468,9 +2163,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2494,9 +2187,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         )
         # Now try to load the page again.
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        response = self.client.get(self.get_url(self.dbgap_application.dbgap_project_id))
         self.assertEqual(response.status_code, 200)
         self.assertTrue("form" in response.context_data)
 
@@ -2511,9 +2202,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2566,9 +2255,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2615,9 +2302,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         self.assertEqual(new_dar.dbgap_current_status, "approved")
         # These should be obtained from the original dar.
         self.assertEqual(new_dar.original_version, original_dar.original_version)
-        self.assertEqual(
-            new_dar.original_participant_set, original_dar.original_participant_set
-        )
+        self.assertEqual(new_dar.original_participant_set, original_dar.original_participant_set)
 
     def test_post_invalid_json(self):
         """JSON is invalid."""
@@ -2644,9 +2329,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_json_project_id_does_not_match(self):
         """Error message when project_id in JSON does not match project_id in dbGaPApplication."""
-        project_json = factories.dbGaPJSONProjectFactory(
-            Project_id=self.dbgap_application.dbgap_project_id + 1
-        )
+        project_json = factories.dbGaPJSONProjectFactory(Project_id=self.dbgap_application.dbgap_project_id + 1)
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.dbgap_application.dbgap_project_id),
@@ -2672,17 +2355,11 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_context_includes_dbgap_application(self):
         """Response context data includes the dbGaP application."""
-        request = self.factory.get(
-            self.get_url(self.dbgap_application.dbgap_project_id)
-        )
+        request = self.factory.get(self.get_url(self.dbgap_application.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(
-            request, dbgap_project_id=self.dbgap_application.dbgap_project_id
-        )
+        response = self.get_view()(request, dbgap_project_id=self.dbgap_application.dbgap_project_id)
         self.assertTrue("dbgap_application" in response.context_data)
-        self.assertEqual(
-            response.context_data["dbgap_application"], self.dbgap_application
-        )
+        self.assertEqual(response.context_data["dbgap_application"], self.dbgap_application)
 
     def test_snapshot_not_created_if_http404(self):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a HTTP 404 response."""
@@ -2695,9 +2372,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2726,9 +2401,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
-        self.assertEqual(
-            views.dbGaPDataAccessSnapshotCreate.ERROR_CREATING_DARS, str(messages[0])
-        )
+        self.assertEqual(views.dbGaPDataAccessSnapshotCreate.ERROR_CREATING_DARS, str(messages[0]))
 
     def test_existing_snapshot_not_updated_http404(self):
         """The dbGaPDataAccessSnapshot is not created if there is an HTTP 404 error."""
@@ -2741,9 +2414,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2793,9 +2464,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json_1, request_json_2]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json_1, request_json_2])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2806,9 +2475,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -2841,9 +2508,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             current_DAR_status="approved",
             DAC_abbrev="FOOBAR",
         )
-        study_json = factories.dbGaPJSONStudyFactory(
-            study_accession=phs, requests=[request_json_1, request_json_2]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(study_accession=phs, requests=[request_json_1, request_json_2])
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
             studies=[study_json],
@@ -2854,9 +2519,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=phs000421.v32.p18"},
         )
         # Create an existing snapshot.
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -2891,14 +2554,10 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def tearDown(self):
@@ -2933,9 +2592,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -2943,13 +2600,9 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
 
     def test_access_without_user_permission_view(self):
         """Raises permission denied if user has no permissions."""
-        user_view_perm = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_view_perm = User.objects.create_user(username="test-none", password="test-none")
         user_view_perm.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         request = self.factory.get(self.get_url())
         request.user = user_view_perm
@@ -2966,9 +2619,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         """Form is the expected class."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
-        self.assertIsInstance(
-            response.context_data["form"], forms.dbGaPDataAccessSnapshotMultipleForm
-        )
+        self.assertIsInstance(response.context_data["form"], forms.dbGaPDataAccessSnapshotMultipleForm)
 
     def test_context_dbgap_dar_json_url(self):
         """Response context includes dbgap_dar_json_url."""
@@ -2978,23 +2629,17 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
 
     def test_updates_one_application(self):
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"},
         )
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
-        )
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": json.dumps([project_json])})
         self.assertEqual(response.status_code, 302)
         dbgap_application.refresh_from_db()
         self.assertEqual(dbgap_application.dbgapdataaccesssnapshot_set.count(), 1)
@@ -3004,33 +2649,25 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_updates_two_applications(self):
         # First application and associated JSON.
         dbgap_application_1 = factories.dbGaPApplicationFactory.create()
-        project_json_1 = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application_1
-        )
+        project_json_1 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application_1)
         phs_1 = project_json_1["studies"][0]["study_accession"]
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs_1})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs_1 + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs_1 + ".v1.p1"},
         )
         # Second application and associated JSON.
         dbgap_application_2 = factories.dbGaPApplicationFactory.create()
-        project_json_2 = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application_2
-        )
+        project_json_2 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application_2)
         phs_2 = project_json_2["studies"][0]["study_accession"]
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs_2})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs_2 + ".v2.p2"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs_2 + ".v2.p2"},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -3052,45 +2689,33 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_redirect_url(self):
         """Redirects to successful url."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"},
         )
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
-        )
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": json.dumps([project_json])})
         self.assertRedirects(response, reverse("dbgap:dbgap_applications:list"))
 
     def test_success_message(self):
         """Redirects to successful url."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         self.dbgap_response_mock.add(
             responses.GET,
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"},
         )
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}, follow=True
-        )
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}, follow=True)
         self.assertIn("messages", response.context)
         messages = list(response.context["messages"])
         self.assertEqual(len(messages), 1)
@@ -3119,9 +2744,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         """Shows an error when the dbGaP application does not exist."""
         project_json = factories.dbGaPJSONProjectFactory()
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
-        )
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": json.dumps([project_json])})
         self.assertEqual(response.status_code, 200)
         # Form has errors in the correct field.
         self.assertIn("form", response.context_data)
@@ -3138,9 +2761,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_second_dbgap_application_does_not_exist(self):
         """Shows an error when one dbGaP application does not exist."""
         dbgap_application_1 = factories.dbGaPApplicationFactory.create()
-        project_json_1 = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application_1
-        )
+        project_json_1 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application_1)
         project_json_2 = factories.dbGaPJSONProjectFactory()
         self.client.force_login(self.user)
         response = self.client.post(
@@ -3163,9 +2784,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_updates_existing_snapshot_is_most_recent(self):
         """Updates the is_most_recent for older snapshots."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
@@ -3178,15 +2797,11 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"},
         )
         # Now add a new snapshot.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
-        )
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": json.dumps([project_json])})
         self.client.force_login(self.user)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 2)
@@ -3201,9 +2816,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_can_add_a_second_snapshot_with_dars(self):
         """Can add a second snapshot and new DARs."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
@@ -3216,15 +2829,11 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v1.p1"},
         )
         # Now add a new snapshot.
         self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(), {"dbgap_dar_data": json.dumps([project_json])}
-        )
+        response = self.client.post(self.get_url(), {"dbgap_dar_data": json.dumps([project_json])})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(models.dbGaPDataAccessSnapshot.objects.count(), 2)
         new_snapshot = models.dbGaPDataAccessSnapshot.objects.latest("pk")
@@ -3254,9 +2863,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_snapshot_not_created_if_http404(self):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a HTTP 404 response."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         # Add responses with the study version and participant_set.
         self.dbgap_response_mock.add(
@@ -3291,9 +2898,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
     def test_existing_snapshot_not_updated_http404(self):
         """The dbGaPDataAccessSnapshot is not created if there is an HTTP 404 error."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application
-        )
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application)
         phs = project_json["studies"][0]["study_accession"]
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=dbgap_application,
@@ -3336,12 +2941,8 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         dbgap_application = factories.dbGaPApplicationFactory.create()
         request_json_1 = factories.dbGaPJSONRequestFactory(DAR=12345)
         request_json_2 = factories.dbGaPJSONRequestFactory(DAR=12345)
-        study_json = factories.dbGaPJSONStudyFactory(
-            requests=[request_json_1, request_json_2]
-        )
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application, studies=[study_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(requests=[request_json_1, request_json_2])
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application, studies=[study_json])
         phs = project_json["studies"][0]["study_accession"]
         # Add responses with the study version and participant_set.
         self.dbgap_response_mock.add(
@@ -3349,9 +2950,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v32.p18"},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -3381,12 +2980,8 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         dbgap_application = factories.dbGaPApplicationFactory.create()
         request_json_1 = factories.dbGaPJSONRequestFactory(DAR=12345)
         request_json_2 = factories.dbGaPJSONRequestFactory(DAR=12345)
-        study_json = factories.dbGaPJSONStudyFactory(
-            requests=[request_json_1, request_json_2]
-        )
-        project_json = factories.dbGaPJSONProjectFactory(
-            dbgap_application=dbgap_application, studies=[study_json]
-        )
+        study_json = factories.dbGaPJSONStudyFactory(requests=[request_json_1, request_json_2])
+        project_json = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application, studies=[study_json])
         phs = project_json["studies"][0]["study_accession"]
 
         existing_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
@@ -3400,9 +2995,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
             constants.DBGAP_STUDY_URL,
             match=[responses.matchers.query_param_matcher({"study_id": phs})],
             status=302,
-            headers={
-                "Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v32.p18"
-            },
+            headers={"Location": constants.DBGAP_STUDY_URL + "?study_id=" + phs + ".v32.p18"},
         )
         self.client.force_login(self.user)
         response = self.client.post(
@@ -3438,14 +3031,10 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.application = factories.dbGaPApplicationFactory.create()
-        self.snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.application
-        )
+        self.snapshot = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.application)
 
     def tearDown(self):
         super().tearDown()
@@ -3466,9 +3055,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
         # Need a client for redirects.
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertRedirects(
             response,
             resolve_url(settings.LOGIN_URL)
@@ -3478,9 +3065,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
 
     def test_status_code_with_user_permission_view(self):
         """Returns successful response code if the user has view permission."""
-        request = self.factory.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        request = self.factory.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         request.user = self.user
         response = self.get_view()(
             request,
@@ -3491,12 +3076,8 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
-        request = self.factory.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
             self.get_view()(
@@ -3507,9 +3088,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
 
     def test_invalid_dbgap_application_pk(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(
-            self.get_url(self.application.dbgap_project_id + 1, self.snapshot.pk)
-        )
+        request = self.factory.get(self.get_url(self.application.dbgap_project_id + 1, self.snapshot.pk))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -3520,9 +3099,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
 
     def test_invalid_dbgap_data_access_snapshot_pk(self):
         """Raises a 404 error with an invalid object dbgap_data_access_snapshot_pk."""
-        request = self.factory.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk + 1)
-        )
+        request = self.factory.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk + 1))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -3534,9 +3111,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
     def test_mismatch_application_snapshot(self):
         """Raises a 404 error when dbgap application and snapshot pk don't match."""
         other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
-        request = self.factory.get(
-            self.get_url(self.application.dbgap_project_id, other_snapshot.pk)
-        )
+        request = self.factory.get(self.get_url(self.application.dbgap_project_id, other_snapshot.pk))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -3548,9 +3123,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
     def test_context_dar_table(self):
         """The data_access_request_table exists in the context."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("data_access_request_table", response.context_data)
         self.assertIsInstance(
             response.context_data["data_access_request_table"],
@@ -3560,75 +3133,45 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
     def test_context_dar_table_none(self):
         """The data_access_request_table works with one DAR."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("data_access_request_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_request_table"].rows), 0
-        )
+        self.assertEqual(len(response.context_data["data_access_request_table"].rows), 0)
 
     def test_context_dar_table_one(self):
         """The data_access_request_table works with one DAR."""
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=self.snapshot
-        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_data_access_snapshot=self.snapshot)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("data_access_request_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_request_table"].rows), 1
-        )
+        self.assertEqual(len(response.context_data["data_access_request_table"].rows), 1)
         self.assertIn(dar, response.context_data["data_access_request_table"].data)
 
     def test_context_dar_table_two(self):
         """The data_access_request_table works with one DAR."""
-        dars = factories.dbGaPDataAccessRequestFactory.create_batch(
-            2, dbgap_data_access_snapshot=self.snapshot
-        )
+        dars = factories.dbGaPDataAccessRequestFactory.create_batch(2, dbgap_data_access_snapshot=self.snapshot)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("data_access_request_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_request_table"].rows), 2
-        )
+        self.assertEqual(len(response.context_data["data_access_request_table"].rows), 2)
         self.assertIn(dars[0], response.context_data["data_access_request_table"].data)
         self.assertIn(dars[1], response.context_data["data_access_request_table"].data)
 
     def test_context_dar_table_only_shows_dars_for_this_snapshot(self):
         """The data_access_request_table only shows DARs associated with this snapshot."""
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=self.snapshot
-        )
-        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.application
-        )
-        other_dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot=other_snapshot
-        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_data_access_snapshot=self.snapshot)
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.application)
+        other_dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_data_access_snapshot=other_snapshot)
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("data_access_request_table", response.context_data)
-        self.assertEqual(
-            len(response.context_data["data_access_request_table"].rows), 1
-        )
+        self.assertEqual(len(response.context_data["data_access_request_table"].rows), 1)
         self.assertIn(dar, response.context_data["data_access_request_table"].data)
-        self.assertNotIn(
-            other_dar, response.context_data["data_access_request_table"].data
-        )
+        self.assertNotIn(other_dar, response.context_data["data_access_request_table"].data)
 
     def test_context_summary_table(self):
         """The data_access_request_table exists in the context."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("summary_table", response.context_data)
         self.assertIsInstance(
             response.context_data["summary_table"],
@@ -3638,9 +3181,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
     def test_context_summary_table_none(self):
         """The data_access_request_table works with no DARs."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("summary_table", response.context_data)
         self.assertEqual(len(response.context_data["summary_table"].rows), 0)
 
@@ -3674,9 +3215,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.NEW,
         )
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("summary_table", response.context_data)
         table = response.context_data["summary_table"]
 
@@ -3710,18 +3249,14 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
 
     def test_context_summary_table_only_shows_dars_for_this_snapshot(self):
         """The data_access_request_table only shows DARs associated with this snapshot."""
-        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.application
-        )
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.application)
         factories.dbGaPDataAccessRequestFactory.create(
             dbgap_data_access_snapshot=other_snapshot,
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
             dbgap_dac="FOO",
         )
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertIn("summary_table", response.context_data)
         table = response.context_data["summary_table"]
         self.assertEqual(len(table.rows), 0)
@@ -3729,12 +3264,8 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
     def test_no_alert_for_most_recent_snapshot(self):
         """No alert is shown when this is the most recent snapshot for an application."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, self.snapshot.pk)
-        )
-        self.assertNotContains(
-            response, "not the most recent snapshot", status_code=200
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
+        self.assertNotContains(response, "not the most recent snapshot", status_code=200)
 
     def test_alert_when_not_most_recent_snapshot(self):
         """An alert is shown when this is not the most recent snapshot for an application."""
@@ -3744,9 +3275,7 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
             is_most_recent=False,
         )
         self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(self.application.dbgap_project_id, old_snapshot.pk)
-        )
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, old_snapshot.pk))
         self.assertContains(response, "not the most recent snapshot", status_code=200)
 
 
@@ -3757,9 +3286,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -3788,9 +3315,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -3801,9 +3326,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPDataAccessRequestTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.dbGaPDataAccessRequestTable)
 
     def test_one_dar(self):
         """Table displays one dar."""
@@ -3822,9 +3345,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
         self.assertIn(dar_2, response.context_data["table"].data)
 
     def test_only_current_dars_shown(self):
-        dar = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_data_access_snapshot__is_most_recent=False
-        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_data_access_snapshot__is_most_recent=False)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertNotIn(dar, response.context_data["table"].data)
@@ -3840,9 +3361,7 @@ class dbGaPDataAccessRequestListTest(TestCase):
         self.assertIn("Content-Type", response)
         self.assertEqual(response["Content-Type"], "text/tsv; charset=utf-8")
         self.assertIn("Content-Disposition", response)
-        self.assertEqual(
-            response["Content-Disposition"], 'attachment; filename="dars_table.tsv"'
-        )
+        self.assertEqual(response["Content-Disposition"], 'attachment; filename="dars_table.tsv"')
 
 
 class dbGaPDataAccessRequestHistoryTest(TestCase):
@@ -3852,9 +3371,7 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -3883,9 +3400,7 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -3904,9 +3419,7 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(instance.dbgap_dar_id))
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPDataAccessRequestHistoryTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.dbGaPDataAccessRequestHistoryTable)
 
     def test_one_dars(self):
         """Table displays two dars."""
@@ -3942,16 +3455,12 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
             created=timezone.now() - timedelta(weeks=5),
             is_most_recent=False,
         )
-        dar_1 = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_dar_id=1, dbgap_data_access_snapshot=old_snapshot
-        )
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1, dbgap_data_access_snapshot=old_snapshot)
         new_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             created=timezone.now() - timedelta(weeks=1),
             is_most_recent=True,
         )
-        dar_2 = factories.dbGaPDataAccessRequestFactory.create(
-            dbgap_dar_id=1, dbgap_data_access_snapshot=new_snapshot
-        )
+        dar_2 = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1, dbgap_data_access_snapshot=new_snapshot)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(1))
         self.assertEqual(len(response.context_data["table"].rows), 2)
@@ -3968,14 +3477,10 @@ class dbGaPApplicationAuditTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.application = factories.dbGaPApplicationFactory.create()
-        self.snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-            dbgap_application=self.application
-        )
+        self.snapshot = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.application)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -3994,25 +3499,19 @@ class dbGaPApplicationAuditTest(TestCase):
         response = self.client.get(self.get_url(self.application.dbgap_project_id))
         self.assertRedirects(
             response,
-            resolve_url(settings.LOGIN_URL)
-            + "?next="
-            + self.get_url(self.application.dbgap_project_id),
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(self.application.dbgap_project_id),
         )
 
     def test_status_code_with_user_permission_view(self):
         """Returns successful response code if the user has view permission."""
         request = self.factory.get(self.get_url(self.application.dbgap_project_id))
         request.user = self.user
-        response = self.get_view()(
-            request, dbgap_project_id=self.application.dbgap_project_id
-        )
+        response = self.get_view()(request, dbgap_project_id=self.application.dbgap_project_id)
         self.assertEqual(response.status_code, 200)
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(self.application.dbgap_project_id))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -4045,16 +3544,12 @@ class dbGaPApplicationAuditTest(TestCase):
         response = self.client.get(self.get_url(self.application.dbgap_project_id))
         data_access_audit = response.context_data["data_access_audit"]
         self.assertEqual(data_access_audit.dbgap_application_queryset.count(), 1)
-        self.assertNotIn(
-            other_application, data_access_audit.dbgap_application_queryset
-        )
+        self.assertNotIn(other_application, data_access_audit.dbgap_application_queryset)
 
     def test_context_verified_table_access(self):
         """verified_table shows a record when audit has verified access."""
         # Add a verified workspace.
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            dbgap_study_accession__dbgap_phs=1
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(dbgap_study_accession__dbgap_phs=1)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
@@ -4103,9 +3598,7 @@ class dbGaPApplicationAuditTest(TestCase):
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            created=timezone.now() - timedelta(weeks=4)
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=4))
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
@@ -4239,9 +3732,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
 
@@ -4283,9 +3774,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(
             self.get_url(
                 self.dbgap_workspace.workspace.billing_project.name,
@@ -4302,9 +3791,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
 
     def test_invalid_billing_project_name(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(
-            self.get_url("foo", self.dbgap_workspace.workspace.name)
-        )
+        request = self.factory.get(self.get_url("foo", self.dbgap_workspace.workspace.name))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -4315,9 +3802,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
 
     def test_invalid_workspace_name(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(
-            self.get_url(self.dbgap_workspace.workspace.name, "foo")
-        )
+        request = self.factory.get(self.get_url(self.dbgap_workspace.workspace.name, "foo"))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(
@@ -4362,9 +3847,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
     def test_context_verified_table_access(self):
         """verified_table shows a record when audit has verified access."""
         # Add a verified workspace.
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=self.dbgap_workspace
-        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=self.dbgap_workspace)
         GroupGroupMembershipFactory.create(
             parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -4384,9 +3867,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4412,9 +3893,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4440,9 +3919,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4472,9 +3949,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4503,9 +3978,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4515,9 +3988,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=self.dbgap_workspace
-        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=self.dbgap_workspace)
         # Check the table in the context.
         self.client.force_login(self.user)
         response = self.client.get(
@@ -4533,9 +4004,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4580,9 +4049,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4617,9 +4084,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4650,9 +4115,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4683,9 +4146,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("workspace"), self.dbgap_workspace
-        )
+        self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
@@ -4703,9 +4164,7 @@ class dbGaPAuditTest(TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -4737,11 +4196,7 @@ class dbGaPAuditTest(TestCase):
     def test_status_code_with_user_permission_view(self):
         """Returns successful response code if the user has view permission."""
         user = User.objects.create_user(username="test-none", password="test-none")
-        user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
-        )
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
         request = self.factory.get(self.get_url())
         request.user = user
         with self.assertRaises(PermissionDenied):
@@ -4749,9 +4204,7 @@ class dbGaPAuditTest(TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url())
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -4831,9 +4284,7 @@ class dbGaPAuditTest(TestCase):
         """verified_table shows a record when audit has verified access."""
         # Add a verified workspace.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace
-        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -4870,9 +4321,7 @@ class dbGaPAuditTest(TestCase):
             audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
-        self.assertEqual(
-            table.rows[0].get_cell_value("application"), snapshot.dbgap_application
-        )
+        self.assertEqual(table.rows[0].get_cell_value("application"), snapshot.dbgap_application)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
@@ -4883,12 +4332,8 @@ class dbGaPAuditTest(TestCase):
 
     def test_context_needs_action_table_grant(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            created=timezone.now() - timedelta(weeks=4)
-        )
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=4))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         # Check the table in the context.
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
@@ -4995,14 +4440,10 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Create a user with both view and edit permission.
         self.user = User.objects.create_user(username="test", password="test")
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
 
     def get_url(self, *args):
@@ -5043,9 +4484,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Returns 403 response code if the user has staff view permission."""
         user_view = User.objects.create_user(username="test-view", password="test-view")
         user_view.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
-            )
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         self.client.force_login(self.user)
         request = self.factory.get(self.get_url(1, "foo", "bar"))
@@ -5056,11 +4495,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_status_code_with_user_permission_view(self):
         """Returns forbidden response code if the user has view permission."""
         user = User.objects.create_user(username="test-none", password="test-none")
-        user.user_permissions.add(
-            Permission.objects.get(
-                codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME
-            )
-        )
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
         request = self.factory.get(self.get_url(1, "foo", "bar"))
         request.user = user
         with self.assertRaises(PermissionDenied):
@@ -5068,9 +4503,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
-        user_no_perms = User.objects.create_user(
-            username="test-none", password="test-none"
-        )
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
         request = self.factory.get(self.get_url(1, "foo", "bar"))
         request.user = user_no_perms
         with self.assertRaises(PermissionDenied):
@@ -5106,11 +4539,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_workspace_does_not_exist(self):
         dbgap_application = factories.dbGaPApplicationFactory.create()
         billing_project = BillingProjectFactory.create()
-        request = self.factory.get(
-            self.get_url(
-                dbgap_application.dbgap_project_id, billing_project.name, "foo"
-            )
-        )
+        request = self.factory.get(self.get_url(dbgap_application.dbgap_project_id, billing_project.name, "foo"))
         request.user = self.user
         with self.assertRaises(Http404):
             self.get_view()(request)
@@ -5167,9 +4596,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Get request with verified access."""
         # Add a verified workspace.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace
-        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -5223,12 +4650,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def test_get_grant_access(self):
         """needs_action_table shows a record when audit finds that access needs to be granted."""
-        workspace = factories.dbGaPWorkspaceFactory.create(
-            created=timezone.now() - timedelta(weeks=4)
-        )
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace
-        )
+        workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=4))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         self.client.force_login(self.user)
         response = self.client.get(
             self.get_url(
@@ -5299,9 +4722,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """post with VerifiedAccess audit result."""
         # Add a verified workspace.
         workspace = factories.dbGaPWorkspaceFactory.create()
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace
-        )
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         date_created = timezone.now() - timedelta(weeks=3)
         with freeze_time(date_created):
             membership = GroupGroupMembershipFactory.create(
@@ -5321,9 +4742,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
-        self.assertEqual(
-            membership.parent_group, workspace.workspace.authorization_domains.first()
-        )
+        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.first())
         self.assertEqual(
             membership.child_group,
             dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -5354,13 +4773,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -5391,13 +4805,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -5414,9 +4823,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(
-            response.content.decode(), views.dbGaPAuditResolve.htmx_success
-        )
+        self.assertEqual(response.content.decode(), views.dbGaPAuditResolve.htmx_success)
         # Membership has been created.
         membership = GroupGroupMembership.objects.get(
             parent_group=workspace.workspace.authorization_domains.first(),
@@ -5446,13 +4853,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -5480,13 +4882,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -5522,13 +4919,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.PUT,
             api_url,
@@ -5576,13 +4968,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -5632,13 +5019,8 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Add API response
         # Note that the auth domain group is created automatically by the factory using the workspace name.
-        group_name = (
-            dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
-        )
-        api_url = (
-            self.api_client.sam_entry_point
-            + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
-        )
+        group_name = dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.name
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/auth_TEST_DBGAP/member/{group_name}@firecloud.org"
         self.anvil_response_mock.add(
             responses.DELETE,
             api_url,
@@ -5728,9 +5110,7 @@ class dbGaPApplicationRecordsListTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["table"], tables.dbGaPApplicationRecordsTable
-        )
+        self.assertIsInstance(response.context_data["table"], tables.dbGaPApplicationRecordsTable)
 
     def test_table_no_rows(self):
         """No rows are shown if there are no dbGaPApplications objects."""

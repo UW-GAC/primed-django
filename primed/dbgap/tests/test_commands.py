@@ -43,9 +43,7 @@ class RunDbGaPAuditTest(TestCase):
         """Test command output with one needs_action instance."""
         # Create a workspace and matching DAR.
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace
-        )
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=dbgap_workspace)
         out = StringIO()
         call_command("run_dbgap_audit", "--no-color", stdout=out)
         self.assertIn("Running dbGaP access audit... problems found.", out.getvalue())
@@ -79,9 +77,7 @@ class RunDbGaPAuditTest(TestCase):
         factories.dbGaPWorkspaceFactory.create()
         factories.dbGaPApplicationFactory.create()
         out = StringIO()
-        call_command(
-            "run_dbgap_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_dbgap_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running dbGaP access audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -90,13 +86,9 @@ class RunDbGaPAuditTest(TestCase):
         """Email is sent for one needs_action instance."""
         # Create a workspace and matching DAR.
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace
-        )
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=dbgap_workspace)
         out = StringIO()
-        call_command(
-            "run_dbgap_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_dbgap_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running dbGaP access audit... problems found.", out.getvalue())
         self.assertIn("* Verified: 0", out.getvalue())
         self.assertIn("* Needs action: 1", out.getvalue())
@@ -117,9 +109,7 @@ class RunDbGaPAuditTest(TestCase):
             child_group=dbgap_application.anvil_access_group,
         )
         out = StringIO()
-        call_command(
-            "run_dbgap_audit", "--no-color", email="test@example.com", stdout=out
-        )
+        call_command("run_dbgap_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running dbGaP access audit... problems found.", out.getvalue())
         self.assertIn("* Verified: 0", out.getvalue())
         self.assertIn("* Needs action: 0", out.getvalue())
@@ -136,12 +126,8 @@ class RunDbGaPAuditTest(TestCase):
         site.save()
         with self.settings(SITE_ID=site.id):
             dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
-            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-                dbgap_workspace=dbgap_workspace
-            )
+            factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=dbgap_workspace)
             out = StringIO()
             call_command("run_dbgap_audit", "--no-color", stdout=out)
-            self.assertIn(
-                "Running dbGaP access audit... problems found.", out.getvalue()
-            )
+            self.assertIn("Running dbGaP access audit... problems found.", out.getvalue())
             self.assertIn("https://foobar.com", out.getvalue())

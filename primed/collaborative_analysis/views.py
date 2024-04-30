@@ -42,17 +42,14 @@ class WorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
             obj = queryset.get()
         except queryset.model.DoesNotExist:
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit
-        data_access_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit(
-            queryset=[self.object]
-        )
+        data_access_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit(queryset=[self.object])
         data_access_audit.run_audit()
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()
@@ -64,9 +61,7 @@ class WorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
 class WorkspaceAuditAll(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show audit results for all `CollaborativeAnalysisWorkspace` objects."""
 
-    template_name = (
-        "collaborative_analysis/collaborativeanalysisworkspace_audit_all.html"
-    )
+    template_name = "collaborative_analysis/collaborativeanalysisworkspace_audit_all.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -82,10 +77,7 @@ class WorkspaceAuditAll(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class CollaborativeAnalysisAuditResolve(
-    AnVILConsortiumManagerStaffEditRequired, FormView
-):
-
+class CollaborativeAnalysisAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     form_class = Form
     template_name = "collaborative_analysis/audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
@@ -105,8 +97,7 @@ class CollaborativeAnalysisAuditResolve(
             obj = queryset.get()
         except queryset.model.DoesNotExist:
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -125,50 +116,37 @@ class CollaborativeAnalysisAuditResolve(
             return ManagedGroup.objects.get(email=email)
         except ManagedGroup.DoesNotExist:
             raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": "Account or ManagedGroup"}
+                _("No %(verbose_name)s found matching the query") % {"verbose_name": "Account or ManagedGroup"}
             )
 
     def get_audit_result(self):
         instance = audit.CollaborativeAnalysisWorkspaceAccessAudit(
-            queryset=models.CollaborativeAnalysisWorkspace.objects.filter(
-                pk=self.collaborative_analysis_workspace.pk
-            )
+            queryset=models.CollaborativeAnalysisWorkspace.objects.filter(pk=self.collaborative_analysis_workspace.pk)
         )
         # No way to include a queryset of members at this point - need to call the sub method directly.
         if isinstance(self.member, Account):
-            instance._audit_workspace_and_account(
-                self.collaborative_analysis_workspace, self.member
-            )
+            instance._audit_workspace_and_account(self.collaborative_analysis_workspace, self.member)
         else:
-            instance._audit_workspace_and_group(
-                self.collaborative_analysis_workspace, self.member
-            )
+            instance._audit_workspace_and_group(self.collaborative_analysis_workspace, self.member)
         # Set to completed, because we are just running this one specific check.
         instance.completed = True
         return instance.get_all_results()[0]
 
     def get(self, request, *args, **kwargs):
-        self.collaborative_analysis_workspace = (
-            self.get_collaborative_analysis_workspace()
-        )
+        self.collaborative_analysis_workspace = self.get_collaborative_analysis_workspace()
         self.member = self.get_member()
         self.audit_result = self.get_audit_result()
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        self.collaborative_analysis_workspace = (
-            self.get_collaborative_analysis_workspace()
-        )
+        self.collaborative_analysis_workspace = self.get_collaborative_analysis_workspace()
         self.member = self.get_member()
         self.audit_result = self.get_audit_result()
         return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context[
-            "collaborative_analysis_workspace"
-        ] = self.collaborative_analysis_workspace
+        context["collaborative_analysis_workspace"] = self.collaborative_analysis_workspace
         context["member"] = self.member
         context["audit_result"] = self.audit_result
         return context
@@ -177,9 +155,7 @@ class CollaborativeAnalysisAuditResolve(
         return self.collaborative_analysis_workspace.get_absolute_url()
 
     def form_valid(self, form):
-        auth_domain = (
-            self.collaborative_analysis_workspace.workspace.authorization_domains.first()
-        )
+        auth_domain = self.collaborative_analysis_workspace.workspace.authorization_domains.first()
         # Handle the result.
         try:
             with transaction.atomic():

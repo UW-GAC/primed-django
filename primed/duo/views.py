@@ -1,15 +1,11 @@
-from anvil_consortium_manager.auth import (
-    AnVILConsortiumManagerStaffViewRequired,
-    AnVILConsortiumManagerViewRequired,
-)
+from anvil_consortium_manager.auth import AnVILConsortiumManagerViewRequired
 from django.http import Http404
 from django.views.generic import DetailView, ListView
 
 from . import models
 
 
-class DataUsePermissionList(AnVILConsortiumManagerStaffViewRequired, ListView):
-
+class DataUsePermissionList(AnVILConsortiumManagerViewRequired, ListView):
     model = models.DataUsePermission
 
     def get_context_data(self, **kwargs):
@@ -22,7 +18,6 @@ class DataUsePermissionList(AnVILConsortiumManagerStaffViewRequired, ListView):
 
 
 class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
-
     model = models.DataUsePermission
 
     def get_object(self):
@@ -30,8 +25,7 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))
         except self.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": self.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
             )
         return obj
 
@@ -41,8 +35,7 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
         return context
 
 
-class DataUseModifierList(AnVILConsortiumManagerStaffViewRequired, ListView):
-
+class DataUseModifierList(AnVILConsortiumManagerViewRequired, ListView):
     model = models.DataUseModifier
 
     def get_context_data(self, **kwargs):
@@ -55,7 +48,6 @@ class DataUseModifierList(AnVILConsortiumManagerStaffViewRequired, ListView):
 
 
 class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
-
     model = models.DataUseModifier
 
     def get_object(self):
@@ -63,8 +55,7 @@ class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))
         except self.model.DoesNotExist:
             raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": self.model._meta.verbose_name}
+                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
             )
         return obj
 

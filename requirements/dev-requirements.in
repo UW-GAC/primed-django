@@ -17,11 +17,12 @@ sphinx-autobuild # https://github.com/GaretJax/sphinx-autobuild
 
 # Code quality
 # ------------------------------------------------------------------------------
-flake8  # https://github.com/PyCQA/flake8
-flake8-isort  # https://github.com/gforcada/flake8-isort
-black  # https://github.com/psf/black
-pylint-django  # https://github.com/PyCQA/pylint-django
+# flake8  # https://github.com/PyCQA/flake8
+# flake8-isort  # https://github.com/gforcada/flake8-isort
+# black  # https://github.com/psf/black
+# pylint-django  # https://github.com/PyCQA/pylint-django
 pre-commit  # https://github.com/pre-commit/pre-commit
+ruff  # https://github.com/astral-sh/ruff
 
 # Django
 # ------------------------------------------------------------------------------

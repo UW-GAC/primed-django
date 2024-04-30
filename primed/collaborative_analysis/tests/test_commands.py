@@ -24,9 +24,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         """Test command output."""
         out = StringIO()
         call_command("run_collaborative_analysis_audit", "--no-color", stdout=out)
-        self.assertIn(
-            "Running Collaborative analysis access audit... ok!", out.getvalue()
-        )
+        self.assertIn("Running Collaborative analysis access audit... ok!", out.getvalue())
         self.assertIn("* Verified: 0", out.getvalue())
         self.assertIn("* Needs action: 0", out.getvalue())
         self.assertIn("* Errors: 0", out.getvalue())
@@ -42,9 +40,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         GroupAccountMembershipFactory.create(group=workspace.analyst_group)
         out = StringIO()
         call_command("run_collaborative_analysis_audit", "--no-color", stdout=out)
-        self.assertIn(
-            "Running Collaborative analysis access audit... ok!", out.getvalue()
-        )
+        self.assertIn("Running Collaborative analysis access audit... ok!", out.getvalue())
         self.assertIn("* Verified: 1", out.getvalue())
         self.assertIn("* Needs action: 0", out.getvalue())
         self.assertIn("* Errors: 0", out.getvalue())
@@ -76,9 +72,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # One group with unexpected access.
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first()
-        )
+        GroupGroupMembershipFactory.create(parent_group=workspace.workspace.authorization_domains.first())
         out = StringIO()
         call_command("run_collaborative_analysis_audit", "--no-color", stdout=out)
         self.assertIn(
@@ -105,9 +99,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
             email="test@example.com",
             stdout=out,
         )
-        self.assertIn(
-            "Running Collaborative analysis access audit... ok!", out.getvalue()
-        )
+        self.assertIn("Running Collaborative analysis access audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
 
@@ -137,9 +129,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
-        self.assertEqual(
-            email.subject, "Collaborative analysis access audit - problems found"
-        )
+        self.assertEqual(email.subject, "Collaborative analysis access audit - problems found")
 
     def test_command_run_audit_one_instance_error_email(self):
         """Test command output with one error instance."""
@@ -148,9 +138,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # One group with unexpected access.
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first()
-        )
+        GroupGroupMembershipFactory.create(parent_group=workspace.workspace.authorization_domains.first())
         out = StringIO()
         call_command(
             "run_collaborative_analysis_audit",
@@ -169,9 +157,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
-        self.assertEqual(
-            email.subject, "Collaborative analysis access audit - problems found"
-        )
+        self.assertEqual(email.subject, "Collaborative analysis access audit - problems found")
 
     def test_different_domain(self):
         """Test command output when a different domain is specified."""

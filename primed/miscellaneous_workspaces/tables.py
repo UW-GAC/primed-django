@@ -9,30 +9,29 @@ from primed.primed_anvil.tables import (
 )
 
 
-class OpenAccessWorkspaceStaffTable(tables.Table):
-    """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
-
-    name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column(linkify=True)
-    is_shared = WorkspaceSharedWithConsortiumColumn()
-
-    class Meta:
-        model = Workspace
-        fields = (
-            "name",
-            "billing_project",
-            "openaccessworkspace__studies",
-            "is_shared",
-        )
-        order_by = ("name",)
-
-
 class OpenAccessWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    billing_project = tables.Column()
     is_shared = WorkspaceSharedWithConsortiumColumn()
+    openaccessworkspace__studies = tables.ManyToManyColumn(
+        linkify_item=True,
+    )
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "openaccessworkspace__studies",
+            "is_shared",
+        )
+        order_by = ("name",)
+
+
+class OpenAccessWorkspaceStaffTable(OpenAccessWorkspaceUserTable):
+    """Class to render a table of Workspace objects with OpenAccessWorkspace workspace data."""
+
+    billing_project = tables.Column(linkify=True)
 
     class Meta:
         model = Workspace
@@ -45,22 +44,33 @@ class OpenAccessWorkspaceUserTable(tables.Table):
         order_by = ("name",)
 
 
-class DataPrepWorkspaceTable(tables.Table):
+class DataPrepWorkspaceUserTable(tables.Table):
     """Class to render a table of Workspace objects with DataPrepWorkspace workspace data."""
 
     name = tables.columns.Column(linkify=True)
-    # TODO: Figure out why this is not showing up
-    dataprepworkspace__target_workspace__name = tables.columns.Column(
-        linkify=True, verbose_name="Target workspace"
-    )
-    dataprepworkspace__is_active = BooleanIconColumn(
-        verbose_name="Active?", show_false_icon=True
-    )
+    dataprepworkspace__target_workspace__name = tables.columns.Column(linkify=True, verbose_name="Target workspace")
+    dataprepworkspace__is_active = BooleanIconColumn(verbose_name="Active?", show_false_icon=True)
 
     class Meta:
         model = Workspace
         fields = (
             "name",
+            "dataprepworkspace__target_workspace__name",
+            "dataprepworkspace__is_active",
+        )
+        order_by = ("name",)
+
+
+class DataPrepWorkspaceStaffTable(DataPrepWorkspaceUserTable):
+    """Class to render a table of Workspace objects with DataPrepWorkspace workspace data."""
+
+    billing_project = tables.columns.Column(linkify=True)
+
+    class Meta:
+        model = Workspace
+        fields = (
+            "name",
+            "billing_project",
             "dataprepworkspace__target_workspace__name",
             "dataprepworkspace__is_active",
         )

@@ -23,9 +23,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_account_verified_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
-        instance = audit.VerifiedAccess(
-            collaborative_analysis_workspace=workspace, member=account, note="test"
-        )
+        instance = audit.VerifiedAccess(collaborative_analysis_workspace=workspace, member=account, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -39,9 +37,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_account_verified_no_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
-        instance = audit.VerifiedNoAccess(
-            collaborative_analysis_workspace=workspace, member=account, note="test"
-        )
+        instance = audit.VerifiedNoAccess(collaborative_analysis_workspace=workspace, member=account, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -55,9 +51,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_account_grant_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
-        instance = audit.GrantAccess(
-            collaborative_analysis_workspace=workspace, member=account, note="test"
-        )
+        instance = audit.GrantAccess(collaborative_analysis_workspace=workspace, member=account, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -71,9 +65,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_account_remove_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         account = AccountFactory.create()
-        instance = audit.RemoveAccess(
-            collaborative_analysis_workspace=workspace, member=account, note="test"
-        )
+        instance = audit.RemoveAccess(collaborative_analysis_workspace=workspace, member=account, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -87,9 +79,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_group_verified_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         group = ManagedGroupFactory.create()
-        instance = audit.VerifiedAccess(
-            collaborative_analysis_workspace=workspace, member=group, note="test"
-        )
+        instance = audit.VerifiedAccess(collaborative_analysis_workspace=workspace, member=group, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -103,9 +93,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_group_verified_no_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         group = ManagedGroupFactory.create()
-        instance = audit.VerifiedNoAccess(
-            collaborative_analysis_workspace=workspace, member=group, note="test"
-        )
+        instance = audit.VerifiedNoAccess(collaborative_analysis_workspace=workspace, member=group, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -119,9 +107,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_group_grant_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         group = ManagedGroupFactory.create()
-        instance = audit.GrantAccess(
-            collaborative_analysis_workspace=workspace, member=group, note="test"
-        )
+        instance = audit.GrantAccess(collaborative_analysis_workspace=workspace, member=group, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -135,9 +121,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
     def test_group_remove_access(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         group = ManagedGroupFactory.create()
-        instance = audit.RemoveAccess(
-            collaborative_analysis_workspace=workspace, member=group, note="test"
-        )
+        instance = audit.RemoveAccess(collaborative_analysis_workspace=workspace, member=group, note="test")
         expected_url = reverse(
             "collaborative_analysis:audit:resolve",
             args=[
@@ -185,18 +169,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -219,17 +199,13 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(), account=account
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -252,9 +228,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
@@ -286,9 +260,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(), account=account
@@ -318,13 +290,9 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # Set up source workspaces.
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
-        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(
-            workspace=source_workspace.workspace
-        )
+        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.all()[0],
@@ -335,9 +303,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -363,9 +329,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # add an extra auth doamin
         WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace.workspace.authorization_domains.first(),
@@ -376,9 +340,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -404,9 +366,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # add an extra auth doamin
         WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace.workspace.authorization_domains.first(),
@@ -417,9 +377,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -442,13 +400,9 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         source_auth_domain_1 = source_workspace.workspace.authorization_domains.first()
-        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(
-            workspace=source_workspace.workspace
-        )
+        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_auth_domain_1,
@@ -483,13 +437,9 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # Set up source workspaces.
         source_workspace = dbGaPWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
-        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(
-            workspace=source_workspace.workspace
-        )
+        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_auth_domain_1,
@@ -526,9 +476,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         workspace.source_workspaces.add(source_workspace.workspace)
         WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_auth_domain_1,
@@ -564,14 +512,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = WorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -594,9 +538,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace = WorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # CollaborativeAnalysisWorkspace auth domain membership.
         # GroupAccountMembershipFactory.create(
@@ -626,9 +568,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace_2 = CDSAWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace_2.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace_1.workspace.authorization_domains.first(),
@@ -639,9 +579,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -666,9 +604,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace_2 = CDSAWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace_2.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace_1.workspace.authorization_domains.first(),
@@ -679,9 +615,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -706,9 +640,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace_2 = CDSAWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace_2.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace_1.workspace.authorization_domains.first(),
@@ -719,9 +651,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=account)
         # Set up audit
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
@@ -746,9 +676,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace_2 = CDSAWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace_2.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace_1.workspace.authorization_domains.first(),
@@ -786,9 +714,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace_2 = CDSAWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace_2.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
             group=source_workspace_1.workspace.authorization_domains.first(),
@@ -828,9 +754,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         source_workspace_2 = CDSAWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace_2.workspace)
         # Analyst group membership.
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=account
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
         #     group=source_workspace_1.workspace.authorization_domains.first(),
@@ -861,17 +785,11 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # Create an analyst that needs access.
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         analyst_1 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=analyst_1
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=analyst_1)
         # Create an analyst that has access.
         analyst_2 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace.analyst_group, account=analyst_2
-        )
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=analyst_2
-        )
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=analyst_2)
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=analyst_2)
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         collab_audit._audit_workspace(workspace)
         self.assertEqual(len(collab_audit.verified), 1)
@@ -893,9 +811,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         # Create an analyst that has access but is not in the analyst group.
         analyst = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(), account=analyst
-        )
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.first(), account=analyst)
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         collab_audit._audit_workspace(workspace)
         self.assertEqual(len(collab_audit.verified), 0)
@@ -1015,15 +931,11 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # Create a workspace with an analyst that needs access.
         workspace_1 = factories.CollaborativeAnalysisWorkspaceFactory.create()
         analyst_1 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace_1.analyst_group, account=analyst_1
-        )
+        GroupAccountMembershipFactory.create(group=workspace_1.analyst_group, account=analyst_1)
         # Create a workspace with an analyst that has access.
         workspace_2 = factories.CollaborativeAnalysisWorkspaceFactory.create()
         analyst_2 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace_2.analyst_group, account=analyst_2
-        )
+        GroupAccountMembershipFactory.create(group=workspace_2.analyst_group, account=analyst_2)
         GroupAccountMembershipFactory.create(
             group=workspace_2.workspace.authorization_domains.first(), account=analyst_2
         )
@@ -1048,21 +960,15 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         # Create a workspace with an analyst that needs access.
         workspace_1 = factories.CollaborativeAnalysisWorkspaceFactory.create()
         analyst_1 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace_1.analyst_group, account=analyst_1
-        )
+        GroupAccountMembershipFactory.create(group=workspace_1.analyst_group, account=analyst_1)
         # Create a workspace with an analyst that has access.
         workspace_2 = factories.CollaborativeAnalysisWorkspaceFactory.create()
         analyst_2 = AccountFactory.create()
-        GroupAccountMembershipFactory.create(
-            group=workspace_2.analyst_group, account=analyst_2
-        )
+        GroupAccountMembershipFactory.create(group=workspace_2.analyst_group, account=analyst_2)
         GroupAccountMembershipFactory.create(
             group=workspace_2.workspace.authorization_domains.first(), account=analyst_2
         )
-        collab_audit_1 = audit.CollaborativeAnalysisWorkspaceAccessAudit(
-            queryset=[workspace_1]
-        )
+        collab_audit_1 = audit.CollaborativeAnalysisWorkspaceAccessAudit(queryset=[workspace_1])
         collab_audit_1.run_audit()
         self.assertEqual(len(collab_audit_1.verified), 0)
         self.assertEqual(len(collab_audit_1.needs_action), 1)
@@ -1072,9 +978,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace_1)
         self.assertEqual(record.member, analyst_1)
         self.assertEqual(record.note, collab_audit_1.IN_SOURCE_AUTH_DOMAINS)
-        collab_audit_2 = audit.CollaborativeAnalysisWorkspaceAccessAudit(
-            queryset=[workspace_2]
-        )
+        collab_audit_2 = audit.CollaborativeAnalysisWorkspaceAccessAudit(queryset=[workspace_2])
         collab_audit_2.run_audit()
         self.assertEqual(len(collab_audit_2.verified), 1)
         self.assertEqual(len(collab_audit_2.needs_action), 0)

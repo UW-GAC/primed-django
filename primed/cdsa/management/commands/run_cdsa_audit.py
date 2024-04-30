@@ -23,11 +23,7 @@ class Command(BaseCommand):
         data_access_audit.run_audit()
 
         # Construct the url for handling errors.
-        url = (
-            "https://"
-            + Site.objects.get_current().domain
-            + reverse("cdsa:audit:signed_agreements:all")
-        )
+        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:all")
         self._report_results(data_access_audit, url)
         self._send_email(data_access_audit, url)
 
@@ -37,11 +33,7 @@ class Command(BaseCommand):
         data_access_audit.run_audit()
 
         # Construct the url for handling errors.
-        url = (
-            "https://"
-            + Site.objects.get_current().domain
-            + reverse("cdsa:audit:workspaces:all")
-        )
+        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:workspaces:all")
         self._report_results(data_access_audit, url)
         self._send_email(data_access_audit, url)
 
@@ -55,15 +47,11 @@ class Command(BaseCommand):
 
         # Print results
         self.stdout.write("* Verified: {}".format(len(data_access_audit.verified)))
-        self.stdout.write(
-            "* Needs action: {}".format(len(data_access_audit.needs_action))
-        )
+        self.stdout.write("* Needs action: {}".format(len(data_access_audit.needs_action)))
         self.stdout.write("* Errors: {}".format(len(data_access_audit.errors)))
 
         if not audit_ok:
-            self.stdout.write(
-                self.style.ERROR(f"Please visit {resolve_url} to resolve these issues.")
-            )
+            self.stdout.write(self.style.ERROR(f"Please visit {resolve_url} to resolve these issues."))
 
     def _send_email(self, data_access_audit, url):
         # Send email if requested and there are problems.

@@ -34,21 +34,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Error if anything is loaded into either model.
-        if (
-            models.DataUsePermission.objects.exists()
-            or models.DataUseModifier.objects.exists()
-        ):
-            raise CommandError(
-                "At least one DataUsePermission or DataUseModifier already exists."
-            )
+        if models.DataUsePermission.objects.exists() or models.DataUseModifier.objects.exists():
+            raise CommandError("At least one DataUsePermission or DataUseModifier already exists.")
 
         duo_file = options["duo_file"]
         if not duo_file:
             # Use the default.
             tmppath = os.path.dirname(os.path.realpath(__file__))
-            duo_file = os.path.join(
-                tmppath, os.pardir, os.pardir, "fixtures", "duo-basic.owl"
-            )
+            duo_file = os.path.join(tmppath, os.pardir, os.pardir, "fixtures", "duo-basic.owl")
         self.stdout.write("Loading DUO terms from {}".format(duo_file))
 
         # Read in the ontology.
@@ -57,9 +50,7 @@ class Command(BaseCommand):
         # Check that specified terms are in the file.
         permissions_code = options["permissions_code"]
         if permissions_code not in duo.terms():
-            msg = "permissions-code '{}' not in available terms.".format(
-                permissions_code
-            )
+            msg = "permissions-code '{}' not in available terms.".format(permissions_code)
             raise CommandError(self.style.ERROR(msg))
 
         modifiers_code = options["modifiers_code"]
@@ -84,9 +75,7 @@ class Command(BaseCommand):
 
     def _get_term_abbreviation(self, term):
         """Return the abbreviation for the term."""
-        abbreviation = [
-            a.literal for a in term.annotations if "shorthand" in a.property
-        ]
+        abbreviation = [a.literal for a in term.annotations if "shorthand" in a.property]
         if len(abbreviation) != 1:
             import ipdb
 

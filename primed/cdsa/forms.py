@@ -22,9 +22,7 @@ class AgreementMajorVersionIsValidForm(forms.ModelForm):
 class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a SignedAgreement object."""
 
-    version = forms.ModelChoiceField(
-        queryset=models.AgreementVersion.objects.filter(major_version__is_valid=True)
-    )
+    version = forms.ModelChoiceField(queryset=models.AgreementVersion.objects.filter(major_version__is_valid=True))
 
     class Meta:
         model = models.SignedAgreement
