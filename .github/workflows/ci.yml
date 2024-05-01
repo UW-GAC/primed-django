@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Set environment variables
-        if: ${{ matrix.backend == 'mysql' }}
+        if: ${{ matrix.backend == 'mariadb' }}
         run: |
           echo "DATABASE_URL==mysql://root:root@127.0.0.1:3306/mysql" >> $GITHUB_ENV
 
