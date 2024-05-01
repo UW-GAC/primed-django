@@ -37,8 +37,7 @@ jobs:
         ports:
           - 3306:3306
         env:
-          MYSQL_ROOT_PASSWORD: rootpw
-          MYSQL_DATABSE: test
+          MYSQL_ROOT_PASSWORD: root
         options: --tmpfs /var/lib/mysql
 
     steps:
