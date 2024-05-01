@@ -40,11 +40,10 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
         options: --tmpfs /var/lib/mysql
 
+    env:
+      DATABASE_URL: ${{ matrix.backend == 'sqlite' && 'sqlite:///db.sqlite3' || 'mysql://root:root@127.0.0.1:3306/mysql' }}
+
     steps:
-      - name: Set environment variables
-        if: ${{ matrix.backend == 'mariadb' }}
-        run: |
-          echo "DATABASE_URL==mysql://root:root@127.0.0.1:3306/mysql" >> $GITHUB_ENV
 
       - name: Checkout Code Repository
         uses: actions/checkout@v4
