@@ -27,6 +27,10 @@ jobs:
         python-version: [3.8]
         backend: ["sqlite", "mariadb"]
         mariadb-version: ["10.4"]
+        include:
+          - python-version: 3.8  # Possible future version.
+            backend: "mariadb"
+            mariadb-version: "10.5"
     name: "py${{ matrix.python-version }}-${{ matrix.backend }}-${{ matrix.mariadb-version }}"
 
     services:
