@@ -45,10 +45,7 @@ jobs:
       - name: Set environment variables
         if: ${{ matrix.backend == 'mysql' }}
         run: |
-          echo "DBNAME=test" >> $GITHUB_ENV
-          echo "DBUSER=root" >> $GITHUB_ENV
-          echo "DBPASSWORD=rootpw" >> $GITHUB_ENV
-          echo "DBHOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DATABASE_URL==mysql://root:root@127.0.0.1:3306/mysql" >> $GITHUB_ENV
 
       - name: Checkout Code Repository
         uses: actions/checkout@v4
