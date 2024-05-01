@@ -29,16 +29,16 @@ jobs:
         mariadb-version: ["10.4"]
     name: "py${{ matrix.python-version }}-${{ matrix.backend }}-${{ matrix.mariadb-version }}"
 
-    # services:
-    #   mysql:
-    #     # Always start mariadb, even if we are testing with the mysql backend.
-    #     # Github actions do not allow conditional services yet.
-    #     image: mariadb:${{ matrix.mariadb-version }}
-    #     ports:
-    #       - 3306:3306
-    #     env:
-    #       MYSQL_ROOT_PASSWORD: root
-    #     options: --tmpfs /var/lib/mysql
+    services:
+      mysql:
+        # Always start mariadb, even if we are testing with the mysql backend.
+        # Github actions do not allow conditional services yet.
+        image: mariadb:${{ matrix.mariadb-version }}
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --tmpfs /var/lib/mysql
 
     env:
       PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
