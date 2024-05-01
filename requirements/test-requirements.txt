@@ -26,7 +26,7 @@ factory-boy==3.3.0
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
-freezegun==1.4.0
+freezegun==1.5.0
     # via -r requirements/test-requirements.in
 idna==3.3
     # via
