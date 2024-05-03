@@ -15,3 +15,6 @@ MAILTO="primedweb@uw.edu"
 10 4 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_dbgap_audit --email primedconsortium@uw.edu >> cron.log
 15 4 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_cdsa_audit --email primedconsortium@uw.edu >> cron.log
 20 4 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_collaborative_analysis_audit --email primedconsortium@uw.edu >> cron.log
+
+# Nightly user data audit
+0 2 * * * . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py sync-drupal-data --update --email primedweb@uw.edu >> cron.log

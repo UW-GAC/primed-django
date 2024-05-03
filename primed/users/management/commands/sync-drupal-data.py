@@ -94,10 +94,10 @@ class Command(BaseCommand):
             f"needs_changes: {len(user_audit.needs_action)} errors: {len(user_audit.errors)}\n"
         )
         if user_audit.needs_action:
-            notification_content += "Users that need syncing:\n"
+            notification_content += "Users that need syncing (will be resolved by this script if in update mode):\n"
             notification_content += user_audit.get_needs_action_table().render_to_text()
         if user_audit.errors:
-            notification_content += "Users that need intervention:\n"
+            notification_content += "Users that need intervention (cannot be resolved by script):\n"
             notification_content += user_audit.get_errors_table().render_to_text()
 
         self.stdout.write(notification_content)

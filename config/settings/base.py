@@ -377,7 +377,7 @@ CONSTANCE_DATABASE_CACHE_AUTOFILL_TIMEOUT = None
 
 # django-anvil-consortium-manager
 # ------------------------------------------------------------------------------
-ANVIL_API_SERVICE_ACCOUNT_FILE = env("ANVIL_API_SERVICE_ACCOUNT_FILE")
+
 # Specify workspace adapters.
 ANVIL_WORKSPACE_ADAPTERS = [
     "primed.dbgap.adapters.dbGaPWorkspaceAdapter",

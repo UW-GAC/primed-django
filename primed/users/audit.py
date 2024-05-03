@@ -288,10 +288,13 @@ class UserAudit(PRIMEDAudit):
             if handled is False:
                 self.errors.append(RemoveUser(local_user=uda, note=f"Over Threshold {over_threshold}"))
 
+        # Use distinct so this returns one row per Account
+        # instead of row per groupaccountmembership
         inactive_anvil_users = Account.objects.filter(
             Q(user__is_active=False) | Q(user__id__in=user_ids_to_check),
             groupaccountmembership__isnull=False,
-        )
+        ).distinct()
+
         for inactive_anvil_user in inactive_anvil_users:
             self.errors.append(
                 InactiveAnvilUser(
