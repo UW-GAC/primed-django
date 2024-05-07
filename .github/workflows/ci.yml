@@ -78,7 +78,7 @@ jobs:
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
-        run:  coverage run -p -m pytest -n auto
+        run:  pytest --cov=primed -n auto
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
