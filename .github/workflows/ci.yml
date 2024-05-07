@@ -113,11 +113,14 @@ jobs:
         run: |
           mv ./artifacts/coverage-data*/.coverage* .
           ls -la .coverage*
-
-      - name: Combine coverage data
-        run: |
           python -m coverage combine
           python -m coverage xml
+          ls -la .coverage*
+
+      - name: Report coverage
+        run: |
+          python -m coverage report
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
