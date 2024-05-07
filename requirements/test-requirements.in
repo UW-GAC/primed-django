@@ -2,6 +2,8 @@
 
 # Pytest
 pytest  # https://github.com/pytest-dev/pytest
+# Parallelized tests
+pytest-xdist  # https://github.com/pytest-dev/pytest-xdist
 # Pytest improvements - progress bar, etc.
 pytest-sugar  # https://github.com/Frozenball/pytest-sugar
 # Mock HTTP responses
