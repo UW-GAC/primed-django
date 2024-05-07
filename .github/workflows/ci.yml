@@ -78,7 +78,9 @@ jobs:
         run: python manage.py collectstatic --noinput --settings=config.settings.test
 
       - name: Run tests
-        run:  pytest --cov=primed -n auto
+        run:  |
+          pytest --cov=primed -n auto
+          mv .coverage .coverage-${{ strategy.job-index }}
 
       - name: List files for debugging purposes
         run: ls -lhta
@@ -87,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-${{ strategy.job-index }}
-          path: .coverage.*
+          path: .coverage-${{ strategy.job-index }}
 
   coverage:
     needs:
