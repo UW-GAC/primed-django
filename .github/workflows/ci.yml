@@ -80,6 +80,9 @@ jobs:
       - name: Run tests
         run:  pytest --cov=primed -n auto
 
+      - name: List files for debugging purposes
+        run: ls -lhta
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
