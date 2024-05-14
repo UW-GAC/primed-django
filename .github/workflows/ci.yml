@@ -32,9 +32,11 @@ jobs:
           - python-version: 3.8  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.5"
+            pip-recompile: true
           - python-version: 3.8  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.11"
+            pip-recompile: true
 
     name: "py${{ matrix.python-version }}-${{ matrix.backend }}-${{ matrix.mariadb-version }}"
 
@@ -77,6 +79,14 @@ jobs:
 
       - name: Install piptools
         run: python -m pip install pip-tools
+
+      - name: Recompile pip files if requested
+        if: matrix.pip-recompile
+        run: |
+          pip-compile requirements/requirements.in
+          pip-compile requirements/test-requirements.in
+          # Print out changes.
+          git diff
 
       - name: Install Dependencies
         run: |
