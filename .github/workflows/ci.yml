@@ -29,11 +29,11 @@ jobs:
         mariadb-version: ["10.4"]
         include:
           # Not sure yet how best to include CI for a newer python version with the pip-tools workflow.
-          - python-version: 3.11  # Possible future version.
+          - python-version: 3.12  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.5"
             pip-recompile: true
-          - python-version: 3.11  # Possible future version.
+          - python-version: 3.12  # Possible future version.
             backend: "mariadb"
             mariadb-version: "10.11"
             pip-recompile: true
