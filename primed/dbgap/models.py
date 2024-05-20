@@ -473,3 +473,11 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
             dbgap_consent_code=self.dbgap_consent_code,
         ).order_by("dbgap_version")
         return dbgap_workspaces
+
+    def get_matching_studies(self):
+        """Get the list of studies matching dbGaP study accession phs associated with this data access request."""
+
+        study_list = Study.objects.filter(dbgapstudyaccession__dbgap_phs=self.dbgap_phs).values_list(
+            "short_name", flat=True
+        )
+        return study_list
