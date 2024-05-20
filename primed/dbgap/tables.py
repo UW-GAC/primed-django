@@ -261,6 +261,10 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
     dbgap_data_access_snapshot__dbgap_application__dbgap_project_id = None
     dbgap_data_access_snapshot__created = None
     matching_workspaces = tables.columns.Column(accessor="get_dbgap_workspaces", orderable=False, default=" ")
+    matching_studies = tables.columns.ManyToManyColumn(
+        accessor="get_matching_studies",
+        verbose_name="Studies",
+    )
 
     class Meta:
         model = models.dbGaPDataAccessRequest
@@ -273,6 +277,11 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
         )
         order_by = ("dbgap_dar_id",)
         attrs = {"class": "table table-sm"}
+        sequence = (
+            "dbgap_dar_id",
+            "dbgap_dac",
+            "matching_studies",
+        )
 
     def render_matching_workspaces(self, value, record):
         template_code = """
