@@ -477,7 +477,5 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
     def get_matching_studies(self):
         """Get the list of studies matching dbGaP study accession phs associated with this data access request."""
 
-        study_list = Study.objects.filter(dbgapstudyaccession__dbgap_phs=self.dbgap_phs).values_list(
-            "short_name", flat=True
-        )
+        study_list = Study.objects.filter(dbgapstudyaccession__dbgap_phs=self.dbgap_phs)
         return study_list

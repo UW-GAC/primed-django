@@ -264,6 +264,7 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
     matching_studies = tables.columns.ManyToManyColumn(
         accessor="get_matching_studies",
         verbose_name="Studies",
+        linkify_item=True,
     )
 
     class Meta:

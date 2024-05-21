@@ -1539,7 +1539,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=dbgap_study_accession.dbgap_phs)
         qs = dar.get_matching_studies()
         self.assertEqual(qs.count(), 1)
-        self.assertEqual(qs[0], test_study.short_name)
+        self.assertEqual(qs[0], test_study)
 
     def test_get_studies_two_match(self):
         """Returns the correct studies when there are 2 match."""
@@ -1551,5 +1551,5 @@ class dbGaPDataAccessRequestTest(TestCase):
         dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=dbgap_study_accession.dbgap_phs)
         qs = dar.get_matching_studies()
         self.assertEqual(qs.count(), 2)
-        self.assertEqual(qs[0], test_study_1.short_name)
-        self.assertEqual(qs[1], test_study_2.short_name)
+        self.assertEqual(qs[0], test_study_1)
+        self.assertEqual(qs[1], test_study_2)
