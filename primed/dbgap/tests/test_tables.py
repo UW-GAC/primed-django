@@ -694,6 +694,26 @@ class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
         self.assertEqual(table.data[0], instance_2)
         self.assertEqual(table.data[1], instance_1)
 
+    def test_one_matching_study(self):
+        """Table works if there is a matching study"""
+        test_study = factories.StudyFactory.create(short_name="Test", full_name="Test Study")
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=1, studies=[test_study])
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=dbgap_study_accession.dbgap_phs)
+        table = self.table_class([dar])
+        self.assertIn(test_study.short_name, table.rows[0].get_cell("matching_studies"))
+
+    def test_two_matching_studies(self):
+        """Table works if there is are two matching studies"""
+        test_study_1 = factories.StudyFactory.create(short_name="Test 1", full_name="Test Study 1")
+        test_study_2 = factories.StudyFactory.create(short_name="Test 2", full_name="Test Study 2")
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create(
+            dbgap_phs=1, studies=[test_study_1, test_study_2]
+        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=dbgap_study_accession.dbgap_phs)
+        table = self.table_class([dar])
+        self.assertIn(test_study_1.short_name, table.rows[0].get_cell("matching_studies"))
+        self.assertIn(test_study_2.short_name, table.rows[0].get_cell("matching_studies"))
+
 
 class dbGaPDataAccessRequestSummaryTable(TestCase):
     model = models.dbGaPDataAccessRequest
