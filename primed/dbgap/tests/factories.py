@@ -151,18 +151,14 @@ class dbGaPDataAccessRequestFactory(DjangoModelFactory):
         model = models.dbGaPDataAccessRequest
 
 
-class dbGaPDataAccessRequestForWorkspaceFactory(DjangoModelFactory):
+class dbGaPDataAccessRequestForWorkspaceFactory(dbGaPDataAccessRequestFactory):
     """A factory for the dbGaPApplication model to match a workspace."""
 
-    dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
     dbgap_phs = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_study_accession.dbgap_phs)
-    dbgap_dar_id = Sequence(lambda n: n + 1)
     original_version = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_version)
     original_participant_set = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_participant_set)
     dbgap_consent_code = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_code)
     dbgap_consent_abbreviation = LazyAttribute(lambda o: o.dbgap_workspace.dbgap_consent_abbreviation)
-    dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
-    dbgap_dac = Faker("word")
 
     class Params:
         dbgap_workspace = None
