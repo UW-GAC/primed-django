@@ -12,7 +12,6 @@ asgiref==3.7.2
     # via
     #   django
     #   django-htmx
-    #   django-simple-history
 attrs==23.2.0
     # via
     #   jsonschema
@@ -59,6 +58,7 @@ django==4.2.13
     #   django-htmx
     #   django-model-utils
     #   django-picklefield
+    #   django-simple-history
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
@@ -95,7 +95,7 @@ django-picklefield==3.2
     # via
     #   -r requirements/requirements.in
     #   django-constance
-django-simple-history==3.5.0
+django-simple-history==3.7.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
