@@ -7,7 +7,7 @@ ipdb  # https://github.com/gotcha/ipdb
 # Type checking
 # ------------------------------------------------------------------------------
 mypy  # https://github.com/python/mypy
-django-stubs  # https://github.com/typeddjango/django-stubs
+django-stubs>=4.2,<5.0  # https://github.com/typeddjango/django-stubs
 types-requests
 
 # Documentation

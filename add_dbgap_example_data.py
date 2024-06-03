@@ -94,6 +94,10 @@ dar_1_4 = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
     dbgap_dac="NHLBI",
     dbgap_current_status=models.dbGaPDataAccessRequest.REJECTED,
 )
+dar_1_5 = factories.dbGaPDataAccessRequestFactory(
+    dbgap_data_access_snapshot=dar_snapshot_1,
+    dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
+)
 
 dbgap_application_2 = factories.dbGaPApplicationFactory.create(
     principal_investigator=UserFactory.create(name="Alisa", username="Alisa"),
