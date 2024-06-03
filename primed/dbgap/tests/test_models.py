@@ -1525,3 +1525,31 @@ class dbGaPDataAccessRequestTest(TestCase):
         """`get_dbgab_link` returns a link."""
         instance = factories.dbGaPDataAccessRequestFactory.create()
         self.assertIsInstance(instance.get_dbgap_link(), str)
+
+    def test_get_studies_no_matches(self):
+        """Returns an empty queryset when there is no matching studies."""
+        factories.dbGaPStudyAccessionFactory.create()
+        dar = factories.dbGaPDataAccessRequestFactory.create()
+        self.assertEqual(dar.get_matching_studies().count(), 0)
+
+    def test_get_studies_one_match(self):
+        """Returns the correct study when there is one match."""
+        test_study = StudyFactory.create(short_name="Test", full_name="Test Study")
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=1, studies=[test_study])
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=dbgap_study_accession.dbgap_phs)
+        qs = dar.get_matching_studies()
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs[0], test_study)
+
+    def test_get_studies_two_match(self):
+        """Returns the correct studies when there are 2 match."""
+        test_study_1 = StudyFactory.create(short_name="Test 1", full_name="Test Study 1")
+        test_study_2 = StudyFactory.create(short_name="Test 2", full_name="Test Study 2")
+        dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create(
+            dbgap_phs=1, studies=[test_study_1, test_study_2]
+        )
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=dbgap_study_accession.dbgap_phs)
+        qs = dar.get_matching_studies()
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(qs[0], test_study_1)
+        self.assertEqual(qs[1], test_study_2)

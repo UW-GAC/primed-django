@@ -2141,17 +2141,17 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_get_dbgap_application_pk_does_not_exist(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.get(self.get_url(self.dbgap_application.pk + 1))
+        request = self.factory.get(self.get_url(self.dbgap_application.pk + 999))
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 1)
+            self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 999)
 
     def test_post_dbgap_application_pk_does_not_exist(self):
         """Raises a 404 error with an invalid object dbgap_application_pk."""
-        request = self.factory.post(self.get_url(self.dbgap_application.pk + 1), {})
+        request = self.factory.post(self.get_url(self.dbgap_application.pk + 999), {})
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 1)
+            self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 999)
 
     def test_has_form_when_one_snapshot_exists(self):
         phs_int = fake.random_int()
