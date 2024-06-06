@@ -470,27 +470,41 @@ class dbGaPDataAccessRequestList(AnVILConsortiumManagerStaffViewRequired, Export
         return self.get_queryset().filter(dbgap_data_access_snapshot__is_most_recent=True)
 
 
-class dbGaPDataAccessRequestHistory(AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView):
+class dbGaPDataAccessRequestHistory(viewmixins.dbGaPApplicationViewPermissionMixin, ExportMixin, SingleTableView):
     """View to show the history of a given DAR."""
 
     model = models.dbGaPDataAccessRequest
     table_class = tables.dbGaPDataAccessRequestHistoryTable
     template_name = "dbgap/dbgapdataaccessrequest_history.html"
 
-    def get_dbgap_dar_id(self):
-        return self.kwargs.get("dbgap_dar_id")
+    def get_dbgap_application(self):
+        dbgap_project_id = self.kwargs.get("dbgap_project_id")
+        # import ipdb; ipdb.set_trace()
+        try:
+            dbgap_application = models.dbGaPApplication.objects.get(dbgap_project_id=dbgap_project_id)
+        except models.dbGaPApplication.DoesNotExist:
+            #  We don't want to raise the 404 error here, because we haven't checked if the user has permission yet.
+            # Only users with permission to this page should see a 404.
+            return None
+        return dbgap_application
 
-    def get(self, request, *args, **kwargs):
-        self.dbgap_dar_id = self.get_dbgap_dar_id()
-        return super().get(request, *args, **kwargs)
-
-    def get_table_data(self):
-        qs = self.get_queryset().filter(
-            dbgap_dar_id=self.dbgap_dar_id,
+    def get_dar_records(self):
+        self.dbgap_dar_id = self.kwargs.get("dbgap_dar_id")
+        if not self.dbgap_application:
+            raise Http404("No dbGaPApplications found matching the query")
+        qs = models.dbGaPDataAccessRequest.objects.filter(
+            dbgap_dar_id=self.dbgap_dar_id, dbgap_data_access_snapshot__dbgap_application=self.dbgap_application
         )
         if not qs.count():
             raise Http404("No DARs found matching the query.")
         return qs
+
+    def get(self, request, *args, **kwargs):
+        self.dar_records = self.get_dar_records()
+        return super().get(request, *args, **kwargs)
+
+    def get_table_data(self):
+        return self.dar_records
 
     def get_table_kwargs(self):
         return {
