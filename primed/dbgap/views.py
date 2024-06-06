@@ -132,10 +132,6 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Sin
     context_table_name = "data_access_snapshot_table"
 
     def get_dbgap_application(self, queryset=None):
-        obj = self.get_object(queryset=queryset)
-        return obj
-
-    def get_object(self, queryset=None):
         queryset = self.get_queryset()
         try:
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
@@ -146,7 +142,8 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Sin
         return obj
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        # self.dbgap_application is set by view mixin already.
+        self.object = self.dbgap_application
         self.latest_snapshot = self.get_latest_snapshot()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
@@ -432,13 +429,21 @@ class dbGaPDataAccessSnapshotDetail(viewmixins.dbGaPApplicationViewPermissionMix
         return application
 
     def get_object(self, queryset=None):
-        # Get the dbGaP application using the URL parameter.
-        # self.dbgap_application = self.get_dbgap_application()
-        # return super().get_object(queryset=queryset)
-        self.dbgap_application = self.get_dbgap_application()
-        if not queryset:
-            queryset = self.model.objects
-        return super().get_object(queryset=queryset.filter(dbgap_application=self.dbgap_application))
+        try:
+            obj = self.dbgap_application.dbgapdataaccesssnapshot_set.get(
+                pk=self.kwargs.get("dbgap_data_access_snapshot_pk")
+            )
+        except self.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
+            )
+        return obj
+
+        # # Already set by the view mixin.
+        # # self.dbgap_application = self.get_dbgap_application()
+        # if not queryset:
+        #     queryset = self.model.objects
+        # return super().get_object(queryset=queryset.filter(dbgap_application=self.dbgap_application))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
