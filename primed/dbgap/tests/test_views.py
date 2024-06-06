@@ -3129,6 +3129,26 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_access_pi_of_dbgap_application(self):
+        """Returns successful response code when the user is the PI of the application."""
+        pi = self.application.principal_investigator
+        self.client.force_login(pi)
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_pi_of_other_dbgap_application(self):
+        """Returns successful response code when the user is the PI of the application."""
+        pi = self.application.principal_investigator
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        request = self.factory.get(self.get_url(other_snapshot.dbgap_application.dbgap_project_id, other_snapshot.pk))
+        request.user = pi
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                dbgap_project_id=other_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_data_access_snapshot_pk=other_snapshot.pk,
+            )
+
     def test_access_without_user_permission(self):
         """Raises permission denied if user has no permissions."""
         user_no_perms = User.objects.create_user(username="test-none", password="test-none")

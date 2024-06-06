@@ -10,12 +10,15 @@ class dbGaPApplicationViewPermissionMixin(UserPassesTestMixin):
     if they are the PI of the dbGaP application.
     """
 
+    def get_dbgap_application(self):
+        raise NotImplementedError("You must implement get_dbgap_application method in your view.")
+
     def test_func(self):
         # The user has ACM Staff View permission
         apm_content_type = ContentType.objects.get_for_model(AnVILProjectManagerAccess)
         required_permission = f"{apm_content_type.app_label}.{AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME}"
         has_acm_permission = self.request.user.has_perm(required_permission)
         # Or the user is the PI of the application.
-        self.object = self.get_object()
-        is_pi = self.object.principal_investigator == self.request.user
+        self.dbgap_application = self.get_dbgap_application()
+        is_pi = self.dbgap_application.principal_investigator == self.request.user
         return has_acm_permission or is_pi

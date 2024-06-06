@@ -131,6 +131,10 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Sin
     table_class = tables.dbGaPDataAccessSnapshotTable
     context_table_name = "data_access_snapshot_table"
 
+    def get_dbgap_application(self, queryset=None):
+        obj = self.get_object(queryset=queryset)
+        return obj
+
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
         try:
@@ -410,7 +414,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(AnVILConsortiumManagerStaffEditRequi
         return super().form_valid(form)
 
 
-class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class dbGaPDataAccessSnapshotDetail(viewmixins.dbGaPApplicationViewPermissionMixin, DetailView):
     """View to show details about a `dbGaPDataAccessSnapshot`."""
 
     model = models.dbGaPDataAccessSnapshot
