@@ -1374,6 +1374,22 @@ class dbGaPApplicationDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
 
+    def test_access_pi_of_dbgap_application(self):
+        """Returns successful response code when the user is the PI of the application."""
+        pi = self.obj.principal_investigator
+        self.client.force_login(pi)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_pi_of_other_dbgap_application(self):
+        """Returns successful response code when the user is the PI of the application."""
+        pi = self.obj.principal_investigator
+        other_application = factories.dbGaPApplicationFactory.create()
+        request = self.factory.get(self.get_url(other_application.dbgap_project_id))
+        request.user = pi
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_project_id=other_application.dbgap_project_id)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -1394,6 +1410,10 @@ class dbGaPApplicationDetailTest(TestCase):
         )
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertIn("show_acm_edit_links", response.context_data)
+        self.assertTrue(response.context_data["show_acm_edit_links"])
+        self.assertIn("show_acm_view_links", response.context_data)
+        self.assertTrue(response.context_data["show_acm_view_links"])
         self.assertContains(
             response,
             reverse(
@@ -1406,11 +1426,18 @@ class dbGaPApplicationDetailTest(TestCase):
             reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
         )
         "dbgap:dbgap_applications:dbgap_data_access_snapshots:new"
+        self.assertContains(
+            response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
+        )
 
     def test_staff_view_links(self):
         """No edit links if staff user only has view permission."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertIn("show_acm_edit_links", response.context_data)
+        self.assertFalse(response.context_data["show_acm_edit_links"])
+        self.assertIn("show_acm_view_links", response.context_data)
+        self.assertTrue(response.context_data["show_acm_view_links"])
         self.assertNotContains(
             response,
             reverse(
@@ -1421,6 +1448,34 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertContains(
             response,
             reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
+        )
+        self.assertContains(
+            response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
+        )
+
+    def test_group_link_pi(self):
+        """Links seen by PI are correct."""
+        pi = self.obj.principal_investigator
+        self.client.force_login(pi)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_acm_edit_links", response.context_data)
+        self.assertFalse(response.context_data["show_acm_edit_links"])
+        self.assertIn("show_acm_view_links", response.context_data)
+        self.assertFalse(response.context_data["show_acm_view_links"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:dbgap_applications:dbgap_data_access_snapshots:new",
+                args=[self.obj.dbgap_project_id],
+            ),
+        )
+        self.assertNotContains(
+            response,
+            reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
+        )
+        self.assertNotContains(
+            response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
 
     def test_context_snapshot_table(self):

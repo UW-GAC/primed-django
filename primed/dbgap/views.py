@@ -34,7 +34,7 @@ from django.views.generic import (
 from django_tables2 import SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
 
-from . import audit, forms, helpers, models, tables
+from . import audit, forms, helpers, models, tables, viewmixins
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class dbGaPStudyAccessionAutocomplete(AnVILConsortiumManagerStaffViewRequired, a
         return qs
 
 
-class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
+class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, SingleTableMixin, DetailView):
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
@@ -167,6 +167,15 @@ class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTabl
             context["latest_snapshot"] = self.latest_snapshot
         else:
             context["latest_snapshot"] = None
+        # Whether or not to show certain links.
+        context["show_acm_edit_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+        )
+        context["show_acm_view_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+        )
+        return context
+
         return context
 
 

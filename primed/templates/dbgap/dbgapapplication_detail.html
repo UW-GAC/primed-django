@@ -8,7 +8,12 @@
   <dt class="col-sm-2">dbGaP PI</dt> <dd class="col-sm-9">{{ object.principal_investigator }}</dd>
   <dt class="col-sm-2">dbGaP Project ID</dt> <dd class="col-sm-9">{{ object.dbgap_project_id }}</dd>
   <dt class="col-sm-2">AnVIL access Group</dt> <dd class="col-sm-9">
+    {% if show_acm_view_links %}
     <a href="{{ object.anvil_access_group.get_absolute_url }}">{{ object.anvil_access_group }}</a>
+    {% else %}
+    {{ object.anvil_access_group }}
+    {% endif %}
+
   </dd>
   <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
   <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
@@ -38,6 +43,10 @@
         <div id="collapseDataAccessSnapshotsOne" class="accordion-collapse collapse" aria-labelledby="headingDataAccessSnapshotsOne" data-bs-parent="#accordionDataAccessSnapshots">
           <div class="accordion-body">
 
+            <p>
+              This table shows snapshots of Data Access Request (DAR) status for this application as recorded by the CC.
+              The CC typically checks for DAR status updates from dbGaP on a monthly basis.
+            </p>
             {% render_table data_access_snapshot_table %}
 
           </div>
@@ -51,10 +60,11 @@
 
 {% block action_buttons %}
     <p>
-      {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
+      {% if show_acm_edit_links %}
       <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
       {% endif %}
+      {% if show_acm_view_links %}
       <a href="{% url 'dbgap:audit:applications' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-secondary" role="button">Audit workspace access</a>
-
+      {% endif %}
     </p>
 {% endblock action_buttons %}
