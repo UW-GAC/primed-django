@@ -31,7 +31,7 @@ from django.views.generic import (
     TemplateView,
     UpdateView,
 )
-from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
 
 from . import audit, forms, helpers, models, tables, viewmixins
@@ -124,12 +124,10 @@ class dbGaPStudyAccessionAutocomplete(AnVILConsortiumManagerStaffViewRequired, a
         return qs
 
 
-class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, SingleTableMixin, DetailView):
+class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, MultiTableMixin, DetailView):
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
-    table_class = tables.dbGaPDataAccessSnapshotTable
-    context_table_name = "data_access_snapshot_table"
 
     def get_dbgap_application(self, queryset=None):
         queryset = self.get_queryset()
@@ -154,8 +152,9 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Sin
         except models.dbGaPDataAccessSnapshot.DoesNotExist:
             return None
 
-    def get_table_data(self):
-        return models.dbGaPDataAccessSnapshot.objects.filter(dbgap_application=self.object).order_by("-created")
+    def get_tables(self):
+        print(self.object.dbgapdataaccesssnapshot_set.all())
+        return (tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),)
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.

@@ -1478,24 +1478,21 @@ class dbGaPApplicationDetailTest(TestCase):
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
 
-    def test_context_snapshot_table(self):
-        """The data_access_snapshot_table exists in the context."""
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertIsInstance(
-            response.context_data["data_access_snapshot_table"],
-            tables.dbGaPDataAccessSnapshotTable,
-        )
+    def test_table_classes(self):
+        """The table classes are correct."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 1)
+        self.assertIsInstance(response.context_data["tables"][0], tables.dbGaPDataAccessSnapshotTable)
+        # self.assertIsInstance(response.context_data["tables"][1], tables.dbGaPDataAccessRequestSummaryTable)
 
     def test_snapshot_table_none(self):
         """No snapshots are shown if the dbGaPApplication has no snapshots."""
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 0)
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
 
     def test_snapshot_table_one(self):
         """One snapshots is shown if the dbGaPApplication has one snapshots."""
@@ -1503,8 +1500,7 @@ class dbGaPApplicationDetailTest(TestCase):
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 1)
+        self.assertEqual(len(response.context_data["tables"][0].rows), 1)
 
     def test_snapshot_table_two(self):
         """Two snapshots are shown if the dbGaPApplication has two snapshots."""
@@ -1513,33 +1509,28 @@ class dbGaPApplicationDetailTest(TestCase):
         request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
         request.user = self.user
         response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 2)
+        self.assertEqual(len(response.context_data["tables"][0].rows), 2)
 
     def test_shows_snapshots_for_only_this_application(self):
         """Only shows snapshots for this dbGaPApplication."""
         other_dbgap_application = factories.dbGaPApplicationFactory.create()
         factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=other_dbgap_application)
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        self.assertIn("data_access_snapshot_table", response.context_data)
-        self.assertEqual(len(response.context_data["data_access_snapshot_table"].rows), 0)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
 
     def test_context_latest_snapshot_no_snapshot(self):
         """latest_snapshot is None in context when there are no dbGaPDataAccessSnapshots for this application."""
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertIn("latest_snapshot", response.context_data)
         self.assertIsNone(response.context_data["latest_snapshot"])
 
     def test_context_latest_snapshot_one_snapshot(self):
         """latest_snapshot is correct in context when there is one dbGaPDataAccessSnapshot for this application."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj)
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertIn("latest_snapshot", response.context_data)
         self.assertEqual(response.context_data["latest_snapshot"], dbgap_snapshot)
 
@@ -1553,13 +1544,12 @@ class dbGaPApplicationDetailTest(TestCase):
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.obj, created=timezone.now()
         )
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertIn("latest_snapshot", response.context_data)
         self.assertEqual(response.context_data["latest_snapshot"], dbgap_snapshot)
 
-    def test_table_default_ordering(self):
+    def test_snapshot_table_default_ordering(self):
         """Most recent dbGaPDataAccessSnapshots appear first."""
         snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.obj,
@@ -1567,10 +1557,9 @@ class dbGaPApplicationDetailTest(TestCase):
             is_most_recent=False,
         )
         snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(dbgap_application=self.obj, created=timezone.now())
-        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
-        request.user = self.user
-        response = self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
-        table = response.context_data["data_access_snapshot_table"]
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        table = response.context_data["tables"][0]
         self.assertEqual(table.data[0], snapshot_2)
         self.assertEqual(table.data[1], snapshot_1)
 
