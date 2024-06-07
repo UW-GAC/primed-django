@@ -564,6 +564,17 @@ class dbGaPApplicationFormTest(TestCase):
         self.assertEqual(len(form.errors["dbgap_project_id"]), 1)
         self.assertIn("already exists", form.errors["dbgap_project_id"][0])
 
+    def test_valid_with_collaborators(self):
+        """Form is valid when collaborators are specified."""
+        collaborators = UserFactory.create_batch(2)
+        form_data = {
+            "principal_investigator": self.pi,
+            "dbgap_project_id": 1,
+            "collaborators": collaborators,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
 
 class dbGaPDataAccessSnapshotFormTest(TestCase):
     """Tests for the dbGaPDataAccessSnapshotForm class."""

@@ -85,6 +85,7 @@ class dbGaPApplicationForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         fields = (
             "principal_investigator",
             "dbgap_project_id",
+            "collaborators",
         )
         widgets = {
             "principal_investigator": autocomplete.ModelSelect2(
