@@ -32,6 +32,38 @@
 {% endblock panel %}
 
 {% block after_panel %}
+
+  <div class="my-3">
+    <div class="accordion" id="accordionDataAccessSnapshots">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDataAccessSnapshotsOne">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataAccessSnapshotsOne" aria-expanded="falase" aria-controls="collapseDataAccessSnapshotsOne">
+            <span class="fa-solid fa-handshake mx-2"></span>
+            Named collaborators
+            <span class="badge mx-2 bg-secondary pill"> {{ tables.1.rows|length }}</span>
+          </button>
+        </h2>
+        <div id="collapseDataAccessSnapshotsOne" class="accordion-collapse collapse" aria-labelledby="headingDataAccessSnapshotsOne" data-bs-parent="#accordionDataAccessSnapshots">
+          <div class="accordion-body">
+
+            <p>
+              This table shows collaborators named for this dbGaP application, their AnVIL account (if linked), and whether or not they are a member of the access group on AnVIL.
+              Only collaborators who are PRIMED members are included.
+              A collaborator must have linked their AnVIL account to be granted access to data on AnVIL.
+              If changes need to be made, please contact the CC.
+            </p>
+            <p>
+              <strong>It is the PI's responsibility to ensure that all collaborators meet the dbGaP definition of internal collaborators or trainees/postdocs</strong>
+              (see the <a href="https://www.ncbi.nlm.nih.gov/books/NBK570251/">dbGaP instructions for Collaborators</a>).
+            </p>
+            {% render_table tables.1 %}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {% if latest_snapshot %}
 
   <div class="my-3">
@@ -41,7 +73,7 @@
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataAccessSnapshotsOne" aria-expanded="falase" aria-controls="collapseDataAccessSnapshotsOne">
             <span class="fa-solid fa-list mx-2"></span>
             Data Access Snapshots
-            <span class="badge mx-2 {% if needs_action_table.rows|length %}bg-warning{% else %}bg-secondary{% endif %} pill"> {{ data_access_snapshot_table.rows|length }}</span>
+            <span class="badge mx-2 bg-secondary pill"> {{ tables.0.rows|length }}</span>
           </button>
         </h2>
         <div id="collapseDataAccessSnapshotsOne" class="accordion-collapse collapse" aria-labelledby="headingDataAccessSnapshotsOne" data-bs-parent="#accordionDataAccessSnapshots">
@@ -60,7 +92,8 @@
   </div>
 
   {% endif %}
-{% endblock after_panel %}
+
+  {% endblock after_panel %}
 
 {% block action_buttons %}
     <p>

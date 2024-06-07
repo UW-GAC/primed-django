@@ -34,6 +34,8 @@ from django.views.generic import (
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
 
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
+
 from . import audit, forms, helpers, models, tables, viewmixins
 
 logger = logging.getLogger(__name__)
@@ -154,7 +156,12 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Mul
 
     def get_tables(self):
         print(self.object.dbgapdataaccesssnapshot_set.all())
-        return (tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),)
+        return (
+            tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),
+            UserAccountSingleGroupMembershipTable(
+                self.object.collaborators.all(), managed_group=self.object.anvil_access_group
+            ),
+        )
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.

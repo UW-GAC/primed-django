@@ -34,6 +34,7 @@ from freezegun import freeze_time
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
 from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; DataUsePermissionFactory,
     StudyFactory,
 )
@@ -1483,9 +1484,9 @@ class dbGaPApplicationDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertIn("tables", response.context_data)
-        self.assertEqual(len(response.context_data["tables"]), 1)
+        self.assertEqual(len(response.context_data["tables"]), 2)
         self.assertIsInstance(response.context_data["tables"][0], tables.dbGaPDataAccessSnapshotTable)
-        # self.assertIsInstance(response.context_data["tables"][1], tables.dbGaPDataAccessRequestSummaryTable)
+        self.assertIsInstance(response.context_data["tables"][1], UserAccountSingleGroupMembershipTable)
 
     def test_snapshot_table_none(self):
         """No snapshots are shown if the dbGaPApplication has no snapshots."""
@@ -1562,6 +1563,35 @@ class dbGaPApplicationDetailTest(TestCase):
         table = response.context_data["tables"][0]
         self.assertEqual(table.data[0], snapshot_2)
         self.assertEqual(table.data[1], snapshot_1)
+
+    def test_user_table_none(self):
+        """No users are shown if the application has no collaborators."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
+
+    def test_user_table_one(self):
+        """One user is shown if the application has one collaborator."""
+        collaborator = UserFactory.create()
+        self.obj.collaborators.add(collaborator)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 1)
+
+    def test_user_table_two(self):
+        collaborators = UserFactory.create_batch(2)
+        self.obj.collaborators.add(*collaborators)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 2)
+
+    def test_user_table_only_from_this_application(self):
+        other_application = factories.dbGaPApplicationFactory.create()
+        other_collaborator = UserFactory.create()
+        other_application.collaborators.add(other_collaborator)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
 
 
 class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
