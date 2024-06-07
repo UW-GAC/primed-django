@@ -92,6 +92,10 @@ class dbGaPApplicationForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
+            "collaborators": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
         }
 
 
@@ -101,6 +105,12 @@ class dbGaPApplicationUpdateForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     class Meta:
         model = models.dbGaPApplication
         fields = ("collaborators",)
+        widgets = {
+            "collaborators": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class dbGaPDataAccessSnapshotForm(forms.ModelForm):
