@@ -576,6 +576,29 @@ class dbGaPApplicationFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
 
+class dbGaPApplicationUpdateFormTest(TestCase):
+    """Tests for the dbGaPApplicationUpdateForm class."""
+
+    form_class = forms.dbGaPApplicationUpdateForm
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "collaborators": [],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_with_collaborators(self):
+        """Form is valid when collaborators are specified."""
+        collaborators = UserFactory.create_batch(2)
+        form_data = {
+            "collaborators": collaborators,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+
 class dbGaPDataAccessSnapshotFormTest(TestCase):
     """Tests for the dbGaPDataAccessSnapshotForm class."""
 

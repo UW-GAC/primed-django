@@ -1977,6 +1977,137 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(ManagedGroup.objects.count(), 1)  # Just the admin group.
 
 
+class dbGaPApplicationUpdateTest(TestCase):
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        # Create an object test this with.
+        self.obj = factories.dbGaPApplicationFactory.create()
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("dbgap:dbgap_applications:update", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.dbGaPApplicationUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(999))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(999),
+        )
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has staff view permissions."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+
+    def test_access_with_limited_view_permission(self):
+        """Raises permission denied if user has view permissions."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+
+    def test_access_pi_of_dbgap_application(self):
+        """Returns permission denied if the user is the PI of the application."""
+        pi = self.obj.principal_investigator
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id))
+        request.user = pi
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_project_id=self.obj.dbgap_project_id)
+
+    def test_view_status_code_with_existing_object(self):
+        """Returns a successful status code for an existing object pk."""
+        # Only clients load the template.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_status_code_with_invalid_pk(self):
+        """Raises a 404 error with an invalid object pk."""
+        request = self.factory.get(self.get_url(self.obj.dbgap_project_id + 1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, pk=self.obj.dbgap_project_id + 1)
+
+    def test_form_class(self):
+        """Form class is correct."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertIn("form", response.context)
+        self.assertIsInstance(response.context_data["form"], forms.dbGaPApplicationUpdateForm)
+
+    def test_redirect(self):
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(self.obj.dbgap_project_id), {"collaborators": []})
+        self.assertRedirects(response, self.obj.get_absolute_url())
+
+    def test_success_message(self):
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(self.obj.dbgap_project_id), {"collaborators": []}, follow=True)
+        self.assertIn("messages", response.context)
+        messages = list(response.context["messages"])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.dbGaPApplicationUpdate.success_message, str(messages[0]))
+
+    def test_can_update_collaborators_one_collaborator(self):
+        """Successfully submitting the form updates collaborators."""
+        collaborator = UserFactory.create()
+        self.client.force_login(self.user)
+        self.client.post(self.get_url(self.obj.dbgap_project_id), {"collaborators": [collaborator.pk]})
+        self.obj.refresh_from_db()
+        self.assertEqual(self.obj.collaborators.count(), 1)
+        self.assertIn(collaborator, self.obj.collaborators.all())
+
+    def test_can_update_collaborators_two_collaborators(self):
+        """Successfully submitting the form updates collaborators."""
+        collaborator_1 = UserFactory.create()
+        collaborator_2 = UserFactory.create()
+        self.client.force_login(self.user)
+        self.client.post(
+            self.get_url(self.obj.dbgap_project_id), {"collaborators": [collaborator_1.pk, collaborator_2.pk]}
+        )
+        self.obj.refresh_from_db()
+        self.assertEqual(self.obj.collaborators.count(), 2)
+        self.assertIn(collaborator_1, self.obj.collaborators.all())
+        self.assertIn(collaborator_2, self.obj.collaborators.all())
+
+
 class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
     """Tests for the dbGaPDataAccessRequestCreateFromJson view."""
 

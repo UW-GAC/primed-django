@@ -239,6 +239,24 @@ class dbGaPApplicationCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
         return super().form_valid(form)
 
 
+class dbGaPApplicationUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """View to update an existing dbGaPApplication."""
+
+    model = models.dbGaPApplication
+    form_class = forms.dbGaPApplicationUpdateForm
+    success_message = "dbGaP application successfully updated."
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+
 class dbGaPDataAccessSnapshotCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView):
     form_class = forms.dbGaPDataAccessSnapshotForm
     template_name = "dbgap/dbgapdataaccesssnapshot_form.html"

@@ -88,6 +88,7 @@ dbgap_application_patterns = (
             name="detail",
         ),
         path("<int:dbgap_project_id>/dars/", include(data_access_snapshot_patterns)),
+        path("<int:dbgap_project_id>/update/", views.dbGaPApplicationUpdate.as_view(), name="update"),
         # path(
         #     "<int:dbgap_project_id>/audit/",
         #     views.dbGaPApplicationAudit.as_view(),

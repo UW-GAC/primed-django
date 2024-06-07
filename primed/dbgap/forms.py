@@ -95,6 +95,14 @@ class dbGaPApplicationForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         }
 
 
+class dbGaPApplicationUpdateForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a dbGaPApplication."""
+
+    class Meta:
+        model = models.dbGaPApplication
+        fields = ("collaborators",)
+
+
 class dbGaPDataAccessSnapshotForm(forms.ModelForm):
     """Create a dbGaP data access snapshot and DARs from JSON data."""
 
