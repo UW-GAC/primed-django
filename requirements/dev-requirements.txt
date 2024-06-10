@@ -178,7 +178,7 @@ tomli==2.0.1
     #   django-stubs
     #   ipdb
     #   mypy
-tornado==6.4
+tornado==6.4.1
     # via livereload
 traitlets==5.14.1
     # via
