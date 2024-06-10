@@ -30,7 +30,7 @@
     {% endif %}
     {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
     <li>
-      <a class="dropdown-item" href="{% url 'dbgap:audit:all' %}">Audit dbGaP access</a>
+      <a class="dropdown-item" href="{% url 'dbgap:audit:access:all' %}">Audit dbGaP access</a>
     </li>
     {% endif %}
 

@@ -814,7 +814,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "dbgap:audit:workspaces",
+                "dbgap:audit:access:workspaces",
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
         )
@@ -828,7 +828,7 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "dbgap:audit:workspaces",
+                "dbgap:audit:access:workspaces",
                 args=[obj.workspace.billing_project.name, obj.workspace.name],
             ),
         )
@@ -1424,7 +1424,7 @@ class dbGaPApplicationDetailTest(TestCase):
         )
         self.assertContains(
             response,
-            reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
+            reverse("dbgap:audit:access:applications", args=[self.obj.dbgap_project_id]),
         )
         "dbgap:dbgap_applications:dbgap_data_access_snapshots:new"
         self.assertContains(
@@ -1448,7 +1448,7 @@ class dbGaPApplicationDetailTest(TestCase):
         )
         self.assertContains(
             response,
-            reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
+            reverse("dbgap:audit:access:applications", args=[self.obj.dbgap_project_id]),
         )
         self.assertContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
@@ -1473,7 +1473,7 @@ class dbGaPApplicationDetailTest(TestCase):
         )
         self.assertNotContains(
             response,
-            reverse("dbgap:audit:applications", args=[self.obj.dbgap_project_id]),
+            reverse("dbgap:audit:access:applications", args=[self.obj.dbgap_project_id]),
         )
         self.assertNotContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
@@ -3777,7 +3777,7 @@ class dbGaPApplicationAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:audit:applications",
+            "dbgap:audit:access:applications",
             args=args,
         )
 
@@ -4031,7 +4031,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:audit:workspaces",
+            "dbgap:audit:access:workspaces",
             args=args,
         )
 
@@ -4462,7 +4462,7 @@ class dbGaPAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:audit:all",
+            "dbgap:audit:access:all",
             args=args,
         )
 
@@ -4741,7 +4741,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=args,
         )
 
@@ -5030,7 +5030,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             ),
             {},
         )
-        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        self.assertRedirects(response, reverse("dbgap:audit:access:all"))
         # Membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
@@ -5053,7 +5053,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             ),
             {},
         )
-        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        self.assertRedirects(response, reverse("dbgap:audit:access:all"))
         # No membership has been created.
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
 
@@ -5082,7 +5082,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
         )
         # The GroupGroup membership was created.
-        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        self.assertRedirects(response, reverse("dbgap:audit:access:all"))
         membership = GroupGroupMembership.objects.get(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -5161,7 +5161,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             ),
             {},
         )
-        self.assertRedirects(response, reverse("dbgap:audit:all"))
+        self.assertRedirects(response, reverse("dbgap:audit:access:all"))
         # Make sure the membership has been deleted.
         with self.assertRaises(GroupGroupMembership.DoesNotExist):
             membership.refresh_from_db()

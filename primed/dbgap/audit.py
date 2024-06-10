@@ -36,7 +36,7 @@ class AuditResult(PRIMEDAuditResult):
     def get_action_url(self):
         """The URL that handles the action needed."""
         return reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 self.dbgap_application.dbgap_project_id,
                 self.workspace.workspace.billing_project.name,

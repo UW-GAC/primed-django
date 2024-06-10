@@ -39,7 +39,7 @@ data_access_snapshot_patterns = (
     "dbgap_data_access_snapshots",
 )
 
-audit_patterns = (
+access_audit_patterns = (
     [
         path("", views.dbGaPAudit.as_view(), name="all"),
         path(
@@ -48,15 +48,22 @@ audit_patterns = (
             name="resolve",
         ),
         path(
-            "<int:dbgap_project_id>/",
+            "application/<int:dbgap_project_id>/",
             views.dbGaPApplicationAudit.as_view(),
             name="applications",
         ),
         path(
-            "<slug:billing_project_slug>/<slug:workspace_slug>/",
+            "workspace/<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.dbGaPWorkspaceAudit.as_view(),
             name="workspaces",
         ),
+    ],
+    "access",
+)
+
+audit_patterns = (
+    [
+        path("access/", include(access_audit_patterns)),
     ],
     "audit",
 )

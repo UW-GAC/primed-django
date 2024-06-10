@@ -707,7 +707,7 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         return context
 
     def get_success_url(self):
-        return reverse("dbgap:audit:all")
+        return reverse("dbgap:audit:access:all")
 
     def form_valid(self, form):
         auth_domain = self.dbgap_workspace.workspace.authorization_domains.first()

@@ -22,7 +22,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
@@ -42,7 +42,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
@@ -62,7 +62,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
@@ -82,7 +82,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
@@ -101,7 +101,7 @@ class AuditResultTest(TestCase):
             note="foo",
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
@@ -122,7 +122,7 @@ class AuditResultTest(TestCase):
             has_access=True,
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
@@ -141,7 +141,7 @@ class AuditResultTest(TestCase):
             has_access=True,
         )
         expected_url = reverse(
-            "dbgap:audit:resolve",
+            "dbgap:audit:access:resolve",
             args=[
                 dbgap_application.dbgap_project_id,
                 dbgap_workspace.workspace.billing_project.name,
