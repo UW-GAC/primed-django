@@ -47,9 +47,9 @@ django==4.2.13
     #   django-stubs
     #   django-stubs-ext
 django-debug-toolbar==4.4.2
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 django-stubs==4.2.7
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 django-stubs-ext==4.2.7
     # via django-stubs
 docutils==0.20.1
@@ -72,7 +72,7 @@ importlib-metadata==7.0.0
     #   -c requirements/requirements.txt
     #   sphinx
 ipdb==0.13.13
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 ipython==8.12.3
     # via ipdb
 jedi==0.19.1
@@ -88,7 +88,7 @@ markupsafe==2.1.5
 matplotlib-inline==0.1.6
     # via ipython
 mypy==1.10.0
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
@@ -107,7 +107,7 @@ pickleshare==0.7.5
 platformdirs==4.1.0
     # via virtualenv
 pre-commit==3.5.0
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 prompt-toolkit==3.0.43
     # via ipython
 ptyprocess==0.7.0
@@ -137,7 +137,7 @@ requests==2.31.0
     #   -c requirements/test-requirements.txt
     #   sphinx
 ruff==0.4.8
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 six==1.16.0
     # via
     #   -c requirements/requirements.txt
@@ -148,10 +148,10 @@ snowballstemmer==2.2.0
     # via sphinx
 sphinx==7.1.2
     # via
-    #   -r dev-requirements.in
+    #   -r requirements/dev-requirements.txt.in
     #   sphinx-autobuild
 sphinx-autobuild==2021.3.14
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 sphinxcontrib-applehelp==1.0.4
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
@@ -189,7 +189,7 @@ types-pytz==2024.1.0.20240203
 types-pyyaml==6.0.12.12
     # via django-stubs
 types-requests==2.32.0.20240602
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 typing-extensions==4.8.0
     # via
     #   -c requirements/requirements.txt
@@ -210,7 +210,7 @@ virtualenv==20.25.1
 wcwidth==0.2.13
     # via prompt-toolkit
 werkzeug==3.0.3
-    # via -r dev-requirements.in
+    # via -r requirements/dev-requirements.txt.in
 zipp==3.17.0
     # via
     #   -c requirements/requirements.txt
