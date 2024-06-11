@@ -7,7 +7,7 @@ from django.urls import reverse
 from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
 
-from .models import (
+from ..models import (
     dbGaPApplication,
     dbGaPDataAccessRequest,
     dbGaPDataAccessSnapshot,
@@ -17,7 +17,7 @@ from .models import (
 
 # Dataclasses for storing audit results?
 @dataclass
-class AuditResult(PRIMEDAuditResult):
+class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing dbGaP workspace access for a dbGaPDataAccessSnapshot."""
 
     workspace: dbGaPWorkspace
@@ -67,7 +67,7 @@ class AuditResult(PRIMEDAuditResult):
 
 
 @dataclass
-class VerifiedAccess(AuditResult):
+class VerifiedAccess(AccessAuditResult):
     """Audit results class for when access has been verified."""
 
     has_access: bool = True
@@ -77,7 +77,7 @@ class VerifiedAccess(AuditResult):
 
 
 @dataclass
-class VerifiedNoAccess(AuditResult):
+class VerifiedNoAccess(AccessAuditResult):
     """Audit results class for when no access has been verified."""
 
     has_access: bool = False
@@ -87,7 +87,7 @@ class VerifiedNoAccess(AuditResult):
 
 
 @dataclass
-class GrantAccess(AuditResult):
+class GrantAccess(AccessAuditResult):
     """Audit results class for when access should be granted."""
 
     has_access: bool = False
@@ -98,7 +98,7 @@ class GrantAccess(AuditResult):
 
 
 @dataclass
-class RemoveAccess(AuditResult):
+class RemoveAccess(AccessAuditResult):
     """Audit results class for when access should be removed for a known reason."""
 
     has_access: bool = True
@@ -109,7 +109,7 @@ class RemoveAccess(AuditResult):
 
 
 @dataclass
-class Error(AuditResult):
+class Error(AccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
     pass

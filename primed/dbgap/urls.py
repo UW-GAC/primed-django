@@ -41,20 +41,20 @@ data_access_snapshot_patterns = (
 
 access_audit_patterns = (
     [
-        path("", views.dbGaPAudit.as_view(), name="all"),
+        path("", views.dbGaPAccessAudit.as_view(), name="all"),
         path(
             "resolve/<int:dbgap_project_id>/<slug:billing_project_slug>/<slug:workspace_slug>/",
-            views.dbGaPAuditResolve.as_view(),
+            views.dbGaPAccessAuditResolve.as_view(),
             name="resolve",
         ),
         path(
             "application/<int:dbgap_project_id>/",
-            views.dbGaPApplicationAudit.as_view(),
+            views.dbGaPApplicationAccessAudit.as_view(),
             name="applications",
         ),
         path(
             "workspace/<slug:billing_project_slug>/<slug:workspace_slug>/",
-            views.dbGaPWorkspaceAudit.as_view(),
+            views.dbGaPWorkspaceAccessAudit.as_view(),
             name="workspaces",
         ),
     ],

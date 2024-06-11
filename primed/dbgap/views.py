@@ -36,7 +36,8 @@ from django_tables2.export.views import ExportMixin
 
 from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
 
-from . import audit, forms, helpers, models, tables, viewmixins
+from . import forms, helpers, models, tables, viewmixins
+from .audit import access_audit
 
 logger = logging.getLogger(__name__)
 
@@ -541,15 +542,15 @@ class dbGaPDataAccessRequestHistory(viewmixins.dbGaPApplicationViewPermissionMix
         return context
 
 
-class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class dbGaPAccessAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to audit access for all dbGaPApplications and dbGaPWorkspaces."""
 
-    template_name = "dbgap/dbgap_audit.html"
+    template_name = "dbgap/dbgap_access_audit.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPAccessAudit()
+        data_access_audit = access_audit.dbGaPAccessAudit()
         data_access_audit.run_audit()
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()
@@ -558,11 +559,11 @@ class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class dbGaPApplicationAccessAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
-    template_name = "dbgap/dbgapapplication_audit.html"
+    template_name = "dbgap/dbgapapplication_access_audit.html"
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
@@ -592,7 +593,7 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         context["latest_snapshot"] = latest_snapshot
         if latest_snapshot:
             # Run the audit.
-            data_access_audit = audit.dbGaPAccessAudit(
+            data_access_audit = access_audit.dbGaPAccessAudit(
                 dbgap_application_queryset=self.model.objects.filter(pk=self.object.pk)
             )
             data_access_audit.run_audit()
@@ -603,11 +604,11 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         return context
 
 
-class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class dbGaPWorkspaceAccessAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPWorkspace`."""
 
     model = models.dbGaPWorkspace
-    template_name = "dbgap/dbgapworkspace_audit.html"
+    template_name = "dbgap/dbgapworkspace_access_audit.html"
 
     def get_object(self, queryset=None):
         """Return the object the view is displaying."""
@@ -635,7 +636,7 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPAccessAudit(
+        data_access_audit = access_audit.dbGaPAccessAudit(
             dbgap_workspace_queryset=self.model.objects.filter(pk=self.object.pk)
         )
         data_access_audit.run_audit()
@@ -646,9 +647,9 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
         return context
 
 
-class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     form_class = Form
-    template_name = "dbgap/audit_resolve.html"
+    template_name = "dbgap/access_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
@@ -679,7 +680,7 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         return obj
 
     def get_audit_result(self):
-        instance = audit.dbGaPAccessAudit(
+        instance = access_audit.dbGaPAccessAudit(
             dbgap_workspace_queryset=models.dbGaPWorkspace.objects.filter(pk=self.dbgap_workspace.pk),
             dbgap_application_queryset=models.dbGaPApplication.objects.filter(pk=self.dbgap_application.pk),
         )
@@ -714,7 +715,7 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         # Handle the result.
         try:
             with transaction.atomic():
-                if isinstance(self.audit_result, audit.GrantAccess):
+                if isinstance(self.audit_result, access_audit.GrantAccess):
                     # Add to workspace auth domain.
                     membership = GroupGroupMembership(
                         parent_group=auth_domain,
@@ -724,7 +725,7 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
                     membership.full_clean()
                     membership.save()
                     membership.anvil_create()
-                elif isinstance(self.audit_result, audit.RemoveAccess):
+                elif isinstance(self.audit_result, access_audit.RemoveAccess):
                     # Remove from CDSA group.
                     membership = GroupGroupMembership.objects.get(
                         parent_group=auth_domain,

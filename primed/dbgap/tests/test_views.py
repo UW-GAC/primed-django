@@ -40,7 +40,8 @@ from primed.primed_anvil.tests.factories import (  # DataUseModifierFactory,; Da
 )
 from primed.users.tests.factories import UserFactory
 
-from .. import audit, constants, forms, models, tables, views
+from .. import constants, forms, models, tables, views
+from ..audit import access_audit
 from . import factories
 
 fake = Faker()
@@ -3760,8 +3761,8 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
         self.assertNotIn(dar_2, response.context_data["table"].data)
 
 
-class dbGaPApplicationAuditTest(TestCase):
-    """Tests for the dbGaPApplicationAudit view."""
+class dbGaPApplicationAccessAuditTest(TestCase):
+    """Tests for the dbGaPApplicationAccessAudit view."""
 
     def setUp(self):
         """Set up test class."""
@@ -3783,7 +3784,7 @@ class dbGaPApplicationAuditTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPApplicationAudit.as_view()
+        return views.dbGaPApplicationAccessAudit.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -3823,7 +3824,7 @@ class dbGaPApplicationAuditTest(TestCase):
         data_access_audit = response.context_data["data_access_audit"]
         self.assertIsInstance(
             data_access_audit,
-            audit.dbGaPAccessAudit,
+            access_audit.dbGaPAccessAudit,
         )
         self.assertTrue(data_access_audit.completed)
         self.assertEqual(data_access_audit.dbgap_application_queryset.count(), 1)
@@ -3856,14 +3857,14 @@ class dbGaPApplicationAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.APPROVED_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -3877,14 +3878,14 @@ class dbGaPApplicationAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NO_DAR,
+            access_audit.dbGaPAccessAudit.NO_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -3901,14 +3902,14 @@ class dbGaPApplicationAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3943,14 +3944,14 @@ class dbGaPApplicationAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
+            access_audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -3975,14 +3976,14 @@ class dbGaPApplicationAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
+            access_audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4015,8 +4016,8 @@ class dbGaPApplicationAuditTest(TestCase):
         self.assertIn("No data access snapshots", str(response.content))
 
 
-class dbGaPWorkspaceAuditTest(TestCase):
-    """Tests for the dbGaPWorkspaceAudit view."""
+class dbGaPWorkspaceAccessAuditTest(TestCase):
+    """Tests for the dbGaPWorkspaceAccessAudit view."""
 
     def setUp(self):
         """Set up test class."""
@@ -4037,7 +4038,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPWorkspaceAudit.as_view()
+        return views.dbGaPWorkspaceAccessAudit.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -4116,7 +4117,7 @@ class dbGaPWorkspaceAuditTest(TestCase):
         data_access_audit = response.context_data["data_access_audit"]
         self.assertIsInstance(
             data_access_audit,
-            audit.dbGaPAccessAudit,
+            access_audit.dbGaPAccessAudit,
         )
         self.assertTrue(data_access_audit.completed)
         self.assertEqual(data_access_audit.dbgap_workspace_queryset.count(), 1)
@@ -4156,14 +4157,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.APPROVED_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4182,14 +4183,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NO_SNAPSHOTS,
+            access_audit.dbGaPAccessAudit.NO_SNAPSHOTS,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4208,14 +4209,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NO_DAR,
+            access_audit.dbGaPAccessAudit.NO_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4238,14 +4239,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NO_DAR,
+            access_audit.dbGaPAccessAudit.NO_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4267,14 +4268,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.DAR_NOT_APPROVED,
+            access_audit.dbGaPAccessAudit.DAR_NOT_APPROVED,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4293,14 +4294,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4338,14 +4339,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
+            access_audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4373,14 +4374,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
+            access_audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4404,14 +4405,14 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
+            access_audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4435,20 +4436,20 @@ class dbGaPWorkspaceAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), self.dbgap_workspace)
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
+            access_audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
 
-class dbGaPAuditTest(TestCase):
-    """Tests for the dbGaPAudit view."""
+class dbGaPAccessAuditTest(TestCase):
+    """Tests for the dbGaPAccessAudit view."""
 
     def setUp(self):
         """Set up test class."""
@@ -4468,7 +4469,7 @@ class dbGaPAuditTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPAudit.as_view()
+        return views.dbGaPAccessAudit.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -4510,7 +4511,7 @@ class dbGaPAuditTest(TestCase):
         data_access_audit = response.context_data["data_access_audit"]
         self.assertIsInstance(
             data_access_audit,
-            audit.dbGaPAccessAudit,
+            access_audit.dbGaPAccessAudit,
         )
         self.assertTrue(data_access_audit.completed)
 
@@ -4588,14 +4589,14 @@ class dbGaPAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.APPROVED_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4610,7 +4611,7 @@ class dbGaPAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("application"), snapshot.dbgap_application)
@@ -4618,7 +4619,7 @@ class dbGaPAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("data_access_request"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NO_DAR,
+            access_audit.dbGaPAccessAudit.NO_DAR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -4633,7 +4634,7 @@ class dbGaPAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(
@@ -4644,7 +4645,7 @@ class dbGaPAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4675,7 +4676,7 @@ class dbGaPAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(
@@ -4686,7 +4687,7 @@ class dbGaPAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
+            access_audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -4710,20 +4711,20 @@ class dbGaPAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            audit.dbGaPAccessAuditTable,
+            access_audit.dbGaPAccessAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("workspace"), workspace)
         self.assertEqual(table.rows[0].get_cell_value("data_access_request"), dar)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
+            access_audit.dbGaPAccessAudit.ERROR_HAS_ACCESS,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
 
-class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests for the dbGaPAudit view."""
+class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the dbGaPAccessAudit view."""
 
     def setUp(self):
         """Set up test class."""
@@ -4747,7 +4748,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.dbGaPAuditResolve.as_view()
+        return views.dbGaPAccessAuditResolve.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -4851,7 +4852,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         self.assertIsInstance(
             response.context_data["audit_result"],
-            audit.AuditResult,
+            access_audit.AccessAuditResult,
         )
 
     def test_get_context_dbgap_application(self):
@@ -4903,7 +4904,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.VerifiedAccess)
+        self.assertIsInstance(audit_result, access_audit.VerifiedAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(
             audit_result.dbgap_application,
@@ -4912,7 +4913,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_access_request, dar)
         self.assertEqual(
             audit_result.note,
-            audit.dbGaPAccessAudit.APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.APPROVED_DAR,
         )
         self.assertIsNone(audit_result.action)
 
@@ -4930,13 +4931,13 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.VerifiedNoAccess)
+        self.assertIsInstance(audit_result, access_audit.VerifiedNoAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(audit_result.dbgap_application, snapshot.dbgap_application)
         self.assertIsNone(audit_result.data_access_request)
         self.assertEqual(
             audit_result.note,
-            audit.dbGaPAccessAudit.NO_DAR,
+            access_audit.dbGaPAccessAudit.NO_DAR,
         )
         self.assertIsNone(audit_result.action)
 
@@ -4954,7 +4955,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.GrantAccess)
+        self.assertIsInstance(audit_result, access_audit.GrantAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(
             audit_result.dbgap_application,
@@ -4963,7 +4964,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_access_request, dar)
         self.assertEqual(
             audit_result.note,
-            audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
+            access_audit.dbGaPAccessAudit.NEW_APPROVED_DAR,
         )
         self.assertIsNotNone(audit_result.action)
 
@@ -4997,7 +4998,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.RemoveAccess)
+        self.assertIsInstance(audit_result, access_audit.RemoveAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(
             audit_result.dbgap_application,
@@ -5006,7 +5007,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_access_request, dar)
         self.assertEqual(
             audit_result.note,
-            audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
+            access_audit.dbGaPAccessAudit.PREVIOUS_APPROVAL,
         )
         self.assertIsNotNone(audit_result.action)
 
@@ -5115,7 +5116,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.dbGaPAuditResolve.htmx_success)
+        self.assertEqual(response.content.decode(), views.dbGaPAccessAuditResolve.htmx_success)
         # Membership has been created.
         membership = GroupGroupMembership.objects.get(
             parent_group=workspace.workspace.authorization_domains.first(),
@@ -5197,7 +5198,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still GrantAccess.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.GrantAccess)
+        self.assertIsInstance(audit_result, access_audit.GrantAccess)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -5231,7 +5232,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.dbGaPAuditResolve.htmx_error)
+        self.assertEqual(response.content.decode(), views.dbGaPAccessAuditResolve.htmx_error)
         # No group membership was created.
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
         # No messages were added.
@@ -5283,7 +5284,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Audit result is still RemoveAccess.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.RemoveAccess)
+        self.assertIsInstance(audit_result, access_audit.RemoveAccess)
         # A message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
@@ -5330,7 +5331,7 @@ class dbGaPAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.dbGaPAuditResolve.htmx_error)
+        self.assertEqual(response.content.decode(), views.dbGaPAccessAuditResolve.htmx_error)
         # The group-group membership still exists.
         membership.refresh_from_db()
         # No messages was added.

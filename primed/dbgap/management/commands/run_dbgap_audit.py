@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from ... import audit
+from ...audit import access_audit
 
 
 class Command(BaseCommand):
@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("Running dbGaP access audit... ", ending="")
-        data_access_audit = audit.dbGaPAccessAudit()
+        data_access_audit = access_audit.dbGaPAccessAudit()
         data_access_audit.run_audit()
 
         # Report errors and needs access.
