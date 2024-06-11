@@ -131,3 +131,7 @@ class RunDbGaPAuditTest(TestCase):
             call_command("run_dbgap_audit", "--no-color", stdout=out)
             self.assertIn("Running dbGaP access audit... problems found.", out.getvalue())
             self.assertIn("https://foobar.com", out.getvalue())
+
+    def test_command_collaborator_audit(self):
+        """run_dbgap_audit runs an audit on collaborators."""
+        self.fail()

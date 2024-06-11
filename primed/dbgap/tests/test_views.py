@@ -5339,6 +5339,20 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(messages), 0)
 
 
+class dbGaPCollaboratorAuditTest(TestCase):
+    """Tests for the dbGaPCollaboratorAudit view."""
+
+    def test_write_tests(self):
+        self.fail()
+
+
+class dbGaPCollaboratorAuditResolveTest(TestCase):
+    """Tests for the dbGaPCollaboratorAuditResolve view."""
+
+    def test_write_tests(self):
+        self.fail()
+
+
 class dbGaPRecordsIndexTest(TestCase):
     """Tests for the dbGaPRecordsIndex view."""
 

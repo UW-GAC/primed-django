@@ -748,6 +748,19 @@ class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView)
             return super().form_valid(form)
 
 
+class dbGaPCollaboratorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit collaborators for all dbGaPApplications."""
+
+    template_name = "dbgap/collaborator_audit.html"
+
+
+class dbGaPCollaboratorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    form_class = Form
+    template_name = "dbgap/collaborator_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+
 class dbGaPRecordsIndex(TemplateView):
     """Index page for dbGaP records."""
 

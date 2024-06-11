@@ -735,3 +735,10 @@ class dbGaPAccessAuditTableTest(TestCase):
         table = access_audit.dbGaPAccessAuditTable(data)
         self.assertIsInstance(table, access_audit.dbGaPAccessAuditTable)
         self.assertEqual(len(table.rows), 2)
+
+
+class CollaboratorAuditResultTest(TestCase):
+    """Tests for the CollaboratorAuditResult dataclasses."""
+
+    def test_write_tests(self):
+        self.fail()

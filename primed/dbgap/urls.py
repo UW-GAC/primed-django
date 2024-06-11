@@ -61,9 +61,23 @@ access_audit_patterns = (
     "access",
 )
 
+collaborator_audit_patterns = (
+    [
+        path("", views.dbGaPCollaboratorAudit.as_view(), name="all"),
+        path(
+            "resolve/<int:dbgap_project_id>/<str:member_email>/",
+            views.dbGaPCollaboratorAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "collaborators",
+)
+
+
 audit_patterns = (
     [
         path("access/", include(access_audit_patterns)),
+        path("collaborators/", include(collaborator_audit_patterns)),
     ],
     "audit",
 )
