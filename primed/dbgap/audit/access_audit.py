@@ -125,7 +125,7 @@ class dbGaPAccessAuditTable(tables.Table):
     dar_consent = tables.Column(verbose_name="DAR consent")
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_audit_action_button.html")
+    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_access_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}

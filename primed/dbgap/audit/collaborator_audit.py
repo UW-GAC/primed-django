@@ -107,7 +107,7 @@ class dbGaPCollaboratorAuditTable(tables.Table):
     member = tables.Column(linkify=True)
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_audit_action_button.html")
+    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_access_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
