@@ -1,12 +1,19 @@
 from datetime import timedelta
 
-from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
+    ManagedGroupFactory,
+)
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from primed.users.tests.factories import UserFactory
+
 from .. import models
-from ..audit import access_audit
+from ..audit import access_audit, collaborator_audit
 from . import factories
 
 
@@ -738,7 +745,327 @@ class dbGaPAccessAuditTableTest(TestCase):
 
 
 class CollaboratorAuditResultTest(TestCase):
-    """Tests for the CollaboratorAuditResult dataclasses."""
+    """General tests of the CollaboratorAuditResult dataclasses."""
 
     def test_write_tests(self):
         self.fail()
+
+
+class dbGaPCollaboratorAuditTableTest(TestCase):
+    """General tests of the CollaboratorAuditTable class.."""
+
+    def test_write_tests(self):
+        self.fail()
+
+
+class dbGaPCollaboratorAuditTest(TestCase):
+    """Tests for the CollaboratorAuditResult dataclasses."""
+
+    def test_completed(self):
+        """completed is updated properly."""
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        self.assertFalse(collab_audit.completed)
+        collab_audit.run_audit()
+        self.assertTrue(collab_audit.completed)
+
+    def test_no_applications(self):
+        """Audit works if there are no dbGaPApplications."""
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    def test_pi_no_account(self):
+        """Audit works if the PI has not linked their account."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, dbgap_application.principal_investigator)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)
+
+    def test_pi_linked_account_not_in_access_group(self):
+        """PI has linked their account but is not in the access group."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(user=dbgap_application.principal_investigator)
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.GrantAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, dbgap_application.principal_investigator)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_LINKED_ACCOUNT)
+
+    def test_pi_linked_account_in_access_group(self):
+        """PI has linked their account and is in the access group."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(user=dbgap_application.principal_investigator)
+        GroupAccountMembershipFactory.create(account=account, group=dbgap_application.anvil_access_group)
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, dbgap_application.principal_investigator)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_IN_ACCESS_GROUP)
+
+    def test_collaborator_linked_account_in_access_group(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        dbgap_application.collaborators.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit._audit_application_and_user(dbgap_application, account.user)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_IN_ACCESS_GROUP)
+
+    def test_collaborator_linked_account_not_in_access_group(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        dbgap_application.collaborators.add(account.user)
+        # Access group membership.
+        # GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit._audit_application_and_user(dbgap_application, account.user)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.GrantAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_LINKED_ACCOUNT)
+
+    def test_collaborator_no_account(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        user = UserFactory.create()
+        # account = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        dbgap_application.collaborators.add(user)
+        # Access group membership.
+        # GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit._audit_application_and_user(dbgap_application, user)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_NO_ACCOUNT)
+
+    def test_user_in_group_not_collaborator(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        # dbgap_application.collaborators.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit._audit_application_and_user(dbgap_application, account.user)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.RemoveAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
+
+    def test_not_collaborator_and_account_has_no_user(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up collaborators.
+        # dbgap_application.collaborators.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application(dbgap_application)
+        self.assertEqual(len(collab_audit.verified), 1)  # The PI.
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.RemoveAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
+
+    def test_two_collaborators(self):
+        """Audit works when there are two collaborators."""
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account_1 = AccountFactory.create(verified=True)
+        account_2 = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        dbgap_application.collaborators.add(account_1.user, account_2.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account_1)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application(dbgap_application)
+        self.assertEqual(len(collab_audit.verified), 2)  # The PI and one of the collaborators.
+        self.assertEqual(len(collab_audit.needs_action), 1)  # The other collaborator.
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[1]  # The 0th record is the PI.
+        self.assertIsInstance(record, collaborator_audit.VerifiedAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, collab_audit.COLLABORATOR_IN_ACCESS_GROUP)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.GrantAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, account_2.user)
+        self.assertEqual(record.member, account_2)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_LINKED_ACCOUNT)
+
+    def test_unexpected_group_in_access_group(self):
+        """A group unexpectedly has access."""
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=dbgap_application.anvil_access_group,
+            child_group=group,
+        )
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application(dbgap_application)
+        self.assertEqual(len(collab_audit.verified), 1)  # The PI.
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 1)
+        record = collab_audit.errors[0]
+        self.assertIsInstance(record, collaborator_audit.RemoveAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.collaborator, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.UNEXPECTED_GROUP_ACCESS)
+
+    def test_ignores_admins_group(self):
+        """A group unexpectedly has access."""
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create(name="PRIMED_CC_ADMINS")
+        GroupGroupMembershipFactory.create(
+            parent_group=dbgap_application.anvil_access_group,
+            child_group=group,
+        )
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application(dbgap_application)
+        self.assertEqual(len(collab_audit.verified), 1)  # The PI.
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    def test_two_applications(self):
+        """Audit works with two dbGaPApplications."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        account_1 = AccountFactory.create(user=dbgap_application_1.principal_investigator)
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application_2)
+        self.assertEqual(record.collaborator, dbgap_application_2.principal_investigator)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.GrantAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application_1)
+        self.assertEqual(record.collaborator, dbgap_application_1.principal_investigator)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_LINKED_ACCOUNT)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset of dbGaPApplications."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        account_1 = AccountFactory.create(user=dbgap_application_1.principal_investigator)
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        # First application
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit(
+            queryset=models.dbGaPApplication.objects.filter(pk=dbgap_application_1.pk)
+        )
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.GrantAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application_1)
+        self.assertEqual(record.collaborator, dbgap_application_1.principal_investigator)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_LINKED_ACCOUNT)
+        # Second application
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit(
+            queryset=models.dbGaPApplication.objects.filter(pk=dbgap_application_2.pk)
+        )
+        collab_audit.run_audit()
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application_2)
+        self.assertEqual(record.collaborator, dbgap_application_2.principal_investigator)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)
