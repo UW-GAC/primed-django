@@ -180,14 +180,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
             child_group__name="PRIMED_CC_ADMINS",
         )
         for group_membership in group_memberships:
-            self.errors.append(
-                RemoveAccess(
-                    dbgap_application=dbgap_application,
-                    user=None,
-                    member=group_membership.child_group,
-                    note=self.UNEXPECTED_GROUP_ACCESS,
-                )
-            )
+            self._audit_application_and_group(dbgap_application, group_membership.child_group)
 
     def _audit_application_and_user(self, dbgap_application, user):
         """Audit access for a specific dbGaP application and a specific user."""
@@ -275,3 +268,15 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                         note=self.NOT_COLLABORATOR,
                     )
                 )
+
+    def _audit_application_and_group(self, dbgap_application, group):
+        """Audit access for a specific dbGaP application and a specific group."""
+        if group.name != "PRIMED_CC_ADMINS":
+            self.errors.append(
+                RemoveAccess(
+                    dbgap_application=dbgap_application,
+                    user=None,
+                    member=group,
+                    note=self.UNEXPECTED_GROUP_ACCESS,
+                )
+            )

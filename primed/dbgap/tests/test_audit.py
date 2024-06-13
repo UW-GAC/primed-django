@@ -1012,6 +1012,12 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(len(collab_audit.verified), 1)  # The PI.
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
+        # Check the sub-method specifically.
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit._audit_application_and_group(dbgap_application, group)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
 
     def test_two_applications(self):
         """Audit works with two dbGaPApplications."""
