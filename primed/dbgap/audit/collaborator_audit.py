@@ -178,14 +178,14 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
 
         if isinstance(obj, str):
             try:
-                instance = User.objects.get(username=obj)
+                instance = User.objects.get(username__iexact=obj)
             except User.DoesNotExist:
                 # Next we'll check the account.
                 try:
-                    instance = Account.objects.get(email=obj)
+                    instance = Account.objects.get(email__iexact=obj)
                 except Account.DoesNotExist:
                     try:
-                        instance = ManagedGroup.objects.get(email=obj)
+                        instance = ManagedGroup.objects.get(email__iexact=obj)
                     except ManagedGroup.DoesNotExist:
                         raise ValueError(f"Could not find a User, Account, or ManagedGroup with the email {obj}.")
         else:
