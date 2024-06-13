@@ -7,7 +7,9 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffViewRequired,
 )
 from anvil_consortium_manager.models import (
+    Account,
     AnVILProjectManagerAccess,
+    GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
     Workspace,
@@ -770,6 +772,103 @@ class dbGaPCollaboratorAuditResolve(AnVILConsortiumManagerStaffEditRequired, For
     template_name = "dbgap/collaborator_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_dbgap_application(self):
+        """Look up the dbGaPApplication by dbgap_project_id."""
+        try:
+            obj = models.dbGaPApplication.objects.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
+        except models.dbGaPApplication.DoesNotExist:
+            raise Http404("No dbGaPApplications found matching the query")
+        return obj
+
+    def get_email(self):
+        return self.kwargs.get("email")
+
+    def get_audit_result(self):
+        audit = collaborator_audit.dbGaPCollaboratorAudit(
+            queryset=models.dbGaPApplication.objects.filter(pk=self.dbgap_application.pk)
+        )
+        # No way to include a queryset of members at this point - need to call the sub method directly.
+        audit.audit_application_and_object(self.dbgap_application, self.email)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.dbgap_application = self.get_dbgap_application()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.dbgap_application = self.get_dbgap_application()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dbgap_application"] = self.dbgap_application
+        context["email"] = self.email
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return reverse("dbgap:audit:collaborators:all")
+
+    def form_valid(self, form):
+        # Add or remove the user from the access group.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, collaborator_audit.GrantAccess):
+                    # Add the member to the access group.
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership(
+                            group=self.dbgap_application.anvil_access_group,
+                            account=self.audit_result.member,
+                            role=GroupAccountMembership.MEMBER,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership(
+                            parent_group=self.dbgap_application.anvil_access_group,
+                            child_group=self.audit_result.member,
+                            role=GroupGroupMembership.MEMBER,
+                        )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, collaborator_audit.RemoveAccess):
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership.objects.get(
+                            group=self.dbgap_application.anvil_access_group,
+                            account=self.audit_result.member,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership.objects.get(
+                            parent_group=self.dbgap_application.anvil_access_group,
+                            child_group=self.audit_result.member,
+                        )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
 
 
 class dbGaPRecordsIndex(TemplateView):

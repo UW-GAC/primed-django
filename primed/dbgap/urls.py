@@ -65,7 +65,7 @@ collaborator_audit_patterns = (
     [
         path("", views.dbGaPCollaboratorAudit.as_view(), name="all"),
         path(
-            "resolve/<int:dbgap_project_id>/<str:member_email>/",
+            "resolve/<int:dbgap_project_id>/<str:email>/",
             views.dbGaPCollaboratorAuditResolve.as_view(),
             name="resolve",
         ),
