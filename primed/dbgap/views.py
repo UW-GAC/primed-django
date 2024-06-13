@@ -37,7 +37,7 @@ from django_tables2.export.views import ExportMixin
 from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
 
 from . import forms, helpers, models, tables, viewmixins
-from .audit import access_audit
+from .audit import access_audit, collaborator_audit
 
 logger = logging.getLogger(__name__)
 
@@ -752,6 +752,17 @@ class dbGaPCollaboratorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateVi
     """View to audit collaborators for all dbGaPApplications."""
 
     template_name = "dbgap/collaborator_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = collaborator_audit.dbGaPCollaboratorAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["collaborator_audit"] = audit
+        return context
 
 
 class dbGaPCollaboratorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):

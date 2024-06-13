@@ -1,0 +1,22 @@
+<div>
+    {% if record.action %}
+    <form
+        method="post"
+        action="{% url 'dbgap:audit:collaborators:resolve' record.application.dbgap_project_id record.member.email %}">
+
+        {% csrf_token %}
+        <button
+            type="submit"
+            class="btn btn-primary btn-sm"
+            hx-post="{% url 'dbgap:audit:collaborators:resolve' record.application.dbgap_project_id record.member.email %}"
+            hx-disabled-elt="this"
+            hx-target="closest div"
+            hx-swap="innerHTML">
+            {{ record.action }}
+        </button>
+      </form>
+
+    {% else %}
+    &mdash;
+    {% endif %}
+</div>

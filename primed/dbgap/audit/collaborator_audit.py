@@ -27,6 +27,7 @@ class CollaboratorAuditResult(PRIMEDAuditResult):
 
     def get_action_url(self):
         """The URL that handles the action needed."""
+        # This is handled in the template with htmx, so None is fine.
         return None
 
     def get_table_dictionary(self):
@@ -100,7 +101,7 @@ class dbGaPCollaboratorAuditTable(tables.Table):
     member = tables.Column(linkify=True)
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    # action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_collaborator_audit_action_button.html")
+    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_collaborator_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
