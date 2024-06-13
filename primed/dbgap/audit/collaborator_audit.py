@@ -3,6 +3,7 @@ from typing import Union
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, ManagedGroup
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 
@@ -323,7 +324,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
         in_access_group = GroupGroupMembership.objects.filter(
             child_group=group, parent_group=dbgap_application.anvil_access_group
         ).exists()
-        if group.name == "PRIMED_CC_ADMINS":
+        if group.name == settings.ANVIL_CC_ADMINS_GROUP_NAME:
             pass
         else:
             if in_access_group:

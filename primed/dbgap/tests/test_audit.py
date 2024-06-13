@@ -6,7 +6,7 @@ from anvil_consortium_manager.tests.factories import (
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
 )
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -1151,11 +1151,36 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.UNEXPECTED_GROUP_ACCESS)
 
     def test_ignores_admins_group(self):
-        """A group unexpectedly has access."""
+        """Ignores the admin group."""
         # Create applications.
         dbgap_application = factories.dbGaPApplicationFactory.create()
         # Add a group to the access group.
-        group = ManagedGroupFactory.create(name="PRIMED_CC_ADMINS")
+        group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        GroupGroupMembershipFactory.create(
+            parent_group=dbgap_application.anvil_access_group,
+            child_group=group,
+        )
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application(dbgap_application)
+        self.assertEqual(len(collab_audit.verified), 1)  # The PI.
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        # Check the sub-method specifically.
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, group)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="TEST_FOO")
+    def test_ignores_admins_group_different_setting(self):
+        """Ignores the admin group found in settings file."""
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create(name="TEST_FOO")
         GroupGroupMembershipFactory.create(
             parent_group=dbgap_application.anvil_access_group,
             child_group=group,
