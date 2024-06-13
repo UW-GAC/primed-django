@@ -747,8 +747,82 @@ class dbGaPAccessAuditTableTest(TestCase):
 class CollaboratorAuditResultTest(TestCase):
     """General tests of the CollaboratorAuditResult dataclasses."""
 
-    def test_write_tests(self):
-        self.fail()
+    def test_verified_access(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(verified=True)
+        instance = collaborator_audit.VerifiedAccess(
+            dbgap_application=dbgap_application, member=account, user=account.user, note="foo"
+        )
+        self.assertTrue(instance.has_access)
+
+    def test_verified_no_access(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(verified=True)
+        instance = collaborator_audit.VerifiedNoAccess(
+            dbgap_application=dbgap_application, member=account, user=account.user, note="foo"
+        )
+        self.assertFalse(instance.has_access)
+
+    def test_grant_access(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(verified=True)
+        instance = collaborator_audit.GrantAccess(
+            dbgap_application=dbgap_application, member=account, user=account.user, note="foo"
+        )
+        self.assertFalse(instance.has_access)
+
+    def test_remove_access(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(verified=True)
+        instance = collaborator_audit.RemoveAccess(
+            dbgap_application=dbgap_application, member=account, user=account.user, note="foo"
+        )
+        self.assertTrue(instance.has_access)
+
+    def test_error(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create(verified=True)
+        collaborator_audit.Error(
+            dbgap_application=dbgap_application,
+            member=account,
+            user=account.user,
+            note="foo",
+            has_access=True,
+        )
+
+    def test_post_init_user_does_not_match(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create()
+        user = UserFactory.create()
+        with self.assertRaises(ValueError) as e:
+            collaborator_audit.CollaboratorAuditResult(
+                dbgap_application=dbgap_application,
+                member=account,
+                user=user,
+                note="foo",
+                has_access=True,
+            )
+        self.assertEqual(
+            str(e.exception),
+            "Account and user do not match.",
+        )
+
+    def test_post_init_group_and_user(self):
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        with self.assertRaises(ValueError) as e:
+            collaborator_audit.CollaboratorAuditResult(
+                dbgap_application=dbgap_application,
+                member=group,
+                user=user,
+                note="foo",
+                has_access=True,
+            )
+        self.assertIn(
+            "both a ManagedGroup member and a User",
+            str(e.exception),
+        )
 
 
 class dbGaPCollaboratorAuditTableTest(TestCase):

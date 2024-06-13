@@ -26,6 +26,12 @@ class CollaboratorAuditResult(PRIMEDAuditResult):
     has_access: bool
     action: str = None
 
+    def __post_init__(self):
+        if isinstance(self.member, Account) and hasattr(self.member, "user") and self.member.user != self.user:
+            raise ValueError("Account and user do not match.")
+        elif isinstance(self.member, ManagedGroup) and self.user:
+            raise ValueError("Cannot specify both a ManagedGroup member and a User.")
+
     def get_action_url(self):
         """The URL that handles the action needed."""
         # This is handled in the template with htmx, so None is fine.
