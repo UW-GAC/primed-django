@@ -787,7 +787,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, dbgap_application.principal_investigator)
+        self.assertEqual(record.user, dbgap_application.principal_investigator)
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)
 
@@ -803,7 +803,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.GrantAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, dbgap_application.principal_investigator)
+        self.assertEqual(record.user, dbgap_application.principal_investigator)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_LINKED_ACCOUNT)
 
@@ -820,7 +820,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, collaborator_audit.VerifiedAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, dbgap_application.principal_investigator)
+        self.assertEqual(record.user, dbgap_application.principal_investigator)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_IN_ACCESS_GROUP)
 
@@ -843,7 +843,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, collaborator_audit.VerifiedAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, account.user)
+        self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_IN_ACCESS_GROUP)
 
@@ -866,7 +866,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.GrantAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, account.user)
+        self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_LINKED_ACCOUNT)
 
@@ -890,7 +890,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, user)
+        self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_NO_ACCOUNT)
 
@@ -913,7 +913,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.RemoveAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, account.user)
+        self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
 
@@ -936,7 +936,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.RemoveAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, None)
+        self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
 
@@ -961,13 +961,13 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[1]  # The 0th record is the PI.
         self.assertIsInstance(record, collaborator_audit.VerifiedAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, account_1.user)
+        self.assertEqual(record.user, account_1.user)
         self.assertEqual(record.member, account_1)
         self.assertEqual(record.note, collab_audit.COLLABORATOR_IN_ACCESS_GROUP)
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.GrantAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, account_2.user)
+        self.assertEqual(record.user, account_2.user)
         self.assertEqual(record.member, account_2)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_LINKED_ACCOUNT)
 
@@ -991,7 +991,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.errors[0]
         self.assertIsInstance(record, collaborator_audit.RemoveAccess)
         self.assertEqual(record.dbgap_application, dbgap_application)
-        self.assertEqual(record.collaborator, None)
+        self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.UNEXPECTED_GROUP_ACCESS)
 
@@ -1026,13 +1026,13 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
         self.assertEqual(record.dbgap_application, dbgap_application_2)
-        self.assertEqual(record.collaborator, dbgap_application_2.principal_investigator)
+        self.assertEqual(record.user, dbgap_application_2.principal_investigator)
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.GrantAccess)
         self.assertEqual(record.dbgap_application, dbgap_application_1)
-        self.assertEqual(record.collaborator, dbgap_application_1.principal_investigator)
+        self.assertEqual(record.user, dbgap_application_1.principal_investigator)
         self.assertEqual(record.member, account_1)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_LINKED_ACCOUNT)
 
@@ -1052,7 +1052,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.needs_action[0]
         self.assertIsInstance(record, collaborator_audit.GrantAccess)
         self.assertEqual(record.dbgap_application, dbgap_application_1)
-        self.assertEqual(record.collaborator, dbgap_application_1.principal_investigator)
+        self.assertEqual(record.user, dbgap_application_1.principal_investigator)
         self.assertEqual(record.member, account_1)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_LINKED_ACCOUNT)
         # Second application
@@ -1066,6 +1066,6 @@ class dbGaPCollaboratorAuditTest(TestCase):
         record = collab_audit.verified[0]
         self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
         self.assertEqual(record.dbgap_application, dbgap_application_2)
-        self.assertEqual(record.collaborator, dbgap_application_2.principal_investigator)
+        self.assertEqual(record.user, dbgap_application_2.principal_investigator)
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)

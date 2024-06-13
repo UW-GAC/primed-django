@@ -5,7 +5,6 @@ import django_tables2 as tables
 from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, ManagedGroup
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
-from django.urls import reverse
 
 from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
@@ -20,7 +19,7 @@ class CollaboratorAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing collaborators for a dbGaP application."""
 
     dbgap_application: dbGaPApplication
-    collaborator: User
+    user: User
     member: Union[Account, ManagedGroup]
     note: str
     has_access: bool
@@ -28,19 +27,13 @@ class CollaboratorAuditResult(PRIMEDAuditResult):
 
     def get_action_url(self):
         """The URL that handles the action needed."""
-        return reverse(
-            "dbgap:audit:collaborators:resolve",
-            args=[
-                self.dbgap_application.dbgap_project_id,
-                self.member.email,
-            ],
-        )
+        return None
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
         row = {
             "application": self.dbgap_application,
-            "collaborator": self.collaborator,
+            "user": self.user,
             "member": self.member,
             "has_access": self.has_access,
             "note": self.note,
@@ -103,11 +96,11 @@ class dbGaPCollaboratorAuditTable(tables.Table):
     """A table to show results from a dbGaPCollaboratorAudit subclass."""
 
     application = tables.Column(linkify=True)
-    collaborator = tables.Column(linkify=True)
+    user = tables.Column(linkify=True)
     member = tables.Column(linkify=True)
     has_access = BooleanIconColumn(show_false_icon=True)
     note = tables.Column()
-    action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_access_audit_action_button.html")
+    # action = tables.TemplateColumn(template_name="dbgap/snippets/dbgap_collaborator_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
@@ -172,7 +165,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
             self.needs_action.append(
                 RemoveAccess(
                     dbgap_application=dbgap_application,
-                    collaborator=account.user,
+                    user=account.user,
                     member=account,
                     note=self.NOT_COLLABORATOR,
                 )
@@ -189,7 +182,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
             self.errors.append(
                 RemoveAccess(
                     dbgap_application=dbgap_application,
-                    collaborator=None,
+                    user=None,
                     member=group_membership.child_group,
                     note=self.UNEXPECTED_GROUP_ACCESS,
                 )
@@ -213,7 +206,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
             self.verified.append(
                 VerifiedNoAccess(
                     dbgap_application=dbgap_application,
-                    collaborator=user,
+                    user=user,
                     member=None,
                     note=note,
                 )
@@ -230,7 +223,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                 self.verified.append(
                     VerifiedAccess(
                         dbgap_application=dbgap_application,
-                        collaborator=user,
+                        user=user,
                         member=account,
                         note=self.PI_IN_ACCESS_GROUP,
                     )
@@ -239,7 +232,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                 self.verified.append(
                     VerifiedAccess(
                         dbgap_application=dbgap_application,
-                        collaborator=user,
+                        user=user,
                         member=account,
                         note=self.COLLABORATOR_IN_ACCESS_GROUP,
                     )
@@ -248,7 +241,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                 self.needs_action.append(
                     RemoveAccess(
                         dbgap_application=dbgap_application,
-                        collaborator=user,
+                        user=user,
                         member=account,
                         note=self.NOT_COLLABORATOR,
                     )
@@ -258,7 +251,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                 self.needs_action.append(
                     GrantAccess(
                         dbgap_application=dbgap_application,
-                        collaborator=user,
+                        user=user,
                         member=account,
                         note=self.PI_LINKED_ACCOUNT,
                     )
@@ -267,7 +260,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                 self.needs_action.append(
                     GrantAccess(
                         dbgap_application=dbgap_application,
-                        collaborator=user,
+                        user=user,
                         member=account,
                         note=self.COLLABORATOR_LINKED_ACCOUNT,
                     )
@@ -276,7 +269,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                 self.verified.append(
                     VerifiedNoAccess(
                         dbgap_application=dbgap_application,
-                        collaborator=user,
+                        user=user,
                         member=account,
                         note=self.NOT_COLLABORATOR,
                     )
