@@ -776,6 +776,113 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
 
+    def test_audit_application_and_object_user(self):
+        """audit_application_and_object works when passed a user object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        user = UserFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, user)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
+
+    def test_audit_application_and_object_account(self):
+        """audit_application_and_object works when passed an Account object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_audit_application_and_object_group(self):
+        """audit_application_and_object works when passed a ManagedGroup object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        group = ManagedGroupFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, group)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.GROUP_WITHOUT_ACCESS)
+
+    def test_audit_application_and_object_user_email(self):
+        """audit_application_and_object works when passed a user object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        user = UserFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, user.username)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
+
+    def test_audit_application_and_object_account_email(self):
+        """audit_application_and_object works when passed an Account object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, account.email)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_audit_application_and_object_group_email(self):
+        """audit_application_and_object works when passed a ManagedGroup object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        group = ManagedGroupFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        collab_audit.audit_application_and_object(dbgap_application, group.email)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.GROUP_WITHOUT_ACCESS)
+
+    def test_audit_application_and_object_email_does_not_exist(self):
+        """audit_application_and_object works when passed a ManagedGroup object."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        with self.assertRaises(ValueError) as e:
+            collab_audit.audit_application_and_object(dbgap_application, "foo@bar.com")
+        self.assertIn(
+            "Could not find",
+            str(e.exception),
+        )
+
     def test_pi_no_account(self):
         """Audit works if the PI has not linked their account."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
@@ -836,7 +943,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         # Set up audit
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
         # Run audit
-        collab_audit._audit_application_and_user(dbgap_application, account.user)
+        collab_audit.audit_application_and_object(dbgap_application, account.user)
         self.assertEqual(len(collab_audit.verified), 1)
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
@@ -859,7 +966,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         # Set up audit
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
         # Run audit
-        collab_audit._audit_application_and_user(dbgap_application, account.user)
+        collab_audit.audit_application_and_object(dbgap_application, account.user)
         self.assertEqual(len(collab_audit.verified), 0)
         self.assertEqual(len(collab_audit.needs_action), 1)
         self.assertEqual(len(collab_audit.errors), 0)
@@ -883,7 +990,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         # Set up audit
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
         # Run audit
-        collab_audit._audit_application_and_user(dbgap_application, user)
+        collab_audit.audit_application_and_object(dbgap_application, user)
         self.assertEqual(len(collab_audit.verified), 1)
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
@@ -906,7 +1013,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         # Set up audit
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
         # Run audit
-        collab_audit._audit_application_and_user(dbgap_application, account.user)
+        collab_audit.audit_application_and_object(dbgap_application, account.user)
         self.assertEqual(len(collab_audit.verified), 0)
         self.assertEqual(len(collab_audit.needs_action), 1)
         self.assertEqual(len(collab_audit.errors), 0)
@@ -929,8 +1036,8 @@ class dbGaPCollaboratorAuditTest(TestCase):
         # Set up audit
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
         # Run audit
-        collab_audit.audit_application(dbgap_application)
-        self.assertEqual(len(collab_audit.verified), 1)  # The PI.
+        collab_audit.audit_application_and_object(dbgap_application, account)
+        self.assertEqual(len(collab_audit.verified), 0)
         self.assertEqual(len(collab_audit.needs_action), 1)
         self.assertEqual(len(collab_audit.errors), 0)
         record = collab_audit.needs_action[0]
@@ -938,7 +1045,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, dbgap_application)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_two_collaborators(self):
         """Audit works when there are two collaborators."""
@@ -1014,7 +1121,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(len(collab_audit.errors), 0)
         # Check the sub-method specifically.
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
-        collab_audit._audit_application_and_group(dbgap_application, group)
+        collab_audit.audit_application_and_object(dbgap_application, group)
         self.assertEqual(len(collab_audit.verified), 0)
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)

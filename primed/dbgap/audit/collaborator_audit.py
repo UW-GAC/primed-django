@@ -122,10 +122,12 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
     PI_LINKED_ACCOUNT = "PI has a linked AnVIL account."
     COLLABORATOR_LINKED_ACCOUNT = "Collaborator has a linked AnVIL account."
     NOT_COLLABORATOR = "Not a collaborator."
+    GROUP_WITHOUT_ACCESS = "Groups do not have access."
 
     # # Unexpected.
     # ERROR_HAS_ACCESS = "Has access for an unknown reason."
-    UNEXPECTED_GROUP_ACCESS = "Group has access for an unknown reason."
+    UNEXPECTED_GROUP_ACCESS = "Group should not have access."
+    ACCOUNT_NOT_LINKED_TO_USER = "Account is not linked to a user."
 
     results_table_class = dbGaPCollaboratorAuditTable
 
@@ -143,44 +145,61 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
 
     def audit_application(self, dbgap_application):
         """Audit access for a specific dbGaP application."""
-        # Get a list of every account in the access group.
-        # accounts_with_access = list(GroupAccountMembership.objects.filter(group=dbgap_application.anvil_access_group))
+        # Get a list of everything to audit.
+        pi = dbgap_application.principal_investigator
+        collaborators = list(dbgap_application.collaborators.all())
         accounts_with_access = list(
-            Account.objects.filter(groupaccountmembership__group=dbgap_application.anvil_access_group)
-        )
-        # Get a list of the PI and collaborators.
-        users_to_audit = [dbgap_application.principal_investigator] + list(dbgap_application.collaborators.all())
-        for user in users_to_audit:
-            self._audit_application_and_user(dbgap_application, user)
-            try:
-                accounts_with_access.remove(user.account)
-            except AttributeError:
-                # The user is not in the access group - this is handled in the audit.
-                pass
-            except ValueError:
-                # The user is not in the access group - this is handled in the audit.
-                pass
-
-        # If there are any accounts left, they should not have access.
-        for account in accounts_with_access:
-            self.needs_action.append(
-                RemoveAccess(
-                    dbgap_application=dbgap_application,
-                    user=account.user,
-                    member=account,
-                    note=self.NOT_COLLABORATOR,
-                )
+            Account.objects.filter(
+                # They are members of this group.
+                groupaccountmembership__group=dbgap_application.anvil_access_group
             )
-
-        # Check group access. Most groups should not have access.
-        group_memberships = GroupGroupMembership.objects.filter(
-            parent_group=dbgap_application.anvil_access_group,
-        ).exclude(
-            # Ignore cc admins group - it is handled differently because it should have admin privileges.
-            child_group__name="PRIMED_CC_ADMINS",
+            .exclude(
+                # Not collaborators.
+                user__in=collaborators
+            )
+            .exclude(
+                # Not the PI.
+                user=pi
+            )
         )
-        for group_membership in group_memberships:
-            self._audit_application_and_group(dbgap_application, group_membership.child_group)
+        groups_with_access = list(
+            ManagedGroup.objects.filter(parent_memberships__parent_group=dbgap_application.anvil_access_group)
+        )
+
+        objs_to_audit = [pi] + collaborators + accounts_with_access + groups_with_access
+
+        for obj in objs_to_audit:
+            self.audit_application_and_object(dbgap_application, obj)
+
+    def audit_application_and_object(self, dbgap_application, obj):
+        """Audit access for a specific dbGaP application and generic object instance.
+
+        obj can be a User, Account, ManagedGroup, or email string."""
+
+        if isinstance(obj, str):
+            try:
+                instance = User.objects.get(username=obj)
+            except User.DoesNotExist:
+                # Next we'll check the account.
+                try:
+                    instance = Account.objects.get(email=obj)
+                except Account.DoesNotExist:
+                    try:
+                        instance = ManagedGroup.objects.get(email=obj)
+                    except ManagedGroup.DoesNotExist:
+                        raise ValueError(f"Could not find a User, Account, or ManagedGroup with the email {obj}.")
+        else:
+            instance = obj
+
+        # Now decide which sub-method to call.
+        if isinstance(instance, User):
+            self._audit_application_and_user(dbgap_application, instance)
+        elif isinstance(instance, Account):
+            self._audit_application_and_account(dbgap_application, instance)
+        elif isinstance(instance, ManagedGroup):
+            self._audit_application_and_group(dbgap_application, instance)
+        else:
+            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_application_and_user(self, dbgap_application, user):
         """Audit access for a specific dbGaP application and a specific user."""
@@ -207,10 +226,40 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
             )
             return
 
+        self._audit_application_and_account(dbgap_application, account)
+
+    def _audit_application_and_account(self, dbgap_application, account):
         # Check if the account is in the access group.
         is_in_access_group = GroupAccountMembership.objects.filter(
-            account=user.account, group=dbgap_application.anvil_access_group
+            account=account, group=dbgap_application.anvil_access_group
         ).exists()
+
+        # Get the user.
+        if hasattr(account, "user") and account.user:
+            user = account.user
+        else:
+            if is_in_access_group:
+                self.needs_action.append(
+                    RemoveAccess(
+                        dbgap_application=dbgap_application,
+                        user=None,
+                        member=account,
+                        note=self.ACCOUNT_NOT_LINKED_TO_USER,
+                    )
+                )
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        dbgap_application=dbgap_application,
+                        user=None,
+                        member=account,
+                        note=self.ACCOUNT_NOT_LINKED_TO_USER,
+                    )
+                )
+            return
+
+        is_pi = user == dbgap_application.principal_investigator
+        is_collaborator = user in dbgap_application.collaborators.all()
 
         if is_in_access_group:
             if is_pi:
@@ -271,12 +320,27 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
 
     def _audit_application_and_group(self, dbgap_application, group):
         """Audit access for a specific dbGaP application and a specific group."""
-        if group.name != "PRIMED_CC_ADMINS":
-            self.errors.append(
-                RemoveAccess(
-                    dbgap_application=dbgap_application,
-                    user=None,
-                    member=group,
-                    note=self.UNEXPECTED_GROUP_ACCESS,
+        in_access_group = GroupGroupMembership.objects.filter(
+            child_group=group, parent_group=dbgap_application.anvil_access_group
+        ).exists()
+        if group.name == "PRIMED_CC_ADMINS":
+            pass
+        else:
+            if in_access_group:
+                self.errors.append(
+                    RemoveAccess(
+                        dbgap_application=dbgap_application,
+                        user=None,
+                        member=group,
+                        note=self.UNEXPECTED_GROUP_ACCESS,
+                    )
                 )
-            )
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        dbgap_application=dbgap_application,
+                        user=None,
+                        member=group,
+                        note=self.GROUP_WITHOUT_ACCESS,
+                    )
+                )
