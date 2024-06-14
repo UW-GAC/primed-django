@@ -826,10 +826,94 @@ class CollaboratorAuditResultTest(TestCase):
 
 
 class dbGaPCollaboratorAuditTableTest(TestCase):
-    """General tests of the CollaboratorAuditTable class.."""
+    """General tests of the dbGaPCollaboratorAuditTable class.."""
 
-    def test_write_tests(self):
-        self.fail()
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = collaborator_audit.dbGaPCollaboratorAuditTable([])
+        self.assertIsInstance(table, collaborator_audit.dbGaPCollaboratorAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row(self):
+        """Table works with one row."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        data = [
+            {
+                "dbgap_application": dbgap_application,
+                "member": None,
+                "user": None,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            }
+        ]
+        table = collaborator_audit.dbGaPCollaboratorAuditTable(data)
+        self.assertIsInstance(table, collaborator_audit.dbGaPCollaboratorAuditTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_one_row_account_member(self):
+        """Table works with one row and an account member."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create()
+        data = [
+            {
+                "dbgap_application": dbgap_application,
+                "member": account,
+                "user": None,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            }
+        ]
+        table = collaborator_audit.dbGaPCollaboratorAuditTable(data)
+        self.assertIsInstance(table, collaborator_audit.dbGaPCollaboratorAuditTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_one_row_group_member(self):
+        """Table works with one row and a group member."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        group = ManagedGroupFactory.create()
+        data = [
+            {
+                "dbgap_application": dbgap_application,
+                "member": group,
+                "user": None,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            }
+        ]
+        table = collaborator_audit.dbGaPCollaboratorAuditTable(data)
+        self.assertIsInstance(table, collaborator_audit.dbGaPCollaboratorAuditTable)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        account = AccountFactory.create()
+        group = ManagedGroupFactory.create()
+        data = [
+            {
+                "dbgap_application": dbgap_application_1,
+                "member": account,
+                "user": None,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            },
+            {
+                "dbgap_application": dbgap_application_2,
+                "member": group,
+                "user": None,
+                "note": "a note",
+                "action": "",
+                "action_url": "",
+            },
+        ]
+        table = collaborator_audit.dbGaPCollaboratorAuditTable(data)
+        self.assertIsInstance(table, collaborator_audit.dbGaPCollaboratorAuditTable)
+        self.assertEqual(len(table.rows), 2)
 
 
 class dbGaPCollaboratorAuditTest(TestCase):
