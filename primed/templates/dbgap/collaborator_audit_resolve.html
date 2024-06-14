@@ -12,7 +12,20 @@
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
     <li>dbGaP application: <a href="{{ dbgap_application.get_absolute_url }}">{{ dbgap_application }}</a></li>
-    <li>dbGaP collaborator: <a href="{{ collaborator.get_absolute_url }}">{{ dbgap_workspace }}</a></li>
+    <li>User:
+      {% if audit_result.user %}
+        <a href="{{ audit_result.user.get_absolute_url }}">{{ audit_result.user.name }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
+    <li>AnVIL email:
+      {% if audit_result.member %}
+        <a href="{{ audit_result.member.get_absolute_url }}">{{ audit_result.member }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
   </ul>
 </div>
 
