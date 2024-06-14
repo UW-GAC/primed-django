@@ -17,20 +17,30 @@
     <li>
       <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:list' %}">List dbGaP applications</a>
     </li>
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
+    <li>
+      <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
+    </li>
+    {% endif %}
+
+
+    <li><hr class="dropdown-divider"></li>
     <li>
       <a class="dropdown-item" href="{% url 'dbgap:dars:current' %}">List all current DARs</a>
     </li>
     {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_edit %}
     <li>
-      <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:new' %}">Add a new dbGaP application</a>
-    </li>
-    <li>
       <a class="dropdown-item" href="{% url 'dbgap:dbgap_applications:update_dars' %}">Update DARs for all applications</a>
     </li>
     {% endif %}
+
     {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+    <li><hr class="dropdown-divider"></li>
     <li>
       <a class="dropdown-item" href="{% url 'dbgap:audit:access:all' %}">Audit dbGaP access</a>
+    </li>
+    <li>
+      <a class="dropdown-item" href="{% url 'dbgap:audit:collaborators:all' %}">Audit dbGaP collaborators</a>
     </li>
     {% endif %}
 
