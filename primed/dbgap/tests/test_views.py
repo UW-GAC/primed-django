@@ -1476,10 +1476,36 @@ class dbGaPApplicationDetailTest(TestCase):
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
 
-    def test_group_link_pi(self):
+    def test_links_pi(self):
         """Links seen by PI are correct."""
         pi = self.obj.principal_investigator
         self.client.force_login(pi)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("show_acm_edit_links", response.context_data)
+        self.assertFalse(response.context_data["show_acm_edit_links"])
+        self.assertIn("show_acm_view_links", response.context_data)
+        self.assertFalse(response.context_data["show_acm_view_links"])
+        self.assertNotContains(
+            response,
+            reverse(
+                "dbgap:dbgap_applications:dbgap_data_access_snapshots:new",
+                args=[self.obj.dbgap_project_id],
+            ),
+        )
+        self.assertNotContains(
+            response,
+            reverse("dbgap:audit:access:applications", args=[self.obj.dbgap_project_id]),
+        )
+        self.assertNotContains(
+            response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
+        )
+
+    def test_links_collaborators(self):
+        """Links seen by collaborators are correct."""
+        collaborator = UserFactory.create()
+        self.obj.collaborators.add(collaborator)
+        self.client.force_login(collaborator)
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertEqual(response.status_code, 200)
         self.assertIn("show_acm_edit_links", response.context_data)
