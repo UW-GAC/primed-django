@@ -22,6 +22,8 @@ class dbGaPApplicationViewPermissionMixin(UserPassesTestMixin):
         self.dbgap_application = self.get_dbgap_application()
         if not self.dbgap_application:
             is_pi = False
+            is_collaborator = False
         else:
             is_pi = self.dbgap_application.principal_investigator == self.request.user
-        return has_acm_permission or is_pi
+            is_collaborator = self.request.user in self.dbgap_application.collaborators.all()
+        return has_acm_permission or is_pi or is_collaborator

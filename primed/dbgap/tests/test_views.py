@@ -1386,12 +1386,30 @@ class dbGaPApplicationDetailTest(TestCase):
         response = self.client.get(self.get_url(self.obj.dbgap_project_id))
         self.assertEqual(response.status_code, 200)
 
+    def test_access_collaborator_for_dbgap_application(self):
+        """Returns successful response code when the user is a collaborator on the application."""
+        collaborator = UserFactory.create()
+        self.obj.collaborators.add(collaborator)
+        self.client.force_login(collaborator)
+        response = self.client.get(self.get_url(self.obj.dbgap_project_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_access_pi_of_other_dbgap_application(self):
-        """Returns successful response code when the user is the PI of the application."""
+        """Raises permission denied code when the user is a PI of a different dbGaP application."""
         pi = self.obj.principal_investigator
         other_application = factories.dbGaPApplicationFactory.create()
         request = self.factory.get(self.get_url(other_application.dbgap_project_id))
         request.user = pi
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, dbgap_project_id=other_application.dbgap_project_id)
+
+    def test_access_collaborator_for_other_dbgap_application(self):
+        """Raises permission denied code when the user is a collaborator on a different dbGaP application."""
+        collaborator = UserFactory.create()
+        self.obj.collaborators.add(collaborator)
+        other_application = factories.dbGaPApplicationFactory.create()
+        request = self.factory.get(self.get_url(other_application.dbgap_project_id))
+        request.user = collaborator
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, dbgap_project_id=other_application.dbgap_project_id)
 
@@ -3290,12 +3308,34 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertEqual(response.status_code, 200)
 
+    def test_access_collaborator_for_dbgap_application(self):
+        """Returns successful response code when the user is a collaborator on the application."""
+        collaborator = UserFactory.create()
+        self.application.collaborators.add(collaborator)
+        self.client.force_login(collaborator)
+        response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
+        self.assertEqual(response.status_code, 200)
+
     def test_access_pi_of_other_dbgap_application(self):
         """Returns successful response code when the user is the PI of the application."""
         pi = self.application.principal_investigator
         other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         request = self.factory.get(self.get_url(other_snapshot.dbgap_application.dbgap_project_id, other_snapshot.pk))
         request.user = pi
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                dbgap_project_id=other_snapshot.dbgap_application.dbgap_project_id,
+                dbgap_data_access_snapshot_pk=other_snapshot.pk,
+            )
+
+    def test_access_collaborator_for_other_dbgap_application(self):
+        """Raises permission denied code when the user is a collaborator on a different dbGaP application."""
+        collaborator = UserFactory.create()
+        self.application.collaborators.add(collaborator)
+        other_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        request = self.factory.get(self.get_url(other_snapshot.dbgap_application.dbgap_project_id, other_snapshot.pk))
+        request.user = collaborator
         with self.assertRaises(PermissionDenied):
             self.get_view()(
                 request,
@@ -3647,6 +3687,17 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_access_collaborator_for_dbgap_application(self):
+        """Returns successful response code when the user is a collaborator on the application."""
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
+        collaborator = UserFactory.create()
+        dar.dbgap_data_access_snapshot.dbgap_application.collaborators.add(collaborator)
+        self.client.force_login(collaborator)
+        response = self.client.get(
+            self.get_url(dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id, dar.dbgap_dar_id)
+        )
+        self.assertEqual(response.status_code, 200)
+
     def test_access_pi_of_other_dbgap_application(self):
         """Returns successful response code when the user is the PI of the application."""
         dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
@@ -3658,6 +3709,25 @@ class dbGaPDataAccessRequestHistoryTest(TestCase):
             )
         )
         request.user = pi
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(
+                request,
+                other_dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                other_dar.dbgap_dar_id,
+            )
+
+    def test_access_collaborator_for_other_dbgap_application(self):
+        """Raises permission denied code when the user is a collaborator on a different dbGaP application."""
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1)
+        collaborator = UserFactory.create()
+        dar.dbgap_data_access_snapshot.dbgap_application.collaborators.add(collaborator)
+        other_dar = factories.dbGaPDataAccessRequestFactory.create()
+        request = self.factory.get(
+            self.get_url(
+                other_dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id, other_dar.dbgap_dar_id
+            )
+        )
+        request.user = collaborator
         with self.assertRaises(PermissionDenied):
             self.get_view()(
                 request,
