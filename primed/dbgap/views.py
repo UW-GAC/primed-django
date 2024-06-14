@@ -827,19 +827,12 @@ class dbGaPCollaboratorAuditResolve(AnVILConsortiumManagerStaffEditRequired, For
         try:
             with transaction.atomic():
                 if isinstance(self.audit_result, collaborator_audit.GrantAccess):
-                    # Add the member to the access group.
-                    if isinstance(self.audit_result.member, Account):
-                        membership = GroupAccountMembership(
-                            group=self.dbgap_application.anvil_access_group,
-                            account=self.audit_result.member,
-                            role=GroupAccountMembership.MEMBER,
-                        )
-                    elif isinstance(self.audit_result.member, ManagedGroup):
-                        membership = GroupGroupMembership(
-                            parent_group=self.dbgap_application.anvil_access_group,
-                            child_group=self.audit_result.member,
-                            role=GroupGroupMembership.MEMBER,
-                        )
+                    # Only accounts should be added to the access group, so we shouldn't need to check type.
+                    membership = GroupAccountMembership(
+                        group=self.dbgap_application.anvil_access_group,
+                        account=self.audit_result.member,
+                        role=GroupAccountMembership.MEMBER,
+                    )
                     membership.full_clean()
                     membership.save()
                     membership.anvil_create()

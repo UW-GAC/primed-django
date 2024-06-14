@@ -5754,8 +5754,8 @@ class dbGaPCollaboratorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_email_not_found(self):
-        """Raises a 404 error with an non-existent email."""
+    def test_get_email_not_found(self):
+        """get request raises a 404 error with an non-existent email."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         self.client.force_login(self.user)
         response = self.client.get(
@@ -5898,6 +5898,19 @@ class dbGaPCollaboratorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.user, account.user)
         self.assertEqual(audit_result.note, collaborator_audit.dbGaPCollaboratorAudit.NOT_COLLABORATOR)
         self.assertIsNotNone(audit_result.action)
+
+    def test_post_email_not_found(self):
+        """post request raises a 404 error with an non-existent email."""
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                dbgap_application.dbgap_project_id,
+                "foo@bar.com",
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_post_verified_access_user(self):
         """post with VerifiedAccess audit result with a user email."""
