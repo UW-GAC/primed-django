@@ -131,7 +131,6 @@ networkx==3.1
     #   pronto
 numpy==1.24.4
     # via
-    #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
     #   pandas
 oauthlib==3.2.2
