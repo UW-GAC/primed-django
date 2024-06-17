@@ -57,8 +57,7 @@ pronto
 mysqlclient # https://github.com/PyMySQL/mysqlclient
 
 # pandas for data summaries
-pandas
-numpy<2.0
+pandas>=2.2.2
 
 # for exporting django-tables2 tables to tsv.
 tablib
