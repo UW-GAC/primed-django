@@ -82,8 +82,8 @@ jobs:
       - name: Recompile pip files if requested
         if: matrix.pip-recompile
         run: |
-          pip-compile requirements/requirements.in
-          pip-compile requirements/test-requirements.in
+          pip-compile -v requirements/requirements.in
+          pip-compile -v requirements/test-requirements.in
           # Print out changes.
           git diff
 
