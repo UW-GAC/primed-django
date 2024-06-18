@@ -1,4 +1,4 @@
-"""Tests for management commands in the `dbgap` app."""
+"""Tests for management commands in the `collaborative_analysis` app."""
 
 from io import StringIO
 
