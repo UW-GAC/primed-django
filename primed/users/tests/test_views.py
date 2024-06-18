@@ -16,6 +16,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.dbgap.tests.factories import dbGaPApplicationFactory
 from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.forms import UserChangeForm
 from primed.users.models import User
@@ -181,6 +182,151 @@ class TestUserDetailView:
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
         response = client.get(user_detail_url)
         assert account.get_absolute_url() not in str(response.content)
+
+
+class UserDetailTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = UserFactory.create()
+
+    def test_data_access_my_profile(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "My data access mechanisms")
+        self.assertContains(response, "dbGaP")
+
+    def test_data_access_other_profile(self):
+        other_user = UserFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(other_user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "My data access mechanisms")
+
+    def test_no_dbgap_applications(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No dbGaP applications")
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 0)
+
+    def test_pi_of_one_dbgap_application(self):
+        dbgap_application = dbGaPApplicationFactory.create(principal_investigator=self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, "Principal Investigator")
+        self.assertContains(response, dbgap_application.dbgap_project_id)
+        self.assertContains(response, dbgap_application.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 1)
+        self.assertIn(dbgap_application, response.context["dbgap_applications"])
+
+    def test_pi_of_two_dbgap_applications(self):
+        dbgap_application_1 = dbGaPApplicationFactory.create(principal_investigator=self.user)
+        dbgap_application_2 = dbGaPApplicationFactory.create(principal_investigator=self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Principal Investigator")
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, dbgap_application_1.dbgap_project_id)
+        self.assertContains(response, dbgap_application_1.get_absolute_url())
+        self.assertContains(response, dbgap_application_2.dbgap_project_id)
+        self.assertContains(response, dbgap_application_2.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 2)
+        self.assertIn(dbgap_application_1, response.context["dbgap_applications"])
+        self.assertIn(dbgap_application_2, response.context["dbgap_applications"])
+
+    def test_collaborator_on_one_dbgap_application(self):
+        dbgap_application = dbGaPApplicationFactory.create()
+        dbgap_application.collaborators.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Collaborator")
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, dbgap_application.dbgap_project_id)
+        self.assertContains(response, dbgap_application.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 1)
+        self.assertIn(dbgap_application, response.context["dbgap_applications"])
+
+    def test_collaborator_on_two_dbgap_applications(self):
+        dbgap_application_1 = dbGaPApplicationFactory.create()
+        dbgap_application_1.collaborators.add(self.user)
+        dbgap_application_2 = dbGaPApplicationFactory.create()
+        dbgap_application_2.collaborators.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Collaborator")
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, dbgap_application_1.dbgap_project_id)
+        self.assertContains(response, dbgap_application_1.get_absolute_url())
+        self.assertContains(response, dbgap_application_2.dbgap_project_id)
+        self.assertContains(response, dbgap_application_2.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 2)
+        self.assertIn(dbgap_application_1, response.context["dbgap_applications"])
+        self.assertIn(dbgap_application_2, response.context["dbgap_applications"])
+
+    def test_dbgap_pi_and_collaborator(self):
+        dbgap_application_1 = dbGaPApplicationFactory.create(principal_investigator=self.user)
+        dbgap_application_2 = dbGaPApplicationFactory.create()
+        dbgap_application_2.collaborators.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Principal Investigator")
+        self.assertContains(response, "Collaborator")
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, dbgap_application_1.dbgap_project_id)
+        self.assertContains(response, dbgap_application_1.get_absolute_url())
+        self.assertContains(response, dbgap_application_2.dbgap_project_id)
+        self.assertContains(response, dbgap_application_2.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 2)
+        self.assertIn(dbgap_application_1, response.context["dbgap_applications"])
+        self.assertIn(dbgap_application_2, response.context["dbgap_applications"])
+
+    def test_other_dbgap_applications(self):
+        # Create an application for a different user.
+        dbGaPApplicationFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No dbGaP applications")
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 0)
+
+    def test_acm_staff_view(self):
+        """Users with staff view permission see dbGaP application info."""
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        other_user = UserFactory.create()
+        dbgap_application_1 = dbGaPApplicationFactory.create(principal_investigator=other_user)
+        dbgap_application_2 = dbGaPApplicationFactory.create()
+        dbgap_application_2.collaborators.add(other_user)
+        self.client.force_login(self.user)
+        response = self.client.get(other_user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "User data access mechanisms")
+        self.assertContains(response, "Principal Investigator")
+        self.assertContains(response, "Collaborator")
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, dbgap_application_1.dbgap_project_id)
+        self.assertContains(response, dbgap_application_1.get_absolute_url())
+        self.assertContains(response, dbgap_application_2.dbgap_project_id)
+        self.assertContains(response, dbgap_application_2.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 2)
+        self.assertIn(dbgap_application_1, response.context["dbgap_applications"])
+        self.assertIn(dbgap_application_2, response.context["dbgap_applications"])
 
 
 class UserAutocompleteTest(TestCase):

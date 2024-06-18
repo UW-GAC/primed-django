@@ -25,7 +25,7 @@ class Command(BaseCommand):
         # Report errors and needs access.
         audit_ok = data_access_audit.ok()
         # Construct the url for handling errors.
-        url = "https://" + Site.objects.get_current().domain + reverse("dbgap:audit:all")
+        url = "https://" + Site.objects.get_current().domain + reverse("collaborative_analysis:audit:all")
         if audit_ok:
             self.stdout.write(self.style.SUCCESS("ok!"))
         else:
