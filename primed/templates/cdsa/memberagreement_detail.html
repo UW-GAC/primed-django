@@ -28,21 +28,35 @@
     {% endif %}
   </dd>
   <dt class="col-sm-2">Agreement version</dt> <dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
+    {% else %}
+      {{ object.signed_agreement.version }}
+    {% endif %}
   </dd>
   <dt class="col-sm-2">Status</dt> <dd class="col-sm-9">{{ object.signed_agreement.get_status_display }}</dd>
   <dt class="col-sm-2">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
 
   <dt class="col-sm-2">Study site</dt> <dd class="col-sm-9">
-    <a href="{{ object.study_site.get_absolute_url }}">{{ object.study_site }}</a>
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.study_site.get_absolute_url }}">{{ object.study_site }}</a>
+    {% else %}
+      {{ object.study_site }}
+    {% endif %}
   </dd>
   <dt class="col-sm-2">AnVIL access group</dt><dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
+    {% else %}
+      {{ object.signed_agreement.anvil_access_group }}
+    {% endif %}
   </dd>
 
-<hr>
+  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+  <hr>
   <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
   <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+  {% endif %}
 
 </dl>
 {% endblock panel %}

@@ -25,7 +25,7 @@ from django.views.generic import DetailView, FormView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
-from . import forms, helpers, models, tables
+from . import forms, helpers, models, tables, viewmixins
 from .audit import signed_agreement_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
@@ -347,7 +347,7 @@ class DataAffiliateAgreementCreate(
         return agreement_type
 
 
-class MemberAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, DetailView):
     """View to show details about a `MemberAgreement`."""
 
     model = models.MemberAgreement
@@ -399,7 +399,7 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
         return obj
 
 
-class DataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, DetailView):
     """View to show details about a `DataAffiliateAgreement`."""
 
     model = models.DataAffiliateAgreement
@@ -449,7 +449,7 @@ class NonDataAffiliateAgreementCreate(
     ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
 
 
-class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, DetailView):
     """View to show details about a `NonDataAffiliateAgreement`."""
 
     model = models.NonDataAffiliateAgreement

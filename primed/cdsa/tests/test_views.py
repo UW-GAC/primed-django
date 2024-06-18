@@ -2183,6 +2183,20 @@ class MemberAgreementDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, cc_id=1)
 
+    def test_representative_access(self):
+        """Returns successful response code if the user is the representative on the signed agreement."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_accessor_access(self):
+        """Returns successful response code if the user is an accessor on the signed agreement."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -2214,6 +2228,36 @@ class MemberAgreementDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+
+    def test_content_representative(self):
+        """Representative does not see all links or content."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to study site.
+        self.assertNotContains(response, self.obj.study_site.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_accessor(self):
+        """Accessor does not see all links or content."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to study site.
+        self.assertNotContains(response, self.obj.study_site.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -3818,6 +3862,28 @@ class DataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, cc_id=1)
 
+    def test_representative_access(self):
+        """Returns successful response code if the user is the representative on the signed agreement."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_accessor_access(self):
+        """Returns successful response code if the user is an accessor on the signed agreement."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_uploader_access(self):
+        """Returns successful response code if the user is an uploader on the signed agreement."""
+        uploader = UserFactory.create()
+        self.obj.uploaders.add(uploader)
+        self.client.force_login(uploader)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -3855,6 +3921,55 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
         self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
+
+    def test_content_representative(self):
+        """Representative does not see all links or content."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_accessor(self):
+        """Accessor does not see all links or content."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_uploader(self):
+        """Uploader does not see all links or content."""
+        uploader = UserFactory.create()
+        self.obj.uploaders.add(uploader)
+        self.client.force_login(uploader)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -4866,6 +4981,20 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, cc_id=1)
 
+    def test_representative_access(self):
+        """Returns successful response code if the user is the representative on the signed agreement."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_accessor_access(self):
+        """Returns successful response code if the user is an accessor on the signed agreement."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -4891,6 +5020,32 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+
+    def test_content_representative(self):
+        """Representative does not see all links or content."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_accessor(self):
+        """Accessor does not see all links or content."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
