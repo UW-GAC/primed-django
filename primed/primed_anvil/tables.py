@@ -1,5 +1,5 @@
 import django_tables2 as tables
-from anvil_consortium_manager.models import Account, Workspace
+from anvil_consortium_manager.models import Account, ManagedGroup, Workspace
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
@@ -174,6 +174,8 @@ class UserAccountSingleGroupMembershipTable(tables.Table):
     def __init__(self, *args, managed_group=None, **kwargs):
         if managed_group is None:
             raise ValueError("managed_group must be provided.")
+        if not isinstance(managed_group, ManagedGroup):
+            raise ValueError("managed_group must be an instance of ManagedGroup.")
         self.managed_group = managed_group
         super().__init__(*args, **kwargs)
 

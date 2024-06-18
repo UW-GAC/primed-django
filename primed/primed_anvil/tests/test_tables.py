@@ -306,3 +306,13 @@ class UserAccountSingleGroupMembershipTableTest(TestCase):
         table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
         self.assertEqual(table.data[0], user_bar)
         self.assertEqual(table.data[1], user_foo)
+
+    def test_managed_group_not_provided(self):
+        with self.assertRaises(ValueError) as e:
+            tables.UserAccountSingleGroupMembershipTable(User.objects.all())
+        self.assertEqual(str(e.exception), "managed_group must be provided.")
+
+    def test_managed_group_wrong_class(self):
+        with self.assertRaises(ValueError) as e:
+            tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=AccountFactory.create())
+        self.assertEqual(str(e.exception), "managed_group must be an instance of ManagedGroup.")

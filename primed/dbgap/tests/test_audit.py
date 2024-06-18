@@ -1420,3 +1420,10 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(record.user, dbgap_application_2.principal_investigator)
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.PI_NO_ACCOUNT)
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            collaborator_audit.dbGaPCollaboratorAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            collaborator_audit.dbGaPCollaboratorAudit(queryset=models.dbGaPStudyAccession.objects.all())
