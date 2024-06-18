@@ -107,12 +107,17 @@
         <div class='card-body'>
           <h4>dbGaP</h4>
           <ul class="list-group">
-            {% for app in object.pi_dbgap_applications.all %}
-            <li class="list-group-item"><strong>Principal Investigator: </strong><a href="{{ app.get_absolute_url }}">{{ app }}</a></li>
-            {% endfor %}
-            {% for app in object.collaborator_dbgap_applications.all %}
-            <li class="list-group-item"><strong>Collaborator: </strong><a href="{{ app.get_absolute_url }}">{{ app }}</a></li>
-            {% endfor %}
+            {% if dbgap_applications %}
+              {% for app in dbgap_applications %}
+              <li class="list-group-item">
+                <strong>
+                  {% if object == app.principal_investigator %}Principal Investigator{% else %}Collaborator{% endif %}: </strong>
+                <a href="{{ app.get_absolute_url }}">{{ app }}</a>
+              </li>
+              {% endfor %}
+            {% else %}
+              <li class="list-group-item">No dbGaP applications for PRIMED</li>
+            {% endif %}
 
             <p class='alert alert-secondary mt-3'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
           </ul>
