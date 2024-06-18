@@ -49,6 +49,7 @@
       </div>
     </div>
     <div class='col'>
+
       <div class='card card-shadow-sm'>
         <div class='card-header'>
           <h3><i class="bi bi-link-45deg"></i> {% if object == request.user %}My{% else %}User{% endif %} AnVIL Account</h3>
@@ -96,6 +97,30 @@
           <p class='alert alert-secondary mt-3'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
         </div><i class="bi bi-c-square"></i>
       </div>
+
+      {% if object == request.user %}
+
+      <div class='card card-shadow-sm mt-3'>
+        <div class='card-header'>
+          <h3><i class="bi bi-clipboard-check"></i> My data access mechanisms </h3>
+        </div>
+        <div class='card-body'>
+          <h4>dbGaP</h4>
+          <ul class="list-group">
+            {% for app in object.pi_dbgap_applications.all %}
+            <li class="list-group-item"><strong>Principal Investigator: </strong><a href="{{ app.get_absolute_url }}">{{ app }}</a></li>
+            {% endfor %}
+            {% for app in object.collaborator_dbgap_applications.all %}
+            <li class="list-group-item"><strong>Collaborator: </strong><a href="{{ app.get_absolute_url }}">{{ app }}</a></li>
+            {% endfor %}
+
+            <p class='alert alert-secondary mt-3'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
+          </ul>
+        </div>
+      </div>
+
+      {% endif %}
+
     </div>
   </div>
 
