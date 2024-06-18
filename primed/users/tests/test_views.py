@@ -303,6 +303,31 @@ class UserDetailTest(TestCase):
         self.assertIn("dbgap_applications", response.context)
         self.assertEqual(len(response.context["dbgap_applications"]), 0)
 
+    def test_acm_staff_view(self):
+        """Users with staff view permission see dbGaP application info."""
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        other_user = UserFactory.create()
+        dbgap_application_1 = dbGaPApplicationFactory.create(principal_investigator=other_user)
+        dbgap_application_2 = dbGaPApplicationFactory.create()
+        dbgap_application_2.collaborators.add(other_user)
+        self.client.force_login(self.user)
+        response = self.client.get(other_user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "User data access mechanisms")
+        self.assertContains(response, "Principal Investigator")
+        self.assertContains(response, "Collaborator")
+        self.assertNotContains(response, "No dbGaP applications")
+        self.assertContains(response, dbgap_application_1.dbgap_project_id)
+        self.assertContains(response, dbgap_application_1.get_absolute_url())
+        self.assertContains(response, dbgap_application_2.dbgap_project_id)
+        self.assertContains(response, dbgap_application_2.get_absolute_url())
+        self.assertIn("dbgap_applications", response.context)
+        self.assertEqual(len(response.context["dbgap_applications"]), 2)
+        self.assertIn(dbgap_application_1, response.context["dbgap_applications"])
+        self.assertIn(dbgap_application_2, response.context["dbgap_applications"])
+
 
 class UserAutocompleteTest(TestCase):
     def setUp(self):
