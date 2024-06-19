@@ -61,6 +61,35 @@
 </dl>
 {% endblock panel %}
 
+{% block after_panel %}
+<div class="my-3">
+  <div class="accordion" id="accordionAccessors">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAccessorsOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAccessorsOne" aria-expanded="falase" aria-controls="collapseAccessorsOne">
+          <span class="fa-solid fa-handshake mx-2"></span>
+          Named accessors
+          <span class="badge mx-2 bg-secondary pill"> {{ table.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseAccessorsOne" class="accordion-collapse collapse" aria-labelledby="headingAccessorsOne" data-bs-parent="#accordionAccessors">
+        <div class="accordion-body">
+
+          <p>
+            This table shows accessors named for this signed agreement, their AnVIL account (if linked), and whether or not they are a member of the access group on AnVIL.
+            Only accessors who are PRIMED members are included.
+            An accessor must have linked their AnVIL account to be granted access to data on AnVIL.
+            If changes need to be made, please contact the CC.
+          </p>
+
+          {% render_table table %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock after_panel %}
 
 {% block action_buttons %}
   {% if show_update_button %}

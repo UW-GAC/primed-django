@@ -25,6 +25,8 @@ from django.views.generic import DetailView, FormView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
+
 from . import forms, helpers, models, tables, viewmixins
 from .audit import signed_agreement_audit, workspace_audit
 
@@ -347,10 +349,15 @@ class DataAffiliateAgreementCreate(
         return agreement_type
 
 
-class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, DetailView):
+class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, SingleTableMixin, DetailView):
     """View to show details about a `MemberAgreement`."""
 
     model = models.MemberAgreement
+
+    def get_table(self):
+        return UserAccountSingleGroupMembershipTable(
+            self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
+        )
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -399,10 +406,21 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
         return obj
 
 
-class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, DetailView):
+class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, MultiTableMixin, DetailView):
     """View to show details about a `DataAffiliateAgreement`."""
 
     model = models.DataAffiliateAgreement
+
+    def get_tables(self):
+        return (
+            UserAccountSingleGroupMembershipTable(
+                self.object.signed_agreement.accessors.all(),
+                managed_group=self.object.signed_agreement.anvil_access_group,
+            ),
+            UserAccountSingleGroupMembershipTable(
+                self.object.uploaders.all(), managed_group=self.object.anvil_upload_group
+            ),
+        )
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -449,10 +467,15 @@ class NonDataAffiliateAgreementCreate(
     ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
 
 
-class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, DetailView):
+class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, SingleTableMixin, DetailView):
     """View to show details about a `NonDataAffiliateAgreement`."""
 
     model = models.NonDataAffiliateAgreement
+
+    def get_table(self):
+        return UserAccountSingleGroupMembershipTable(
+            self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
+        )
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""

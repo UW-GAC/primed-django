@@ -32,6 +32,7 @@ from freezegun import freeze_time
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
     StudyFactory,
@@ -2316,6 +2317,43 @@ class MemberAgreementDetailTest(TestCase):
             ),
         )
 
+    def test_table_classes(self):
+        """Table classes are as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], UserAccountSingleGroupMembershipTable)
+
+    def test_accessor_table_none(self):
+        """No accessors are shown if the signed agreement has no accessors."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_accessor_table_one(self):
+        """One accessor is shown if the signed agreement has one accessors."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_accessor_table_two(self):
+        """Two accessors are shown if the signed agreement has two accessors."""
+        accessors = UserFactory.create_batch(2)
+        self.obj.signed_agreement.accessors.add(*accessors)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+    def test_accessor_table_only_from_this_application(self):
+        other_agreement = factories.MemberAgreementFactory.create()
+        other_accessor = UserFactory.create()
+        other_agreement.signed_agreement.accessors.add(other_accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
     def test_response_is_primary(self):
         """Response includes info about requires_study_review."""
         instance = factories.MemberAgreementFactory.create(
@@ -4094,6 +4132,75 @@ class DataAffiliateAgreementDetailTest(TestCase):
             html=True,
         )
 
+    def test_table_classes(self):
+        """Table classes are as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 2)
+        self.assertIsInstance(response.context_data["tables"][0], UserAccountSingleGroupMembershipTable)
+        self.assertIsInstance(response.context_data["tables"][1], UserAccountSingleGroupMembershipTable)
+
+    def test_accessor_table_none(self):
+        """No accessors are shown if the signed agreement has no accessors."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
+
+    def test_accessor_table_one(self):
+        """One accessor is shown if the signed agreement has one accessors."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 1)
+
+    def test_accessor_table_two(self):
+        """Two accessors are shown if the signed agreement has two accessors."""
+        accessors = UserFactory.create_batch(2)
+        self.obj.signed_agreement.accessors.add(*accessors)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 2)
+
+    def test_accessor_table_only_from_this_application(self):
+        other_agreement = factories.DataAffiliateAgreementFactory.create()
+        other_accessor = UserFactory.create()
+        other_agreement.signed_agreement.accessors.add(other_accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
+
+    def test_uploader_table_none(self):
+        """No uploaders are shown if the signed agreement has no uploaders."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
+
+    def test_uploader_table_one(self):
+        """One uploader is shown if the signed agreement has one uploader."""
+        uploader = UserFactory.create()
+        self.obj.uploaders.add(uploader)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 1)
+
+    def test_uploader_table_two(self):
+        """Two uploaders are shown if the signed agreement has two uploaders."""
+        uploaders = UserFactory.create_batch(2)
+        self.obj.uploaders.add(*uploaders)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 2)
+
+    def test_uploader_table_only_from_this_application(self):
+        other_agreement = factories.DataAffiliateAgreementFactory.create()
+        other_uploader = UserFactory.create()
+        other_agreement.uploaders.add(other_uploader)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
@@ -5103,6 +5210,43 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
+
+    def test_table_classes(self):
+        """Table classes are as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], UserAccountSingleGroupMembershipTable)
+
+    def test_accessor_table_none(self):
+        """No accessors are shown if the signed agreement has no accessors."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_accessor_table_one(self):
+        """One accessor is shown if the signed agreement has one accessors."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_accessor_table_two(self):
+        """Two accessors are shown if the signed agreement has two accessors."""
+        accessors = UserFactory.create_batch(2)
+        self.obj.signed_agreement.accessors.add(*accessors)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+    def test_accessor_table_only_from_this_application(self):
+        other_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        other_accessor = UserFactory.create()
+        other_agreement.signed_agreement.accessors.add(other_accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
 
 
 class NonDataAffiliateAgreementListTest(TestCase):

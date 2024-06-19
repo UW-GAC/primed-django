@@ -91,6 +91,62 @@
 
 {{ block.super }}
 
+<div class="my-3">
+  <div class="accordion" id="accordionAccessors">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAccessorsOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAccessorsOne" aria-expanded="falase" aria-controls="collapseAccessorsOne">
+          <span class="fa-solid fa-handshake mx-2"></span>
+          Named accessors
+          <span class="badge mx-2 bg-secondary pill"> {{ tables.0.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseAccessorsOne" class="accordion-collapse collapse" aria-labelledby="headingAccessorsOne" data-bs-parent="#accordionAccessors">
+        <div class="accordion-body">
+
+          <p>
+            This table shows accessors named for this signed agreement, their AnVIL account (if linked), and whether or not they are a member of the access group on AnVIL.
+            Only accessors who are PRIMED members are included.
+            An accessor must have linked their AnVIL account to be granted access to data on AnVIL.
+            If changes need to be made, please contact the CC.
+          </p>
+
+          {% render_table tables.0 %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="my-3">
+  <div class="accordion" id="accordionUploaders">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingUploadersOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUploadersOne" aria-expanded="falase" aria-controls="collapseUploadersOne">
+          <span class="fa-solid fa-cloud-arrow-up mx-2"></span>
+          Named uploaders
+          <span class="badge mx-2 bg-secondary pill"> {{ tables.1.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseUploadersOne" class="accordion-collapse collapse" aria-labelledby="headingUploadersOne" data-bs-parent="#accordionUploaders">
+        <div class="accordion-body">
+
+          <p>
+            This table shows uploaders named for this signed agreement, their AnVIL account (if linked), and whether or not they are a member of the upload group on AnVIL.
+            Only uploaders who are PRIMED members are included.
+            An uploaders must have linked their AnVIL account to be granted access to data on AnVIL.
+            If changes need to be made, please contact the CC.
+          </p>
+
+          {% render_table tables.1 %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock after_panel %}
 
 
