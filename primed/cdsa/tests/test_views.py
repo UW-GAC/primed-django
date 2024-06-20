@@ -68,7 +68,7 @@ class NavbarTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertContains(response, reverse("cdsa:agreement_versions:list"))
-        self.assertContains(response, reverse("cdsa:audit:signed_agreements:all"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements:sag:all"))
         self.assertContains(response, reverse("cdsa:audit:workspaces:all"))
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
@@ -88,7 +88,7 @@ class NavbarTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertContains(response, reverse("cdsa:agreement_versions:list"))
-        self.assertContains(response, reverse("cdsa:audit:signed_agreements:all"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements:sag:all"))
         self.assertContains(response, reverse("cdsa:audit:workspaces:all"))
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
@@ -6239,7 +6239,7 @@ class SignedAgreementAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "cdsa:audit:signed_agreements:all",
+            "cdsa:audit:signed_agreements:sag:all",
             args=args,
         )
 
@@ -6415,7 +6415,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:audit:signed_agreements:resolve", args=args)
+        return reverse("cdsa:audit:signed_agreements:sag:resolve", args=args)
 
     def get_view(self):
         """Return the view being tested."""

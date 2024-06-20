@@ -23,7 +23,7 @@ class Command(BaseCommand):
         data_access_audit.run_audit()
 
         # Construct the url for handling errors.
-        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:all")
+        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:sag:all")
         self._report_results(data_access_audit, url)
         self._send_email(data_access_audit, url)
 

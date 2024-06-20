@@ -149,7 +149,7 @@ class RunCDSAAuditTest(TestCase):
             "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
-        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), out.getvalue())
+        self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), out.getvalue())
         self.assertIn("Running CDSAWorkspace access audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -170,7 +170,7 @@ class RunCDSAAuditTest(TestCase):
             "* Errors: 1\n"
         )
         self.assertIn(expected_output, out.getvalue())
-        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), out.getvalue())
+        self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), out.getvalue())
         self.assertIn("Running CDSAWorkspace access audit... ok!", out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -203,7 +203,7 @@ class RunCDSAAuditTest(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
-        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0])
+        self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), email.alternatives[0][0])
 
     def test_command_run_audit_one_agreement_error_email(self):
         """Test command output with one error instance."""
@@ -221,14 +221,14 @@ class RunCDSAAuditTest(TestCase):
             "* Errors: 1\n"
         )
         self.assertIn(expected_output, out.getvalue())
-        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), out.getvalue())
+        self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), out.getvalue())
         self.assertIn("Running CDSAWorkspace access audit... ok!", out.getvalue())
         # One message has been sent by default.
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
-        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0])
+        self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), email.alternatives[0][0])
 
     def test_command_run_audit_one_workspace_verified(self):
         """Test command output with one verified instance."""
@@ -395,7 +395,7 @@ class RunCDSAAuditTest(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
-        self.assertIn(reverse("cdsa:audit:signed_agreements:all"), email.alternatives[0][0])
+        self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), email.alternatives[0][0])
         email = mail.outbox[1]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA WorkspaceAccessAudit errors")

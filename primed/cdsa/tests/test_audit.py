@@ -36,7 +36,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertIsNone(instance.action)
         self.assertEqual(
             instance.get_action_url(),
-            reverse("cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]),
+            reverse("cdsa:audit:signed_agreements:sag:resolve", args=[signed_agreement.cc_id]),
         )
 
     def test_verified_no_access(self):
@@ -48,7 +48,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertIsNone(instance.action)
         self.assertEqual(
             instance.get_action_url(),
-            reverse("cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]),
+            reverse("cdsa:audit:signed_agreements:sag:resolve", args=[signed_agreement.cc_id]),
         )
 
     def test_grant_access(self):
@@ -60,7 +60,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(instance.action, "Grant access")
         self.assertEqual(
             instance.get_action_url(),
-            reverse("cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]),
+            reverse("cdsa:audit:signed_agreements:sag:resolve", args=[signed_agreement.cc_id]),
         )
 
     def test_remove_access(self):
@@ -72,7 +72,7 @@ class SignedAgreementAuditResultTest(TestCase):
         self.assertEqual(instance.action, "Remove access")
         self.assertEqual(
             instance.get_action_url(),
-            reverse("cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]),
+            reverse("cdsa:audit:signed_agreements:sag:resolve", args=[signed_agreement.cc_id]),
         )
 
     def test_error(self):
@@ -83,7 +83,7 @@ class SignedAgreementAuditResultTest(TestCase):
         )
         self.assertEqual(
             instance.get_action_url(),
-            reverse("cdsa:audit:signed_agreements:resolve", args=[signed_agreement.cc_id]),
+            reverse("cdsa:audit:signed_agreements:sag:resolve", args=[signed_agreement.cc_id]),
         )
 
     def test_anvil_group_name(self):

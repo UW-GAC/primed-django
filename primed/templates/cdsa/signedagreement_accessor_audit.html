@@ -1,0 +1,45 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}Signed Agreement audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Signed Agreement accessor audit</h1>
+
+<h2>Audit results</h2>
+
+<div class="my-3 p-3 bg-light border rounded shadow-sm">
+  <p>
+    To be added to a dbGaP access group, a user must have linked their AnVIL account and be named as a collaborator on a dbGaP application.
+    Access to workspaces containing data for study-consent groups that are approved for this application is controlled by adding users' AnVIL accounts to the dbGaP access group for the application.
+  </p>
+  <p>The audit result categories are explained below.
+    <ul>
+
+      <li><b>Verified</b> includes the following:</li>
+        <ul>
+          <li>A named accessor who <strong>has not</strong> linked their AnVIL account.</li>
+          <li>A named accessor who has linked their AnVIL account and is in the AnVIL access group for this application.</li>
+          <li>A named accessor who <strong>has not</strong> linked their AnVIL account and <strong>is not</strong> in the AnVIL access group.</li>
+        </ul>
+
+      <li><b>Needs action</b> includes the following:</li>
+      <ul>
+        <li>A named accessor who has linked their AnVIL account and <strong>is not </strong> in the AnVIL access group for this application.</li>
+        <li>An account in the AnVIL access group for this application that <strong>is not</strong> linked to a collaborator.</li>
+    </ul>
+
+      <li><b>Errors</b></li>
+      <ul>
+        <li>A different group is in the AnVIL access group for this application.</li>
+      </ul>
+    </ul>
+  </p>
+  <p>Any errors should be reported!</p>
+</div>
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

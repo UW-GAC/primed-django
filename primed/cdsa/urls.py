@@ -134,7 +134,7 @@ signed_agreement_patterns = (
     "signed_agreements",
 )
 
-signed_agreement_audit_patterns = (
+signed_agreement_sag_audit_patterns = (
     [
         path("", views.SignedAgreementAudit.as_view(), name="all"),
         path(
@@ -142,6 +142,13 @@ signed_agreement_audit_patterns = (
             views.SignedAgreementAuditResolve.as_view(),
             name="resolve",
         ),
+    ],
+    "sag",
+)
+
+signed_agreement_audit_patterns = (
+    [
+        path("sag/", include(signed_agreement_sag_audit_patterns)),
     ],
     "signed_agreements",
 )
@@ -160,8 +167,8 @@ workspace_audit_patterns = (
 
 audit_patterns = (
     [
-        path("workspaces", include(workspace_audit_patterns)),
-        path("signed_agreements", include(signed_agreement_audit_patterns)),
+        path("workspaces/", include(workspace_audit_patterns)),
+        path("signed_agreements/", include(signed_agreement_audit_patterns)),
     ],
     "audit",
 )

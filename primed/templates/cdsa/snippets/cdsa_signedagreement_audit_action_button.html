@@ -2,13 +2,13 @@
     {% if record.action %}
     <form
         method="post"
-        action="{% url 'cdsa:audit:signed_agreements:resolve' record.signed_agreement.cc_id %}">
+        action="{% url 'cdsa:audit:signed_agreements:sag:resolve' record.signed_agreement.cc_id %}">
 
         {% csrf_token %}
         <button
             type="submit"
             class="btn btn-primary btn-sm"
-            hx-post="{% url 'cdsa:audit:signed_agreements:resolve' record.signed_agreement.cc_id %}"
+            hx-post="{% url 'cdsa:audit:signed_agreements:sag:resolve' record.signed_agreement.cc_id %}"
             hx-disabled-elt="this"
             hx-target="closest div"
             hx-swap="innerHTML">
