@@ -2650,34 +2650,67 @@ class MemberAgreementDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.signed_agreement.cc_id + 1)
 
-    def test_response_includes_link_to_user_profile(self):
-        """Response includes a link to the user profile page."""
-        self.client.force_login(self.user)
+    def test_content_staff_edit(self):
+        staff_edit_user = UserFactory.create()
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(staff_edit_user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
         self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
-
-    def test_response_includes_link_to_study_site(self):
-        """Response includes a link to the study site detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(response, self.obj.study_site.get_absolute_url())
-
-    def test_response_includes_link_to_anvil_access_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Links to groups.
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study_site.get_absolute_url())
+        # Links to update views.
+        self.assertContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
+
+    def test_content_staff_view(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study_site.get_absolute_url())
+        # Links to update views.
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
     def test_content_representative(self):
         """Representative does not see all links or content."""
         self.client.force_login(self.obj.signed_agreement.representative)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
         # No links to study site.
         self.assertNotContains(response, self.obj.study_site.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -2688,12 +2721,18 @@ class MemberAgreementDetailTest(TestCase):
         self.obj.signed_agreement.accessors.add(accessor)
         self.client.force_login(accessor)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
         # No links to study site.
         self.assertNotContains(response, self.obj.study_site.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -4374,41 +4413,73 @@ class DataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.signed_agreement.cc_id + 1)
 
-    def test_response_includes_link_to_user_profile(self):
-        """Response includes a link to the user profile page."""
-        self.client.force_login(self.user)
+    def test_content_staff_edit(self):
+        staff_edit_user = UserFactory.create()
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(staff_edit_user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
         self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
-
-    def test_response_includes_link_to_study(self):
-        """Response includes a link to the study detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(response, self.obj.study.get_absolute_url())
-
-    def test_response_includes_link_to_anvil_access_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Links to groups.
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # Links to update views.
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
-    def test_response_includes_link_to_anvil_upload_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
+    def test_content_staff_view(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No link to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
     def test_content_representative(self):
         """Representative does not see all links or content."""
         self.client.force_login(self.obj.signed_agreement.representative)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
-        # Links to study.
+        # Links to study site.
         self.assertContains(response, self.obj.study.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -4419,13 +4490,20 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.obj.signed_agreement.accessors.add(accessor)
         self.client.force_login(accessor)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
-        # Links to study.
+        # Links to study site.
         self.assertContains(response, self.obj.study.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -4436,13 +4514,20 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.obj.uploaders.add(uploader)
         self.client.force_login(uploader)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
-        # Links to study.
+        # Links to study site.
         self.assertContains(response, self.obj.study.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -5716,26 +5801,64 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.signed_agreement.cc_id + 1)
 
-    def test_response_includes_link_to_user_profile(self):
-        """Response includes a link to the user profile page."""
-        self.client.force_login(self.user)
+    def test_content_staff_edit(self):
+        staff_edit_user = UserFactory.create()
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(staff_edit_user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
         self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to update views.
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
-    def test_response_includes_link_to_anvil_access_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
+    def test_content_staff_view(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No link to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
     def test_content_representative(self):
         """Representative does not see all links or content."""
         self.client.force_login(self.obj.signed_agreement.representative)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -5746,10 +5869,17 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.obj.signed_agreement.accessors.add(accessor)
         self.client.force_login(accessor)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
         # No links to groups.
         self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         # No links to agreement versions.
         self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")

@@ -16,7 +16,11 @@
 <dl class="row">
   <dt class="col-sm-2">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
   <dt class="col-sm-2">Representative</dt> <dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative.name }}</a>
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative.name }}</a>
+    {% else %}
+      {{ object.signed_agreement.representative.name }}
+    {% endif %}
   </dd>
   <dt class="col-sm-2">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
   <dt class="col-sm-2">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
