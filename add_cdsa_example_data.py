@@ -147,58 +147,59 @@ cdsa_1009 = factories.NonDataAffiliateAgreementFactory.create(
 
 
 # Add some users to the CDSA groups.
-accounts = AccountFactory.create_batch(10, verified=True)
-cdsa_1001.signed_agreement.accessors.add(accounts[0].user)
+users = UserFactory.create_batch(10)
+cdsa_1001.signed_agreement.accessors.add(users[0])
 GroupAccountMembershipFactory.create(
     group=cdsa_1001.signed_agreement.anvil_access_group,
-    account=accounts[0],
+    account__user=users[0],
 )
 # # Do not add as an accessor so we can check auditing.
-# cdsa_1001.signed_agreement.accessors.add(accounts[1].user)
+# cdsa_1001.signed_agreement.accessors.add(users[1])
 GroupAccountMembershipFactory.create(
     group=cdsa_1001.signed_agreement.anvil_access_group,
-    account=accounts[1],
+    account__user=users[1],
 )
-cdsa_1001.signed_agreement.accessors.add(accounts[2].user)
+cdsa_1001.signed_agreement.accessors.add(users[2])
+AccountFactory.create(user=users[2])
 # # Do not create the GroupAccountMembership so we can check auditing.
 # GroupAccountMembershipFactory.create(
 #     group=cdsa_1001.signed_agreement.anvil_access_group,
-#     account=accounts[2],
+#     account__user=users[2],
 # )
-cdsa_1002.signed_agreement.accessors.add(accounts[3].user)
+cdsa_1002.signed_agreement.accessors.add(users[3])
 GroupAccountMembershipFactory.create(
     group=cdsa_1002.signed_agreement.anvil_access_group,
-    account=accounts[3],
+    account__user=users[3],
 )
-cdsa_1002.signed_agreement.accessors.add(accounts[4].user)
+cdsa_1002.signed_agreement.accessors.add(users[4])
 GroupAccountMembershipFactory.create(
     group=cdsa_1002.signed_agreement.anvil_access_group,
-    account=accounts[4],
+    account__user=users[4],
 )
-cdsa_1003.signed_agreement.accessors.add(accounts[5].user)
+cdsa_1003.signed_agreement.accessors.add(users[5])
 GroupAccountMembershipFactory.create(
     group=cdsa_1003.signed_agreement.anvil_access_group,
-    account=accounts[5],
+    account__user=users[5],
 )
-cdsa_1005.signed_agreement.accessors.add(accounts[6].user)
+cdsa_1005.signed_agreement.accessors.add(users[6])
 GroupAccountMembershipFactory.create(
     group=cdsa_1005.signed_agreement.anvil_access_group,
-    account=accounts[6],
+    account__user=users[6],
 )
-cdsa_1005.signed_agreement.accessors.add(accounts[7].user)
+cdsa_1005.signed_agreement.accessors.add(users[7])
 GroupAccountMembershipFactory.create(
     group=cdsa_1005.signed_agreement.anvil_access_group,
-    account=accounts[7],
+    account__user=users[7],
 )
-cdsa_1006.signed_agreement.accessors.add(accounts[8].user)
+cdsa_1006.signed_agreement.accessors.add(users[8])
 GroupAccountMembershipFactory.create(
     group=cdsa_1006.signed_agreement.anvil_access_group,
-    account=accounts[8],
+    account__user=users[8],
 )
-cdsa_1006.signed_agreement.accessors.add(accounts[9].user)
+cdsa_1006.signed_agreement.accessors.add(users[9])
 GroupAccountMembershipFactory.create(
     group=cdsa_1006.signed_agreement.anvil_access_group,
-    account=accounts[9],
+    account__user=users[9],
 )
 # Add an uploader.
 cdsa_1006.uploaders.add(UserFactory.create())
