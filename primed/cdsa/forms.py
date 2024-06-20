@@ -58,6 +58,20 @@ class SignedAgreementStatusForm(forms.ModelForm):
         widgets = {"status": forms.RadioSelect}
 
 
+class SignedAgreementAccessorsForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update accessors for `SignedAgreementAccessor` objects."""
+
+    class Meta:
+        model = models.SignedAgreement
+        fields = ("accessors",)
+        widgets = {
+            "accessors": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+
 class MemberAgreementForm(forms.ModelForm):
     is_primary = forms.TypedChoiceField(
         coerce=lambda x: x == "True",
@@ -98,6 +112,23 @@ class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 url="primed_anvil:studies:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
+            "uploaders": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+
+class DataAffiliateAgreementUploadersForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update uploaders for `DataAffiliateAgreement` objects."""
+
+    class Meta:
+        model = models.DataAffiliateAgreement
+        fields = (
+            "signed_agreement",
+            "uploaders",
+        )
+        widgets = {
             "uploaders": autocomplete.ModelSelect2Multiple(
                 url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
