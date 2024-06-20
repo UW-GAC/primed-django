@@ -29,19 +29,39 @@ agreement_version_patterns = (
     ],
     "agreement_versions",
 )
+
+member_agreement_update_patterns = (
+    [
+        path(
+            "status/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.MEMBER},
+            name="status",
+        ),
+    ],
+    "update",
+)
+
 member_agreement_patterns = (
     [
         path("", views.MemberAgreementList.as_view(), name="list"),
         path("new/", views.MemberAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.MemberAgreementDetail.as_view(), name="detail"),
-        path(
-            "<int:cc_id>/update/",
-            views.SignedAgreementStatusUpdate.as_view(),
-            {"agreement_type": models.SignedAgreement.MEMBER},
-            name="update",
-        ),
+        path("<int:cc_id>/update/", include(member_agreement_update_patterns)),
     ],
     "members",
+)
+
+data_affiliate_agreement_update_patterns = (
+    [
+        path(
+            "status/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
+            name="status",
+        ),
+    ],
+    "update",
 )
 
 data_affiliate_agreement_patterns = (
@@ -49,14 +69,21 @@ data_affiliate_agreement_patterns = (
         path("", views.DataAffiliateAgreementList.as_view(), name="list"),
         path("new/", views.DataAffiliateAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.DataAffiliateAgreementDetail.as_view(), name="detail"),
-        path(
-            "<int:cc_id>/update/",
-            views.SignedAgreementStatusUpdate.as_view(),
-            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
-            name="update",
-        ),
+        path("<int:cc_id>/update/", include(data_affiliate_agreement_update_patterns)),
     ],
     "data_affiliates",
+)
+
+non_data_affiliate_agreement_update_patterns = (
+    [
+        path(
+            "status/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
+            name="status",
+        ),
+    ],
+    "update",
 )
 
 non_data_affiliate_agreement_patterns = (
@@ -68,12 +95,7 @@ non_data_affiliate_agreement_patterns = (
             views.NonDataAffiliateAgreementDetail.as_view(),
             name="detail",
         ),
-        path(
-            "<int:cc_id>/update/",
-            views.SignedAgreementStatusUpdate.as_view(),
-            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
-            name="update",
-        ),
+        path("<int:cc_id>/update/", include(non_data_affiliate_agreement_update_patterns)),
     ],
     "non_data_affiliates",
 )

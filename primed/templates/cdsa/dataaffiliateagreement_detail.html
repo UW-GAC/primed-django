@@ -152,7 +152,7 @@
 
 {% block action_buttons %}
   {% if show_update_button %}
-  <a href="{% url 'cdsa:signed_agreements:data_affiliates:update' cc_id=object.signed_agreement.cc_id %}" class="btn btn-primary" role="button">Update status</a>
+  <a href="{% url 'cdsa:signed_agreements:data_affiliates:update:status' cc_id=object.signed_agreement.cc_id %}" class="btn btn-primary" role="button">Update status</a>
   </p>
   {% endif %}
 {% endblock action_buttons %}

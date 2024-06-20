@@ -803,7 +803,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:signed_agreements:members:update", args=args)
+        return reverse("cdsa:signed_agreements:members:update:status", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -945,7 +945,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:signed_agreements:data_affiliates:update", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:update:status", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1087,7 +1087,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:signed_agreements:non_data_affiliates:update", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -2297,7 +2297,7 @@ class MemberAgreementDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "cdsa:signed_agreements:members:update",
+                "cdsa:signed_agreements:members:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -2312,7 +2312,7 @@ class MemberAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "cdsa:signed_agreements:members:update",
+                "cdsa:signed_agreements:members:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -4046,7 +4046,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "cdsa:signed_agreements:data_affiliates:update",
+                "cdsa:signed_agreements:data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -4061,7 +4061,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "cdsa:signed_agreements:data_affiliates:update",
+                "cdsa:signed_agreements:data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -5191,7 +5191,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "cdsa:signed_agreements:non_data_affiliates:update",
+                "cdsa:signed_agreements:non_data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -5206,7 +5206,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "cdsa:signed_agreements:non_data_affiliates:update",
+                "cdsa:signed_agreements:non_data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
