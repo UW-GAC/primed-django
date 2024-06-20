@@ -2672,6 +2672,9 @@ class MemberAgreementDetailTest(TestCase):
         self.assertContains(
             response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
         )
+        self.assertContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
+        )
         # Has date created or modified.
         self.assertContains(response, "Date created")
         self.assertContains(response, "Date modified")
@@ -2690,6 +2693,9 @@ class MemberAgreementDetailTest(TestCase):
         # Links to update views.
         self.assertNotContains(
             response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
         )
         # Has date created or modified.
         self.assertContains(response, "Date created")
@@ -2710,6 +2716,9 @@ class MemberAgreementDetailTest(TestCase):
         # No links to update views.
         self.assertNotContains(
             response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
         )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
@@ -2732,6 +2741,9 @@ class MemberAgreementDetailTest(TestCase):
         # No links to update views.
         self.assertNotContains(
             response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
         )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
@@ -4437,6 +4449,14 @@ class DataAffiliateAgreementDetailTest(TestCase):
             response,
             reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
         )
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
         # Has date created or modified.
         self.assertContains(response, "Date created")
         self.assertContains(response, "Date modified")
@@ -4457,6 +4477,14 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
         )
         # Has date created or modified.
         self.assertContains(response, "Date created")
@@ -4479,6 +4507,14 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
         )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
@@ -4504,6 +4540,14 @@ class DataAffiliateAgreementDetailTest(TestCase):
             response,
             reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
         )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
         self.assertNotContains(response, "Date modified")
@@ -4527,6 +4571,14 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
         )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
@@ -5822,6 +5874,12 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
             response,
             reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
         )
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
+        )
         # Has date created or modified.
         self.assertContains(response, "Date created")
         self.assertContains(response, "Date modified")
@@ -5839,6 +5897,12 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
         )
         # Has date created or modified.
         self.assertContains(response, "Date created")
@@ -5858,6 +5922,12 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
         )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
@@ -5879,6 +5949,12 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
         )
         # No date created or modified.
         self.assertNotContains(response, "Date created")
