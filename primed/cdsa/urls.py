@@ -38,6 +38,12 @@ member_agreement_update_patterns = (
             {"agreement_type": models.SignedAgreement.MEMBER},
             name="status",
         ),
+        path(
+            "accessors/",
+            views.SignedAgreementAccessorsUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.MEMBER},
+            name="accessors",
+        ),
     ],
     "update",
 )
@@ -60,6 +66,17 @@ data_affiliate_agreement_update_patterns = (
             {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
             name="status",
         ),
+        path(
+            "accessors/",
+            views.SignedAgreementAccessorsUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
+            name="accessors",
+        ),
+        path(
+            "uploaders/",
+            views.DataAffiliateAgreementUploadersUpdate.as_view(),
+            name="uploaders",
+        ),
     ],
     "update",
 )
@@ -81,6 +98,12 @@ non_data_affiliate_agreement_update_patterns = (
             views.SignedAgreementStatusUpdate.as_view(),
             {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
             name="status",
+        ),
+        path(
+            "accessors/",
+            views.SignedAgreementAccessorsUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
+            name="accessors",
         ),
     ],
     "update",

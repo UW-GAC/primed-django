@@ -397,6 +397,31 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
     def get_object(self, queryset=None):
         """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
         queryset = self.get_queryset()
+        if not self.kwargs.get("agreement_type"):
+            raise Http404("No agreement_type provided.")
+        try:
+            obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+
+class SignedAgreementAccessorsUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """Update accessors for a SignedAgreement object."""
+
+    model = models.SignedAgreement
+    form_class = forms.SignedAgreementAccessorsForm
+    template_name = "cdsa/signedagreement_accessors_update.html"
+    agreement_type = None
+    success_message = "Successfully updated Signed Agreement accessors."
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
+        queryset = self.get_queryset()
+        if not self.kwargs.get("agreement_type"):
+            raise Http404("No agreement_type provided.")
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
@@ -448,6 +473,26 @@ class DataAffiliateAgreementList(AnVILConsortiumManagerStaffViewRequired, Single
 
     model = models.DataAffiliateAgreement
     table_class = tables.DataAffiliateAgreementTable
+
+
+class DataAffiliateAgreementUploadersUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """Update uploaders for a DataAffiliateAgreement object."""
+
+    model = models.DataAffiliateAgreement
+    form_class = forms.DataAffiliateAgreementUploadersForm
+    template_name = "cdsa/dataaffiliateagreement_uploaders_update.html"
+    success_message = "Successfully updated Data Affiliate Agreement uploaders."
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by CDSA cc_id."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class NonDataAffiliateAgreementCreate(
