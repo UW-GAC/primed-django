@@ -146,9 +146,16 @@ signed_agreement_sag_audit_patterns = (
     "sag",
 )
 
+signed_agreement_accessor_audit_patterns = (
+    [
+        path("", views.SignedAgreementAccessorAudit.as_view(), name="all"),
+    ],
+    "accessors",
+)
 signed_agreement_audit_patterns = (
     [
         path("sag/", include(signed_agreement_sag_audit_patterns)),
+        path("accessors/", include(signed_agreement_accessor_audit_patterns)),
     ],
     "signed_agreements",
 )

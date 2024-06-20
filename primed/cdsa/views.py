@@ -28,7 +28,7 @@ from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
 
 from . import forms, helpers, models, tables, viewmixins
-from .audit import signed_agreement_audit, workspace_audit
+from .audit import accessor_audit, signed_agreement_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
 
@@ -770,6 +770,22 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
             return HttpResponse(self.htmx_success)
         else:
             return super().form_valid(form)
+
+
+class SignedAgreementAccessorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to show accessor audit results for `SignedAgreements`."""
+
+    template_name = "cdsa/signedagreement_accessor_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
+        return context
 
 
 class RecordsIndex(TemplateView):

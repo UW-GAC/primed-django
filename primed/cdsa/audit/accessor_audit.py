@@ -103,7 +103,7 @@ class Error(AccessorAuditResult):
 class SignedAgreementAccessorAuditTable(tables.Table):
     """A table to show results from a SignedAgreementAccessorAudit subclass."""
 
-    application = tables.Column(linkify=True)
+    signed_agreement = tables.Column(linkify=True)
     user = tables.Column(linkify=True)
     member = tables.Column(linkify=True)
     has_access = BooleanIconColumn(show_false_icon=True)
