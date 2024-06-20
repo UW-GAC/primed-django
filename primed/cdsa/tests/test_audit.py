@@ -1,6 +1,8 @@
 # from datetime import timedelta
 
 from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    GroupAccountMembershipFactory,
     GroupGroupMembershipFactory,
     ManagedGroupFactory,
 )
@@ -9,9 +11,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
+from primed.users.tests.factories import UserFactory
 
 from .. import models
-from ..audit import signed_agreement_audit, workspace_audit
+from ..audit import accessor_audit, signed_agreement_audit, workspace_audit
 from . import factories
 
 # from django.utils import timezone
@@ -162,8 +165,8 @@ class SignedAgreementAccessAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
         self.assertEqual(record.note, cdsa_audit.ACTIVE_PRIMARY_AGREEMENT)
 
-    def test_dbgap_application_queryset_wrong_class(self):
-        """dbGaPAccessAudit raises error if dbgap_application_queryset has the wrong model class."""
+    def test_signed_agreement_queryset_wrong_class(self):
+        """dbGaPAccessAudit raises error if signed_agreement_queryset has the wrong model class."""
         with self.assertRaises(ValueError) as e:
             signed_agreement_audit.SignedAgreementAccessAudit(
                 signed_agreement_queryset=models.MemberAgreement.objects.all()
@@ -173,8 +176,8 @@ class SignedAgreementAccessAuditTest(TestCase):
             "signed_agreement_queryset must be a queryset of SignedAgreement objects.",
         )
 
-    def test_dbgap_application_queryset_not_queryset(self):
-        """dbGaPAccessAudit raises error if dbgap_application_queryset is not a queryset."""
+    def test_signed_agreement_queryset_not_queryset(self):
+        """dbGaPAccessAudit raises error if signed_agreement_queryset is not a queryset."""
         member_agreement = factories.MemberAgreementFactory.create()
         with self.assertRaises(ValueError) as e:
             signed_agreement_audit.SignedAgreementAccessAudit(
@@ -1499,7 +1502,7 @@ class WorkspaceAccessAuditTest(TestCase):
         self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
 
     def test_cdsa_workspace_queryset_wrong_class(self):
-        """Audit raises error if dbgap_application_queryset has the wrong model class."""
+        """Audit raises error if signed_agreement_queryset has the wrong model class."""
         with self.assertRaises(ValueError) as e:
             workspace_audit.WorkspaceAccessAudit(cdsa_workspace_queryset=models.SignedAgreement.objects.all())
         self.assertEqual(
@@ -1508,7 +1511,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
 
     def test_cdsa_workspace_queryset_not_queryset(self):
-        """Audit raises error if dbgap_application_queryset is not a queryset."""
+        """Audit raises error if signed_agreement_queryset is not a queryset."""
         workspace = factories.CDSAWorkspaceFactory.create()
         with self.assertRaises(ValueError) as e:
             workspace_audit.WorkspaceAccessAudit(cdsa_workspace_queryset=workspace)
@@ -2073,3 +2076,495 @@ class WorkspaceAccessAuditTableTest(TestCase):
         ]
         table = workspace_audit.WorkspaceAccessAuditTable(data)
         self.assertEqual(len(table.rows), 2)
+
+
+class SignedAgreementAccessorAuditTest(TestCase):
+    """Tests for the SignedAgreementAccessorAudit classes."""
+
+    def test_completed(self):
+        """completed is updated properly."""
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_applications(self):
+        """Audit works if there are no SignedAgreements."""
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def testaudit_agreement_and_object_user(self):
+        """audit_agreement_and_object works when passed a user object."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        user = UserFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, user)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+
+    def testaudit_agreement_and_object_account(self):
+        """audit_agreement_and_object works when passed an Account object."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, account)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def testaudit_agreement_and_object_group(self):
+        """audit_agreement_and_object works when passed a ManagedGroup object."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
+
+    def testaudit_agreement_and_object_user_email(self):
+        """audit_agreement_and_object works when passed a string email for a user."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        user = UserFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, user.username)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+
+    def testaudit_agreement_and_object_user_email_case_insensitive(self):
+        """audit_agreement_and_object works when passed a string email for a user."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        user = UserFactory.create(username="foo@BAR.com")
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, "FOO@bar.com")
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+
+    def testaudit_agreement_and_object_account_email(self):
+        """audit_agreement_and_object works when passed a string email for an account."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, account.email)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def testaudit_agreement_and_object_account_email_case_insensitive(self):
+        """audit_agreement_and_object works when passed a string email for an account."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create(email="foo@BAR.com")
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, "FOO@bar.com")
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def testaudit_agreement_and_object_group_email(self):
+        """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, group.email)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
+
+    def testaudit_agreement_and_object_group_email_case_insensitive(self):
+        """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        group = ManagedGroupFactory.create(email="foo@BAR.com")
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, "FOO@bar.com")
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
+
+    def testaudit_agreement_and_object_email_does_not_exist(self):
+        """audit_agreement_and_object works when passed a ManagedGroup object."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        with self.assertRaises(ValueError) as e:
+            audit.audit_agreement_and_object(signed_agreement, "foo@bar.com")
+        self.assertIn(
+            "Could not find",
+            str(e.exception),
+        )
+
+    def testaudit_agreement_and_object_other_object(self):
+        """audit_agreement_and_object raises ValueError when passed an incorrect object."""
+        signed_agreement = factories.SignedAgreementFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        with self.assertRaises(ValueError):
+            audit.audit_agreement_and_object(signed_agreement, object)
+
+    def test_accessor_linked_account_in_access_group(self):
+        # Create agreement.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up accessors.
+        signed_agreement.accessors.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_IN_ACCESS_GROUP)
+
+    def test_accessor_linked_account_not_in_access_group(self):
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up accessors.
+        signed_agreement.accessors.add(account.user)
+        # Access group membership.
+        # GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.GrantAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+
+    def test_accessor_no_account(self):
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        user = UserFactory.create()
+        # account = AccountFactory.create(verified=True)
+        # Set up accessors.
+        signed_agreement.accessors.add(user)
+        # Access group membership.
+        # GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT)
+
+    def test_user_in_group_not_accessor(self):
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up accessors.
+        # signed_agreement.accessors.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.RemoveAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+
+    def test_not_accessor_and_account_has_no_user(self):
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up accessors.
+        # signed_agreement.accessors.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.RemoveAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_two_accessors(self):
+        """Audit works when there are two accessors."""
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account_1 = AccountFactory.create(verified=True)
+        account_2 = AccountFactory.create(verified=True)
+        # Set up accessors.
+        signed_agreement.accessors.add(account_1.user, account_2.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account_1)
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 1)  # One of the accessors.
+        self.assertEqual(len(audit.needs_action), 1)  # The other accessor.
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, audit.ACCESSOR_IN_ACCESS_GROUP)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.GrantAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account_2.user)
+        self.assertEqual(record.member, account_2)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+
+    def test_unexpected_group_in_access_group(self):
+        """A group unexpectedly has access."""
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=signed_agreement.anvil_access_group,
+            child_group=group,
+        )
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, accessor_audit.RemoveAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.UNEXPECTED_GROUP_ACCESS)
+
+    def test_representative_not_accessor(self):
+        """Representative is not an accessor."""
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_representative_is_accessor(self):
+        """Representative is also an accessor."""
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        signed_agreement.accessors.add(signed_agreement.representative)
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, signed_agreement.representative)
+        self.assertIsNone(record.member)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT)
+
+    def test_ignores_admins_group(self):
+        """Ignores the admin group."""
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        GroupGroupMembershipFactory.create(
+            parent_group=signed_agreement.anvil_access_group,
+            child_group=group,
+        )
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        # Check the sub-method specifically.
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="TEST_FOO")
+    def test_ignores_admins_group_different_setting(self):
+        """Ignores the admin group found in settings file."""
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create(name="TEST_FOO")
+        GroupGroupMembershipFactory.create(
+            parent_group=signed_agreement.anvil_access_group,
+            child_group=group,
+        )
+        # Set up audit
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        # Check the sub-method specifically.
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.audit_agreement_and_object(signed_agreement, group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_two_agreements(self):
+        """Audit works with two SignedAgreements."""
+        signed_agreement_1 = factories.SignedAgreementFactory.create()
+        account_1 = AccountFactory.create(verified=True)
+        signed_agreement_1.accessors.add(account_1.user)
+        signed_agreement_2 = factories.SignedAgreementFactory.create()
+        user_2 = UserFactory.create()
+        signed_agreement_2.accessors.add(user_2)
+        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement_2)
+        self.assertEqual(record.user, user_2)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.GrantAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement_1)
+        self.assertEqual(record.user, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset of SignedAgreements."""
+        signed_agreement_1 = factories.SignedAgreementFactory.create()
+        account_1 = AccountFactory.create(verified=True)
+        signed_agreement_1.accessors.add(account_1.user)
+        signed_agreement_2 = factories.SignedAgreementFactory.create()
+        # First application
+        audit = accessor_audit.SignedAgreementAccessorAudit(
+            queryset=models.SignedAgreement.objects.filter(pk=signed_agreement_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.GrantAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement_1)
+        self.assertEqual(record.user, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        # Second application
+        audit = accessor_audit.SignedAgreementAccessorAudit(
+            queryset=models.SignedAgreement.objects.filter(pk=signed_agreement_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            accessor_audit.SignedAgreementAccessorAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            accessor_audit.SignedAgreementAccessorAudit(queryset=models.MemberAgreement.objects.all())
