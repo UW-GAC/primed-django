@@ -124,10 +124,7 @@ class DataAffiliateAgreementUploadersForm(Bootstrap5MediaFormMixin, forms.ModelF
 
     class Meta:
         model = models.DataAffiliateAgreement
-        fields = (
-            "signed_agreement",
-            "uploaders",
-        )
+        fields = ("uploaders",)
         widgets = {
             "uploaders": autocomplete.ModelSelect2Multiple(
                 url="users:autocomplete",

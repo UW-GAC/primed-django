@@ -551,7 +551,6 @@ class DataAffiliateAgreementUploadersFormTest(TestCase):
     def test_valid(self):
         """Form is valid with necessary input."""
         form_data = {
-            "signed_agreement": self.signed_agreement,
             "uploaders": [],
         }
         form = self.form_class(data=form_data)
@@ -561,7 +560,6 @@ class DataAffiliateAgreementUploadersFormTest(TestCase):
         """Form is valid with one accessor."""
         uploader = UserFactory.create()
         form_data = {
-            "signed_agreement": self.signed_agreement,
             "uploaders": [uploader],
         }
         form = self.form_class(data=form_data)
@@ -571,7 +569,6 @@ class DataAffiliateAgreementUploadersFormTest(TestCase):
         """Form is valid with two accessors."""
         uploaders = UserFactory.create_batch(2)
         form_data = {
-            "signed_agreement": self.signed_agreement,
             "uploaders": uploaders,
         }
         form = self.form_class(data=form_data)
@@ -580,7 +577,6 @@ class DataAffiliateAgreementUploadersFormTest(TestCase):
     def test_uploaders_wrong_class(self):
         """Form is invalid when an object is not a User."""
         form_data = {
-            "signed_agreement": self.signed_agreement,
             "uploaders": [999],
         }
         form = self.form_class(data=form_data)
@@ -589,19 +585,6 @@ class DataAffiliateAgreementUploadersFormTest(TestCase):
         self.assertIn("uploaders", form.errors)
         self.assertEqual(len(form.errors["uploaders"]), 1)
         self.assertIn("valid choice", form.errors["uploaders"][0])
-
-    def test_missing_signed_agreement(self):
-        """Form is invalid when missing signed_agreement."""
-        form_data = {
-            # "signed_agreement": self.signed_agreement,
-            "uploaders": [],
-        }
-        form = self.form_class(data=form_data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(len(form.errors), 1)
-        self.assertIn("signed_agreement", form.errors)
-        self.assertEqual(len(form.errors["signed_agreement"]), 1)
-        self.assertIn("required", form.errors["signed_agreement"][0])
 
 
 class NonDataAffiliateAgreementFormTest(TestCase):

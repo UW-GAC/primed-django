@@ -4930,7 +4930,6 @@ class DataAffiliateAgreementUploadersUpdateTest(TestCase):
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
             {
-                "signed_agreement": instance.signed_agreement.pk,
                 "uploaders": [user.pk],
             },
         )
@@ -4948,7 +4947,6 @@ class DataAffiliateAgreementUploadersUpdateTest(TestCase):
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
             {
-                "signed_agreement": instance.signed_agreement.pk,
                 "uploaders": [],
             },
         )
@@ -4962,9 +4960,8 @@ class DataAffiliateAgreementUploadersUpdateTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
-            {"signed_agreement": instance.signed_agreement.pk, "uploaders": [-1]},
+            {"uploaders": [-1]},
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertIn("form", response.context)
         form = response.context_data["form"]
@@ -4982,7 +4979,6 @@ class DataAffiliateAgreementUploadersUpdateTest(TestCase):
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
             {
-                "signed_agreement": instance.signed_agreement.pk,
                 "uploaders": [],
             },
             follow=True,
@@ -4998,7 +4994,6 @@ class DataAffiliateAgreementUploadersUpdateTest(TestCase):
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
             {
-                "signed_agreement": instance.signed_agreement.pk,
                 "uploaders": [],
             },
         )
