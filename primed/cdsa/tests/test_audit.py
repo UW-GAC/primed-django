@@ -2078,6 +2078,260 @@ class WorkspaceAccessAuditTableTest(TestCase):
         self.assertEqual(len(table.rows), 2)
 
 
+class AccessorAuditResultTest(TestCase):
+    """General tests of the AccessorAuditResult dataclasses for SignedAgreements."""
+
+    def setUp(self):
+        super().setUp()
+        self.cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
+
+    def test_verified_access(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = accessor_audit.VerifiedAccess(
+            signed_agreement=signed_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertIsNone(instance.action)
+
+    def test_verified_no_access(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = accessor_audit.VerifiedNoAccess(
+            signed_agreement=signed_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertIsNone(instance.action)
+
+    def test_grant_access(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = accessor_audit.GrantAccess(
+            signed_agreement=signed_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertEqual(instance.action, "Grant access")
+
+    def test_remove_access(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = accessor_audit.RemoveAccess(
+            signed_agreement=signed_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertEqual(instance.action, "Remove access")
+
+    def test_error(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = accessor_audit.Error(
+            signed_agreement=signed_agreement,
+            member=account,
+            note="foo",
+            has_access=False,
+        )
+        self.assertIsNone(instance.action)
+
+
+class AccessorAuditTableTest(TestCase):
+    """Tests for the `SignedAgreementAccessorAuditTable` table."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = accessor_audit.SignedAgreementAccessorAuditTable([])
+        self.assertIsInstance(table, accessor_audit.SignedAgreementAccessorAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row(self):
+        """Table works with one row."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data = [
+            {
+                "signed_agreement": member_agreement.signed_agreement,
+                "user": account.user,
+                "member": account,
+                "has_access": True,
+                "note": "a note",
+            }
+        ]
+        table = accessor_audit.SignedAgreementAccessorAuditTable(data)
+        self.assertIsInstance(table, accessor_audit.SignedAgreementAccessorAuditTable)
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(
+            str(member_agreement.signed_agreement.cc_id),
+            table.rows[0].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[0].get_cell("note"), "a note")
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        member_agreement_1 = factories.MemberAgreementFactory.create()
+        member_agreement_2 = factories.DataAffiliateAgreementFactory.create()
+        account_1 = AccountFactory.create(verified=True)
+        account_2 = AccountFactory.create(verified=True)
+        data = [
+            {
+                "signed_agreement": member_agreement_1.signed_agreement,
+                "user": account_1.user,
+                "member": account_1,
+                "has_access": True,
+                "note": "note 1",
+            },
+            {
+                "signed_agreement": member_agreement_2.signed_agreement,
+                "user": account_2.user,
+                "member": account_2,
+                "has_access": True,
+                "note": "note 2",
+            },
+        ]
+        table = accessor_audit.SignedAgreementAccessorAuditTable(data)
+        self.assertIsInstance(table, accessor_audit.SignedAgreementAccessorAuditTable)
+        self.assertEqual(len(table.rows), 2)
+        self.assertIn(
+            str(member_agreement_1.signed_agreement.cc_id),
+            table.rows[0].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[0].get_cell("note"), "note 1")
+        self.assertIn(
+            str(member_agreement_2.signed_agreement.cc_id),
+            table.rows[1].get_cell("signed_agreement"),
+        )
+        self.assertEqual(table.rows[1].get_cell("note"), "note 2")
+
+
+class UploaderAuditResultTest(TestCase):
+    """General tests of the UploaderAuditResult dataclasses for DataAffiliateAgreements."""
+
+    def setUp(self):
+        super().setUp()
+        self.cdsa_group = ManagedGroupFactory.create(name=settings.ANVIL_CDSA_GROUP_NAME)
+
+    def test_verified_access(self):
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = uploader_audit.VerifiedAccess(
+            data_affiliate_agreement=data_affiliate_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertIsNone(instance.action)
+
+    def test_verified_no_access(self):
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = uploader_audit.VerifiedNoAccess(
+            data_affiliate_agreement=data_affiliate_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertIsNone(instance.action)
+
+    def test_grant_access(self):
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = uploader_audit.GrantAccess(
+            data_affiliate_agreement=data_affiliate_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertEqual(instance.action, "Grant access")
+
+    def test_remove_access(self):
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = uploader_audit.RemoveAccess(
+            data_affiliate_agreement=data_affiliate_agreement,
+            member=account,
+            note="foo",
+        )
+        self.assertEqual(instance.action, "Remove access")
+
+    def test_error(self):
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        instance = uploader_audit.Error(
+            data_affiliate_agreement=data_affiliate_agreement,
+            member=account,
+            note="foo",
+            has_access=False,
+        )
+        self.assertIsNone(instance.action)
+
+
+class UploaderAuditTableTest(TestCase):
+    """Tests for the `DataAffiliateUploaderAuditTable` table."""
+
+    def test_no_rows(self):
+        """Table works with no rows."""
+        table = uploader_audit.DataAffiliateUploaderAuditTable([])
+        self.assertIsInstance(table, uploader_audit.DataAffiliateUploaderAuditTable)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_one_row(self):
+        """Table works with one row."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data = [
+            {
+                "data_affiliate_agreement": data_affiliate_agreement,
+                "user": account.user,
+                "member": account,
+                "has_access": True,
+                "note": "a note",
+            }
+        ]
+        table = uploader_audit.DataAffiliateUploaderAuditTable(data)
+        self.assertIsInstance(table, uploader_audit.DataAffiliateUploaderAuditTable)
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(
+            str(data_affiliate_agreement.signed_agreement.cc_id),
+            table.rows[0].get_cell("data_affiliate_agreement"),
+        )
+        self.assertEqual(table.rows[0].get_cell("note"), "a note")
+
+    def test_two_rows(self):
+        """Table works with two rows."""
+        data_affiliate_agreement_1 = factories.DataAffiliateAgreementFactory.create()
+        data_affiliate_agreement_2 = factories.DataAffiliateAgreementFactory.create()
+        account_1 = AccountFactory.create(verified=True)
+        account_2 = AccountFactory.create(verified=True)
+        data = [
+            {
+                "data_affiliate_agreement": data_affiliate_agreement_1,
+                "user": account_1.user,
+                "member": account_1,
+                "has_access": True,
+                "note": "note 1",
+            },
+            {
+                "data_affiliate_agreement": data_affiliate_agreement_2,
+                "user": account_2.user,
+                "member": account_2,
+                "has_access": True,
+                "note": "note 2",
+            },
+        ]
+        table = uploader_audit.DataAffiliateUploaderAuditTable(data)
+        self.assertIsInstance(table, uploader_audit.DataAffiliateUploaderAuditTable)
+        self.assertEqual(len(table.rows), 2)
+        self.assertIn(
+            str(data_affiliate_agreement_1.signed_agreement.cc_id),
+            table.rows[0].get_cell("data_affiliate_agreement"),
+        )
+        self.assertEqual(table.rows[0].get_cell("note"), "note 1")
+        self.assertIn(
+            str(data_affiliate_agreement_2.signed_agreement.cc_id),
+            table.rows[1].get_cell("data_affiliate_agreement"),
+        )
+        self.assertEqual(table.rows[1].get_cell("note"), "note 2")
+
+
 class SignedAgreementAccessorAuditTest(TestCase):
     """Tests for the SignedAgreementAccessorAudit classes."""
 

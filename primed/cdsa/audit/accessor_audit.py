@@ -20,10 +20,10 @@ class AccessorAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing accessors for a SignedAgreement."""
 
     signed_agreement: SignedAgreement
-    user: User
-    member: Union[Account, ManagedGroup]
     note: str
     has_access: bool
+    user: User = None
+    member: Union[Account, ManagedGroup] = None
     action: str = None
 
     def __post_init__(self):
@@ -31,11 +31,6 @@ class AccessorAuditResult(PRIMEDAuditResult):
             raise ValueError("Account and user do not match.")
         elif isinstance(self.member, ManagedGroup) and self.user:
             raise ValueError("Cannot specify both a ManagedGroup member and a User.")
-
-    def get_action_url(self):
-        """The URL that handles the action needed."""
-        # This is handled in the template with htmx, so None is fine.
-        return None
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
@@ -46,7 +41,6 @@ class AccessorAuditResult(PRIMEDAuditResult):
             "has_access": self.has_access,
             "note": self.note,
             "action": self.action,
-            "action_url": self.get_action_url(),
         }
         return row
 

@@ -20,11 +20,11 @@ class UploaderAuditResult(PRIMEDAuditResult):
     """Base class to hold results for auditing uploaders for a DataAffiliateAgreement."""
 
     data_affiliate_agreement: DataAffiliateAgreement
-    user: User
-    member: Union[Account, ManagedGroup]
     note: str
     has_access: bool
     action: str = None
+    user: User = None
+    member: Union[Account, ManagedGroup] = None
 
     def __post_init__(self):
         if isinstance(self.member, Account) and hasattr(self.member, "user") and self.member.user != self.user:
