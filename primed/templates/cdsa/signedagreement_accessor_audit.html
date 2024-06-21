@@ -10,35 +10,7 @@
 
 <h2>Audit results</h2>
 
-<div class="my-3 p-3 bg-light border rounded shadow-sm">
-  <p>
-    To be added to a SignedAgreement access group, a user must have linked their AnVIL account and be named as an accessor on that agreement.
-    Access to shared workspaces containing SAG data is controlled by adding users' AnVIL accounts to the AnVIL access group associated with the agreement.
-  </p>
-  <p>The audit result categories are explained below.
-    <ul>
-
-      <li><b>Verified</b> includes the following:</li>
-        <ul>
-          <li>A named accessor who <strong>has not</strong> linked their AnVIL account.</li>
-          <li>A named accessor who has linked their AnVIL account and is in the AnVIL access group for this application.</li>
-          <li>A named accessor who <strong>has not</strong> linked their AnVIL account and <strong>is not</strong> in the AnVIL access group.</li>
-        </ul>
-
-      <li><b>Needs action</b> includes the following:</li>
-      <ul>
-        <li>A named accessor who has linked their AnVIL account and <strong>is not </strong> in the AnVIL access group for this application.</li>
-        <li>An account in the AnVIL access group for this application that <strong>is not</strong> linked to a collaborator.</li>
-    </ul>
-
-      <li><b>Errors</b></li>
-      <ul>
-        <li>A different group is in the AnVIL access group for this application.</li>
-      </ul>
-    </ul>
-  </p>
-  <p>Any errors should be reported!</p>
-</div>
+{% include "cdsa/snippets/accessor_audit_explanation.html" %}
 
 {% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
 

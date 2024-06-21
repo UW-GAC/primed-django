@@ -138,7 +138,7 @@ signed_agreement_sag_audit_patterns = (
     [
         path("", views.SignedAgreementAudit.as_view(), name="all"),
         path(
-            "<int:cc_id>/resolve/",
+            "resolve/<int:cc_id>/",
             views.SignedAgreementAuditResolve.as_view(),
             name="resolve",
         ),
@@ -149,6 +149,11 @@ signed_agreement_sag_audit_patterns = (
 signed_agreement_accessor_audit_patterns = (
     [
         path("", views.SignedAgreementAccessorAudit.as_view(), name="all"),
+        path(
+            "resolve/<int:cc_id>/<str:email>/",
+            views.SignedAgreementAccessorAuditResolve.as_view(),
+            name="resolve",
+        ),
     ],
     "accessors",
 )
@@ -164,7 +169,7 @@ workspace_audit_patterns = (
     [
         path("", views.CDSAWorkspaceAudit.as_view(), name="all"),
         path(
-            "<slug:billing_project_slug>/<slug:workspace_slug>/resolve/",
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.CDSAWorkspaceAuditResolve.as_view(),
             name="resolve",
         ),

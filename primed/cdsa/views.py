@@ -7,6 +7,7 @@ from anvil_consortium_manager.auth import (
     AnVILProjectManagerAccess,
 )
 from anvil_consortium_manager.models import (
+    Account,
     GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
@@ -786,6 +787,103 @@ class SignedAgreementAccessorAudit(AnVILConsortiumManagerStaffViewRequired, Temp
         context["needs_action_table"] = audit.get_needs_action_table()
         context["audit"] = audit
         return context
+
+
+class SignedAgreementAccessorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    form_class = Form
+    template_name = "cdsa/signedagreement_accessor_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_signed_agreement(self):
+        """Look up the SignedAgreement by cc_id."""
+        try:
+            obj = models.SignedAgreement.objects.get(cc_id=self.kwargs.get("cc_id"))
+        except models.SignedAgreement.DoesNotExist:
+            raise Http404("No SignedAgreements found matching the query")
+        return obj
+
+    def get_email(self):
+        return self.kwargs.get("email")
+
+    def get_audit_result(self):
+        audit = accessor_audit.SignedAgreementAccessorAudit(
+            queryset=models.SignedAgreement.objects.filter(pk=self.signed_agreement.pk)
+        )
+        # No way to include a queryset of members at this point - need to call the sub method directly.
+        audit.audit_agreement_and_object(self.signed_agreement, self.email)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.signed_agreement = self.get_signed_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.signed_agreement = self.get_signed_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["signed_agreement"] = self.signed_agreement
+        context["email"] = self.email
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.signed_agreement.get_absolute_url()
+
+    def form_valid(self, form):
+        # Add or remove the user from the access group.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, accessor_audit.GrantAccess):
+                    # Only accounts should be added to the access group, so we shouldn't need to check type.
+                    membership = GroupAccountMembership(
+                        group=self.signed_agreement.anvil_access_group,
+                        account=self.audit_result.member,
+                        role=GroupAccountMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, accessor_audit.RemoveAccess):
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership.objects.get(
+                            group=self.signed_agreement.anvil_access_group,
+                            account=self.audit_result.member,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership.objects.get(
+                            parent_group=self.signed_agreement.anvil_access_group,
+                            child_group=self.audit_result.member,
+                        )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
 
 
 class RecordsIndex(TemplateView):
