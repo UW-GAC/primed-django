@@ -41,10 +41,13 @@
     {% endif %}
 
     <li>
+      <a class="dropdown-item" href="{% url 'cdsa:audit:workspaces:all'%}">Audit workspaces</a>
+    </li>
+    <li>
       <a class="dropdown-item" href="{% url 'cdsa:audit:signed_agreements:sag:all'%}">Audit signed agreements</a>
     </li>
     <li>
-      <a class="dropdown-item" href="{% url 'cdsa:audit:workspaces:all'%}">Audit workspaces</a>
+      <a class="dropdown-item" href="{% url 'cdsa:audit:signed_agreements:accessors:all'%}">Audit accessors</a>
     </li>
 
     <li><hr class="dropdown-divider"></li>

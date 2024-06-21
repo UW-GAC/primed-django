@@ -14,7 +14,7 @@ from primed.primed_anvil.tests.factories import StudyFactory, StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import models
-from ..audit import accessor_audit, signed_agreement_audit, workspace_audit
+from ..audit import accessor_audit, signed_agreement_audit, uploader_audit, workspace_audit
 from . import factories
 
 # from django.utils import timezone
@@ -2096,7 +2096,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
 
-    def testaudit_agreement_and_object_user(self):
+    def test_audit_agreement_and_object_user(self):
         """audit_agreement_and_object works when passed a user object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         user = UserFactory.create()
@@ -2112,7 +2112,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
 
-    def testaudit_agreement_and_object_account(self):
+    def test_audit_agreement_and_object_account(self):
         """audit_agreement_and_object works when passed an Account object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         account = AccountFactory.create()
@@ -2128,7 +2128,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
-    def testaudit_agreement_and_object_group(self):
+    def test_audit_agreement_and_object_group(self):
         """audit_agreement_and_object works when passed a ManagedGroup object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         group = ManagedGroupFactory.create()
@@ -2144,7 +2144,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, group)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
 
-    def testaudit_agreement_and_object_user_email(self):
+    def test_audit_agreement_and_object_user_email(self):
         """audit_agreement_and_object works when passed a string email for a user."""
         signed_agreement = factories.SignedAgreementFactory.create()
         user = UserFactory.create()
@@ -2160,7 +2160,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
 
-    def testaudit_agreement_and_object_user_email_case_insensitive(self):
+    def test_audit_agreement_and_object_user_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for a user."""
         signed_agreement = factories.SignedAgreementFactory.create()
         user = UserFactory.create(username="foo@BAR.com")
@@ -2176,7 +2176,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
 
-    def testaudit_agreement_and_object_account_email(self):
+    def test_audit_agreement_and_object_account_email(self):
         """audit_agreement_and_object works when passed a string email for an account."""
         signed_agreement = factories.SignedAgreementFactory.create()
         account = AccountFactory.create()
@@ -2192,7 +2192,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
-    def testaudit_agreement_and_object_account_email_case_insensitive(self):
+    def test_audit_agreement_and_object_account_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for an account."""
         signed_agreement = factories.SignedAgreementFactory.create()
         account = AccountFactory.create(email="foo@BAR.com")
@@ -2208,7 +2208,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
-    def testaudit_agreement_and_object_group_email(self):
+    def test_audit_agreement_and_object_group_email(self):
         """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
         signed_agreement = factories.SignedAgreementFactory.create()
         group = ManagedGroupFactory.create()
@@ -2224,7 +2224,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, group)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
 
-    def testaudit_agreement_and_object_group_email_case_insensitive(self):
+    def test_audit_agreement_and_object_group_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
         signed_agreement = factories.SignedAgreementFactory.create()
         group = ManagedGroupFactory.create(email="foo@BAR.com")
@@ -2240,7 +2240,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.member, group)
         self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
 
-    def testaudit_agreement_and_object_email_does_not_exist(self):
+    def test_audit_agreement_and_object_email_does_not_exist(self):
         """audit_agreement_and_object works when passed a ManagedGroup object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         audit = accessor_audit.SignedAgreementAccessorAudit()
@@ -2251,7 +2251,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
             str(e.exception),
         )
 
-    def testaudit_agreement_and_object_other_object(self):
+    def test_audit_agreement_and_object_other_object(self):
         """audit_agreement_and_object raises ValueError when passed an incorrect object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         audit = accessor_audit.SignedAgreementAccessorAudit()
@@ -2568,3 +2568,495 @@ class SignedAgreementAccessorAuditTest(TestCase):
             accessor_audit.SignedAgreementAccessorAudit(queryset="foo")
         with self.assertRaises(ValueError):
             accessor_audit.SignedAgreementAccessorAudit(queryset=models.MemberAgreement.objects.all())
+
+
+class DataAffiliateAgreementUploaderAuditTest(TestCase):
+    """Tests for the DataAffiliateAgreementUploaderAudit classes."""
+
+    def test_completed(self):
+        """completed is updated properly."""
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        self.assertFalse(audit.completed)
+        audit.run_audit()
+        self.assertTrue(audit.completed)
+
+    def test_no_applications(self):
+        """Audit works if there are no DataAffiliateAgreements."""
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_audit_agreement_and_object_user(self):
+        """audit_agreement_and_object works when passed a user object."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        user = UserFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, user)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+
+    def test_audit_agreement_and_object_account(self):
+        """audit_agreement_and_object works when passed an Account object."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, account)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_audit_agreement_and_object_group(self):
+        """audit_agreement_and_object works when passed a ManagedGroup object."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, group)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.GROUP_WITHOUT_ACCESS)
+
+    def test_audit_agreement_and_object_user_email(self):
+        """audit_agreement_and_object works when passed a string email for a user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        user = UserFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, user.username)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+
+    def test_audit_agreement_and_object_user_email_case_insensitive(self):
+        """audit_agreement_and_object works when passed a string email for a user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        user = UserFactory.create(username="foo@BAR.com")
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, "FOO@bar.com")
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+
+    def test_audit_agreement_and_object_account_email(self):
+        """audit_agreement_and_object works when passed a string email for an account."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, account.email)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_audit_agreement_and_object_account_email_case_insensitive(self):
+        """audit_agreement_and_object works when passed a string email for an account."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(email="foo@BAR.com")
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, "FOO@bar.com")
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_audit_agreement_and_object_group_email(self):
+        """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, group.email)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.GROUP_WITHOUT_ACCESS)
+
+    def test_audit_agreement_and_object_group_email_case_insensitive(self):
+        """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        group = ManagedGroupFactory.create(email="foo@BAR.com")
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, "FOO@bar.com")
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.GROUP_WITHOUT_ACCESS)
+
+    def test_audit_agreement_and_object_email_does_not_exist(self):
+        """audit_agreement_and_object works when passed a ManagedGroup object."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        with self.assertRaises(ValueError) as e:
+            audit.audit_agreement_and_object(data_affiliate_agreement, "foo@bar.com")
+        self.assertIn(
+            "Could not find",
+            str(e.exception),
+        )
+
+    def test_audit_agreement_and_object_other_object(self):
+        """audit_agreement_and_object raises ValueError when passed an incorrect object."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        with self.assertRaises(ValueError):
+            audit.audit_agreement_and_object(data_affiliate_agreement, object)
+
+    def test_uploader_linked_account_in_access_group(self):
+        # Create agreement.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_IN_ACCESS_GROUP)
+
+    def test_uploader_linked_account_not_in_access_group(self):
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Access group membership.
+        # GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+
+    def test_uploader_no_account(self):
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        user = UserFactory.create()
+        # account = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        data_affiliate_agreement.uploaders.add(user)
+        # Access group membership.
+        # GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, user)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT)
+
+    def test_user_in_group_not_uploader(self):
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        # data_affiliate_agreement.uploaders.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.RemoveAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+
+    def test_not_uploader_and_account_has_no_user(self):
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up uploaders.
+        # data_affiliate_agreement.uploaders.add(account.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.RemoveAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+
+    def test_two_uploaders(self):
+        """Audit works when there are two uploaders."""
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account_1 = AccountFactory.create(verified=True)
+        account_2 = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        data_affiliate_agreement.uploaders.add(account_1.user, account_2.user)
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account_1)
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 1)  # One of the uploaders.
+        self.assertEqual(len(audit.needs_action), 1)  # The other uploader.
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, audit.UPLOADER_IN_ACCESS_GROUP)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account_2.user)
+        self.assertEqual(record.member, account_2)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+
+    def test_unexpected_group_in_access_group(self):
+        """A group unexpectedly has access."""
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=data_affiliate_agreement.anvil_upload_group,
+            child_group=group,
+        )
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 1)
+        record = audit.errors[0]
+        self.assertIsInstance(record, uploader_audit.RemoveAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, None)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UNEXPECTED_GROUP_ACCESS)
+
+    def test_representative_not_uploader(self):
+        """Representative is not an uploader."""
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_representative_is_uploader(self):
+        """Representative is also an uploader."""
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        data_affiliate_agreement.uploaders.add(data_affiliate_agreement.signed_agreement.representative)
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, data_affiliate_agreement.signed_agreement.representative)
+        self.assertIsNone(record.member)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT)
+
+    def test_ignores_admins_group(self):
+        """Ignores the admin group."""
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        GroupGroupMembershipFactory.create(
+            parent_group=data_affiliate_agreement.anvil_upload_group,
+            child_group=group,
+        )
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        # Check the sub-method specifically.
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="TEST_FOO")
+    def test_ignores_admins_group_different_setting(self):
+        """Ignores the admin group found in settings file."""
+        # Create applications.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Add a group to the access group.
+        group = ManagedGroupFactory.create(name="TEST_FOO")
+        GroupGroupMembershipFactory.create(
+            parent_group=data_affiliate_agreement.anvil_upload_group,
+            child_group=group,
+        )
+        # Set up audit
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        # Check the sub-method specifically.
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.audit_agreement_and_object(data_affiliate_agreement, group)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_two_agreements(self):
+        """Audit works with two DataAffiliateAgreements."""
+        data_affiliate_agreement_1 = factories.DataAffiliateAgreementFactory.create()
+        account_1 = AccountFactory.create(verified=True)
+        data_affiliate_agreement_1.uploaders.add(account_1.user)
+        data_affiliate_agreement_2 = factories.DataAffiliateAgreementFactory.create()
+        user_2 = UserFactory.create()
+        data_affiliate_agreement_2.uploaders.add(user_2)
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement_2)
+        self.assertEqual(record.user, user_2)
+        self.assertEqual(record.member, None)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement_1)
+        self.assertEqual(record.user, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+
+    def test_queryset(self):
+        """Audit only runs on the specified queryset of DataAffiliateAgreements."""
+        data_affiliate_agreement_1 = factories.DataAffiliateAgreementFactory.create()
+        account_1 = AccountFactory.create(verified=True)
+        data_affiliate_agreement_1.uploaders.add(account_1.user)
+        data_affiliate_agreement_2 = factories.DataAffiliateAgreementFactory.create()
+        # First application
+        audit = uploader_audit.DataAffiliateUploaderAudit(
+            queryset=models.DataAffiliateAgreement.objects.filter(pk=data_affiliate_agreement_1.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.GrantAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement_1)
+        self.assertEqual(record.user, account_1.user)
+        self.assertEqual(record.member, account_1)
+        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        # Second application
+        audit = uploader_audit.DataAffiliateUploaderAudit(
+            queryset=models.DataAffiliateAgreement.objects.filter(pk=data_affiliate_agreement_2.pk)
+        )
+        audit.run_audit()
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_queryset_wrong_class(self):
+        """Raises ValueError if queryset is not a QuerySet."""
+        with self.assertRaises(ValueError):
+            uploader_audit.DataAffiliateUploaderAudit(queryset="foo")
+        with self.assertRaises(ValueError):
+            uploader_audit.DataAffiliateUploaderAudit(queryset=models.SignedAgreement.objects.all())
