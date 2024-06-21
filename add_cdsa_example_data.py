@@ -147,7 +147,7 @@ cdsa_1009 = factories.NonDataAffiliateAgreementFactory.create(
 
 
 # Add some users to the CDSA groups.
-users = UserFactory.create_batch(10)
+users = UserFactory.create_batch(12)
 cdsa_1001.signed_agreement.accessors.add(users[0])
 GroupAccountMembershipFactory.create(
     group=cdsa_1001.signed_agreement.anvil_access_group,
@@ -201,8 +201,10 @@ GroupAccountMembershipFactory.create(
     group=cdsa_1006.signed_agreement.anvil_access_group,
     account__user=users[9],
 )
-# Add an uploader.
-cdsa_1006.uploaders.add(UserFactory.create())
+# Add uploaders.
+cdsa_1006.uploaders.add(users[10])
+AccountFactory.create(user=users[10])
+cdsa_1006.uploaders.add(users[11])
 
 cdsa_workspace_1 = factories.CDSAWorkspaceFactory.create(
     workspace__billing_project__name="demo-primed-cdsa",
