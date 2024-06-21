@@ -157,10 +157,24 @@ signed_agreement_accessor_audit_patterns = (
     ],
     "accessors",
 )
+
+signed_agreement_uploader_audit_patterns = (
+    [
+        path("", views.DataAffiliateUploaderAudit.as_view(), name="all"),
+        # path(
+        #     "resolve/<int:cc_id>/<str:email>/",
+        #     views.DataAffiliateUploaderAuditResolve.as_view(),
+        #     name="resolve",
+        # ),
+    ],
+    "uploaders",
+)
+
 signed_agreement_audit_patterns = (
     [
         path("sag/", include(signed_agreement_sag_audit_patterns)),
         path("accessors/", include(signed_agreement_accessor_audit_patterns)),
+        path("uploaders/", include(signed_agreement_uploader_audit_patterns)),
     ],
     "signed_agreements",
 )

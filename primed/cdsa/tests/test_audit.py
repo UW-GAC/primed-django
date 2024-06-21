@@ -3060,3 +3060,14 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
             uploader_audit.DataAffiliateUploaderAudit(queryset="foo")
         with self.assertRaises(ValueError):
             uploader_audit.DataAffiliateUploaderAudit(queryset=models.SignedAgreement.objects.all())
+
+    def test_queryset_only_data_affiliates(self):
+        """Only DataAffiliateAgreements are included in the audit."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        member_agreement = factories.MemberAgreementFactory.create()
+        non_data_affiliate_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        audit = uploader_audit.DataAffiliateUploaderAudit()
+        self.assertEqual(audit.queryset.count(), 1)
+        self.assertIn(data_affiliate_agreement, audit.queryset)
+        self.assertNotIn(member_agreement, audit.queryset)
+        self.assertNotIn(non_data_affiliate_agreement, audit.queryset)
