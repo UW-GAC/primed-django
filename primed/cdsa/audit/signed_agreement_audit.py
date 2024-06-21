@@ -95,7 +95,7 @@ class SignedAgreementAccessAuditTable(tables.Table):
     agreement_type = tables.Column(accessor="signed_agreement__combined_type")
     agreement_version = tables.Column(accessor="signed_agreement__version")
     note = tables.Column()
-    action = tables.TemplateColumn(template_name="cdsa/snippets/cdsa_signedagreement_audit_action_button.html")
+    action = tables.TemplateColumn(template_name="cdsa/snippets/signedagreement_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}

@@ -96,7 +96,7 @@ class WorkspaceAccessAuditTable(tables.Table):
     data_affiliate_agreement = tables.Column(linkify=True)
     agreement_version = tables.Column(accessor="data_affiliate_agreement__signed_agreement__version")
     note = tables.Column()
-    action = tables.TemplateColumn(template_name="cdsa/snippets/cdsa_workspace_audit_action_button.html")
+    action = tables.TemplateColumn(template_name="cdsa/snippets/cdsaworkspace_audit_action_button.html")
 
     class Meta:
         attrs = {"class": "table align-middle"}
