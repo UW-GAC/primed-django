@@ -902,6 +902,103 @@ class DataAffiliateUploaderAudit(AnVILConsortiumManagerStaffViewRequired, Templa
         return context
 
 
+class DataAffiliateUploaderAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    form_class = Form
+    template_name = "cdsa/uploader_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_data_affiliate_agreement(self):
+        """Look up the DataAffiliateAgreement by cc_id."""
+        try:
+            obj = models.DataAffiliateAgreement.objects.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
+        except models.DataAffiliateAgreement.DoesNotExist:
+            raise Http404("No DataAffiliateAgreements found matching the query")
+        return obj
+
+    def get_email(self):
+        return self.kwargs.get("email")
+
+    def get_audit_result(self):
+        audit = uploader_audit.DataAffiliateUploaderAudit(
+            queryset=models.DataAffiliateAgreement.objects.filter(pk=self.data_affiliate_agreement.pk)
+        )
+        # No way to include a queryset of members at this point - need to call the sub method directly.
+        audit.audit_agreement_and_object(self.data_affiliate_agreement, self.email)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.data_affiliate_agreement = self.get_data_affiliate_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.data_affiliate_agreement = self.get_data_affiliate_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["data_affiliate_agreement"] = self.data_affiliate_agreement
+        context["email"] = self.email
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.data_affiliate_agreement.get_absolute_url()
+
+    def form_valid(self, form):
+        # Add or remove the user from the access group.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, uploader_audit.GrantAccess):
+                    # Only accounts should be added to the access group, so we shouldn't need to check type.
+                    membership = GroupAccountMembership(
+                        group=self.data_affiliate_agreement.anvil_upload_group,
+                        account=self.audit_result.member,
+                        role=GroupAccountMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, uploader_audit.RemoveAccess):
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership.objects.get(
+                            group=self.data_affiliate_agreement.anvil_upload_group,
+                            account=self.audit_result.member,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership.objects.get(
+                            parent_group=self.data_affiliate_agreement.anvil_upload_group,
+                            child_group=self.audit_result.member,
+                        )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+
 class RecordsIndex(TemplateView):
     """Index page for records."""
 
