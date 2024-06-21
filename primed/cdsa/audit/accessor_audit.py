@@ -94,8 +94,8 @@ class Error(AccessorAuditResult):
     pass
 
 
-class SignedAgreementAccessorAuditTable(tables.Table):
-    """A table to show results from a SignedAgreementAccessorAudit subclass."""
+class AccessorAuditTable(tables.Table):
+    """A table to show results from a AccessorAudit subclass."""
 
     signed_agreement = tables.Column(linkify=True)
     user = tables.Column(linkify=True)
@@ -108,7 +108,7 @@ class SignedAgreementAccessorAuditTable(tables.Table):
         attrs = {"class": "table align-middle"}
 
 
-class SignedAgreementAccessorAudit(PRIMEDAudit):
+class AccessorAudit(PRIMEDAudit):
     """Audit collaborators for a SignedAgreement."""
 
     # Access verified.
@@ -127,7 +127,7 @@ class SignedAgreementAccessorAudit(PRIMEDAudit):
     UNEXPECTED_GROUP_ACCESS = "Group should not have access."
     ACCOUNT_NOT_LINKED_TO_USER = "Account is not linked to a user."
 
-    results_table_class = SignedAgreementAccessorAuditTable
+    results_table_class = AccessorAuditTable
 
     def __init__(self, queryset=None):
         super().__init__()

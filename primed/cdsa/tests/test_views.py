@@ -6882,8 +6882,8 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.role, membership.MEMBER)
 
 
-class SignedAgreementAccessorAuditTest(TestCase):
-    """Tests for the SignedAgreementAccessorAudit view."""
+class AccessorAuditTest(TestCase):
+    """Tests for the AccessorAudit view."""
 
     def setUp(self):
         """Set up test class."""
@@ -6903,7 +6903,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.SignedAgreementAccessorAudit.as_view()
+        return views.AccessorAudit.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -6945,7 +6945,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         audit = response.context_data["audit"]
         self.assertIsInstance(
             audit,
-            accessor_audit.SignedAgreementAccessorAudit,
+            accessor_audit.AccessorAudit,
         )
         self.assertTrue(audit.completed)
 
@@ -7015,7 +7015,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            accessor_audit.SignedAgreementAccessorAuditTable,
+            accessor_audit.AccessorAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
@@ -7023,7 +7023,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_IN_ACCESS_GROUP,
+            accessor_audit.AccessorAudit.ACCESSOR_IN_ACCESS_GROUP,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -7040,7 +7040,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            accessor_audit.SignedAgreementAccessorAuditTable,
+            accessor_audit.AccessorAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
@@ -7048,7 +7048,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), accessor)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT,
+            accessor_audit.AccessorAudit.ACCESSOR_NO_ACCOUNT,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -7064,7 +7064,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            accessor_audit.SignedAgreementAccessorAuditTable,
+            accessor_audit.AccessorAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
@@ -7072,7 +7072,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT,
+            accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "Grant access")
         self.assertIn(
@@ -7099,7 +7099,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            accessor_audit.SignedAgreementAccessorAuditTable,
+            accessor_audit.AccessorAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
@@ -7107,7 +7107,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR,
+            accessor_audit.AccessorAudit.NOT_ACCESSOR,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
         self.assertIn(
@@ -7132,7 +7132,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            accessor_audit.SignedAgreementAccessorAuditTable,
+            accessor_audit.AccessorAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
@@ -7140,7 +7140,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("user"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            accessor_audit.SignedAgreementAccessorAudit.UNEXPECTED_GROUP_ACCESS,
+            accessor_audit.AccessorAudit.UNEXPECTED_GROUP_ACCESS,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
         self.assertIn(
@@ -7152,8 +7152,8 @@ class SignedAgreementAccessorAuditTest(TestCase):
         )
 
 
-class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests for the SignedAgreementAccessorAuditResolve view."""
+class AccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the AccessorAuditResolve view."""
 
     def setUp(self):
         """Set up test class."""
@@ -7177,7 +7177,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.SignedAgreementAccessorAuditResolve.as_view()
+        return views.AccessorAuditResolve.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -7421,7 +7421,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_IN_ACCESS_GROUP)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.ACCESSOR_IN_ACCESS_GROUP)
         self.assertIsNone(audit_result.action)
 
     def test_get_verified_no_access(self):
@@ -7441,7 +7441,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
         self.assertIsNone(audit_result.action)
 
     def test_get_grant_access(self):
@@ -7462,7 +7462,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT)
         self.assertIsNotNone(audit_result.action)
 
     def test_get_remove_access(self):
@@ -7486,7 +7486,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
         self.assertIsNotNone(audit_result.action)
 
     def test_post_email_not_found(self):
@@ -7691,7 +7691,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             **header,
         )
         # The membership was created.
-        self.assertEqual(response.content.decode(), views.SignedAgreementAccessorAuditResolve.htmx_success)
+        self.assertEqual(response.content.decode(), views.AccessorAuditResolve.htmx_success)
         membership = GroupAccountMembership.objects.get(
             group=member_agreement.signed_agreement.anvil_access_group,
             account=account,
@@ -7852,7 +7852,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.SignedAgreementAccessorAuditResolve.htmx_error)
+        self.assertEqual(response.content.decode(), views.AccessorAuditResolve.htmx_error)
         # No membership was created.
         self.assertEqual(GroupAccountMembership.objects.count(), 0)
         # No messages were added.
@@ -7925,7 +7925,7 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.SignedAgreementAccessorAuditResolve.htmx_error)
+        self.assertEqual(response.content.decode(), views.AccessorAuditResolve.htmx_error)
         # The group-group membership still exists.
         membership.refresh_from_db()
         # No messages was added.
@@ -7933,8 +7933,8 @@ class SignedAgreementAccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(messages), 0)
 
 
-class DataAffiliateUploaderAuditTest(TestCase):
-    """Tests for the DataAffiliateUploaderAudit view."""
+class UploaderAuditTest(TestCase):
+    """Tests for the UploaderAudit view."""
 
     def setUp(self):
         """Set up test class."""
@@ -7954,7 +7954,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.DataAffiliateUploaderAudit.as_view()
+        return views.UploaderAudit.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -7996,7 +7996,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         audit = response.context_data["audit"]
         self.assertIsInstance(
             audit,
-            uploader_audit.DataAffiliateUploaderAudit,
+            uploader_audit.UploaderAudit,
         )
         self.assertTrue(audit.completed)
 
@@ -8052,7 +8052,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            uploader_audit.DataAffiliateUploaderAuditTable,
+            uploader_audit.UploaderAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
@@ -8060,7 +8060,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            uploader_audit.DataAffiliateUploaderAudit.UPLOADER_IN_ACCESS_GROUP,
+            uploader_audit.UploaderAudit.UPLOADER_IN_ACCESS_GROUP,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -8077,7 +8077,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         table = response.context_data["verified_table"]
         self.assertIsInstance(
             table,
-            uploader_audit.DataAffiliateUploaderAuditTable,
+            uploader_audit.UploaderAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
@@ -8085,7 +8085,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), uploader)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT,
+            uploader_audit.UploaderAudit.UPLOADER_NO_ACCOUNT,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
 
@@ -8101,7 +8101,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            uploader_audit.DataAffiliateUploaderAuditTable,
+            uploader_audit.UploaderAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
@@ -8109,7 +8109,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT,
+            uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "Grant access")
         self.assertIn(
@@ -8136,7 +8136,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         table = response.context_data["needs_action_table"]
         self.assertIsInstance(
             table,
-            uploader_audit.DataAffiliateUploaderAuditTable,
+            uploader_audit.UploaderAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
@@ -8144,7 +8144,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER,
+            uploader_audit.UploaderAudit.NOT_UPLOADER,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
         self.assertIn(
@@ -8169,7 +8169,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         table = response.context_data["errors_table"]
         self.assertIsInstance(
             table,
-            uploader_audit.DataAffiliateUploaderAuditTable,
+            uploader_audit.UploaderAuditTable,
         )
         self.assertEqual(len(table.rows), 1)
         self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
@@ -8177,7 +8177,7 @@ class DataAffiliateUploaderAuditTest(TestCase):
         self.assertIsNone(table.rows[0].get_cell_value("user"))
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            uploader_audit.DataAffiliateUploaderAudit.UNEXPECTED_GROUP_ACCESS,
+            uploader_audit.UploaderAudit.UNEXPECTED_GROUP_ACCESS,
         )
         self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
         self.assertIn(
@@ -8199,8 +8199,8 @@ class DataAffiliateUploaderAuditTest(TestCase):
         self.assertEqual(audit.queryset.count(), 0)
 
 
-class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
-    """Tests for the DataAffiliateUploaderAuditResolve view."""
+class UploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the UploaderAuditResolve view."""
 
     def setUp(self):
         """Set up test class."""
@@ -8224,7 +8224,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.DataAffiliateUploaderAuditResolve.as_view()
+        return views.UploaderAuditResolve.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -8466,7 +8466,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_IN_ACCESS_GROUP)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.UPLOADER_IN_ACCESS_GROUP)
         self.assertIsNone(audit_result.action)
 
     def test_get_verified_no_access(self):
@@ -8486,7 +8486,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
         self.assertIsNone(audit_result.action)
 
     def test_get_grant_access(self):
@@ -8507,7 +8507,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT)
         self.assertIsNotNone(audit_result.action)
 
     def test_get_remove_access(self):
@@ -8531,7 +8531,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(audit_result.member, account)
         self.assertEqual(audit_result.user, account.user)
-        self.assertEqual(audit_result.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
         self.assertIsNotNone(audit_result.action)
 
     def test_post_email_not_found(self):
@@ -8736,7 +8736,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             **header,
         )
         # The membership was created.
-        self.assertEqual(response.content.decode(), views.DataAffiliateUploaderAuditResolve.htmx_success)
+        self.assertEqual(response.content.decode(), views.UploaderAuditResolve.htmx_success)
         membership = GroupAccountMembership.objects.get(
             group=data_affiliate_agreement.anvil_upload_group,
             account=account,
@@ -8897,7 +8897,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.DataAffiliateUploaderAuditResolve.htmx_error)
+        self.assertEqual(response.content.decode(), views.UploaderAuditResolve.htmx_error)
         # No membership was created.
         self.assertEqual(GroupAccountMembership.objects.count(), 0)
         # No messages were added.
@@ -8970,7 +8970,7 @@ class DataAffiliateUploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             {},
             **header,
         )
-        self.assertEqual(response.content.decode(), views.DataAffiliateUploaderAuditResolve.htmx_error)
+        self.assertEqual(response.content.decode(), views.UploaderAuditResolve.htmx_error)
         # The group-group membership still exists.
         membership.refresh_from_db()
         # No messages was added.

@@ -2138,12 +2138,12 @@ class AccessorAuditResultTest(TestCase):
 
 
 class AccessorAuditTableTest(TestCase):
-    """Tests for the `SignedAgreementAccessorAuditTable` table."""
+    """Tests for the `AccessorAuditTable` table."""
 
     def test_no_rows(self):
         """Table works with no rows."""
-        table = accessor_audit.SignedAgreementAccessorAuditTable([])
-        self.assertIsInstance(table, accessor_audit.SignedAgreementAccessorAuditTable)
+        table = accessor_audit.AccessorAuditTable([])
+        self.assertIsInstance(table, accessor_audit.AccessorAuditTable)
         self.assertEqual(len(table.rows), 0)
 
     def test_one_row(self):
@@ -2159,8 +2159,8 @@ class AccessorAuditTableTest(TestCase):
                 "note": "a note",
             }
         ]
-        table = accessor_audit.SignedAgreementAccessorAuditTable(data)
-        self.assertIsInstance(table, accessor_audit.SignedAgreementAccessorAuditTable)
+        table = accessor_audit.AccessorAuditTable(data)
+        self.assertIsInstance(table, accessor_audit.AccessorAuditTable)
         self.assertEqual(len(table.rows), 1)
         self.assertIn(
             str(member_agreement.signed_agreement.cc_id),
@@ -2190,8 +2190,8 @@ class AccessorAuditTableTest(TestCase):
                 "note": "note 2",
             },
         ]
-        table = accessor_audit.SignedAgreementAccessorAuditTable(data)
-        self.assertIsInstance(table, accessor_audit.SignedAgreementAccessorAuditTable)
+        table = accessor_audit.AccessorAuditTable(data)
+        self.assertIsInstance(table, accessor_audit.AccessorAuditTable)
         self.assertEqual(len(table.rows), 2)
         self.assertIn(
             str(member_agreement_1.signed_agreement.cc_id),
@@ -2265,12 +2265,12 @@ class UploaderAuditResultTest(TestCase):
 
 
 class UploaderAuditTableTest(TestCase):
-    """Tests for the `DataAffiliateUploaderAuditTable` table."""
+    """Tests for the `UploaderAuditTable` table."""
 
     def test_no_rows(self):
         """Table works with no rows."""
-        table = uploader_audit.DataAffiliateUploaderAuditTable([])
-        self.assertIsInstance(table, uploader_audit.DataAffiliateUploaderAuditTable)
+        table = uploader_audit.UploaderAuditTable([])
+        self.assertIsInstance(table, uploader_audit.UploaderAuditTable)
         self.assertEqual(len(table.rows), 0)
 
     def test_one_row(self):
@@ -2286,8 +2286,8 @@ class UploaderAuditTableTest(TestCase):
                 "note": "a note",
             }
         ]
-        table = uploader_audit.DataAffiliateUploaderAuditTable(data)
-        self.assertIsInstance(table, uploader_audit.DataAffiliateUploaderAuditTable)
+        table = uploader_audit.UploaderAuditTable(data)
+        self.assertIsInstance(table, uploader_audit.UploaderAuditTable)
         self.assertEqual(len(table.rows), 1)
         self.assertIn(
             str(data_affiliate_agreement.signed_agreement.cc_id),
@@ -2317,8 +2317,8 @@ class UploaderAuditTableTest(TestCase):
                 "note": "note 2",
             },
         ]
-        table = uploader_audit.DataAffiliateUploaderAuditTable(data)
-        self.assertIsInstance(table, uploader_audit.DataAffiliateUploaderAuditTable)
+        table = uploader_audit.UploaderAuditTable(data)
+        self.assertIsInstance(table, uploader_audit.UploaderAuditTable)
         self.assertEqual(len(table.rows), 2)
         self.assertIn(
             str(data_affiliate_agreement_1.signed_agreement.cc_id),
@@ -2332,19 +2332,19 @@ class UploaderAuditTableTest(TestCase):
         self.assertEqual(table.rows[1].get_cell("note"), "note 2")
 
 
-class SignedAgreementAccessorAuditTest(TestCase):
-    """Tests for the SignedAgreementAccessorAudit classes."""
+class AccessorAuditTest(TestCase):
+    """Tests for the AccessorAudit classes."""
 
     def test_completed(self):
         """completed is updated properly."""
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         self.assertFalse(audit.completed)
         audit.run_audit()
         self.assertTrue(audit.completed)
 
     def test_no_applications(self):
         """Audit works if there are no SignedAgreements."""
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2354,7 +2354,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         """audit_agreement_and_object works when passed a user object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         user = UserFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, user)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2364,13 +2364,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
 
     def test_audit_agreement_and_object_account(self):
         """audit_agreement_and_object works when passed an Account object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         account = AccountFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, account)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2380,13 +2380,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_audit_agreement_and_object_group(self):
         """audit_agreement_and_object works when passed a ManagedGroup object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         group = ManagedGroupFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, group)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2396,13 +2396,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.GROUP_WITHOUT_ACCESS)
 
     def test_audit_agreement_and_object_user_email(self):
         """audit_agreement_and_object works when passed a string email for a user."""
         signed_agreement = factories.SignedAgreementFactory.create()
         user = UserFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, user.username)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2412,13 +2412,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
 
     def test_audit_agreement_and_object_user_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for a user."""
         signed_agreement = factories.SignedAgreementFactory.create()
         user = UserFactory.create(username="foo@BAR.com")
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, "FOO@bar.com")
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2428,13 +2428,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
 
     def test_audit_agreement_and_object_account_email(self):
         """audit_agreement_and_object works when passed a string email for an account."""
         signed_agreement = factories.SignedAgreementFactory.create()
         account = AccountFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, account.email)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2444,13 +2444,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_audit_agreement_and_object_account_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for an account."""
         signed_agreement = factories.SignedAgreementFactory.create()
         account = AccountFactory.create(email="foo@BAR.com")
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, "FOO@bar.com")
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2460,13 +2460,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_audit_agreement_and_object_group_email(self):
         """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
         signed_agreement = factories.SignedAgreementFactory.create()
         group = ManagedGroupFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, group.email)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2476,13 +2476,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.GROUP_WITHOUT_ACCESS)
 
     def test_audit_agreement_and_object_group_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
         signed_agreement = factories.SignedAgreementFactory.create()
         group = ManagedGroupFactory.create(email="foo@BAR.com")
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, "FOO@bar.com")
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2492,12 +2492,12 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.GROUP_WITHOUT_ACCESS)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.GROUP_WITHOUT_ACCESS)
 
     def test_audit_agreement_and_object_email_does_not_exist(self):
         """audit_agreement_and_object works when passed a ManagedGroup object."""
         signed_agreement = factories.SignedAgreementFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         with self.assertRaises(ValueError) as e:
             audit.audit_agreement_and_object(signed_agreement, "foo@bar.com")
         self.assertIn(
@@ -2508,7 +2508,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
     def test_audit_agreement_and_object_other_object(self):
         """audit_agreement_and_object raises ValueError when passed an incorrect object."""
         signed_agreement = factories.SignedAgreementFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         with self.assertRaises(ValueError):
             audit.audit_agreement_and_object(signed_agreement, object)
 
@@ -2522,7 +2522,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 1)
@@ -2533,7 +2533,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_IN_ACCESS_GROUP)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_IN_ACCESS_GROUP)
 
     def test_accessor_linked_account_not_in_access_group(self):
         # Create applications.
@@ -2545,7 +2545,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Access group membership.
         # GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -2556,7 +2556,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT)
 
     def test_accessor_no_account(self):
         # Create applications.
@@ -2569,7 +2569,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Access group membership.
         # GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 1)
@@ -2580,7 +2580,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_NO_ACCOUNT)
 
     def test_user_in_group_not_accessor(self):
         # Create applications.
@@ -2592,7 +2592,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -2603,7 +2603,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.NOT_ACCESSOR)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
 
     def test_not_accessor_and_account_has_no_user(self):
         # Create applications.
@@ -2615,7 +2615,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -2626,7 +2626,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_two_accessors(self):
         """Audit works when there are two accessors."""
@@ -2640,7 +2640,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account_1)
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 1)  # One of the accessors.
@@ -2657,7 +2657,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, account_2.user)
         self.assertEqual(record.member, account_2)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT)
 
     def test_unexpected_group_in_access_group(self):
         """A group unexpectedly has access."""
@@ -2670,7 +2670,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
             child_group=group,
         )
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -2681,13 +2681,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.UNEXPECTED_GROUP_ACCESS)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.UNEXPECTED_GROUP_ACCESS)
 
     def test_representative_not_accessor(self):
         """Representative is not an accessor."""
         # Create applications.
         signed_agreement = factories.SignedAgreementFactory.create()
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -2699,7 +2699,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         # Create applications.
         signed_agreement = factories.SignedAgreementFactory.create()
         signed_agreement.accessors.add(signed_agreement.representative)
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 1)
@@ -2710,7 +2710,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement)
         self.assertEqual(record.user, signed_agreement.representative)
         self.assertIsNone(record.member)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_NO_ACCOUNT)
 
     def test_ignores_admins_group(self):
         """Ignores the admin group."""
@@ -2723,14 +2723,14 @@ class SignedAgreementAccessorAuditTest(TestCase):
             child_group=group,
         )
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         # Check the sub-method specifically.
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, group)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2748,14 +2748,14 @@ class SignedAgreementAccessorAuditTest(TestCase):
             child_group=group,
         )
         # Set up audit
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         # Run audit
         audit.audit_agreement(signed_agreement)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         # Check the sub-method specifically.
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.audit_agreement_and_object(signed_agreement, group)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2769,7 +2769,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         signed_agreement_2 = factories.SignedAgreementFactory.create()
         user_2 = UserFactory.create()
         signed_agreement_2.accessors.add(user_2)
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 1)
@@ -2779,13 +2779,13 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement_2)
         self.assertEqual(record.user, user_2)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_NO_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_NO_ACCOUNT)
         record = audit.needs_action[0]
         self.assertIsInstance(record, accessor_audit.GrantAccess)
         self.assertEqual(record.signed_agreement, signed_agreement_1)
         self.assertEqual(record.user, account_1.user)
         self.assertEqual(record.member, account_1)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT)
 
     def test_queryset(self):
         """Audit only runs on the specified queryset of SignedAgreements."""
@@ -2794,9 +2794,7 @@ class SignedAgreementAccessorAuditTest(TestCase):
         signed_agreement_1.accessors.add(account_1.user)
         signed_agreement_2 = factories.SignedAgreementFactory.create()
         # First application
-        audit = accessor_audit.SignedAgreementAccessorAudit(
-            queryset=models.SignedAgreement.objects.filter(pk=signed_agreement_1.pk)
-        )
+        audit = accessor_audit.AccessorAudit(queryset=models.SignedAgreement.objects.filter(pk=signed_agreement_1.pk))
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 1)
@@ -2806,11 +2804,9 @@ class SignedAgreementAccessorAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, signed_agreement_1)
         self.assertEqual(record.user, account_1.user)
         self.assertEqual(record.member, account_1)
-        self.assertEqual(record.note, accessor_audit.SignedAgreementAccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT)
         # Second application
-        audit = accessor_audit.SignedAgreementAccessorAudit(
-            queryset=models.SignedAgreement.objects.filter(pk=signed_agreement_2.pk)
-        )
+        audit = accessor_audit.AccessorAudit(queryset=models.SignedAgreement.objects.filter(pk=signed_agreement_2.pk))
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2819,9 +2815,9 @@ class SignedAgreementAccessorAuditTest(TestCase):
     def test_queryset_wrong_class(self):
         """Raises ValueError if queryset is not a QuerySet."""
         with self.assertRaises(ValueError):
-            accessor_audit.SignedAgreementAccessorAudit(queryset="foo")
+            accessor_audit.AccessorAudit(queryset="foo")
         with self.assertRaises(ValueError):
-            accessor_audit.SignedAgreementAccessorAudit(queryset=models.MemberAgreement.objects.all())
+            accessor_audit.AccessorAudit(queryset=models.MemberAgreement.objects.all())
 
 
 class DataAffiliateAgreementUploaderAuditTest(TestCase):
@@ -2829,14 +2825,14 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
 
     def test_completed(self):
         """completed is updated properly."""
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         self.assertFalse(audit.completed)
         audit.run_audit()
         self.assertTrue(audit.completed)
 
     def test_no_applications(self):
         """Audit works if there are no DataAffiliateAgreements."""
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2846,7 +2842,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         """audit_agreement_and_object works when passed a user object."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         user = UserFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, user)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2856,13 +2852,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
 
     def test_audit_agreement_and_object_account(self):
         """audit_agreement_and_object works when passed an Account object."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         account = AccountFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, account)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2872,13 +2868,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_audit_agreement_and_object_group(self):
         """audit_agreement_and_object works when passed a ManagedGroup object."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         group = ManagedGroupFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, group)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2888,13 +2884,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.GROUP_WITHOUT_ACCESS)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.GROUP_WITHOUT_ACCESS)
 
     def test_audit_agreement_and_object_user_email(self):
         """audit_agreement_and_object works when passed a string email for a user."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         user = UserFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, user.username)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2904,13 +2900,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
 
     def test_audit_agreement_and_object_user_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for a user."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         user = UserFactory.create(username="foo@BAR.com")
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, "FOO@bar.com")
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2920,13 +2916,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
 
     def test_audit_agreement_and_object_account_email(self):
         """audit_agreement_and_object works when passed a string email for an account."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         account = AccountFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, account.email)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2936,13 +2932,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_audit_agreement_and_object_account_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for an account."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         account = AccountFactory.create(email="foo@BAR.com")
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, "FOO@bar.com")
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2952,13 +2948,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_audit_agreement_and_object_group_email(self):
         """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         group = ManagedGroupFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, group.email)
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2968,13 +2964,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.GROUP_WITHOUT_ACCESS)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.GROUP_WITHOUT_ACCESS)
 
     def test_audit_agreement_and_object_group_email_case_insensitive(self):
         """audit_agreement_and_object works when passed a string email for a ManagedGroup."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         group = ManagedGroupFactory.create(email="foo@BAR.com")
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, "FOO@bar.com")
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 0)
@@ -2984,12 +2980,12 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.GROUP_WITHOUT_ACCESS)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.GROUP_WITHOUT_ACCESS)
 
     def test_audit_agreement_and_object_email_does_not_exist(self):
         """audit_agreement_and_object works when passed a ManagedGroup object."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         with self.assertRaises(ValueError) as e:
             audit.audit_agreement_and_object(data_affiliate_agreement, "foo@bar.com")
         self.assertIn(
@@ -3000,7 +2996,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
     def test_audit_agreement_and_object_other_object(self):
         """audit_agreement_and_object raises ValueError when passed an incorrect object."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         with self.assertRaises(ValueError):
             audit.audit_agreement_and_object(data_affiliate_agreement, object)
 
@@ -3014,7 +3010,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 1)
@@ -3025,7 +3021,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_IN_ACCESS_GROUP)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_IN_ACCESS_GROUP)
 
     def test_uploader_linked_account_not_in_access_group(self):
         # Create applications.
@@ -3037,7 +3033,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Access group membership.
         # GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -3048,7 +3044,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT)
 
     def test_uploader_no_account(self):
         # Create applications.
@@ -3061,7 +3057,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Access group membership.
         # GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 1)
@@ -3072,7 +3068,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, user)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_NO_ACCOUNT)
 
     def test_user_in_group_not_uploader(self):
         # Create applications.
@@ -3084,7 +3080,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -3095,7 +3091,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, account.user)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.NOT_UPLOADER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
 
     def test_not_uploader_and_account_has_no_user(self):
         # Create applications.
@@ -3107,7 +3103,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -3118,7 +3114,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, account)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
     def test_two_uploaders(self):
         """Audit works when there are two uploaders."""
@@ -3132,7 +3128,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Access group membership.
         GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account_1)
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 1)  # One of the uploaders.
@@ -3149,7 +3145,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, account_2.user)
         self.assertEqual(record.member, account_2)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT)
 
     def test_unexpected_group_in_access_group(self):
         """A group unexpectedly has access."""
@@ -3162,7 +3158,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
             child_group=group,
         )
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -3173,13 +3169,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, None)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UNEXPECTED_GROUP_ACCESS)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UNEXPECTED_GROUP_ACCESS)
 
     def test_representative_not_uploader(self):
         """Representative is not an uploader."""
         # Create applications.
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
@@ -3191,7 +3187,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         # Create applications.
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         data_affiliate_agreement.uploaders.add(data_affiliate_agreement.signed_agreement.representative)
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 1)
@@ -3202,7 +3198,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
         self.assertEqual(record.user, data_affiliate_agreement.signed_agreement.representative)
         self.assertIsNone(record.member)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_NO_ACCOUNT)
 
     def test_ignores_admins_group(self):
         """Ignores the admin group."""
@@ -3215,14 +3211,14 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
             child_group=group,
         )
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         # Check the sub-method specifically.
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, group)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -3240,14 +3236,14 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
             child_group=group,
         )
         # Set up audit
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         # Run audit
         audit.audit_agreement(data_affiliate_agreement)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
         self.assertEqual(len(audit.errors), 0)
         # Check the sub-method specifically.
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.audit_agreement_and_object(data_affiliate_agreement, group)
         self.assertEqual(len(audit.verified), 0)
         self.assertEqual(len(audit.needs_action), 0)
@@ -3261,7 +3257,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         data_affiliate_agreement_2 = factories.DataAffiliateAgreementFactory.create()
         user_2 = UserFactory.create()
         data_affiliate_agreement_2.uploaders.add(user_2)
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.run_audit()
         self.assertEqual(len(audit.verified), 1)
         self.assertEqual(len(audit.needs_action), 1)
@@ -3271,13 +3267,13 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement_2)
         self.assertEqual(record.user, user_2)
         self.assertEqual(record.member, None)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_NO_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_NO_ACCOUNT)
         record = audit.needs_action[0]
         self.assertIsInstance(record, uploader_audit.GrantAccess)
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement_1)
         self.assertEqual(record.user, account_1.user)
         self.assertEqual(record.member, account_1)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT)
 
     def test_queryset(self):
         """Audit only runs on the specified queryset of DataAffiliateAgreements."""
@@ -3286,7 +3282,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         data_affiliate_agreement_1.uploaders.add(account_1.user)
         data_affiliate_agreement_2 = factories.DataAffiliateAgreementFactory.create()
         # First application
-        audit = uploader_audit.DataAffiliateUploaderAudit(
+        audit = uploader_audit.UploaderAudit(
             queryset=models.DataAffiliateAgreement.objects.filter(pk=data_affiliate_agreement_1.pk)
         )
         audit.run_audit()
@@ -3298,9 +3294,9 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement_1)
         self.assertEqual(record.user, account_1.user)
         self.assertEqual(record.member, account_1)
-        self.assertEqual(record.note, uploader_audit.DataAffiliateUploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT)
         # Second application
-        audit = uploader_audit.DataAffiliateUploaderAudit(
+        audit = uploader_audit.UploaderAudit(
             queryset=models.DataAffiliateAgreement.objects.filter(pk=data_affiliate_agreement_2.pk)
         )
         audit.run_audit()
@@ -3311,16 +3307,16 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
     def test_queryset_wrong_class(self):
         """Raises ValueError if queryset is not a QuerySet."""
         with self.assertRaises(ValueError):
-            uploader_audit.DataAffiliateUploaderAudit(queryset="foo")
+            uploader_audit.UploaderAudit(queryset="foo")
         with self.assertRaises(ValueError):
-            uploader_audit.DataAffiliateUploaderAudit(queryset=models.SignedAgreement.objects.all())
+            uploader_audit.UploaderAudit(queryset=models.SignedAgreement.objects.all())
 
     def test_queryset_only_data_affiliates(self):
         """Only DataAffiliateAgreements are included in the audit."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         member_agreement = factories.MemberAgreementFactory.create()
         non_data_affiliate_agreement = factories.NonDataAffiliateAgreementFactory.create()
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         self.assertEqual(audit.queryset.count(), 1)
         self.assertIn(data_affiliate_agreement, audit.queryset)
         self.assertNotIn(member_agreement, audit.queryset)

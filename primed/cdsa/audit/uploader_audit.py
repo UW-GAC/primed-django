@@ -100,7 +100,7 @@ class Error(UploaderAuditResult):
     pass
 
 
-class DataAffiliateUploaderAuditTable(tables.Table):
+class UploaderAuditTable(tables.Table):
     """A table to show results from a DataAffiliateAgreementUploaderAudit subclass."""
 
     data_affiliate_agreement = tables.Column(linkify=True)
@@ -114,7 +114,7 @@ class DataAffiliateUploaderAuditTable(tables.Table):
         attrs = {"class": "table align-middle"}
 
 
-class DataAffiliateUploaderAudit(PRIMEDAudit):
+class UploaderAudit(PRIMEDAudit):
     """Audit collaborators for a DataAffiliateAgreement."""
 
     # Access verified.
@@ -133,7 +133,7 @@ class DataAffiliateUploaderAudit(PRIMEDAudit):
     UNEXPECTED_GROUP_ACCESS = "Group should not have access."
     ACCOUNT_NOT_LINKED_TO_USER = "Account is not linked to a user."
 
-    results_table_class = DataAffiliateUploaderAuditTable
+    results_table_class = UploaderAuditTable
 
     def __init__(self, queryset=None):
         super().__init__()

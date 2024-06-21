@@ -773,14 +773,14 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
             return super().form_valid(form)
 
 
-class SignedAgreementAccessorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class AccessorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show accessor audit results for `SignedAgreements`."""
 
     template_name = "cdsa/signedagreement_accessor_audit.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        audit = accessor_audit.SignedAgreementAccessorAudit()
+        audit = accessor_audit.AccessorAudit()
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
@@ -789,7 +789,7 @@ class SignedAgreementAccessorAudit(AnVILConsortiumManagerStaffViewRequired, Temp
         return context
 
 
-class SignedAgreementAccessorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class AccessorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     form_class = Form
     template_name = "cdsa/signedagreement_accessor_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
@@ -807,7 +807,7 @@ class SignedAgreementAccessorAuditResolve(AnVILConsortiumManagerStaffEditRequire
         return self.kwargs.get("email")
 
     def get_audit_result(self):
-        audit = accessor_audit.SignedAgreementAccessorAudit(
+        audit = accessor_audit.AccessorAudit(
             queryset=models.SignedAgreement.objects.filter(pk=self.signed_agreement.pk)
         )
         # No way to include a queryset of members at this point - need to call the sub method directly.
@@ -886,14 +886,14 @@ class SignedAgreementAccessorAuditResolve(AnVILConsortiumManagerStaffEditRequire
             return super().form_valid(form)
 
 
-class DataAffiliateUploaderAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class UploaderAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show uploader audit results for `DataAffiliateAgreements`."""
 
     template_name = "cdsa/uploader_audit.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        audit = uploader_audit.DataAffiliateUploaderAudit()
+        audit = uploader_audit.UploaderAudit()
         audit.run_audit()
         context["verified_table"] = audit.get_verified_table()
         context["errors_table"] = audit.get_errors_table()
@@ -902,7 +902,7 @@ class DataAffiliateUploaderAudit(AnVILConsortiumManagerStaffViewRequired, Templa
         return context
 
 
-class DataAffiliateUploaderAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class UploaderAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     form_class = Form
     template_name = "cdsa/uploader_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
@@ -920,7 +920,7 @@ class DataAffiliateUploaderAuditResolve(AnVILConsortiumManagerStaffEditRequired,
         return self.kwargs.get("email")
 
     def get_audit_result(self):
-        audit = uploader_audit.DataAffiliateUploaderAudit(
+        audit = uploader_audit.UploaderAudit(
             queryset=models.DataAffiliateAgreement.objects.filter(pk=self.data_affiliate_agreement.pk)
         )
         # No way to include a queryset of members at this point - need to call the sub method directly.
