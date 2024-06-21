@@ -776,7 +776,7 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
 class AccessorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to show accessor audit results for `SignedAgreements`."""
 
-    template_name = "cdsa/signedagreement_accessor_audit.html"
+    template_name = "cdsa/accessor_audit.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -791,7 +791,7 @@ class AccessorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
 
 class AccessorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     form_class = Form
-    template_name = "cdsa/signedagreement_accessor_audit_resolve.html"
+    template_name = "cdsa/accessor_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
