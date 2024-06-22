@@ -129,7 +129,7 @@
                     Accessor: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
                   </li>
                 {% endif %}
-                {% if object in agreement.dataaffiliateagreement.uploaders.all %}
+                {% if agreement.dataaffiliateagreement and object in agreement.dataaffiliateagreement.uploaders.all %}
                   <li class="list-group-item">
                     Uploader: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
                   </li>
@@ -149,4 +149,6 @@
   </div>
 
 </div>
+
+<p>{{ signed_agreements }}</p>
 {% endblock content %}

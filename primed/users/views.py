@@ -24,10 +24,10 @@ class UserDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["dbgap_applications"] = dbGaPApplication.objects.filter(
             Q(principal_investigator=self.object) | Q(collaborators=self.object)
-        )
+        ).distinct()
         context["signed_agreements"] = SignedAgreement.objects.filter(
             Q(accessors=self.object) | Q(dataaffiliateagreement__uploaders=self.object)
-        )
+        ).distinct()
         return context
 
 
