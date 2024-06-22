@@ -16,6 +16,11 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.cdsa.tests.factories import (
+    DataAffiliateAgreementFactory,
+    MemberAgreementFactory,
+    NonDataAffiliateAgreementFactory,
+)
 from primed.dbgap.tests.factories import dbGaPApplicationFactory
 from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.forms import UserChangeForm
@@ -195,6 +200,7 @@ class UserDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "My data access mechanisms")
         self.assertContains(response, "dbGaP")
+        self.assertContains(response, "Consortium data sharing agreements")
 
     def test_data_access_other_profile(self):
         other_user = UserFactory.create()
@@ -302,6 +308,122 @@ class UserDetailTest(TestCase):
         self.assertContains(response, "No dbGaP applications")
         self.assertIn("dbgap_applications", response.context)
         self.assertEqual(len(response.context["dbgap_applications"]), 0)
+
+    def test_no_signed_agreements(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No CDSAs")
+
+    def test_accessor_on_one_member_agreement(self):
+        agreement = MemberAgreementFactory.create()
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Accessor")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement.signed_agreement.cc_id)
+        self.assertContains(response, agreement.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 1)
+        self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
+
+    def test_accessor_on_one_data_affiliate_agreement(self):
+        agreement = DataAffiliateAgreementFactory.create()
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Accessor")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement.signed_agreement.cc_id)
+        self.assertContains(response, agreement.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 1)
+        self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
+
+    def test_accessor_on_one_non_data_affiliate_agreement(self):
+        agreement = NonDataAffiliateAgreementFactory.create()
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Accessor")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement.signed_agreement.cc_id)
+        self.assertContains(response, agreement.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 1)
+        self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
+
+    def test_accessor_on_two_signed_agreements(self):
+        agreement_1 = MemberAgreementFactory.create()
+        agreement_2 = MemberAgreementFactory.create()
+        agreement_1.signed_agreement.accessors.add(self.user)
+        agreement_2.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Accessor")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement_1.signed_agreement.cc_id)
+        self.assertContains(response, agreement_1.get_absolute_url())
+        self.assertContains(response, agreement_2.signed_agreement.cc_id)
+        self.assertContains(response, agreement_2.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 2)
+        self.assertIn(agreement_1.signed_agreement, response.context["signed_agreements"])
+        self.assertIn(agreement_2.signed_agreement, response.context["signed_agreements"])
+
+    def test_uploader_on_one_signed_agreement(self):
+        agreement = DataAffiliateAgreementFactory.create()
+        agreement.uploaders.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Uploader")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement.signed_agreement.cc_id)
+        self.assertContains(response, agreement.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 1)
+        self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
+
+    def test_uploader_on_two_signed_agreements(self):
+        agreement_1 = DataAffiliateAgreementFactory.create()
+        agreement_1.uploaders.add(self.user)
+        agreement_2 = DataAffiliateAgreementFactory.create()
+        agreement_2.uploaders.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Uploader")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement_1.signed_agreement.cc_id)
+        self.assertContains(response, agreement_1.get_absolute_url())
+        self.assertContains(response, agreement_2.signed_agreement.cc_id)
+        self.assertContains(response, agreement_2.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 2)
+        self.assertIn(agreement_1.signed_agreement, response.context["signed_agreements"])
+        self.assertIn(agreement_2.signed_agreement, response.context["signed_agreements"])
+
+    def test_uploader_and_accessor(self):
+        agreement = DataAffiliateAgreementFactory.create()
+        agreement.signed_agreement.accessors.add(self.user)
+        agreement.uploaders.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Uploader")
+        self.assertContains(response, "Accessor")
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement.signed_agreement.cc_id)
+        self.assertContains(response, agreement.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 1)
+        self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
 
     def test_acm_staff_view(self):
         """Users with staff view permission see dbGaP application info."""
