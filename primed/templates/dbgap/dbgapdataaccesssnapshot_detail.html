@@ -43,6 +43,14 @@
       </h2>
       <div id="collapseOne" class="accordion-collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionDARs">
         <div class="accordion-body">
+          <p>
+            This table shows dbGaP Data Access Request (DAR) statuses as recorded by the CC in this snapshot.
+            In the table, the "Studies" column is populated if the CC has a record of this study in the AnVIL web app.
+            The "Matching Workspaces" column shows any CC-managed workspaces in AnVIL that are associated with this DAR,
+            as well as whether the dbGaP access group associated with this application has access (green check) or does not have access (red X).
+            Access to workspaces is handled using the most recent snapshot for this dbGaP application.
+          </p>
+
           {% render_table data_access_request_table %}
         </div>
       </div>

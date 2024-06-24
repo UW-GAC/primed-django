@@ -1,9 +1,12 @@
 import django_tables2 as tables
-from anvil_consortium_manager.models import Account, Workspace
+from anvil_consortium_manager.models import Account, ManagedGroup, Workspace
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
 
 from . import models
+
+User = get_user_model()
 
 
 class BooleanIconColumn(tables.BooleanColumn):
@@ -151,3 +154,43 @@ class DataSummaryTable(tables.Table):
         available_data_types = models.AvailableData.objects.values_list("name", flat=True)
         extra_columns = [(x, BooleanIconColumn(default=False)) for x in available_data_types]
         super().__init__(*args, extra_columns=extra_columns, **kwargs)
+
+
+class UserAccountSingleGroupMembershipTable(tables.Table):
+    """A table with users and info about whether they are members of a group."""
+
+    class Meta:
+        model = User
+        fields = (
+            "name",
+            "account",
+        )
+        order_by = ("name",)
+
+    name = tables.Column(linkify=lambda record: record.get_absolute_url())
+    account = tables.Column(verbose_name="AnVIL account")
+    is_group_member = tables.BooleanColumn(verbose_name="Has access?", default=False)
+
+    def __init__(self, *args, managed_group=None, **kwargs):
+        if managed_group is None:
+            raise ValueError("managed_group must be provided.")
+        if not isinstance(managed_group, ManagedGroup):
+            raise ValueError("managed_group must be an instance of ManagedGroup.")
+        self.managed_group = managed_group
+        super().__init__(*args, **kwargs)
+
+    def render_is_group_member(self, record):
+        if hasattr(record, "account"):
+            value = record.account.groupaccountmembership_set.filter(group=self.managed_group).exists()
+        else:
+            value = False
+        # Copied from BooleanIconColumn - maybe there is a DRYer way to do this?
+        if value:
+            rendered_value = format_html(
+                """<i class="bi bi-check-circle-fill bi-align-center px-2" style="color: green;"></i>"""
+            )
+        else:
+            rendered_value = format_html(
+                """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""  # noqa: E501
+            )
+        return rendered_value
