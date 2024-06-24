@@ -54,7 +54,7 @@ class CDSARecordsTest(TestCase):
         self.assertEqual(len(lines), 1)
 
     def test_representative_records_three(self):
-        factories.MemberAgreementFactory.create()
+        factories.DataAffiliateAgreementFactory.create()
         factories.DataAffiliateAgreementFactory.create()
         factories.NonDataAffiliateAgreementFactory.create()
         out = StringIO()
@@ -122,8 +122,8 @@ class RunCDSAAuditTest(TestCase):
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(expected_output, out.getvalue())
-        expected_output = "Running accessor audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
-        expected_output = "Running uploader audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Accessor audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Uploader audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -131,7 +131,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_agreements_one_agreement_verified(self):
         """Test command output with one verified instance."""
-        factories.MemberAgreementFactory.create(is_primary=False)
+        factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
@@ -143,7 +143,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_agreements_one_agreement_needs_action(self):
         """Test command output with one needs_action instance."""
-        factories.MemberAgreementFactory.create()
+        factories.DataAffiliateAgreementFactory.create()
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
@@ -159,7 +159,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_agreements_one_agreement_error(self):
         """Test command output with one error instance."""
-        agreement = factories.MemberAgreementFactory.create(is_primary=False)
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=self.cdsa_group,
             child_group=agreement.signed_agreement.anvil_access_group,
@@ -179,7 +179,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_agreements_one_agreement_verified_email(self):
         """No email is sent when there are no errors."""
-        factories.MemberAgreementFactory.create(is_primary=False)
+        factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running SignedAgreement access audit... ok!", out.getvalue())
@@ -188,7 +188,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_agreements_one_agreement_needs_action_email(self):
         """Email is sent for one needs_action instance."""
-        factories.MemberAgreementFactory.create()
+        factories.DataAffiliateAgreementFactory.create()
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
@@ -207,7 +207,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_agreements_one_agreement_error_email(self):
         """Test command output with one error instance."""
-        agreement = factories.MemberAgreementFactory.create(is_primary=False)
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=self.cdsa_group,
             child_group=agreement.signed_agreement.anvil_access_group,
@@ -341,7 +341,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_accessors_no_accessors(self):
         """Test command output with no accessors."""
-        factories.MemberAgreementFactory.create(is_primary=False)
+        factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = "Running Accessor audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
@@ -352,7 +352,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_accessors_verified(self):
         """Test command output with one verified instance."""
-        agreement = factories.MemberAgreementFactory.create(is_primary=False)
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         agreement.signed_agreement.accessors.add(UserFactory.create())
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
@@ -363,7 +363,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_accessors_needs_action(self):
         """Test command output with one needs_action instance."""
-        agreement = factories.MemberAgreementFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create()
         account = AccountFactory.create(verified=True)
         agreement.signed_agreement.accessors.add(account.user)
         out = StringIO()
@@ -378,7 +378,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_accessors_error(self):
         """Test command output with one error instance."""
-        agreement = factories.MemberAgreementFactory.create(is_primary=False)
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=agreement.signed_agreement.anvil_access_group,
         )
@@ -394,7 +394,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_accessors_verified_email(self):
         """No email is sent when there are no errors."""
-        factories.MemberAgreementFactory.create(is_primary=False)
+        factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         self.assertIn("Running Accessor audit... ok!", out.getvalue())
@@ -403,7 +403,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_accessors_needs_action_email(self):
         """Email is sent for one needs_action instance."""
-        agreement = factories.MemberAgreementFactory.create()
+        agreement = factories.DataAffiliateAgreementFactory.create()
         GroupGroupMembershipFactory.create(
             parent_group=self.cdsa_group,
             child_group=agreement.signed_agreement.anvil_access_group,
@@ -425,7 +425,7 @@ class RunCDSAAuditTest(TestCase):
 
     def test_command_accessors_error_email(self):
         """Test command output with one error instance."""
-        agreement = factories.MemberAgreementFactory.create(is_primary=False)
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         GroupGroupMembershipFactory.create(
             parent_group=agreement.signed_agreement.anvil_access_group,
         )
@@ -443,10 +443,115 @@ class RunCDSAAuditTest(TestCase):
         self.assertEqual(email.subject, "CDSA AccessorAudit errors")
         self.assertIn(reverse("cdsa:audit:signed_agreements:accessors:all"), email.alternatives[0][0])
 
+    def test_uploaders_no_uploaders(self):
+        """Test command output with no uploaders."""
+        factories.DataAffiliateAgreementFactory.create(is_primary=False)
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", stdout=out)
+        expected_output = "Running Uploader audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
+        self.assertIn(expected_output, out.getvalue())
+        self.assertIn(expected_output, out.getvalue())
+        # Zero messages have been sent by default.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_command_uploaders_verified(self):
+        """Test command output with one verified instance."""
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
+        agreement.uploaders.add(UserFactory.create())
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", stdout=out)
+        expected_output = "Running Uploader audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
+        self.assertIn(expected_output, out.getvalue())
+        # Zero messages have been sent by default.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_command_uploaders_needs_action(self):
+        """Test command output with one needs_action instance."""
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        agreement.uploaders.add(account.user)
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", stdout=out)
+        expected_output = (
+            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
+        self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), out.getvalue())
+        # Zero messages have been sent by default.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_command_uploaders_error(self):
+        """Test command output with one error instance."""
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
+        GroupGroupMembershipFactory.create(
+            parent_group=agreement.anvil_upload_group,
+        )
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", stdout=out)
+        expected_output = (
+            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 1\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
+        self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), out.getvalue())
+        # Zero messages have been sent by default.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_command_uploaders_verified_email(self):
+        """No email is sent when there are no errors."""
+        factories.DataAffiliateAgreementFactory.create(is_primary=False)
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
+        self.assertIn("Running Uploader audit... ok!", out.getvalue())
+        # Zero messages have been sent by default.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_command_uploaders_needs_action_email(self):
+        """Email is sent for one needs_action instance."""
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        GroupGroupMembershipFactory.create(
+            parent_group=self.cdsa_group,
+            child_group=agreement.signed_agreement.anvil_access_group,
+        )
+        account = AccountFactory.create(verified=True)
+        agreement.uploaders.add(account.user)
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
+        expected_output = (
+            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
+        # One message has been sent by default.
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ["test@example.com"])
+        self.assertEqual(email.subject, "CDSA UploaderAudit errors")
+        self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), email.alternatives[0][0])
+
+    def test_command_uploaders_error_email(self):
+        """Test command output with one error instance."""
+        agreement = factories.DataAffiliateAgreementFactory.create(is_primary=False)
+        GroupGroupMembershipFactory.create(
+            parent_group=agreement.anvil_upload_group,
+        )
+        out = StringIO()
+        call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
+        expected_output = (
+            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 1\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
+        self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), out.getvalue())
+        # One message has been sent by default.
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ["test@example.com"])
+        self.assertEqual(email.subject, "CDSA UploaderAudit errors")
+        self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), email.alternatives[0][0])
+
     def test_needs_action(self):
         agreement = factories.DataAffiliateAgreementFactory.create()
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
         agreement.signed_agreement.accessors.add(AccountFactory.create(verified=True).user)
+        agreement.uploaders.add(AccountFactory.create(verified=True).user)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
@@ -467,13 +572,18 @@ class RunCDSAAuditTest(TestCase):
             "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
+        expected_output = (
+            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
         # No messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
-        self.fail("include accessor and uploader audits")
 
     def test_needs_action_email(self):
         agreement = factories.DataAffiliateAgreementFactory.create()
         factories.CDSAWorkspaceFactory.create(study=agreement.study)
+        agreement.signed_agreement.accessors.add(AccountFactory.create(verified=True).user)
+        agreement.uploaders.add(AccountFactory.create(verified=True).user)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
@@ -490,8 +600,16 @@ class RunCDSAAuditTest(TestCase):
             "* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
+        expected_output = (
+            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
+        expected_output = (
+            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
+        )
+        self.assertIn(expected_output, out.getvalue())
         # Two messages has been sent.
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 4)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA SignedAgreementAccessAudit errors")
@@ -500,13 +618,20 @@ class RunCDSAAuditTest(TestCase):
         self.assertEqual(email.to, ["test@example.com"])
         self.assertEqual(email.subject, "CDSA WorkspaceAccessAudit errors")
         self.assertIn(reverse("cdsa:audit:workspaces:all"), email.alternatives[0][0])
-        self.fail("include accessor and uploader audits")
+        email = mail.outbox[2]
+        self.assertEqual(email.to, ["test@example.com"])
+        self.assertEqual(email.subject, "CDSA AccessorAudit errors")
+        self.assertIn(reverse("cdsa:audit:signed_agreements:accessors:all"), email.alternatives[0][0])
+        email = mail.outbox[3]
+        self.assertEqual(email.to, ["test@example.com"])
+        self.assertEqual(email.subject, "CDSA UploaderAudit errors")
+        self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), email.alternatives[0][0])
 
     def test_different_domain(self):
         """Test command output when a different domain is specified."""
         site = Site.objects.create(domain="foobar.com", name="test")
         site.save()
-        factories.MemberAgreementFactory.create()
+        factories.DataAffiliateAgreementFactory.create()
         with self.settings(SITE_ID=site.id):
             out = StringIO()
             call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
