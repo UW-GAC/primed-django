@@ -39,7 +39,7 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
 django-simple-history
 
 # Making HTTP requests to get dbgap study versions.
-requests
+requests>=2.32.0
 
 # For json schema validation.
 jsonschema
