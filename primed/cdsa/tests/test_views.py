@@ -544,7 +544,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
     def test_version_already_invalid_post(self):
         instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(instance.version), {})
+        response = self.client.post(self.get_url(instance.version), {})
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
         self.assertEqual(
@@ -850,13 +850,25 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, cc_id=1)
 
+    def test_object_no_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.SignedAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404) as e:
+            self.get_view()(request, cc_id=instance.cc_id)
+        self.assertIn("No agreement_type provided", str(e.exception))
+
     def test_object_different_agreement_type(self):
         """Raises Http404 if object has a different agreement type."""
         instance = factories.DataAffiliateAgreementFactory.create()
         request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
         request.user = self.user
-        with self.assertRaises(Http404):
-            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+        with self.assertRaises(Http404) as e:
+            self.get_view()(
+                request, cc_id=instance.signed_agreement.cc_id, agreement_type=models.SignedAgreement.MEMBER
+            )
+        self.assertIn("No signed agreement found", str(e.exception))
 
     def test_has_form_in_context(self):
         """Response includes a form."""
@@ -1276,13 +1288,26 @@ class SignedAgreementAccessorsUpdateMemberTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, cc_id=1)
 
+    def test_object_no_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.SignedAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404) as e:
+            self.get_view()(request, cc_id=instance.cc_id)
+        self.assertIn("No agreement_type provided", str(e.exception))
+
     def test_object_different_agreement_type(self):
         """Raises Http404 if object has a different agreement type."""
         instance = factories.DataAffiliateAgreementFactory.create()
         request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
         request.user = self.user
-        with self.assertRaises(Http404):
-            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+        print("here")
+        with self.assertRaises(Http404) as e:
+            self.get_view()(
+                request, cc_id=instance.signed_agreement.cc_id, agreement_type=models.SignedAgreement.MEMBER
+            )
+        self.assertIn("No signed agreement found", str(e.exception))
 
     def test_has_form_in_context(self):
         """Response includes a form."""

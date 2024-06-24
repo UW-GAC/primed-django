@@ -2136,6 +2136,32 @@ class AccessorAuditResultTest(TestCase):
         )
         self.assertIsNone(instance.action)
 
+    def test_post_init_account_and_user_do_not_match(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        account = AccountFactory.create()
+        user = UserFactory.create()
+        with self.assertRaises(ValueError) as e:
+            accessor_audit.VerifiedAccess(
+                signed_agreement=signed_agreement,
+                member=account,
+                user=user,
+                note="foo",
+            )
+        self.assertEqual(str(e.exception), "Account and user do not match.")
+
+    def test_post_init_user_and_group(self):
+        signed_agreement = factories.SignedAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        with self.assertRaises(ValueError) as e:
+            accessor_audit.VerifiedAccess(
+                signed_agreement=signed_agreement,
+                member=group,
+                user=user,
+                note="foo",
+            )
+        self.assertEqual(str(e.exception), "Cannot specify both a ManagedGroup member and a User.")
+
 
 class AccessorAuditTableTest(TestCase):
     """Tests for the `AccessorAuditTable` table."""
@@ -2262,6 +2288,32 @@ class UploaderAuditResultTest(TestCase):
             has_access=False,
         )
         self.assertIsNone(instance.action)
+
+    def test_post_init_account_and_user_do_not_match(self):
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        user = UserFactory.create()
+        with self.assertRaises(ValueError) as e:
+            uploader_audit.VerifiedAccess(
+                data_affiliate_agreement=agreement,
+                member=account,
+                user=user,
+                note="foo",
+            )
+        self.assertEqual(str(e.exception), "Account and user do not match.")
+
+    def test_post_init_user_and_group(self):
+        agreement = factories.DataAffiliateAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        with self.assertRaises(ValueError) as e:
+            uploader_audit.VerifiedAccess(
+                data_affiliate_agreement=agreement,
+                member=group,
+                user=user,
+                note="foo",
+            )
+        self.assertEqual(str(e.exception), "Cannot specify both a ManagedGroup member and a User.")
 
 
 class UploaderAuditTableTest(TestCase):
