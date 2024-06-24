@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.urls import reverse
 
-from ...audit import signed_agreement_audit, workspace_audit
+from ...audit import accessor_audit, signed_agreement_audit, uploader_audit, workspace_audit
 
 
 class Command(BaseCommand):
@@ -23,7 +23,7 @@ class Command(BaseCommand):
         data_access_audit.run_audit()
 
         # Construct the url for handling errors.
-        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:all")
+        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:sag:all")
         self._report_results(data_access_audit, url)
         self._send_email(data_access_audit, url)
 
@@ -34,6 +34,26 @@ class Command(BaseCommand):
 
         # Construct the url for handling errors.
         url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:workspaces:all")
+        self._report_results(data_access_audit, url)
+        self._send_email(data_access_audit, url)
+
+    def _audit_accessors(self):
+        self.stdout.write("Running Accessor audit... ", ending="")
+        data_access_audit = accessor_audit.AccessorAudit()
+        data_access_audit.run_audit()
+
+        # Construct the url for handling errors.
+        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:accessors:all")
+        self._report_results(data_access_audit, url)
+        self._send_email(data_access_audit, url)
+
+    def _audit_uploaders(self):
+        self.stdout.write("Running Uploader audit... ", ending="")
+        data_access_audit = uploader_audit.UploaderAudit()
+        data_access_audit.run_audit()
+
+        # Construct the url for handling errors.
+        url = "https://" + Site.objects.get_current().domain + reverse("cdsa:audit:signed_agreements:uploaders:all")
         self._report_results(data_access_audit, url)
         self._send_email(data_access_audit, url)
 
@@ -78,3 +98,5 @@ class Command(BaseCommand):
         self.email = options["email"]
         self._audit_signed_agreements()
         self._audit_workspaces()
+        self._audit_accessors()
+        self._audit_uploaders()

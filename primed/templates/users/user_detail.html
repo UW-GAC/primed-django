@@ -122,7 +122,22 @@
 
           <ul class="list-group mb-3">
             <li class="list-group-item"><h5 class>Consortium data sharing agreements</h5></li>
-            <li class="list-group-item"><i class="bi bi-cone-striped"> </i>Coming soon!</li>
+            {% if signed_agreements %}
+              {% for agreement in signed_agreements %}
+                {% if object in agreement.accessors.all %}
+                  <li class="list-group-item">
+                    Accessor: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
+                  </li>
+                {% endif %}
+                {% if agreement.dataaffiliateagreement and object in agreement.dataaffiliateagreement.uploaders.all %}
+                  <li class="list-group-item">
+                    Uploader: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <li class="list-group-item">No CDSAs</li>
+            {% endif %}
           </ul>
           <p class='alert alert-secondary'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
         </div>
@@ -134,4 +149,6 @@
   </div>
 
 </div>
+
+<p>{{ signed_agreements }}</p>
 {% endblock content %}

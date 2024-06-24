@@ -5,12 +5,14 @@ from datetime import date, timedelta
 import responses
 from anvil_consortium_manager.models import (
     AnVILProjectManagerAccess,
+    GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
     Workspace,
 )
 from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
     BillingProjectFactory,
     GroupAccountMembershipFactory,
     GroupGroupMembershipFactory,
@@ -32,6 +34,7 @@ from freezegun import freeze_time
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
 from primed.miscellaneous_workspaces.tests.factories import DataPrepWorkspaceFactory
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
 from primed.primed_anvil.tests.factories import (
     AvailableDataFactory,
     StudyFactory,
@@ -40,7 +43,7 @@ from primed.primed_anvil.tests.factories import (
 from primed.users.tests.factories import UserFactory
 
 from .. import forms, models, tables, views
-from ..audit import signed_agreement_audit, workspace_audit
+from ..audit import accessor_audit, signed_agreement_audit, uploader_audit, workspace_audit
 from . import factories
 
 User = get_user_model()
@@ -67,7 +70,7 @@ class NavbarTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertContains(response, reverse("cdsa:agreement_versions:list"))
-        self.assertContains(response, reverse("cdsa:audit:signed_agreements:all"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements:sag:all"))
         self.assertContains(response, reverse("cdsa:audit:workspaces:all"))
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
@@ -87,7 +90,7 @@ class NavbarTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(self.get_url())
         self.assertContains(response, reverse("cdsa:agreement_versions:list"))
-        self.assertContains(response, reverse("cdsa:audit:signed_agreements:all"))
+        self.assertContains(response, reverse("cdsa:audit:signed_agreements:sag:all"))
         self.assertContains(response, reverse("cdsa:audit:workspaces:all"))
         self.assertContains(response, reverse("cdsa:records:index"))
         # Links to add CDSAs.
@@ -541,7 +544,7 @@ class AgreementMajorVersionInvalidateTest(TestCase):
     def test_version_already_invalid_post(self):
         instance = factories.AgreementMajorVersionFactory.create(is_valid=False)
         self.client.force_login(self.user)
-        response = self.client.get(self.get_url(instance.version), {})
+        response = self.client.post(self.get_url(instance.version), {})
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
         self.assertEqual(
@@ -802,7 +805,7 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:signed_agreements:members:update", args=args)
+        return reverse("cdsa:signed_agreements:members:update:status", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -847,13 +850,25 @@ class SignedAgreementStatusUpdateMemberTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, cc_id=1)
 
+    def test_object_no_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.SignedAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404) as e:
+            self.get_view()(request, cc_id=instance.cc_id)
+        self.assertIn("No agreement_type provided", str(e.exception))
+
     def test_object_different_agreement_type(self):
         """Raises Http404 if object has a different agreement type."""
         instance = factories.DataAffiliateAgreementFactory.create()
         request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
         request.user = self.user
-        with self.assertRaises(Http404):
-            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+        with self.assertRaises(Http404) as e:
+            self.get_view()(
+                request, cc_id=instance.signed_agreement.cc_id, agreement_type=models.SignedAgreement.MEMBER
+            )
+        self.assertIn("No signed agreement found", str(e.exception))
 
     def test_has_form_in_context(self):
         """Response includes a form."""
@@ -944,7 +959,7 @@ class SignedAgreementStatusUpdateDataAffiliateTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:signed_agreements:data_affiliates:update", args=args)
+        return reverse("cdsa:signed_agreements:data_affiliates:update:status", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1086,7 +1101,7 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:signed_agreements:non_data_affiliates:update", args=args)
+        return reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -1206,6 +1221,456 @@ class SignedAgreementStatusUpdateNonDataAffiliateTest(TestCase):
         response = self.client.post(
             self.get_url(instance.signed_agreement.cc_id),
             {"status": models.SignedAgreement.StatusChoices.WITHDRAWN},
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
+
+
+class SignedAgreementAccessorsUpdateMemberTest(TestCase):
+    """Tests for the SignedAgreementAccessorsUpdate view with a MemberAgreement."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:members:update:accessors", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementStatusUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1, agreement_type=models.SignedAgreement.MEMBER)
+
+    def test_object_no_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.SignedAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404) as e:
+            self.get_view()(request, cc_id=instance.cc_id)
+        self.assertIn("No agreement_type provided", str(e.exception))
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404) as e:
+            self.get_view()(
+                request, cc_id=instance.signed_agreement.cc_id, agreement_type=models.SignedAgreement.MEMBER
+            )
+        self.assertIn("No signed agreement found", str(e.exception))
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementAccessorsForm)
+
+    def test_can_add_accessor(self):
+        """Can add an accessor."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": [user.pk]},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.signed_agreement.accessors.count(), 1)
+        self.assertIn(user, instance.signed_agreement.accessors.all())
+
+    def test_can_remove_accessor(self):
+        """Can add an accessor."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.MemberAgreementFactory.create()
+        instance.signed_agreement.accessors.add(user)
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.signed_agreement.accessors.count(), 0)
+
+    def test_invalid_accessor(self):
+        """Invalid accessor."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.signed_agreement.cc_id), {"accessors": [-1]})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("accessors", form.errors)
+        self.assertEqual(len(form.errors["accessors"]), 1)
+        self.assertIn("valid choice", form.errors["accessors"][0])
+        self.assertEqual(instance.signed_agreement.accessors.count(), 0)
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.SignedAgreementAccessorsUpdate.success_message, str(messages[0]))
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        instance = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
+
+
+class SignedAgreementAccessorsUpdateNonDataAffiliateTest(TestCase):
+    """Tests for the SignedAgreementAccessorsUpdate view with a NonDataAffiliateAgreement."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:non_data_affiliates:update:accessors", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementAccessorsUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.MemberAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementAccessorsForm)
+
+    def test_can_add_accessor(self):
+        """Can add an accessor."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": [user.pk]},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.signed_agreement.accessors.count(), 1)
+        self.assertIn(user, instance.signed_agreement.accessors.all())
+
+    def test_can_remove_accessor(self):
+        """Can add an accessor."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        instance.signed_agreement.accessors.add(user)
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.signed_agreement.accessors.count(), 0)
+
+    def test_invalid_accessor(self):
+        """Invalid accessor."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.signed_agreement.cc_id), {"accessors": [-1]})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("accessors", form.errors)
+        self.assertEqual(len(form.errors["accessors"]), 1)
+        self.assertIn("valid choice", form.errors["accessors"][0])
+        self.assertEqual(instance.signed_agreement.accessors.count(), 0)
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.SignedAgreementAccessorsUpdate.success_message, str(messages[0]))
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        instance = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
+
+
+class SignedAgreementAccessorsUpdateDataAffiliateTest(TestCase):
+    """Tests for the SignedAgreementAccessorsUpdate view with a DataAffiliateAgreement."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.SignedAgreementAccessorsUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.MemberAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(response.context_data["form"], forms.SignedAgreementAccessorsForm)
+
+    def test_can_add_accessor(self):
+        """Can add an accessor."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": [user.pk]},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.signed_agreement.accessors.count(), 1)
+        self.assertIn(user, instance.signed_agreement.accessors.all())
+
+    def test_can_remove_accessor(self):
+        """Can add an accessor."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.DataAffiliateAgreementFactory.create()
+        instance.signed_agreement.accessors.add(user)
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.signed_agreement.accessors.count(), 0)
+
+    def test_invalid_accessor(self):
+        """Invalid accessor."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(instance.signed_agreement.cc_id), {"accessors": [-1]})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("accessors", form.errors)
+        self.assertEqual(len(form.errors["accessors"]), 1)
+        self.assertIn("valid choice", form.errors["accessors"][0])
+        self.assertEqual(instance.signed_agreement.accessors.count(), 0)
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.SignedAgreementAccessorsUpdate.success_message, str(messages[0]))
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"accessors": []},
         )
         self.assertRedirects(response, instance.get_absolute_url())
 
@@ -2183,6 +2648,20 @@ class MemberAgreementDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, cc_id=1)
 
+    def test_representative_access(self):
+        """Returns successful response code if the user is the representative on the signed agreement."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_accessor_access(self):
+        """Returns successful response code if the user is an accessor on the signed agreement."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -2197,23 +2676,104 @@ class MemberAgreementDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.signed_agreement.cc_id + 1)
 
-    def test_response_includes_link_to_user_profile(self):
-        """Response includes a link to the user profile page."""
-        self.client.force_login(self.user)
+    def test_content_staff_edit(self):
+        staff_edit_user = UserFactory.create()
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(staff_edit_user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
         self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
-
-    def test_response_includes_link_to_study_site(self):
-        """Response includes a link to the study site detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(response, self.obj.study_site.get_absolute_url())
-
-    def test_response_includes_link_to_anvil_access_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Links to groups.
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study_site.get_absolute_url())
+        # Links to update views.
+        self.assertContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
+
+    def test_content_staff_view(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study_site.get_absolute_url())
+        # Links to update views.
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
+
+    def test_content_representative(self):
+        """Representative does not see all links or content."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to study site.
+        self.assertNotContains(response, self.obj.study_site.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_accessor(self):
+        """Accessor does not see all links or content."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to study site.
+        self.assertNotContains(response, self.obj.study_site.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:status", args=[self.obj.signed_agreement.cc_id])
+        )
+        self.assertNotContains(
+            response, reverse("cdsa:signed_agreements:members:update:accessors", args=[self.obj.signed_agreement.cc_id])
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -2252,7 +2812,7 @@ class MemberAgreementDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "cdsa:signed_agreements:members:update",
+                "cdsa:signed_agreements:members:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -2267,10 +2827,47 @@ class MemberAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "cdsa:signed_agreements:members:update",
+                "cdsa:signed_agreements:members:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
+
+    def test_table_classes(self):
+        """Table classes are as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], UserAccountSingleGroupMembershipTable)
+
+    def test_accessor_table_none(self):
+        """No accessors are shown if the signed agreement has no accessors."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_accessor_table_one(self):
+        """One accessor is shown if the signed agreement has one accessors."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_accessor_table_two(self):
+        """Two accessors are shown if the signed agreement has two accessors."""
+        accessors = UserFactory.create_batch(2)
+        self.obj.signed_agreement.accessors.add(*accessors)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+    def test_accessor_table_only_from_this_agreement(self):
+        other_agreement = factories.MemberAgreementFactory.create()
+        other_accessor = UserFactory.create()
+        other_agreement.signed_agreement.accessors.add(other_accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
 
     def test_response_is_primary(self):
         """Response includes info about requires_study_review."""
@@ -3818,6 +4415,28 @@ class DataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, cc_id=1)
 
+    def test_representative_access(self):
+        """Returns successful response code if the user is the representative on the signed agreement."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_accessor_access(self):
+        """Returns successful response code if the user is an accessor on the signed agreement."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_uploader_access(self):
+        """Returns successful response code if the user is an uploader on the signed agreement."""
+        uploader = UserFactory.create()
+        self.obj.uploaders.add(uploader)
+        self.client.force_login(uploader)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -3832,29 +4451,164 @@ class DataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.signed_agreement.cc_id + 1)
 
-    def test_response_includes_link_to_user_profile(self):
-        """Response includes a link to the user profile page."""
-        self.client.force_login(self.user)
+    def test_content_staff_edit(self):
+        staff_edit_user = UserFactory.create()
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(staff_edit_user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
         self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
-
-    def test_response_includes_link_to_study(self):
-        """Response includes a link to the study detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
-        self.assertContains(response, self.obj.study.get_absolute_url())
-
-    def test_response_includes_link_to_anvil_access_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Links to groups.
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # Links to update views.
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
-    def test_response_includes_link_to_anvil_upload_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
+    def test_content_staff_view(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
         self.assertContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No link to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
+
+    def test_content_representative(self):
+        """Representative does not see all links or content."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_accessor(self):
+        """Accessor does not see all links or content."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_uploader(self):
+        """Uploader does not see all links or content."""
+        uploader = UserFactory.create()
+        self.obj.uploaders.add(uploader)
+        self.client.force_login(uploader)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        self.assertNotContains(response, self.obj.anvil_upload_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to study site.
+        self.assertContains(response, self.obj.study.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=[self.obj.signed_agreement.cc_id]),
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -3893,7 +4647,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "cdsa:signed_agreements:data_affiliates:update",
+                "cdsa:signed_agreements:data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -3908,7 +4662,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "cdsa:signed_agreements:data_affiliates:update",
+                "cdsa:signed_agreements:data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -3979,6 +4733,75 @@ class DataAffiliateAgreementDetailTest(TestCase):
             html=True,
         )
 
+    def test_table_classes(self):
+        """Table classes are as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 2)
+        self.assertIsInstance(response.context_data["tables"][0], UserAccountSingleGroupMembershipTable)
+        self.assertIsInstance(response.context_data["tables"][1], UserAccountSingleGroupMembershipTable)
+
+    def test_accessor_table_none(self):
+        """No accessors are shown if the signed agreement has no accessors."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
+
+    def test_accessor_table_one(self):
+        """One accessor is shown if the signed agreement has one accessors."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 1)
+
+    def test_accessor_table_two(self):
+        """Two accessors are shown if the signed agreement has two accessors."""
+        accessors = UserFactory.create_batch(2)
+        self.obj.signed_agreement.accessors.add(*accessors)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 2)
+
+    def test_accessor_table_only_from_this_agreement(self):
+        other_agreement = factories.DataAffiliateAgreementFactory.create()
+        other_accessor = UserFactory.create()
+        other_agreement.signed_agreement.accessors.add(other_accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][0].rows), 0)
+
+    def test_uploader_table_none(self):
+        """No uploaders are shown if the signed agreement has no uploaders."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
+
+    def test_uploader_table_one(self):
+        """One uploader is shown if the signed agreement has one uploader."""
+        uploader = UserFactory.create()
+        self.obj.uploaders.add(uploader)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 1)
+
+    def test_uploader_table_two(self):
+        """Two uploaders are shown if the signed agreement has two uploaders."""
+        uploaders = UserFactory.create_batch(2)
+        self.obj.uploaders.add(*uploaders)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 2)
+
+    def test_uploader_table_only_from_this_agreement(self):
+        other_agreement = factories.DataAffiliateAgreementFactory.create()
+        other_uploader = UserFactory.create()
+        other_agreement.uploaders.add(other_uploader)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["tables"][1].rows), 0)
+
 
 class DataAffiliateAgreementListTest(TestCase):
     """Tests for the DataAffiliateAgreement view."""
@@ -4044,6 +4867,163 @@ class DataAffiliateAgreementListTest(TestCase):
         response = self.client.get(self.get_url())
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 3)
+
+
+class DataAffiliateAgreementUploadersUpdateTest(TestCase):
+    """Tests for the DataAffiliateAgreementUploadersUpdate view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("cdsa:signed_agreements:data_affiliates:update:uploaders", args=args)
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.DataAffiliateAgreementUploadersUpdate.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1))
+        self.assertRedirects(response, resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1))
+
+    def test_status_code_with_user_permission(self):
+        """Returns successful response code."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_with_view_permission(self):
+        """Raises permission denied if user has only view permission."""
+        user_with_view_perm = User.objects.create_user(username="test-other", password="test-other")
+        user_with_view_perm.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        request = self.factory.get(self.get_url(1))
+        request.user = user_with_view_perm
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(1))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_does_not_exist(self):
+        """Raises Http404 if object does not exist."""
+        request = self.factory.get(self.get_url(1))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=1)
+
+    def test_object_different_agreement_type(self):
+        """Raises Http404 if object has a different agreement type."""
+        instance = factories.MemberAgreementFactory.create()
+        request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
+        request.user = self.user
+        with self.assertRaises(Http404):
+            self.get_view()(request, cc_id=instance.signed_agreement.cc_id)
+
+    def test_has_form_in_context(self):
+        """Response includes a form."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(instance.signed_agreement.cc_id))
+        self.assertTrue("form" in response.context_data)
+        self.assertIsInstance(response.context_data["form"], forms.DataAffiliateAgreementUploadersForm)
+
+    def test_can_add_uploader(self):
+        """Can add an uploader."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {
+                "uploaders": [user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.uploaders.count(), 1)
+        self.assertIn(user, instance.uploaders.all())
+
+    def test_can_remove_uploader(self):
+        """Can remove an uploader."""
+        user = User.objects.create_user(username="test-accessor", password="test-accessor")
+        instance = factories.DataAffiliateAgreementFactory.create()
+        instance.uploaders.add(user)
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {
+                "uploaders": [],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        instance.refresh_from_db()
+        self.assertEqual(instance.uploaders.count(), 0)
+
+    def test_invalid_uploader(self):
+        """Invalid uploader."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {"uploaders": [-1]},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("uploaders", form.errors)
+        self.assertEqual(len(form.errors["uploaders"]), 1)
+        self.assertIn("valid choice", form.errors["uploaders"][0])
+        self.assertEqual(instance.uploaders.count(), 0)
+
+    def test_success_message(self):
+        """Response includes a success message if successful."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {
+                "uploaders": [],
+            },
+            follow=True,
+        )
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(views.DataAffiliateAgreementUploadersUpdate.success_message, str(messages[0]))
+
+    def test_redirects_to_object_detail(self):
+        """After successfully creating an object, view redirects to the object's detail page."""
+        instance = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(instance.signed_agreement.cc_id),
+            {
+                "uploaders": [],
+            },
+        )
+        self.assertRedirects(response, instance.get_absolute_url())
 
 
 class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
@@ -4866,6 +5846,20 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(PermissionDenied):
             self.get_view()(request, cc_id=1)
 
+    def test_representative_access(self):
+        """Returns successful response code if the user is the representative on the signed agreement."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
+    def test_accessor_access(self):
+        """Returns successful response code if the user is an accessor on the signed agreement."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(response.status_code, 200)
+
     def test_view_status_code_with_existing_object(self):
         """Returns a successful status code for an existing object pk."""
         # Only clients load the template.
@@ -4880,17 +5874,112 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=self.obj.signed_agreement.cc_id + 1)
 
-    def test_response_includes_link_to_user_profile(self):
-        """Response includes a link to the user profile page."""
-        self.client.force_login(self.user)
+    def test_content_staff_edit(self):
+        staff_edit_user = UserFactory.create()
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        staff_edit_user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.client.force_login(staff_edit_user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
         self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
+        self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # Links to update views.
+        self.assertContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
 
-    def test_response_includes_link_to_anvil_access_group(self):
-        """Response includes a link to the AnVIL access group detail page."""
+    def test_content_staff_view(self):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # Link to the representative profile
+        self.assertContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # Links to groups.
         self.assertContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # Links to agreement version.
+        self.assertContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No link to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
+        )
+        # Has date created or modified.
+        self.assertContains(response, "Date created")
+        self.assertContains(response, "Date modified")
+
+    def test_content_representative(self):
+        """Representative does not see all links or content."""
+        self.client.force_login(self.obj.signed_agreement.representative)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
+
+    def test_content_accessor(self):
+        """Accessor does not see all links or content."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(accessor)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        # No links to the representative profile
+        self.assertNotContains(response, self.obj.signed_agreement.representative.get_absolute_url())
+        # No links to groups.
+        self.assertNotContains(response, self.obj.signed_agreement.anvil_access_group.get_absolute_url())
+        # No links to agreement versions.
+        self.assertNotContains(response, self.obj.signed_agreement.version.get_absolute_url())
+        # No links to update views.
+        self.assertNotContains(
+            response,
+            reverse("cdsa:signed_agreements:non_data_affiliates:update:status", args=[self.obj.signed_agreement.cc_id]),
+        )
+        self.assertNotContains(
+            response,
+            reverse(
+                "cdsa:signed_agreements:non_data_affiliates:update:accessors", args=[self.obj.signed_agreement.cc_id]
+            ),
+        )
+        # No date created or modified.
+        self.assertNotContains(response, "Date created")
+        self.assertNotContains(response, "Date modified")
 
     def test_response_show_deprecation_message_valid(self):
         """response context does not show a deprecation warning when AgreementMajorVersion is valid."""
@@ -4929,7 +6018,7 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(
             response,
             reverse(
-                "cdsa:signed_agreements:non_data_affiliates:update",
+                "cdsa:signed_agreements:non_data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
@@ -4944,10 +6033,47 @@ class NonDataAffiliateAgreementDetailTest(TestCase):
         self.assertNotContains(
             response,
             reverse(
-                "cdsa:signed_agreements:non_data_affiliates:update",
+                "cdsa:signed_agreements:non_data_affiliates:update:status",
                 args=[self.obj.signed_agreement.cc_id],
             ),
         )
+
+    def test_table_classes(self):
+        """Table classes are as expected."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertIn("table", response.context_data)
+        self.assertIsInstance(response.context_data["table"], UserAccountSingleGroupMembershipTable)
+
+    def test_accessor_table_none(self):
+        """No accessors are shown if the signed agreement has no accessors."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_accessor_table_one(self):
+        """One accessor is shown if the signed agreement has one accessors."""
+        accessor = UserFactory.create()
+        self.obj.signed_agreement.accessors.add(accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_accessor_table_two(self):
+        """Two accessors are shown if the signed agreement has two accessors."""
+        accessors = UserFactory.create_batch(2)
+        self.obj.signed_agreement.accessors.add(*accessors)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+    def test_accessor_table_only_from_this_agreement(self):
+        other_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        other_accessor = UserFactory.create()
+        other_agreement.signed_agreement.accessors.add(other_accessor)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(self.obj.signed_agreement.cc_id))
+        self.assertEqual(len(response.context_data["table"].rows), 0)
 
 
 class NonDataAffiliateAgreementListTest(TestCase):
@@ -5139,7 +6265,7 @@ class SignedAgreementAuditTest(TestCase):
     def get_url(self, *args):
         """Get the url for the view being tested."""
         return reverse(
-            "cdsa:audit:signed_agreements:all",
+            "cdsa:audit:signed_agreements:sag:all",
             args=args,
         )
 
@@ -5315,7 +6441,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("cdsa:audit:signed_agreements:resolve", args=args)
+        return reverse("cdsa:audit:signed_agreements:sag:resolve", args=args)
 
     def get_view(self):
         """Return the view being tested."""
@@ -5778,6 +6904,2102 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             child_group=member_agreement.signed_agreement.anvil_access_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
+
+
+class AccessorAuditTest(TestCase):
+    """Tests for the AccessorAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "cdsa:audit:signed_agreements:accessors:all",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AccessorAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns successful response code if the user has staff view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_without_user_permission_view(self):
+        """Raises PermissionDenied if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url())
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_data_access_audit(self):
+        """The accessor_audit exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit", response.context_data)
+        audit = response.context_data["audit"]
+        self.assertIsInstance(
+            audit,
+            accessor_audit.AccessorAudit,
+        )
+        self.assertTrue(audit.completed)
+
+    def test_audit_queryset_includes_all_agreement_types(self):
+        """The accessor_audit exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        non_data_affiliate_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit", response.context_data)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 3)
+        self.assertIn(member_agreement.signed_agreement, audit.queryset)
+        self.assertIn(data_affiliate_agreement.signed_agreement, audit.queryset)
+        self.assertIn(non_data_affiliate_agreement.signed_agreement, audit.queryset)
+
+    def test_no_agreements(self):
+        """Loads correctly if there are no agreements."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 0)
+
+    def test_one_agreements_no_accessors(self):
+        """Loads correctly if there is one agreement and no accessors."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 1)
+        self.assertIn(member_agreement.signed_agreement, audit.queryset)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_two_agreements_no_accessors(self):
+        """Loads correctly if there are two agreement and no accessors."""
+        member_agreement_1 = factories.MemberAgreementFactory.create()
+        member_agreement_2 = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 2)
+        self.assertIn(member_agreement_1.signed_agreement, audit.queryset)
+        self.assertIn(member_agreement_2.signed_agreement, audit.queryset)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            accessor_audit.AccessorAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            accessor_audit.AccessorAudit.ACCESSOR_IN_ACCESS_GROUP,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        accessor = UserFactory.create()
+        member_agreement.signed_agreement.accessors.add(accessor)
+        # Do not create an account for the PI
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            accessor_audit.AccessorAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), None)
+        self.assertEqual(table.rows[0].get_cell_value("user"), accessor)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            accessor_audit.AccessorAudit.ACCESSOR_NO_ACCOUNT,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_grant(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            accessor_audit.AccessorAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "Grant access")
+        self.assertIn(
+            reverse(
+                "cdsa:audit:signed_agreements:accessors:resolve",
+                args=[member_agreement.signed_agreement.cc_id, account.email],
+            ),
+            table.rows[0].get_cell("action"),
+        )
+
+    def test_context_needs_action_table_remove(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        # Add an account who is not a accessor.
+        account = AccountFactory.create(verified=True)
+        GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            accessor_audit.AccessorAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            accessor_audit.AccessorAudit.NOT_ACCESSOR,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
+        self.assertIn(
+            reverse(
+                "cdsa:audit:signed_agreements:accessors:resolve",
+                args=[member_agreement.signed_agreement.cc_id, account.email],
+            ),
+            table.rows[0].get_cell("action"),
+        )
+
+    def test_context_error_table_has_access(self):
+        """error shows a record when audit finds that access needs to be removed."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        # Add a group to the anvil access group.
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=member_agreement.signed_agreement.anvil_access_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            accessor_audit.AccessorAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("signed_agreement"), member_agreement.signed_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), membership.child_group)
+        self.assertIsNone(table.rows[0].get_cell_value("user"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            accessor_audit.AccessorAudit.UNEXPECTED_GROUP_ACCESS,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
+        self.assertIn(
+            reverse(
+                "cdsa:audit:signed_agreements:accessors:resolve",
+                args=[member_agreement.signed_agreement.cc_id, membership.child_group.email],
+            ),
+            table.rows[0].get_cell("action"),
+        )
+
+
+class AccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the AccessorAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "cdsa:audit:signed_agreements:accessors:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.AccessorAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1, "foo"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1, "foo"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(member_agreement.signed_agreement.cc_id, account.email))
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url(1, "foo"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url(1, "foo"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(1, "foo"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_member_agreement_does_not_exist(self):
+        """Raises a 404 error with an invalid object member_agreement_pk."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                1,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_email_is_user(self):
+        """View returns successful response code when the email is a user."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        user = UserFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                user.username,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_user_case_insensitive(self):
+        """View returns successful response code when the email is a user."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        UserFactory.create(username="foo@bar.com")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                "FOO@BAR.com",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_account(self):
+        """View returns successful response code when the email is an account."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_account_case_insensitive(self):
+        """View returns successful response code when the email is an account."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        AccountFactory.create(email="foo@bar.com")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                "FOO@BAR.com",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_group(self):
+        """View returns successful response code when the email is a group."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                group.email,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_group_case_insensitive(self):
+        """View returns successful response code when the email is a group."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        ManagedGroupFactory.create(email="foo@bar.com")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                "FOO@BAR.com",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_email_not_found(self):
+        """get request raises a 404 error with an non-existent email."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                "foo@bar.com",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The data_access_audit exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            accessor_audit.AccessorAuditResult,
+        )
+
+    def test_get_context_signed_agreement_member(self):
+        """The signed_agreement exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("signed_agreement", response.context_data)
+        self.assertEqual(response.context_data["signed_agreement"], member_agreement.signed_agreement)
+
+    def test_get_context_signed_agreement_data_affiliate(self):
+        """The signed_agreement exists in the context."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("signed_agreement", response.context_data)
+        self.assertEqual(response.context_data["signed_agreement"], data_affiliate_agreement.signed_agreement)
+
+    def test_get_context_signed_agreement_non_data_affiliate(self):
+        """The signed_agreement exists in the context."""
+        non_data_affiliate_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                non_data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("signed_agreement", response.context_data)
+        self.assertEqual(response.context_data["signed_agreement"], non_data_affiliate_agreement.signed_agreement)
+
+    def test_get_context_email(self):
+        """email exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("email", response.context_data)
+        self.assertEqual(response.context_data["email"], account.email)
+
+    def test_get_verified_access(self):
+        """Get request with verified access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, accessor_audit.VerifiedAccess)
+        self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.ACCESSOR_IN_ACCESS_GROUP)
+        self.assertIsNone(audit_result.action)
+
+    def test_get_verified_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
+        self.assertIsNone(audit_result.action)
+
+    def test_get_grant_access(self):
+        """Get request with grant access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, accessor_audit.GrantAccess)
+        self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.ACCESSOR_LINKED_ACCOUNT)
+        self.assertIsNotNone(audit_result.action)
+
+    def test_get_remove_access(self):
+        """Get request with remove access."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, accessor_audit.RemoveAccess)
+        self.assertEqual(audit_result.signed_agreement, member_agreement.signed_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, accessor_audit.AccessorAudit.NOT_ACCESSOR)
+        self.assertIsNotNone(audit_result.action)
+
+    def test_post_email_not_found(self):
+        """post request raises a 404 error with an non-existent email."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                "foo@bar.com",
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_verified_access_user(self):
+        """post with VerifiedAccess audit result with a user email."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupAccountMembershipFactory.create(
+                group=member_agreement.signed_agreement.anvil_access_group,
+                account=account,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        # Membership hasn't changed.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.group, member_agreement.signed_agreement.anvil_access_group)
+        self.assertEqual(membership.account, account)
+
+    def test_post_verified_access_account(self):
+        """post with VerifiedAccess audit result."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupAccountMembershipFactory.create(
+                group=member_agreement.signed_agreement.anvil_access_group,
+                account=account,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        # Membership hasn't changed.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.group, member_agreement.signed_agreement.anvil_access_group)
+        self.assertEqual(membership.account, account)
+
+    def test_post_verified_no_access_user_email(self):
+        """post with VerifiedNoAccess audit result."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_post_verified_no_access_account_email(self):
+        """post with VerifiedNoAccess audit result."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_post_verified_no_access_group_email(self):
+        """post with VerifiedNoAccess audit result."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                group.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_post_grant_access_user_email(self):
+        """post with GrantAccess audit result."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.get(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_account_email(self):
+        """post with GrantAccess audit result."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.get(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_htmx(self):
+        """Context with GrantAccess."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+            **header,
+        )
+        # The membership was created.
+        self.assertEqual(response.content.decode(), views.AccessorAuditResolve.htmx_success)
+        membership = GroupAccountMembership.objects.get(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_remove_access_user_email(self):
+        """post request with remove access for an user."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        membership = GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupAccountMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_remove_access_account_email(self):
+        """post request with remove access for an user."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create()
+        membership = GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupAccountMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_remove_access_group_email(self):
+        """post request with remove access for an user."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=member_agreement.signed_agreement.anvil_access_group,
+            child_group=group,
+        )
+        # Add API response
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{group.email}"
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                group.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, member_agreement.signed_agreement.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_anvil_api_error_grant(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No group membership was created.
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+        # Audit result is still GrantAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, accessor_audit.GrantAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_grant_htmx(self):
+        """AnVIL API errors are properly handled with htmx."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        member_agreement.signed_agreement.accessors.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.AccessorAuditResolve.htmx_error)
+        # No membership was created.
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_anvil_api_error_remove(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create()
+        membership = GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # Audit result is still RemoveAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, accessor_audit.RemoveAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove_htmx(self):
+        """AnVIL API errors are properly handled."""
+        member_agreement = factories.MemberAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create()
+        membership = GroupAccountMembershipFactory.create(
+            group=member_agreement.signed_agreement.anvil_access_group,
+            account=account,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.AccessorAuditResolve.htmx_error)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # No messages was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+
+class UploaderAuditTest(TestCase):
+    """Tests for the UploaderAudit view."""
+
+    def setUp(self):
+        """Set up test class."""
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "cdsa:audit:signed_agreements:uploaders:all",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploaderAudit.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url())
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(),
+        )
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns successful response code if the user has staff view permission."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_without_user_permission_view(self):
+        """Raises PermissionDenied if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url())
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url())
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_context_data_access_audit(self):
+        """The uploader_audit exists in the context."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit", response.context_data)
+        audit = response.context_data["audit"]
+        self.assertIsInstance(
+            audit,
+            uploader_audit.UploaderAudit,
+        )
+        self.assertTrue(audit.completed)
+
+    def test_no_agreements(self):
+        """Loads correctly if there are no agreements."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 0)
+
+    def test_one_agreements_no_uploaders(self):
+        """Loads correctly if there is one agreement and no uploaders."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 1)
+        self.assertIn(data_affiliate_agreement, audit.queryset)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_two_agreements_no_uploaders(self):
+        """Loads correctly if there are two agreement and no uploaders."""
+        data_affiliate_agreement_1 = factories.DataAffiliateAgreementFactory.create()
+        data_affiliate_agreement_2 = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 2)
+        self.assertIn(data_affiliate_agreement_1, audit.queryset)
+        self.assertIn(data_affiliate_agreement_2, audit.queryset)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+
+    def test_context_verified_table_access(self):
+        """verified_table shows a record when audit has verified access."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            uploader_audit.UploaderAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            uploader_audit.UploaderAudit.UPLOADER_IN_ACCESS_GROUP,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_verified_table_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        uploader = UserFactory.create()
+        data_affiliate_agreement.uploaders.add(uploader)
+        # Do not create an account for the PI
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("verified_table", response.context_data)
+        table = response.context_data["verified_table"]
+        self.assertIsInstance(
+            table,
+            uploader_audit.UploaderAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), None)
+        self.assertEqual(table.rows[0].get_cell_value("user"), uploader)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            uploader_audit.UploaderAudit.UPLOADER_NO_ACCOUNT,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "&mdash;")
+
+    def test_context_needs_action_table_grant(self):
+        """needs_action_table shows a record when audit finds that access needs to be granted."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            uploader_audit.UploaderAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "Grant access")
+        self.assertIn(
+            reverse(
+                "cdsa:audit:signed_agreements:uploaders:resolve",
+                args=[data_affiliate_agreement.signed_agreement.cc_id, account.email],
+            ),
+            table.rows[0].get_cell("action"),
+        )
+
+    def test_context_needs_action_table_remove(self):
+        """needs_action_table shows a record when audit finds that access needs to be removed."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Add an account who is not a uploader.
+        account = AccountFactory.create(verified=True)
+        GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("needs_action_table", response.context_data)
+        table = response.context_data["needs_action_table"]
+        self.assertIsInstance(
+            table,
+            uploader_audit.UploaderAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), account)
+        self.assertEqual(table.rows[0].get_cell_value("user"), account.user)
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            uploader_audit.UploaderAudit.NOT_UPLOADER,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
+        self.assertIn(
+            reverse(
+                "cdsa:audit:signed_agreements:uploaders:resolve",
+                args=[data_affiliate_agreement.signed_agreement.cc_id, account.email],
+            ),
+            table.rows[0].get_cell("action"),
+        )
+
+    def test_context_error_table_has_access(self):
+        """error shows a record when audit finds that access needs to be removed."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Add a group to the anvil access group.
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=data_affiliate_agreement.anvil_upload_group,
+        )
+        # Check the table in the context.
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("errors_table", response.context_data)
+        table = response.context_data["errors_table"]
+        self.assertIsInstance(
+            table,
+            uploader_audit.UploaderAuditTable,
+        )
+        self.assertEqual(len(table.rows), 1)
+        self.assertEqual(table.rows[0].get_cell_value("data_affiliate_agreement"), data_affiliate_agreement)
+        self.assertEqual(table.rows[0].get_cell_value("member"), membership.child_group)
+        self.assertIsNone(table.rows[0].get_cell_value("user"))
+        self.assertEqual(
+            table.rows[0].get_cell_value("note"),
+            uploader_audit.UploaderAudit.UNEXPECTED_GROUP_ACCESS,
+        )
+        self.assertEqual(table.rows[0].get_cell_value("action"), "Remove access")
+        self.assertIn(
+            reverse(
+                "cdsa:audit:signed_agreements:uploaders:resolve",
+                args=[data_affiliate_agreement.signed_agreement.cc_id, membership.child_group.email],
+            ),
+            table.rows[0].get_cell("action"),
+        )
+
+    def test_audit_queryset_other_agreement_types(self):
+        """Member and NonDataAffiliate Agreements are not included."""
+        factories.MemberAgreementFactory.create()
+        factories.NonDataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertIn("audit", response.context_data)
+        audit = response.context_data["audit"]
+        self.assertEqual(audit.queryset.count(), 0)
+
+
+class UploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests for the UploaderAuditResolve view."""
+
+    def setUp(self):
+        """Set up test class."""
+        super().setUp()
+        self.factory = RequestFactory()
+        # Create a user with both view and edit permission.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse(
+            "cdsa:audit:signed_agreements:uploaders:resolve",
+            args=args,
+        )
+
+    def get_view(self):
+        """Return the view being tested."""
+        return views.UploaderAuditResolve.as_view()
+
+    def test_view_redirect_not_logged_in(self):
+        "View redirects to login view when user is not logged in."
+        # Need a client for redirects.
+        response = self.client.get(self.get_url(1, "foo"))
+        self.assertRedirects(
+            response,
+            resolve_url(settings.LOGIN_URL) + "?next=" + self.get_url(1, "foo"),
+        )
+
+    def test_status_code_with_user_permission_staff_edit(self):
+        """Returns successful response code if the user has staff edit permission."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(data_affiliate_agreement.signed_agreement.cc_id, account.email))
+        self.assertEqual(response.status_code, 200)
+
+    def test_status_code_with_user_permission_staff_view(self):
+        """Returns 403 response code if the user has staff view permission."""
+        user_view = User.objects.create_user(username="test-view", password="test-view")
+        user_view.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.client.force_login(self.user)
+        request = self.factory.get(self.get_url(1, "foo"))
+        request.user = user_view
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_status_code_with_user_permission_view(self):
+        """Returns forbidden response code if the user has view permission."""
+        user = User.objects.create_user(username="test-none", password="test-none")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+        request = self.factory.get(self.get_url(1, "foo"))
+        request.user = user
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_access_without_user_permission(self):
+        """Raises permission denied if user has no permissions."""
+        user_no_perms = User.objects.create_user(username="test-none", password="test-none")
+        request = self.factory.get(self.get_url(1, "foo"))
+        request.user = user_no_perms
+        with self.assertRaises(PermissionDenied):
+            self.get_view()(request)
+
+    def test_data_affiliate_agreement_does_not_exist(self):
+        """Raises a 404 error with an invalid object data_affiliate_agreement_pk."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                1,
+                "foo",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_email_is_user(self):
+        """View returns successful response code when the email is a user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        user = UserFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                user.username,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_user_case_insensitive(self):
+        """View returns successful response code when the email is a user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        UserFactory.create(username="foo@bar.com")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                "FOO@BAR.com",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_account(self):
+        """View returns successful response code when the email is an account."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_account_case_insensitive(self):
+        """View returns successful response code when the email is an account."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        AccountFactory.create(email="foo@bar.com")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                "FOO@BAR.com",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_group(self):
+        """View returns successful response code when the email is a group."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                group.email,
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_email_is_group_case_insensitive(self):
+        """View returns successful response code when the email is a group."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        ManagedGroupFactory.create(email="foo@bar.com")
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                "FOO@BAR.com",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_email_not_found(self):
+        """get request raises a 404 error with an non-existent email."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                "foo@bar.com",
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_audit_result(self):
+        """The data_access_audit exists in the context."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        self.assertIsInstance(
+            response.context_data["audit_result"],
+            uploader_audit.UploaderAuditResult,
+        )
+
+    def test_get_context_signed_agreement_member(self):
+        """The signed_agreement exists in the context."""
+        member_agreement = factories.MemberAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                member_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context(self):
+        """The signed_agreement exists in the context."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("data_affiliate_agreement", response.context_data)
+        self.assertEqual(response.context_data["data_affiliate_agreement"], data_affiliate_agreement)
+
+    def test_get_context_signed_agreement_non_data_affiliate(self):
+        """The signed_agreement exists in the context."""
+        non_data_affiliate_agreement = factories.NonDataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                non_data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_context_email(self):
+        """email exists in the context."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("email", response.context_data)
+        self.assertEqual(response.context_data["email"], account.email)
+
+    def test_get_verified_access(self):
+        """Get request with verified access."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, uploader_audit.VerifiedAccess)
+        self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.UPLOADER_IN_ACCESS_GROUP)
+        self.assertIsNone(audit_result.action)
+
+    def test_get_verified_no_access(self):
+        """verified_table shows a record when audit has verified no access."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
+        self.assertIsNone(audit_result.action)
+
+    def test_get_grant_access(self):
+        """Get request with grant access."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, uploader_audit.GrantAccess)
+        self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.UPLOADER_LINKED_ACCOUNT)
+        self.assertIsNotNone(audit_result.action)
+
+    def test_get_remove_access(self):
+        """Get request with remove access."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, uploader_audit.RemoveAccess)
+        self.assertEqual(audit_result.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(audit_result.member, account)
+        self.assertEqual(audit_result.user, account.user)
+        self.assertEqual(audit_result.note, uploader_audit.UploaderAudit.NOT_UPLOADER)
+        self.assertIsNotNone(audit_result.action)
+
+    def test_post_email_not_found(self):
+        """post request raises a 404 error with an non-existent email."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                "foo@bar.com",
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_verified_access_user(self):
+        """post with VerifiedAccess audit result with a user email."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupAccountMembershipFactory.create(
+                group=data_affiliate_agreement.anvil_upload_group,
+                account=account,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        # Membership hasn't changed.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.group, data_affiliate_agreement.anvil_upload_group)
+        self.assertEqual(membership.account, account)
+
+    def test_post_verified_access_account(self):
+        """post with VerifiedAccess audit result."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupAccountMembershipFactory.create(
+                group=data_affiliate_agreement.anvil_upload_group,
+                account=account,
+            )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        # Membership hasn't changed.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.created, date_created)
+        self.assertEqual(membership.group, data_affiliate_agreement.anvil_upload_group)
+        self.assertEqual(membership.account, account)
+
+    def test_post_verified_no_access_user_email(self):
+        """post with VerifiedNoAccess audit result."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_post_verified_no_access_account_email(self):
+        """post with VerifiedNoAccess audit result."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        account = AccountFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_post_verified_no_access_group_email(self):
+        """post with VerifiedNoAccess audit result."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        group = ManagedGroupFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                group.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+    def test_post_grant_access_user_email(self):
+        """post with GrantAccess audit result."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.get(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_account_email(self):
+        """post with GrantAccess audit result."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.get(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_grant_access_htmx(self):
+        """Context with GrantAccess."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+            **header,
+        )
+        # The membership was created.
+        self.assertEqual(response.content.decode(), views.UploaderAuditResolve.htmx_success)
+        membership = GroupAccountMembership.objects.get(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        self.assertEqual(membership.role, membership.MEMBER)
+
+    def test_post_remove_access_user_email(self):
+        """post request with remove access for an user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        membership = GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.user.username,
+            ),
+            {},
+        )
+        # The GroupGroup membership was created.
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupAccountMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_remove_access_account_email(self):
+        """post request with remove access for an user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create()
+        membership = GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupAccountMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_post_remove_access_group_email(self):
+        """post request with remove access for an user."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        group = ManagedGroupFactory.create()
+        membership = GroupGroupMembershipFactory.create(
+            parent_group=data_affiliate_agreement.anvil_upload_group,
+            child_group=group,
+        )
+        # Add API response
+        api_url = self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{group.email}"
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=204,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                group.email,
+            ),
+            {},
+        )
+        self.assertRedirects(response, data_affiliate_agreement.signed_agreement.get_absolute_url())
+        # Make sure the membership has been deleted.
+        with self.assertRaises(GroupGroupMembership.DoesNotExist):
+            membership.refresh_from_db()
+
+    def test_anvil_api_error_grant(self):
+        """AnVIL API errors are properly handled."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # No group membership was created.
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+        # Audit result is still GrantAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, uploader_audit.GrantAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_grant_htmx(self):
+        """AnVIL API errors are properly handled with htmx."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create(verified=True)
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Add API response
+        # Note that the auth domain group is created automatically by the factory using the workspace name.
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        # Check the response.
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploaderAuditResolve.htmx_error)
+        # No membership was created.
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+        # No messages were added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
+
+    def test_anvil_api_error_remove(self):
+        """AnVIL API errors are properly handled."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create()
+        membership = GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+        )
+        self.assertEqual(response.status_code, 200)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # Audit result is still RemoveAccess.
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, uploader_audit.RemoveAccess)
+        # A message was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 1)
+        self.assertIn("AnVIL API Error", str(messages[0]))
+
+    def test_anvil_api_error_remove_htmx(self):
+        """AnVIL API errors are properly handled."""
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(signed_agreement__cc_id=1234)
+        account = AccountFactory.create()
+        membership = GroupAccountMembershipFactory.create(
+            group=data_affiliate_agreement.anvil_upload_group,
+            account=account,
+        )
+        # Add API response
+        api_url = (
+            self.api_client.sam_entry_point + f"/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/member/{account.email}"
+        )
+        self.anvil_response_mock.add(
+            responses.DELETE,
+            api_url,
+            status=500,
+            json=ErrorResponseFactory().response,
+        )
+        self.client.force_login(self.user)
+        header = {"HTTP_HX-Request": "true"}
+        response = self.client.post(
+            self.get_url(
+                data_affiliate_agreement.signed_agreement.cc_id,
+                account.email,
+            ),
+            {},
+            **header,
+        )
+        self.assertEqual(response.content.decode(), views.UploaderAuditResolve.htmx_error)
+        # The group-group membership still exists.
+        membership.refresh_from_db()
+        # No messages was added.
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(len(messages), 0)
 
 
 class CDSAWorkspaceAuditTest(TestCase):

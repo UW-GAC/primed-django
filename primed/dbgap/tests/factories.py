@@ -70,9 +70,9 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
 
     workspace = SubFactory(WorkspaceFactory, workspace_type="dbgap")
     dbgap_study_accession = SubFactory(dbGaPStudyAccessionFactory)
-    dbgap_version = Faker("random_int")
-    dbgap_participant_set = Faker("random_int")
-    dbgap_consent_code = Faker("random_int")
+    dbgap_version = Faker("random_int", min=1)
+    dbgap_participant_set = Faker("random_int", min=1)
+    dbgap_consent_code = Faker("random_int", min=1)
     dbgap_consent_abbreviation = Faker("word")
     data_use_limitations = Faker("paragraph")
     acknowledgments = Faker("paragraph")
@@ -138,11 +138,11 @@ class dbGaPDataAccessRequestFactory(DjangoModelFactory):
     """A factory for the dbGaPApplication model."""
 
     dbgap_data_access_snapshot = SubFactory(dbGaPDataAccessSnapshotFactory)
-    dbgap_phs = Faker("random_int")
+    dbgap_phs = Faker("random_int", min=1)
     dbgap_dar_id = Sequence(lambda n: n + 1)
-    original_version = Faker("random_int")
-    original_participant_set = Faker("random_int")
-    dbgap_consent_code = Faker("random_int")
+    original_version = Faker("random_int", min=1)
+    original_participant_set = Faker("random_int", min=1)
+    dbgap_consent_code = Faker("random_int", min=1)
     dbgap_consent_abbreviation = Faker("word")
     dbgap_current_status = models.dbGaPDataAccessRequest.APPROVED
     dbgap_dac = Faker("word")
@@ -172,9 +172,9 @@ class dbGaPJSONRequestFactory(DictFactory):
 
     DAC_abbrev = Faker("word")
     consent_abbrev = Faker("word")
-    consent_code = Faker("random_int")
+    consent_code = Faker("random_int", min=1)
     DAR = Sequence(lambda n: n + 1)
-    current_version = Faker("random_int")
+    current_version = Faker("random_int", min=1)
     current_DAR_status = FuzzyChoice(
         models.dbGaPDataAccessRequest.DBGAP_CURRENT_STATUS_CHOICES,
         getter=lambda c: c[0],

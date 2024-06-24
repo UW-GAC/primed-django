@@ -147,47 +147,64 @@ cdsa_1009 = factories.NonDataAffiliateAgreementFactory.create(
 
 
 # Add some users to the CDSA groups.
-accounts = AccountFactory.create_batch(10, verified=True)
+users = UserFactory.create_batch(12)
+cdsa_1001.signed_agreement.accessors.add(users[0])
 GroupAccountMembershipFactory.create(
     group=cdsa_1001.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[0],
 )
+# # Do not add as an accessor so we can check auditing.
+# cdsa_1001.signed_agreement.accessors.add(users[1])
 GroupAccountMembershipFactory.create(
     group=cdsa_1001.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[1],
 )
-GroupAccountMembershipFactory.create(
-    group=cdsa_1001.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
-)
+cdsa_1001.signed_agreement.accessors.add(users[2])
+AccountFactory.create(user=users[2])
+# # Do not create the GroupAccountMembership so we can check auditing.
+# GroupAccountMembershipFactory.create(
+#     group=cdsa_1001.signed_agreement.anvil_access_group,
+#     account__user=users[2],
+# )
+cdsa_1002.signed_agreement.accessors.add(users[3])
 GroupAccountMembershipFactory.create(
     group=cdsa_1002.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[3],
 )
+cdsa_1002.signed_agreement.accessors.add(users[4])
 GroupAccountMembershipFactory.create(
     group=cdsa_1002.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[4],
 )
+cdsa_1003.signed_agreement.accessors.add(users[5])
 GroupAccountMembershipFactory.create(
     group=cdsa_1003.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[5],
 )
+cdsa_1005.signed_agreement.accessors.add(users[6])
 GroupAccountMembershipFactory.create(
     group=cdsa_1005.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[6],
 )
+cdsa_1005.signed_agreement.accessors.add(users[7])
 GroupAccountMembershipFactory.create(
     group=cdsa_1005.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[7],
 )
+cdsa_1006.signed_agreement.accessors.add(users[8])
 GroupAccountMembershipFactory.create(
     group=cdsa_1006.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[8],
 )
+cdsa_1006.signed_agreement.accessors.add(users[9])
 GroupAccountMembershipFactory.create(
     group=cdsa_1006.signed_agreement.anvil_access_group,
-    account__user=UserFactory.create(),
+    account__user=users[9],
 )
+# Add uploaders.
+cdsa_1006.uploaders.add(users[10])
+AccountFactory.create(user=users[10])
+cdsa_1006.uploaders.add(users[11])
 
 cdsa_workspace_1 = factories.CDSAWorkspaceFactory.create(
     workspace__billing_project__name="demo-primed-cdsa",

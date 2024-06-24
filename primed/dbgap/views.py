@@ -158,7 +158,6 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Mul
             return None
 
     def get_tables(self):
-        print(self.object.dbgapdataaccesssnapshot_set.all())
         return (
             tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),
             UserAccountSingleGroupMembershipTable(
@@ -690,7 +689,6 @@ class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView)
         return instance.get_all_results()[0]
 
     def get(self, request, *args, **kwargs):
-        print(self.kwargs)
         self.dbgap_workspace = self.get_dbgap_workspace()
         self.dbgap_application = self.get_dbgap_application()
         self.audit_result = self.get_audit_result()
