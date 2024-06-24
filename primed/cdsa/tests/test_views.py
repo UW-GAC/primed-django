@@ -1286,7 +1286,7 @@ class SignedAgreementAccessorsUpdateMemberTest(TestCase):
         request = self.factory.get(self.get_url(1))
         request.user = self.user
         with self.assertRaises(Http404):
-            self.get_view()(request, cc_id=1)
+            self.get_view()(request, cc_id=1, agreement_type=models.SignedAgreement.MEMBER)
 
     def test_object_no_agreement_type(self):
         """Raises Http404 if object has a different agreement type."""
@@ -1302,7 +1302,6 @@ class SignedAgreementAccessorsUpdateMemberTest(TestCase):
         instance = factories.DataAffiliateAgreementFactory.create()
         request = self.factory.get(self.get_url(instance.signed_agreement.cc_id))
         request.user = self.user
-        print("here")
         with self.assertRaises(Http404) as e:
             self.get_view()(
                 request, cc_id=instance.signed_agreement.cc_id, agreement_type=models.SignedAgreement.MEMBER
