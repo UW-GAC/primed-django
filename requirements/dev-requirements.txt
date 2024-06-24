@@ -136,7 +136,7 @@ requests==2.31.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.4.9
+ruff==0.4.10
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -188,7 +188,7 @@ types-pytz==2024.1.0.20240203
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.32.0.20240602
+types-requests==2.32.0.20240622
     # via -r requirements/dev-requirements.in
 typing-extensions==4.8.0
     # via
