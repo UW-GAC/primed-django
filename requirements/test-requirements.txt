@@ -31,7 +31,7 @@ faker==23.2.1
     # via factory-boy
 freezegun==1.5.1
     # via -r requirements/test-requirements.in
-idna==3.3
+idna==3.7
     # via
     #   -c requirements/requirements.txt
     #   requests
