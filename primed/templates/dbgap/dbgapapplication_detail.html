@@ -99,6 +99,7 @@
     <p>
       {% if show_acm_edit_links %}
       <a href="{% url 'dbgap:dbgap_applications:dbgap_data_access_snapshots:new' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update data access requests</a>
+      <a href="{% url 'dbgap:dbgap_applications:update' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-primary" role="button">Update collaborators</a>
       {% endif %}
       {% if show_acm_view_links %}
       <a href="{% url 'dbgap:audit:access:applications' dbgap_project_id=object.dbgap_project_id %}" class="btn btn-secondary" role="button">Audit workspace access</a>

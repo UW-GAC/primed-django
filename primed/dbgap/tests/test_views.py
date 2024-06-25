@@ -1452,6 +1452,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_staff_view_links(self):
         """No edit links if staff user only has view permission."""
@@ -1475,6 +1476,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_links_pi(self):
         """Links seen by PI are correct."""
@@ -1500,6 +1502,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_links_collaborators(self):
         """Links seen by collaborators are correct."""
@@ -1526,6 +1529,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_table_classes(self):
         """The table classes are correct."""
