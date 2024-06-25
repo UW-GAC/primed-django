@@ -246,7 +246,8 @@ class dbGaPApplicationUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
 
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationUpdateForm
-    success_message = "dbGaP application successfully updated."
+    success_message = "dbGaP collaborators successfully updated."
+    template_name = "dbgap/dbgapapplication_update_collaborators.html"
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()

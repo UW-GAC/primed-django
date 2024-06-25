@@ -1,0 +1,49 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}New dbGaP application{% endblock %}
+
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-2">dbGaP PI</dt> <dd class="col-sm-9">
+    <a href="{{ object.principal_investigator.get_absolute_url }}">
+      {{ object.principal_investigator.name }}
+    </a>
+  </dd>
+  <dt class="col-sm-2">dbGaP Project ID</dt> <dd class="col-sm-9">{{ object.dbgap_project_id }}</dd>
+  <dt class="col-sm-2">AnVIL access Group</dt> <dd class="col-sm-9">
+    {% if show_acm_view_links %}
+    <a href="{{ object.anvil_access_group.get_absolute_url }}">{{ object.anvil_access_group }}</a>
+    {% else %}
+    {{ object.anvil_access_group }}
+    {% endif %}
+
+  </dd>
+  <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
+  <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+  <dt class="col-sm-2">Last DAR update</dt> <dd class="col-sm-9">
+    {% if latest_snapshot %}
+      <a href="{{ latest_snapshot.get_absolute_url }}">{{ latest_snapshot.created }}</a>
+    {% else %}
+      	—
+    {% endif %}
+  </dd>
+</dl>
+{% endblock panel %}
+
+{% block after_panel %}
+  <form method="post">
+
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button type="submit" class="btn btn-success">Save dbGaP application</button>
+  </form>
+
+{% endblock after_panel %}
+
+
+{% block inline_javascript %}
+  {{ form.media }}
+{% endblock inline_javascript %}
