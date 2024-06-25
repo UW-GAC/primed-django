@@ -2,13 +2,13 @@
     {% if record.action %}
     <form
         method="post"
-        action="{% url 'dbgap:audit:resolve' record.application.dbgap_project_id record.workspace.workspace.billing_project.name record.workspace.workspace.name %}">
+        action="{% url 'cdsa:audit:signed_agreements:accessors:resolve' record.signed_agreement.cc_id record.member.email %}">
 
         {% csrf_token %}
         <button
             type="submit"
             class="btn btn-primary btn-sm"
-            hx-post="{% url 'dbgap:audit:resolve' record.application.dbgap_project_id record.workspace.workspace.billing_project.name record.workspace.workspace.name %}"
+            hx-post="{% url 'cdsa:audit:signed_agreements:accessors:resolve' record.signed_agreement.cc_id record.member.email %}"
             hx-disabled-elt="this"
             hx-target="closest div"
             hx-swap="innerHTML">

@@ -272,6 +272,14 @@ class SignedAgreementTest(TestCase):
         with self.assertRaises(ValidationError):
             instance.full_clean()
 
+    def test_can_add_accessors(self):
+        """Saving a model with accessors set is valid."""
+        accessors = UserFactory.create_batch(2)
+        instance = factories.MemberAgreementFactory.create()
+        instance.signed_agreement.accessors.add(*accessors)
+        self.assertIn(accessors[0], instance.signed_agreement.accessors.all())
+        self.assertIn(accessors[1], instance.signed_agreement.accessors.all())
+
     def test_get_combined_type(self):
         obj = factories.MemberAgreementFactory()
         self.assertEqual(obj.signed_agreement.combined_type, "Member")
@@ -429,6 +437,14 @@ class DataAffiliateAgreementTest(TestCase):
         self.assertEqual(instance.is_primary, True)
         instance = factories.DataAffiliateAgreementFactory.create(is_primary=False)
         self.assertEqual(instance.is_primary, False)
+
+    def test_can_add_uploaders(self):
+        """Saving a model with uploaders set is valid."""
+        uploaders = UserFactory.create_batch(2)
+        instance = factories.DataAffiliateAgreementFactory.create()
+        instance.uploaders.add(*uploaders)
+        self.assertIn(uploaders[0], instance.uploaders.all())
+        self.assertIn(uploaders[1], instance.uploaders.all())
 
     def test_clean_incorrect_type(self):
         signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.MEMBER)

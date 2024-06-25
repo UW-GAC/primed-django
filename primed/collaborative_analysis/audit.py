@@ -8,6 +8,7 @@ from anvil_consortium_manager.models import (
     GroupGroupMembership,
     ManagedGroup,
 )
+from django.conf import settings
 from django.urls import reverse
 
 from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
@@ -176,7 +177,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
             )
             .exclude(
                 # Ignore cc admins group - it is handled differently because it should have admin privileges.
-                child_group__name="PRIMED_CC_ADMINS",
+                child_group__name=settings.ANVIL_CC_ADMINS_GROUP_NAME,
             )
             .exclude(
                 # Ignore allowed groups - they will be checked separately later.

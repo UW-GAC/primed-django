@@ -33,6 +33,7 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
             "signing_institution",
             "version",
             "date_signed",
+            "accessors",
         )
         widgets = {
             "representative": autocomplete.ModelSelect2(
@@ -40,6 +41,10 @@ class SignedAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
                 attrs={"data-theme": "bootstrap-5"},
             ),
             "date_signed": CustomDateInput(),
+            "accessors": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
         }
 
 
@@ -51,6 +56,20 @@ class SignedAgreementStatusForm(forms.ModelForm):
         fields = ("status",)
         help_texts = {"status": """The status of this Signed Agreement."""}
         widgets = {"status": forms.RadioSelect}
+
+
+class SignedAgreementAccessorsForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update accessors for `SignedAgreementAccessor` objects."""
+
+    class Meta:
+        model = models.SignedAgreement
+        fields = ("accessors",)
+        widgets = {
+            "accessors": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
 
 
 class MemberAgreementForm(forms.ModelForm):
@@ -82,6 +101,7 @@ class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         model = models.DataAffiliateAgreement
         fields = (
             "signed_agreement",
+            "uploaders",
             "study",
             "is_primary",
             "additional_limitations",
@@ -90,6 +110,24 @@ class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         widgets = {
             "study": autocomplete.ModelSelect2(
                 url="primed_anvil:studies:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "uploaders": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+
+class DataAffiliateAgreementUploadersForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form to update uploaders for `DataAffiliateAgreement` objects."""
+
+    class Meta:
+        model = models.DataAffiliateAgreement
+        fields = ("uploaders",)
+        widgets = {
+            "uploaders": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),
         }

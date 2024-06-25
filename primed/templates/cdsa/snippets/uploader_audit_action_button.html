@@ -1,0 +1,22 @@
+<div>
+    {% if record.action %}
+    <form
+        method="post"
+        action="{% url 'cdsa:audit:signed_agreements:uploaders:resolve' record.data_affiliate_agreement.signed_agreement.cc_id record.member.email %}">
+
+        {% csrf_token %}
+        <button
+            type="submit"
+            class="btn btn-primary btn-sm"
+            hx-post="{% url 'cdsa:audit:signed_agreements:uploaders:resolve' record.data_affiliate_agreement.signed_agreement.cc_id record.member.email %}"
+            hx-disabled-elt="this"
+            hx-target="closest div"
+            hx-swap="innerHTML">
+            {{ record.action }}
+        </button>
+      </form>
+
+    {% else %}
+    &mdash;
+    {% endif %}
+</div>

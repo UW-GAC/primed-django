@@ -1,0 +1,17 @@
+{% extends "anvil_consortium_manager/base.html" %}
+{% load django_tables2 %}
+
+{% block title %}Signed Agreement audit{% endblock %}
+
+
+{% block content %}
+
+<h1>Signed Agreement accessor audit</h1>
+
+<h2>Audit results</h2>
+
+{% include "cdsa/snippets/accessor_audit_explanation.html" %}
+
+{% include "__audit_tables.html" with verified_table=verified_table needs_action_table=needs_action_table errors_table=errors_table %}
+
+{% endblock content %}

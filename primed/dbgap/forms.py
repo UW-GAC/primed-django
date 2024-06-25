@@ -85,9 +85,28 @@ class dbGaPApplicationForm(Bootstrap5MediaFormMixin, forms.ModelForm):
         fields = (
             "principal_investigator",
             "dbgap_project_id",
+            "collaborators",
         )
         widgets = {
             "principal_investigator": autocomplete.ModelSelect2(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+            "collaborators": autocomplete.ModelSelect2Multiple(
+                url="users:autocomplete",
+                attrs={"data-theme": "bootstrap-5"},
+            ),
+        }
+
+
+class dbGaPApplicationUpdateForm(Bootstrap5MediaFormMixin, forms.ModelForm):
+    """Form for a dbGaPApplication."""
+
+    class Meta:
+        model = models.dbGaPApplication
+        fields = ("collaborators",)
+        widgets = {
+            "collaborators": autocomplete.ModelSelect2Multiple(
                 url="users:autocomplete",
                 attrs={"data-theme": "bootstrap-5"},
             ),

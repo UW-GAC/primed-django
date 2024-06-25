@@ -2,9 +2,11 @@ from anvil_consortium_manager.models import Account
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     GroupAccountMembershipFactory,
+    ManagedGroupFactory,
     WorkspaceFactory,
     WorkspaceGroupSharingFactory,
 )
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
@@ -12,6 +14,8 @@ from primed.users.tests.factories import UserFactory
 
 from .. import models, tables
 from . import factories
+
+User = get_user_model()
 
 
 class StudyTableTest(TestCase):
@@ -249,3 +253,66 @@ class WorkspaceSharedWithConsortiumColumnTest(TestCase):
         column = tables.WorkspaceSharedWithConsortiumColumn()
         with self.assertRaises(ImproperlyConfigured):
             column.render(None, "foo", None)
+
+
+class UserAccountSingleGroupMembershipTableTest(TestCase):
+    """Tests for the UserAccountSingleGroupMembershipTable class."""
+
+    def setUp(self):
+        self.managed_group = ManagedGroupFactory.create()
+
+    def test_row_count_with_no_objects(self):
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        UserFactory.create()
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        UserFactory.create_batch(2)
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        self.assertEqual(len(table.rows), 2)
+
+    def test_render_is_group_member_no_account(self):
+        user = UserFactory.create()
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        value = table.render_is_group_member(user)
+        self.assertIn("bi-x-circle-fill", value)
+        self.assertIn("red", value)
+
+    def test_render_is_group_member_account_not_member(self):
+        user = UserFactory.create()
+        AccountFactory.create(user=user)
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        value = table.render_is_group_member(user)
+        self.assertIn("bi-x-circle-fill", value)
+        self.assertIn("red", value)
+
+    def test_render_is_group_member_account_member(self):
+        user = UserFactory.create()
+        account = AccountFactory.create(user=user)
+        GroupAccountMembershipFactory.create(account=account, group=self.managed_group)
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        value = table.render_is_group_member(user)
+        self.assertIn("bi-check-circle-fill", value)
+        self.assertIn("green", value)
+
+    def test_ordering(self):
+        """Users are ordered alphabetically by name"""
+        user_foo = UserFactory.create(name="Foo")
+        user_bar = UserFactory.create(name="Bar")
+        table = tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=self.managed_group)
+        self.assertEqual(table.data[0], user_bar)
+        self.assertEqual(table.data[1], user_foo)
+
+    def test_managed_group_not_provided(self):
+        with self.assertRaises(ValueError) as e:
+            tables.UserAccountSingleGroupMembershipTable(User.objects.all())
+        self.assertEqual(str(e.exception), "managed_group must be provided.")
+
+    def test_managed_group_wrong_class(self):
+        with self.assertRaises(ValueError) as e:
+            tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=AccountFactory.create())
+        self.assertEqual(str(e.exception), "managed_group must be an instance of ManagedGroup.")

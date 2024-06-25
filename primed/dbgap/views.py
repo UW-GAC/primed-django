@@ -7,7 +7,9 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffViewRequired,
 )
 from anvil_consortium_manager.models import (
+    Account,
     AnVILProjectManagerAccess,
+    GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
     Workspace,
@@ -31,10 +33,13 @@ from django.views.generic import (
     TemplateView,
     UpdateView,
 )
-from django_tables2 import SingleTableMixin, SingleTableView
+from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
 
-from . import audit, forms, helpers, models, tables
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
+
+from . import forms, helpers, models, tables, viewmixins
+from .audit import access_audit, collaborator_audit
 
 logger = logging.getLogger(__name__)
 
@@ -124,14 +129,12 @@ class dbGaPStudyAccessionAutocomplete(AnVILConsortiumManagerStaffViewRequired, a
         return qs
 
 
-class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMixin, DetailView):
+class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, MultiTableMixin, DetailView):
     """View to show details about a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
-    table_class = tables.dbGaPDataAccessSnapshotTable
-    context_table_name = "data_access_snapshot_table"
 
-    def get_object(self, queryset=None):
+    def get_dbgap_application(self, queryset=None):
         queryset = self.get_queryset()
         try:
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
@@ -142,7 +145,8 @@ class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTabl
         return obj
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        # self.dbgap_application is set by view mixin already.
+        self.object = self.dbgap_application
         self.latest_snapshot = self.get_latest_snapshot()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
@@ -153,8 +157,13 @@ class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTabl
         except models.dbGaPDataAccessSnapshot.DoesNotExist:
             return None
 
-    def get_table_data(self):
-        return models.dbGaPDataAccessSnapshot.objects.filter(dbgap_application=self.object).order_by("-created")
+    def get_tables(self):
+        return (
+            tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),
+            UserAccountSingleGroupMembershipTable(
+                self.object.collaborators.all(), managed_group=self.object.anvil_access_group
+            ),
+        )
 
     def get_context_data(self, *args, **kwargs):
         """Add to the context.
@@ -167,6 +176,15 @@ class dbGaPApplicationDetail(AnVILConsortiumManagerStaffViewRequired, SingleTabl
             context["latest_snapshot"] = self.latest_snapshot
         else:
             context["latest_snapshot"] = None
+        # Whether or not to show certain links.
+        context["show_acm_edit_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
+        )
+        context["show_acm_view_links"] = self.request.user.has_perm(
+            "anvil_consortium_manager." + AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME
+        )
+        return context
+
         return context
 
 
@@ -221,6 +239,24 @@ class dbGaPApplicationCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
             return self.render_to_response(self.get_context_data(form=form))
         form.instance.anvil_access_group = managed_group
         return super().form_valid(form)
+
+
+class dbGaPApplicationUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """View to update an existing dbGaPApplication."""
+
+    model = models.dbGaPApplication
+    form_class = forms.dbGaPApplicationUpdateForm
+    success_message = "dbGaP application successfully updated."
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
 
 
 class dbGaPDataAccessSnapshotCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, FormView):
@@ -401,7 +437,7 @@ class dbGaPDataAccessSnapshotCreateMultiple(AnVILConsortiumManagerStaffEditRequi
         return super().form_valid(form)
 
 
-class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class dbGaPDataAccessSnapshotDetail(viewmixins.dbGaPApplicationViewPermissionMixin, DetailView):
     """View to show details about a `dbGaPDataAccessSnapshot`."""
 
     model = models.dbGaPDataAccessSnapshot
@@ -419,13 +455,21 @@ class dbGaPDataAccessSnapshotDetail(AnVILConsortiumManagerStaffViewRequired, Det
         return application
 
     def get_object(self, queryset=None):
-        # Get the dbGaP application using the URL parameter.
-        # self.dbgap_application = self.get_dbgap_application()
-        # return super().get_object(queryset=queryset)
-        self.dbgap_application = self.get_dbgap_application()
-        if not queryset:
-            queryset = self.model.objects
-        return super().get_object(queryset=queryset.filter(dbgap_application=self.dbgap_application))
+        try:
+            obj = self.dbgap_application.dbgapdataaccesssnapshot_set.get(
+                pk=self.kwargs.get("dbgap_data_access_snapshot_pk")
+            )
+        except self.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
+            )
+        return obj
+
+        # # Already set by the view mixin.
+        # # self.dbgap_application = self.get_dbgap_application()
+        # if not queryset:
+        #     queryset = self.model.objects
+        # return super().get_object(queryset=queryset.filter(dbgap_application=self.dbgap_application))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -452,27 +496,41 @@ class dbGaPDataAccessRequestList(AnVILConsortiumManagerStaffViewRequired, Export
         return self.get_queryset().filter(dbgap_data_access_snapshot__is_most_recent=True)
 
 
-class dbGaPDataAccessRequestHistory(AnVILConsortiumManagerStaffViewRequired, ExportMixin, SingleTableView):
+class dbGaPDataAccessRequestHistory(viewmixins.dbGaPApplicationViewPermissionMixin, ExportMixin, SingleTableView):
     """View to show the history of a given DAR."""
 
     model = models.dbGaPDataAccessRequest
     table_class = tables.dbGaPDataAccessRequestHistoryTable
     template_name = "dbgap/dbgapdataaccessrequest_history.html"
 
-    def get_dbgap_dar_id(self):
-        return self.kwargs.get("dbgap_dar_id")
+    def get_dbgap_application(self):
+        dbgap_project_id = self.kwargs.get("dbgap_project_id")
+        # import ipdb; ipdb.set_trace()
+        try:
+            dbgap_application = models.dbGaPApplication.objects.get(dbgap_project_id=dbgap_project_id)
+        except models.dbGaPApplication.DoesNotExist:
+            #  We don't want to raise the 404 error here, because we haven't checked if the user has permission yet.
+            # Only users with permission to this page should see a 404.
+            return None
+        return dbgap_application
 
-    def get(self, request, *args, **kwargs):
-        self.dbgap_dar_id = self.get_dbgap_dar_id()
-        return super().get(request, *args, **kwargs)
-
-    def get_table_data(self):
-        qs = self.get_queryset().filter(
-            dbgap_dar_id=self.dbgap_dar_id,
+    def get_dar_records(self):
+        self.dbgap_dar_id = self.kwargs.get("dbgap_dar_id")
+        if not self.dbgap_application:
+            raise Http404("No dbGaPApplications found matching the query")
+        qs = models.dbGaPDataAccessRequest.objects.filter(
+            dbgap_dar_id=self.dbgap_dar_id, dbgap_data_access_snapshot__dbgap_application=self.dbgap_application
         )
         if not qs.count():
             raise Http404("No DARs found matching the query.")
         return qs
+
+    def get(self, request, *args, **kwargs):
+        self.dar_records = self.get_dar_records()
+        return super().get(request, *args, **kwargs)
+
+    def get_table_data(self):
+        return self.dar_records
 
     def get_table_kwargs(self):
         return {
@@ -485,15 +543,15 @@ class dbGaPDataAccessRequestHistory(AnVILConsortiumManagerStaffViewRequired, Exp
         return context
 
 
-class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+class dbGaPAccessAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
     """View to audit access for all dbGaPApplications and dbGaPWorkspaces."""
 
-    template_name = "dbgap/dbgap_audit.html"
+    template_name = "dbgap/dbgap_access_audit.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPAccessAudit()
+        data_access_audit = access_audit.dbGaPAccessAudit()
         data_access_audit.run_audit()
         context["verified_table"] = data_access_audit.get_verified_table()
         context["errors_table"] = data_access_audit.get_errors_table()
@@ -502,11 +560,11 @@ class dbGaPAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
         return context
 
 
-class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class dbGaPApplicationAccessAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPApplication`."""
 
     model = models.dbGaPApplication
-    template_name = "dbgap/dbgapapplication_audit.html"
+    template_name = "dbgap/dbgapapplication_access_audit.html"
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
@@ -536,7 +594,7 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         context["latest_snapshot"] = latest_snapshot
         if latest_snapshot:
             # Run the audit.
-            data_access_audit = audit.dbGaPAccessAudit(
+            data_access_audit = access_audit.dbGaPAccessAudit(
                 dbgap_application_queryset=self.model.objects.filter(pk=self.object.pk)
             )
             data_access_audit.run_audit()
@@ -547,11 +605,11 @@ class dbGaPApplicationAudit(AnVILConsortiumManagerStaffViewRequired, DetailView)
         return context
 
 
-class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class dbGaPWorkspaceAccessAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     """View to show audit results for a `dbGaPWorkspace`."""
 
     model = models.dbGaPWorkspace
-    template_name = "dbgap/dbgapworkspace_audit.html"
+    template_name = "dbgap/dbgapworkspace_access_audit.html"
 
     def get_object(self, queryset=None):
         """Return the object the view is displaying."""
@@ -579,7 +637,7 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Run the audit.
-        data_access_audit = audit.dbGaPAccessAudit(
+        data_access_audit = access_audit.dbGaPAccessAudit(
             dbgap_workspace_queryset=self.model.objects.filter(pk=self.object.pk)
         )
         data_access_audit.run_audit()
@@ -590,9 +648,9 @@ class dbGaPWorkspaceAudit(AnVILConsortiumManagerStaffViewRequired, DetailView):
         return context
 
 
-class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
     form_class = Form
-    template_name = "dbgap/audit_resolve.html"
+    template_name = "dbgap/access_audit_resolve.html"
     htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
     htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
 
@@ -623,7 +681,7 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         return obj
 
     def get_audit_result(self):
-        instance = audit.dbGaPAccessAudit(
+        instance = access_audit.dbGaPAccessAudit(
             dbgap_workspace_queryset=models.dbGaPWorkspace.objects.filter(pk=self.dbgap_workspace.pk),
             dbgap_application_queryset=models.dbGaPApplication.objects.filter(pk=self.dbgap_application.pk),
         )
@@ -631,7 +689,6 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         return instance.get_all_results()[0]
 
     def get(self, request, *args, **kwargs):
-        print(self.kwargs)
         self.dbgap_workspace = self.get_dbgap_workspace()
         self.dbgap_application = self.get_dbgap_application()
         self.audit_result = self.get_audit_result()
@@ -651,14 +708,14 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
         return context
 
     def get_success_url(self):
-        return reverse("dbgap:audit:all")
+        return reverse("dbgap:audit:access:all")
 
     def form_valid(self, form):
         auth_domain = self.dbgap_workspace.workspace.authorization_domains.first()
         # Handle the result.
         try:
             with transaction.atomic():
-                if isinstance(self.audit_result, audit.GrantAccess):
+                if isinstance(self.audit_result, access_audit.GrantAccess):
                     # Add to workspace auth domain.
                     membership = GroupGroupMembership(
                         parent_group=auth_domain,
@@ -668,12 +725,126 @@ class dbGaPAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
                     membership.full_clean()
                     membership.save()
                     membership.anvil_create()
-                elif isinstance(self.audit_result, audit.RemoveAccess):
+                elif isinstance(self.audit_result, access_audit.RemoveAccess):
                     # Remove from CDSA group.
                     membership = GroupGroupMembership.objects.get(
                         parent_group=auth_domain,
                         child_group=self.dbgap_application.anvil_access_group,
                     )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+
+class dbGaPCollaboratorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to audit collaborators for all dbGaPApplications."""
+
+    template_name = "dbgap/collaborator_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Run the audit.
+        audit = collaborator_audit.dbGaPCollaboratorAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["collaborator_audit"] = audit
+        return context
+
+
+class dbGaPCollaboratorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    form_class = Form
+    template_name = "dbgap/collaborator_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_dbgap_application(self):
+        """Look up the dbGaPApplication by dbgap_project_id."""
+        try:
+            obj = models.dbGaPApplication.objects.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
+        except models.dbGaPApplication.DoesNotExist:
+            raise Http404("No dbGaPApplications found matching the query")
+        return obj
+
+    def get_email(self):
+        return self.kwargs.get("email")
+
+    def get_audit_result(self):
+        audit = collaborator_audit.dbGaPCollaboratorAudit(
+            queryset=models.dbGaPApplication.objects.filter(pk=self.dbgap_application.pk)
+        )
+        # No way to include a queryset of members at this point - need to call the sub method directly.
+        audit.audit_application_and_object(self.dbgap_application, self.email)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.dbgap_application = self.get_dbgap_application()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.dbgap_application = self.get_dbgap_application()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dbgap_application"] = self.dbgap_application
+        context["email"] = self.email
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return reverse("dbgap:audit:collaborators:all")
+
+    def form_valid(self, form):
+        # Add or remove the user from the access group.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, collaborator_audit.GrantAccess):
+                    # Only accounts should be added to the access group, so we shouldn't need to check type.
+                    membership = GroupAccountMembership(
+                        group=self.dbgap_application.anvil_access_group,
+                        account=self.audit_result.member,
+                        role=GroupAccountMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, collaborator_audit.RemoveAccess):
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership.objects.get(
+                            group=self.dbgap_application.anvil_access_group,
+                            account=self.audit_result.member,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership.objects.get(
+                            parent_group=self.dbgap_application.anvil_access_group,
+                            child_group=self.audit_result.member,
+                        )
                     membership.delete()
                     membership.anvil_delete()
                 else:

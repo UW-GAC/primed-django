@@ -39,24 +39,45 @@ data_access_snapshot_patterns = (
     "dbgap_data_access_snapshots",
 )
 
-audit_patterns = (
+access_audit_patterns = (
     [
-        path("", views.dbGaPAudit.as_view(), name="all"),
+        path("", views.dbGaPAccessAudit.as_view(), name="all"),
         path(
             "resolve/<int:dbgap_project_id>/<slug:billing_project_slug>/<slug:workspace_slug>/",
-            views.dbGaPAuditResolve.as_view(),
+            views.dbGaPAccessAuditResolve.as_view(),
             name="resolve",
         ),
         path(
-            "<int:dbgap_project_id>/",
-            views.dbGaPApplicationAudit.as_view(),
+            "application/<int:dbgap_project_id>/",
+            views.dbGaPApplicationAccessAudit.as_view(),
             name="applications",
         ),
         path(
-            "<slug:billing_project_slug>/<slug:workspace_slug>/",
-            views.dbGaPWorkspaceAudit.as_view(),
+            "workspace/<slug:billing_project_slug>/<slug:workspace_slug>/",
+            views.dbGaPWorkspaceAccessAudit.as_view(),
             name="workspaces",
         ),
+    ],
+    "access",
+)
+
+collaborator_audit_patterns = (
+    [
+        path("", views.dbGaPCollaboratorAudit.as_view(), name="all"),
+        path(
+            "resolve/<int:dbgap_project_id>/<str:email>/",
+            views.dbGaPCollaboratorAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "collaborators",
+)
+
+
+audit_patterns = (
+    [
+        path("access/", include(access_audit_patterns)),
+        path("collaborators/", include(collaborator_audit_patterns)),
     ],
     "audit",
 )
@@ -65,7 +86,7 @@ data_access_request_patterns = (
     [
         path("current/", views.dbGaPDataAccessRequestList.as_view(), name="current"),
         path(
-            "history/<int:dbgap_dar_id>",
+            "history/<int:dbgap_project_id>/<int:dbgap_dar_id>/",
             views.dbGaPDataAccessRequestHistory.as_view(),
             name="history",
         ),
@@ -88,6 +109,7 @@ dbgap_application_patterns = (
             name="detail",
         ),
         path("<int:dbgap_project_id>/dars/", include(data_access_snapshot_patterns)),
+        path("<int:dbgap_project_id>/update/", views.dbGaPApplicationUpdate.as_view(), name="update"),
         # path(
         #     "<int:dbgap_project_id>/audit/",
         #     views.dbGaPApplicationAudit.as_view(),
