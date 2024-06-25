@@ -1,7 +1,11 @@
 # Temporary script to create some test data.
 # Run with: python manage.py shell < add_cdsa_example_data.py
 
-from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
+)
 
 from primed.dbgap import models
 from primed.dbgap.tests import factories
@@ -133,3 +137,24 @@ GroupGroupMembershipFactory.create(
     parent_group=workspace_fhs_1.workspace.authorization_domains.first(),
     child_group=dbgap_application_1.anvil_access_group,
 )
+
+# Add the PI to the access group for the first application.
+GroupAccountMembershipFactory.create(
+    group=dbgap_application_1.anvil_access_group,
+    account__user=dbgap_application_1.principal_investigator,
+)
+# Add some collaborators for the first application.
+users = UserFactory.create_batch(3)
+dbgap_application_1.collaborators.add(users[0])
+GroupAccountMembershipFactory.create(
+    group=dbgap_application_1.anvil_access_group,
+    account__user=users[0],
+)
+# # Do not add as an collaborator so we can check auditing.
+# dbgap_application_1.collaborators.add(users[1])
+GroupAccountMembershipFactory.create(
+    group=dbgap_application_1.anvil_access_group,
+    account__user=users[1],
+)
+dbgap_application_1.collaborators.add(users[2])
+AccountFactory.create(user=users[2], verified=True)
