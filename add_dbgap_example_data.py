@@ -9,9 +9,18 @@ from primed.primed_anvil.tests.factories import StudyFactory
 from primed.users.tests.factories import UserFactory
 
 # Studies
-fhs = StudyFactory.create(short_name="FHS", full_name="Framingham Heart Study")
-mesa = StudyFactory.create(short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis")
-aric = StudyFactory.create(short_name="ARIC", full_name="Atherosclerosis Risk in Communities")
+try:
+    fhs = models.Study.objects.get(short_name="FHS")
+except models.Study.DoesNotExist:
+    fhs = StudyFactory.create(short_name="FHS", full_name="Framingham Heart Study")
+try:
+    mesa = models.Study.objects.get(short_name="MESA")
+except models.Study.DoesNotExist:
+    mesa = StudyFactory.create(short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis")
+try:
+    aric = models.Study.objects.get(short_name="ARIC")
+except models.Study.DoesNotExist:
+    aric = StudyFactory.create(short_name="ARIC", full_name="Atherosclerosis Risk in Communities")
 
 # dbGaP study accessions
 dbgap_study_accession_fhs = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=7, studies=[fhs])
