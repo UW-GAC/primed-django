@@ -87,14 +87,6 @@ class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView, FilterView,
 
     filterset_class = filters.StudyListFilter
 
-    def get_queryset(self):
-        qs = models.Study.objects.order_by("short_name")
-
-        if self.q:
-            qs = qs.filter(Q(short_name__icontains=self.q) | Q(full_name__icontains=self.q))
-
-        return qs
-
 
 class StudyCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):
     """View to create a new `Study`."""
