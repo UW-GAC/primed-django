@@ -4720,7 +4720,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         # import ipdb; ipdb.set_trace()
         self.assertContains(
             response,
-            """<dt class="col-sm-2">Study review required?</dt> <dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",  # noqa: E501
+            """<dt class="col-sm-3">Study review required?</dt> <dd class="col-sm-9">Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i></dd>""",  # noqa: E501
             html=True,
         )
         instance.requires_study_review = False
@@ -4729,7 +4729,7 @@ class DataAffiliateAgreementDetailTest(TestCase):
         self.assertContains(response, "Study review required?")
         self.assertContains(
             response,
-            """<dt class="col-sm-2">Study review required?</dt> <dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",  # noqa: E501
+            """<dt class="col-sm-3">Study review required?</dt> <dd class="col-sm-9">No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i></dd>""",  # noqa: E501
             html=True,
         )
 
