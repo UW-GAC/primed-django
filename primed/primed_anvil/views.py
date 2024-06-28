@@ -86,6 +86,7 @@ class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView, FilterView,
     template_name = "primed_anvil/study_list.html"
 
     filterset_class = filters.StudyListFilter
+    queryset = models.Study.objects.order_by("short_name")
 
 
 class StudyCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):
