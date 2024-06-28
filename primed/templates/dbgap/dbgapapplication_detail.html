@@ -50,13 +50,14 @@
               This table shows collaborators named for this dbGaP application, their AnVIL account (if linked), and whether or not they are a member of the access group on AnVIL.
               Only collaborators who are PRIMED members are included.
               A collaborator must have linked their AnVIL account to be granted access to data on AnVIL.
-              If changes need to be made, please contact the CC.
             </p>
             <p>
               <strong>It is the PI's responsibility to ensure that all collaborators meet the dbGaP definition of internal collaborators or trainees/postdocs</strong>
               (see the <a href="https://www.ncbi.nlm.nih.gov/books/NBK570251/">dbGaP instructions for Collaborators</a>).
             </p>
             {% render_table tables.1 %}
+
+            <p class='alert alert-secondary'><i class="bi bi-question-circle-fill"></i> If collaborators need to be added or removed, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
 
           </div>
         </div>
