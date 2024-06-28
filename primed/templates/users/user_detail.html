@@ -124,6 +124,11 @@
             <li class="list-group-item"><h5 class>Consortium data sharing agreements</h5></li>
             {% if signed_agreements %}
               {% for agreement in signed_agreements %}
+                {% if object == agreement.representative %}
+                  <li class="list-group-item">
+                    Representative: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
+                  </li>
+                {% endif %}
                 {% if object in agreement.accessors.all %}
                   <li class="list-group-item">
                     Accessor: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>

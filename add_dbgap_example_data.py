@@ -1,7 +1,11 @@
 # Temporary script to create some test data.
 # Run with: python manage.py shell < add_cdsa_example_data.py
 
-from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory
+from anvil_consortium_manager.tests.factories import (
+    AccountFactory,
+    GroupAccountMembershipFactory,
+    GroupGroupMembershipFactory,
+)
 
 from primed.dbgap import models
 from primed.dbgap.tests import factories
@@ -9,9 +13,18 @@ from primed.primed_anvil.tests.factories import StudyFactory
 from primed.users.tests.factories import UserFactory
 
 # Studies
-fhs = StudyFactory.create(short_name="FHS", full_name="Framingham Heart Study")
-mesa = StudyFactory.create(short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis")
-aric = StudyFactory.create(short_name="ARIC", full_name="Atherosclerosis Risk in Communities")
+try:
+    fhs = models.Study.objects.get(short_name="FHS")
+except models.Study.DoesNotExist:
+    fhs = StudyFactory.create(short_name="FHS", full_name="Framingham Heart Study")
+try:
+    mesa = models.Study.objects.get(short_name="MESA")
+except models.Study.DoesNotExist:
+    mesa = StudyFactory.create(short_name="MESA", full_name="Multi-Ethnic Study of Atherosclerosis")
+try:
+    aric = models.Study.objects.get(short_name="ARIC")
+except models.Study.DoesNotExist:
+    aric = StudyFactory.create(short_name="ARIC", full_name="Atherosclerosis Risk in Communities")
 
 # dbGaP study accessions
 dbgap_study_accession_fhs = factories.dbGaPStudyAccessionFactory.create(dbgap_phs=7, studies=[fhs])
@@ -124,3 +137,24 @@ GroupGroupMembershipFactory.create(
     parent_group=workspace_fhs_1.workspace.authorization_domains.first(),
     child_group=dbgap_application_1.anvil_access_group,
 )
+
+# Add the PI to the access group for the first application.
+GroupAccountMembershipFactory.create(
+    group=dbgap_application_1.anvil_access_group,
+    account__user=dbgap_application_1.principal_investigator,
+)
+# Add some collaborators for the first application.
+users = UserFactory.create_batch(3)
+dbgap_application_1.collaborators.add(users[0])
+GroupAccountMembershipFactory.create(
+    group=dbgap_application_1.anvil_access_group,
+    account__user=users[0],
+)
+# # Do not add as an collaborator so we can check auditing.
+# dbgap_application_1.collaborators.add(users[1])
+GroupAccountMembershipFactory.create(
+    group=dbgap_application_1.anvil_access_group,
+    account__user=users[1],
+)
+dbgap_application_1.collaborators.add(users[2])
+AccountFactory.create(user=users[2], verified=True)
