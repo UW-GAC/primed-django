@@ -26,7 +26,7 @@ class UserDetailView(LoginRequiredMixin, DetailView):
             Q(principal_investigator=self.object) | Q(collaborators=self.object)
         ).distinct()
         context["signed_agreements"] = SignedAgreement.objects.filter(
-            Q(accessors=self.object) | Q(dataaffiliateagreement__uploaders=self.object)
+            Q(representative=self.object) | Q(accessors=self.object) | Q(dataaffiliateagreement__uploaders=self.object)
         ).distinct()
         return context
 
