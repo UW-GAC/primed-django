@@ -7,6 +7,7 @@ from anvil_consortium_manager.auth import (
     AnVILProjectManagerAccess,
 )
 from anvil_consortium_manager.models import (
+    Account,
     GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
@@ -25,8 +26,10 @@ from django.views.generic import DetailView, FormView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
-from . import forms, helpers, models, tables
-from .audit import signed_agreement_audit, workspace_audit
+from primed.primed_anvil.tables import UserAccountSingleGroupMembershipTable
+
+from . import forms, helpers, models, tables, viewmixins
+from .audit import accessor_audit, signed_agreement_audit, uploader_audit, workspace_audit
 
 logger = logging.getLogger(__name__)
 
@@ -347,10 +350,15 @@ class DataAffiliateAgreementCreate(
         return agreement_type
 
 
-class MemberAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, SingleTableMixin, DetailView):
     """View to show details about a `MemberAgreement`."""
 
     model = models.MemberAgreement
+
+    def get_table(self):
+        return UserAccountSingleGroupMembershipTable(
+            self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
+        )
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -390,6 +398,8 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
     def get_object(self, queryset=None):
         """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
         queryset = self.get_queryset()
+        if not self.kwargs.get("agreement_type"):
+            raise Http404("No agreement_type provided.")
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
@@ -399,10 +409,44 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
         return obj
 
 
-class DataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class SignedAgreementAccessorsUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """Update accessors for a SignedAgreement object."""
+
+    model = models.SignedAgreement
+    form_class = forms.SignedAgreementAccessorsForm
+    template_name = "cdsa/signedagreement_accessors_update.html"
+    agreement_type = None
+    success_message = "Successfully updated Signed Agreement accessors."
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by agreement_type_indicator and CDSA cc_id."""
+        queryset = self.get_queryset()
+        if not self.kwargs.get("agreement_type"):
+            raise Http404("No agreement_type provided.")
+        try:
+            obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+
+class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, MultiTableMixin, DetailView):
     """View to show details about a `DataAffiliateAgreement`."""
 
     model = models.DataAffiliateAgreement
+
+    def get_tables(self):
+        return (
+            UserAccountSingleGroupMembershipTable(
+                self.object.signed_agreement.accessors.all(),
+                managed_group=self.object.signed_agreement.anvil_access_group,
+            ),
+            UserAccountSingleGroupMembershipTable(
+                self.object.uploaders.all(), managed_group=self.object.anvil_upload_group
+            ),
+        )
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -432,6 +476,26 @@ class DataAffiliateAgreementList(AnVILConsortiumManagerStaffViewRequired, Single
     table_class = tables.DataAffiliateAgreementTable
 
 
+class DataAffiliateAgreementUploadersUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, UpdateView):
+    """Update uploaders for a DataAffiliateAgreement object."""
+
+    model = models.DataAffiliateAgreement
+    form_class = forms.DataAffiliateAgreementUploadersForm
+    template_name = "cdsa/dataaffiliateagreement_uploaders_update.html"
+    success_message = "Successfully updated Data Affiliate Agreement uploaders."
+
+    def get_object(self, queryset=None):
+        """Look up the agreement by CDSA cc_id."""
+        queryset = self.get_queryset()
+        try:
+            obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+
 class NonDataAffiliateAgreementCreate(
     AnVILConsortiumManagerStaffEditRequired,
     AgreementTypeCreateMixin,
@@ -449,10 +513,15 @@ class NonDataAffiliateAgreementCreate(
     ERROR_CREATING_GROUP = "Error creating access group on AnVIL."
 
 
-class NonDataAffiliateAgreementDetail(AnVILConsortiumManagerStaffViewRequired, DetailView):
+class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, SingleTableMixin, DetailView):
     """View to show details about a `NonDataAffiliateAgreement`."""
 
     model = models.NonDataAffiliateAgreement
+
+    def get_table(self):
+        return UserAccountSingleGroupMembershipTable(
+            self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
+        )
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -687,6 +756,232 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
                         parent_group=auth_domain,
                         child_group=cdsa_group,
                     )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+
+class AccessorAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to show accessor audit results for `SignedAgreements`."""
+
+    template_name = "cdsa/accessor_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        audit = accessor_audit.AccessorAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
+        return context
+
+
+class AccessorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    form_class = Form
+    template_name = "cdsa/accessor_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_signed_agreement(self):
+        """Look up the SignedAgreement by cc_id."""
+        try:
+            obj = models.SignedAgreement.objects.get(cc_id=self.kwargs.get("cc_id"))
+        except models.SignedAgreement.DoesNotExist:
+            raise Http404("No SignedAgreements found matching the query")
+        return obj
+
+    def get_email(self):
+        return self.kwargs.get("email")
+
+    def get_audit_result(self):
+        audit = accessor_audit.AccessorAudit(
+            queryset=models.SignedAgreement.objects.filter(pk=self.signed_agreement.pk)
+        )
+        # No way to include a queryset of members at this point - need to call the sub method directly.
+        audit.audit_agreement_and_object(self.signed_agreement, self.email)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.signed_agreement = self.get_signed_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.signed_agreement = self.get_signed_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["signed_agreement"] = self.signed_agreement
+        context["email"] = self.email
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.signed_agreement.get_absolute_url()
+
+    def form_valid(self, form):
+        # Add or remove the user from the access group.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, accessor_audit.GrantAccess):
+                    # Only accounts should be added to the access group, so we shouldn't need to check type.
+                    membership = GroupAccountMembership(
+                        group=self.signed_agreement.anvil_access_group,
+                        account=self.audit_result.member,
+                        role=GroupAccountMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, accessor_audit.RemoveAccess):
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership.objects.get(
+                            group=self.signed_agreement.anvil_access_group,
+                            account=self.audit_result.member,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership.objects.get(
+                            parent_group=self.signed_agreement.anvil_access_group,
+                            child_group=self.audit_result.member,
+                        )
+                    membership.delete()
+                    membership.anvil_delete()
+                else:
+                    pass
+        except AnVILAPIError as e:
+            if self.request.htmx:
+                return HttpResponse(self.htmx_error)
+            else:
+                messages.error(self.request, "AnVIL API Error: " + str(e))
+                return super().form_invalid(form)
+        # Otherwise, the audit resolution succeeded.
+        if self.request.htmx:
+            return HttpResponse(self.htmx_success)
+        else:
+            return super().form_valid(form)
+
+
+class UploaderAudit(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    """View to show uploader audit results for `DataAffiliateAgreements`."""
+
+    template_name = "cdsa/uploader_audit.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        audit = uploader_audit.UploaderAudit()
+        audit.run_audit()
+        context["verified_table"] = audit.get_verified_table()
+        context["errors_table"] = audit.get_errors_table()
+        context["needs_action_table"] = audit.get_needs_action_table()
+        context["audit"] = audit
+        return context
+
+
+class UploaderAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
+    form_class = Form
+    template_name = "cdsa/uploader_audit_resolve.html"
+    htmx_success = """<i class="bi bi-check-circle-fill"></i> Handled!"""
+    htmx_error = """<i class="bi bi-x-circle-fill"></i> Error!"""
+
+    def get_data_affiliate_agreement(self):
+        """Look up the DataAffiliateAgreement by cc_id."""
+        try:
+            obj = models.DataAffiliateAgreement.objects.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
+        except models.DataAffiliateAgreement.DoesNotExist:
+            raise Http404("No DataAffiliateAgreements found matching the query")
+        return obj
+
+    def get_email(self):
+        return self.kwargs.get("email")
+
+    def get_audit_result(self):
+        audit = uploader_audit.UploaderAudit(
+            queryset=models.DataAffiliateAgreement.objects.filter(pk=self.data_affiliate_agreement.pk)
+        )
+        # No way to include a queryset of members at this point - need to call the sub method directly.
+        audit.audit_agreement_and_object(self.data_affiliate_agreement, self.email)
+        # Set to completed, because we are just running this one specific check.
+        audit.completed = True
+        return audit.get_all_results()[0]
+
+    def get(self, request, *args, **kwargs):
+        self.data_affiliate_agreement = self.get_data_affiliate_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.data_affiliate_agreement = self.get_data_affiliate_agreement()
+        self.email = self.get_email()
+        try:
+            self.audit_result = self.get_audit_result()
+        except ValueError as e:
+            raise Http404(str(e))
+        return super().post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["data_affiliate_agreement"] = self.data_affiliate_agreement
+        context["email"] = self.email
+        context["audit_result"] = self.audit_result
+        return context
+
+    def get_success_url(self):
+        return self.data_affiliate_agreement.get_absolute_url()
+
+    def form_valid(self, form):
+        # Add or remove the user from the access group.
+        try:
+            with transaction.atomic():
+                if isinstance(self.audit_result, uploader_audit.GrantAccess):
+                    # Only accounts should be added to the access group, so we shouldn't need to check type.
+                    membership = GroupAccountMembership(
+                        group=self.data_affiliate_agreement.anvil_upload_group,
+                        account=self.audit_result.member,
+                        role=GroupAccountMembership.MEMBER,
+                    )
+                    membership.full_clean()
+                    membership.save()
+                    membership.anvil_create()
+                elif isinstance(self.audit_result, uploader_audit.RemoveAccess):
+                    if isinstance(self.audit_result.member, Account):
+                        membership = GroupAccountMembership.objects.get(
+                            group=self.data_affiliate_agreement.anvil_upload_group,
+                            account=self.audit_result.member,
+                        )
+                    elif isinstance(self.audit_result.member, ManagedGroup):
+                        membership = GroupGroupMembership.objects.get(
+                            parent_group=self.data_affiliate_agreement.anvil_upload_group,
+                            child_group=self.audit_result.member,
+                        )
                     membership.delete()
                     membership.anvil_delete()
                 else:

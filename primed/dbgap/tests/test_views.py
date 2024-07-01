@@ -1452,6 +1452,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_staff_view_links(self):
         """No edit links if staff user only has view permission."""
@@ -1475,6 +1476,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_links_pi(self):
         """Links seen by PI are correct."""
@@ -1500,6 +1502,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_links_collaborators(self):
         """Links seen by collaborators are correct."""
@@ -1526,6 +1529,7 @@ class dbGaPApplicationDetailTest(TestCase):
         self.assertNotContains(
             response, reverse("anvil_consortium_manager:managed_groups:detail", args=[self.obj.anvil_access_group.name])
         )
+        self.assertNotContains(response, reverse("dbgap:dbgap_applications:update", args=[self.obj.dbgap_project_id]))
 
     def test_table_classes(self):
         """The table classes are correct."""
@@ -2237,7 +2241,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_can_create_object(self):
         """Can create a dbGaPSnapshot and related dbGaPDataAccessRequests for this dbGaPApplication."""
-        phs = "phs{phs:06d}".format(phs=fake.random_int())
+        phs = "phs{phs:06d}".format(phs=fake.random_int(min=1))
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
         project_json = factories.dbGaPJSONProjectFactory(dbgap_application=self.dbgap_application, studies=[study_json])
         self.dbgap_response_mock.add(
@@ -2315,7 +2319,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
     def test_redirect_url(self):
         """Redirects to successful url."""
         # Add responses with the study version and participant_set.
-        phs = "phs{phs:06d}".format(phs=fake.random_int())
+        phs = "phs{phs:06d}".format(phs=fake.random_int(min=1))
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
@@ -2341,7 +2345,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_success_message(self):
         """Redirects to successful url."""
-        phs = "phs{phs:06d}".format(phs=fake.random_int())
+        phs = "phs{phs:06d}".format(phs=fake.random_int(min=1))
         study_json = factories.dbGaPJSONStudyFactory(study_accession=phs)
         project_json = factories.dbGaPJSONProjectFactory(
             dbgap_application=self.dbgap_application,
@@ -2407,7 +2411,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
             self.get_view()(request, dbgap_project_id=self.dbgap_application.pk + 999)
 
     def test_has_form_when_one_snapshot_exists(self):
-        phs_int = fake.random_int()
+        phs_int = fake.random_int(min=1)
         phs = "phs{phs_int:06d}".format(phs_int=phs_int)
         request_json = factories.dbGaPJSONRequestFactory(
             DAR=1234,
@@ -2446,7 +2450,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_updates_existing_snapshot_is_most_recent(self):
         """Updates the is_most_recent for older snapshots."""
-        phs_int = fake.random_int()
+        phs_int = fake.random_int(min=1)
         phs = "phs{phs_int:06d}".format(phs_int=phs_int)
         request_json = factories.dbGaPJSONRequestFactory(
             DAR=1234,
@@ -2499,7 +2503,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_can_add_a_second_snapshot_with_dars(self):
         """Can add a second snapshot and new DARs."""
-        phs_int = fake.random_int()
+        phs_int = fake.random_int(min=1)
         phs = "phs{phs_int:06d}".format(phs_int=phs_int)
         request_json = factories.dbGaPJSONRequestFactory(
             DAR=1234,
@@ -2616,7 +2620,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_snapshot_not_created_if_http404(self):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to a HTTP 404 response."""
-        phs_int = fake.random_int()
+        phs_int = fake.random_int(min=1)
         phs = "phs{phs_int:06d}".format(phs_int=phs_int)
         request_json = factories.dbGaPJSONRequestFactory(
             DAR=1234,
@@ -2658,7 +2662,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_existing_snapshot_not_updated_http404(self):
         """The dbGaPDataAccessSnapshot is not created if there is an HTTP 404 error."""
-        phs_int = fake.random_int()
+        phs_int = fake.random_int(min=1)
         phs = "phs{phs_int:06d}".format(phs_int=phs_int)
         request_json = factories.dbGaPJSONRequestFactory(
             DAR=1234,
@@ -2702,7 +2706,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_snapshot_not_created_if_dar_error(self):
         """The dbGaPDataAccessSnapshot is not created if DARs cannot be created due to duplicated DAR id."""
-        phs = "phs{phs_int:06d}".format(phs_int=fake.random_int())
+        phs = "phs{phs_int:06d}".format(phs_int=fake.random_int(min=1))
         request_json_1 = factories.dbGaPJSONRequestFactory(
             DAR=1234,
             consent_code=1,
@@ -2746,7 +2750,7 @@ class dbGaPDataAccessSnapshotCreateTest(dbGaPResponseTestMixin, TestCase):
 
     def test_existing_snapshot_is_most_recent_with_dar_errors(self):
         """An existing dbGaPDataAccessSnapshot.is_most_recent value is not updated if DARs cannot be created."""
-        phs = "phs{phs_int:06d}".format(phs_int=fake.random_int())
+        phs = "phs{phs_int:06d}".format(phs_int=fake.random_int(min=1))
         request_json_1 = factories.dbGaPJSONRequestFactory(
             DAR=1234,
             consent_code=1,

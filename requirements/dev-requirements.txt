@@ -60,7 +60,7 @@ filelock==3.13.1
     # via virtualenv
 identify==2.5.34
     # via pre-commit
-idna==3.3
+idna==3.7
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -87,7 +87,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.10.0
+mypy==1.10.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -131,7 +131,7 @@ pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
     #   pre-commit
-requests==2.31.0
+requests==2.32.3
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -199,7 +199,7 @@ typing-extensions==4.8.0
     #   django-stubs-ext
     #   ipython
     #   mypy
-urllib3==2.1.0
+urllib3==2.2.2
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt

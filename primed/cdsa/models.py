@@ -132,6 +132,7 @@ class SignedAgreement(TimeStampedModel, SignedAgreementStatusMixin, StatusModel,
     representative = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
+        related_name="representative_signed_agreements",
         help_text="The investigator who signed this Agreement.",
     )
     representative_role = models.CharField(
@@ -159,6 +160,12 @@ class SignedAgreement(TimeStampedModel, SignedAgreementStatusMixin, StatusModel,
     date_signed = models.DateField(
         help_text="Date that this Agreement signed by the institution.",
         default=date.today,
+    )
+    accessors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="accessor_signed_agreements",
+        help_text="Investigators who have access to data under this Agreement.",
     )
     anvil_access_group = models.OneToOneField(
         ManagedGroup,
@@ -265,6 +272,12 @@ class DataAffiliateAgreement(TimeStampedModel, AgreementTypeModel, models.Model)
         Study,
         on_delete=models.PROTECT,
         help_text="Study that this agreement is associated with.",
+    )
+    uploaders = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="uploader_signed_agreements",
+        help_text="Investigators who have permission to upload data under this Agreement.",
     )
     anvil_upload_group = models.ForeignKey(ManagedGroup, on_delete=models.PROTECT)
     additional_limitations = models.TextField(

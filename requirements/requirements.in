@@ -39,7 +39,7 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
 django-simple-history
 
 # Making HTTP requests to get dbgap study versions.
-requests
+requests>=2.32.0
 
 # For json schema validation.
 jsonschema
@@ -69,8 +69,9 @@ django-htmx
 
 # Temporary(?) pins to fix security alerts.
 certifi>=2023.7.22
-urllib3>=1.26.18
+urllib3>=2.2.2
 sqlparse>=0.4.4
+idna>=3.7
 
 # Dynamic settings
 django-constance

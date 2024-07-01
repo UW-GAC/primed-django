@@ -14,43 +14,94 @@
 
 {% block panel %}
 <dl class="row">
-  <dt class="col-sm-2">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
-  <dt class="col-sm-2">Representative</dt> <dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative.name }}</a>
+  <dt class="col-sm-3">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
+  <dt class="col-sm-3">Representative</dt> <dd class="col-sm-9">
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative.name }}</a>
+    {% else %}
+      {{ object.signed_agreement.representative.name }}
+    {% endif %}
   </dd>
-  <dt class="col-sm-2">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
-  <dt class="col-sm-2">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
-  <dt class="col-sm-2">Primary?</dt> <dd class="col-sm-9">
+  <dt class="col-sm-3">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
+  <dt class="col-sm-3">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
+  <dt class="col-sm-3">Primary?</dt> <dd class="col-sm-9">
     {% if object.is_primary %}
       Yes <i class="bi bi-check-circle-fill px-2" style="color: green;"></i>
     {% else %}
       No <i class="bi bi-x-circle-fill px-2" style="color: red;"></i>
     {% endif %}
   </dd>
-  <dt class="col-sm-2">Agreement version</dt> <dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
+  <dt class="col-sm-3">Agreement version</dt> <dd class="col-sm-9">
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
+    {% else %}
+      {{ object.signed_agreement.version }}
+    {% endif %}
   </dd>
-  <dt class="col-sm-2">Status</dt> <dd class="col-sm-9">{{ object.signed_agreement.get_status_display }}</dd>
-  <dt class="col-sm-2">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
+  <dt class="col-sm-3">Status</dt> <dd class="col-sm-9">{{ object.signed_agreement.get_status_display }}</dd>
+  <dt class="col-sm-3">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
 
-  <dt class="col-sm-2">Study site</dt> <dd class="col-sm-9">
-    <a href="{{ object.study_site.get_absolute_url }}">{{ object.study_site }}</a>
+  <dt class="col-sm-3">Study site</dt> <dd class="col-sm-9">
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.study_site.get_absolute_url }}">{{ object.study_site }}</a>
+    {% else %}
+      {{ object.study_site }}
+    {% endif %}
   </dd>
-  <dt class="col-sm-2">AnVIL access group</dt><dd class="col-sm-9">
-    <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
+  <dt class="col-sm-3">AnVIL access group</dt><dd class="col-sm-9">
+    {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+      <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
+    {% else %}
+      {{ object.signed_agreement.anvil_access_group }}
+    {% endif %}
   </dd>
 
-<hr>
-  <dt class="col-sm-2">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
-  <dt class="col-sm-2">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+  <hr>
+  <dt class="col-sm-3">Date created</dt> <dd class="col-sm-9">{{ object.created }}</dd>
+  <dt class="col-sm-3">Date modified</dt> <dd class="col-sm-9">{{ object.modified }}</dd>
+  {% endif %}
 
 </dl>
 {% endblock panel %}
 
+{% block after_panel %}
+<div class="my-3">
+  <div class="accordion" id="accordionAccessors">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAccessorsOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAccessorsOne" aria-expanded="falase" aria-controls="collapseAccessorsOne">
+          <span class="fa-solid fa-handshake mx-2"></span>
+          Named accessors
+          <span class="badge mx-2 bg-secondary pill"> {{ table.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseAccessorsOne" class="accordion-collapse collapse" aria-labelledby="headingAccessorsOne" data-bs-parent="#accordionAccessors">
+        <div class="accordion-body">
+
+          <p>
+            This table shows accessors named for this signed agreement, their AnVIL account (if linked), and whether or not they are a member of the access group on AnVIL.
+            Only accessors who are PRIMED members are included.
+            An accessor must have linked their AnVIL account to be granted access to data on AnVIL.
+          </p>
+
+          {% render_table table %}
+
+          <p class='alert alert-secondary'><i class="bi bi-question-circle-fill"></i> If accessors need to be added or removed, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock after_panel %}
+
 
 {% block action_buttons %}
   {% if show_update_button %}
-  <a href="{% url 'cdsa:signed_agreements:members:update' cc_id=object.signed_agreement.cc_id %}" class="btn btn-primary" role="button">Update status</a>
+  <p>
+  <a href="{% url 'cdsa:signed_agreements:members:update:status' cc_id=object.signed_agreement.cc_id %}" class="btn btn-primary" role="button">Update status</a>
+  <a href="{% url 'cdsa:signed_agreements:members:update:accessors' cc_id=object.signed_agreement.cc_id %}" class="btn btn-primary" role="button">Update accessors</a>
   </p>
   {% endif %}
 {% endblock action_buttons %}

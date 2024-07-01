@@ -158,7 +158,6 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Mul
             return None
 
     def get_tables(self):
-        print(self.object.dbgapdataaccesssnapshot_set.all())
         return (
             tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),
             UserAccountSingleGroupMembershipTable(
@@ -247,7 +246,8 @@ class dbGaPApplicationUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
 
     model = models.dbGaPApplication
     form_class = forms.dbGaPApplicationUpdateForm
-    success_message = "dbGaP application successfully updated."
+    success_message = "dbGaP collaborators successfully updated."
+    template_name = "dbgap/dbgapapplication_update_collaborators.html"
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
@@ -690,7 +690,6 @@ class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView)
         return instance.get_all_results()[0]
 
     def get(self, request, *args, **kwargs):
-        print(self.kwargs)
         self.dbgap_workspace = self.get_dbgap_workspace()
         self.dbgap_application = self.get_dbgap_application()
         self.audit_result = self.get_audit_result()

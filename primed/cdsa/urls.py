@@ -29,19 +29,56 @@ agreement_version_patterns = (
     ],
     "agreement_versions",
 )
+
+member_agreement_update_patterns = (
+    [
+        path(
+            "status/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.MEMBER},
+            name="status",
+        ),
+        path(
+            "accessors/",
+            views.SignedAgreementAccessorsUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.MEMBER},
+            name="accessors",
+        ),
+    ],
+    "update",
+)
+
 member_agreement_patterns = (
     [
         path("", views.MemberAgreementList.as_view(), name="list"),
         path("new/", views.MemberAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.MemberAgreementDetail.as_view(), name="detail"),
-        path(
-            "<int:cc_id>/update/",
-            views.SignedAgreementStatusUpdate.as_view(),
-            {"agreement_type": models.SignedAgreement.MEMBER},
-            name="update",
-        ),
+        path("<int:cc_id>/update/", include(member_agreement_update_patterns)),
     ],
     "members",
+)
+
+data_affiliate_agreement_update_patterns = (
+    [
+        path(
+            "status/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
+            name="status",
+        ),
+        path(
+            "accessors/",
+            views.SignedAgreementAccessorsUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
+            name="accessors",
+        ),
+        path(
+            "uploaders/",
+            views.DataAffiliateAgreementUploadersUpdate.as_view(),
+            name="uploaders",
+        ),
+    ],
+    "update",
 )
 
 data_affiliate_agreement_patterns = (
@@ -49,14 +86,27 @@ data_affiliate_agreement_patterns = (
         path("", views.DataAffiliateAgreementList.as_view(), name="list"),
         path("new/", views.DataAffiliateAgreementCreate.as_view(), name="new"),
         path("<int:cc_id>/", views.DataAffiliateAgreementDetail.as_view(), name="detail"),
-        path(
-            "<int:cc_id>/update/",
-            views.SignedAgreementStatusUpdate.as_view(),
-            {"agreement_type": models.SignedAgreement.DATA_AFFILIATE},
-            name="update",
-        ),
+        path("<int:cc_id>/update/", include(data_affiliate_agreement_update_patterns)),
     ],
     "data_affiliates",
+)
+
+non_data_affiliate_agreement_update_patterns = (
+    [
+        path(
+            "status/",
+            views.SignedAgreementStatusUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
+            name="status",
+        ),
+        path(
+            "accessors/",
+            views.SignedAgreementAccessorsUpdate.as_view(),
+            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
+            name="accessors",
+        ),
+    ],
+    "update",
 )
 
 non_data_affiliate_agreement_patterns = (
@@ -68,12 +118,7 @@ non_data_affiliate_agreement_patterns = (
             views.NonDataAffiliateAgreementDetail.as_view(),
             name="detail",
         ),
-        path(
-            "<int:cc_id>/update/",
-            views.SignedAgreementStatusUpdate.as_view(),
-            {"agreement_type": models.SignedAgreement.NON_DATA_AFFILIATE},
-            name="update",
-        ),
+        path("<int:cc_id>/update/", include(non_data_affiliate_agreement_update_patterns)),
     ],
     "non_data_affiliates",
 )
@@ -89,14 +134,47 @@ signed_agreement_patterns = (
     "signed_agreements",
 )
 
-signed_agreement_audit_patterns = (
+signed_agreement_sag_audit_patterns = (
     [
         path("", views.SignedAgreementAudit.as_view(), name="all"),
         path(
-            "<int:cc_id>/resolve/",
+            "resolve/<int:cc_id>/",
             views.SignedAgreementAuditResolve.as_view(),
             name="resolve",
         ),
+    ],
+    "sag",
+)
+
+signed_agreement_accessor_audit_patterns = (
+    [
+        path("", views.AccessorAudit.as_view(), name="all"),
+        path(
+            "resolve/<int:cc_id>/<str:email>/",
+            views.AccessorAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "accessors",
+)
+
+signed_agreement_uploader_audit_patterns = (
+    [
+        path("", views.UploaderAudit.as_view(), name="all"),
+        path(
+            "resolve/<int:cc_id>/<str:email>/",
+            views.UploaderAuditResolve.as_view(),
+            name="resolve",
+        ),
+    ],
+    "uploaders",
+)
+
+signed_agreement_audit_patterns = (
+    [
+        path("sag/", include(signed_agreement_sag_audit_patterns)),
+        path("accessors/", include(signed_agreement_accessor_audit_patterns)),
+        path("uploaders/", include(signed_agreement_uploader_audit_patterns)),
     ],
     "signed_agreements",
 )
@@ -105,7 +183,7 @@ workspace_audit_patterns = (
     [
         path("", views.CDSAWorkspaceAudit.as_view(), name="all"),
         path(
-            "<slug:billing_project_slug>/<slug:workspace_slug>/resolve/",
+            "resolve/<slug:billing_project_slug>/<slug:workspace_slug>/",
             views.CDSAWorkspaceAuditResolve.as_view(),
             name="resolve",
         ),
@@ -115,8 +193,8 @@ workspace_audit_patterns = (
 
 audit_patterns = (
     [
-        path("workspaces", include(workspace_audit_patterns)),
-        path("signed_agreements", include(signed_agreement_audit_patterns)),
+        path("workspaces/", include(workspace_audit_patterns)),
+        path("signed_agreements/", include(signed_agreement_audit_patterns)),
     ],
     "audit",
 )

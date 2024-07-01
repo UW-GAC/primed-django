@@ -1136,7 +1136,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         obj = factories.dbGaPDataAccessRequestFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
             dbgap_data_access_snapshot=obj.dbgap_data_access_snapshot,
-            dbgap_phs=fake.random_int(),
+            dbgap_phs=fake.random_int(min=1),
             dbgap_dar_id=obj.dbgap_dar_id,
         )
         with self.assertRaises(ValidationError) as e:

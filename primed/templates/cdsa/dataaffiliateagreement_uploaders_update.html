@@ -1,0 +1,48 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Data Affiliate Agreement uploaders{% endblock title %}
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-2">Coordinating Center ID</dt> <dd class="col-sm-9">{{ object.signed_agreement.cc_id }}</dd>
+  <dt class="col-sm-2">Representative</dt> <dd class="col-sm-9">
+    <a href="{{ object.signed_agreement.representative.get_absolute_url }}">{{ object.signed_agreement.representative.name }}</a>
+  </dd>
+  <dt class="col-sm-2">Representative role</dt> <dd class="col-sm-9">{{ object.signed_agreement.representative_role }}</dd>
+  <dt class="col-sm-2">Signing institution</dt> <dd class="col-sm-9">{{ object.signed_agreement.signing_institution }}</dd>
+  <dt class="col-sm-2">Primary?</dt> <dd class="col-sm-9">{{ object.signed_agreement.is_primary }}</dd>
+  <dt class="col-sm-2">Agreement version</dt> <dd class="col-sm-9">
+    <a href="{{ object.signed_agreement.version.get_absolute_url }}">{{ object.signed_agreement.version }}</a>
+  </dd>
+  <dt class="col-sm-2">Date signed</dt> <dd class="col-sm-9">{{ object.signed_agreement.date_signed }}</dd>
+
+  <dt class="col-sm-2">Agreement group</dt> <dd class="col-sm-9">
+    <a href="{{ object.study }}">{{ object.study }}</a>
+  </dd>
+  <dt class="col-sm-2">AnVIL access group</dt><dd class="col-sm-9">
+    <a href="{{ object.signed_agreement.anvil_access_group.get_absolute_url }}">{{ object.signed_agreement.anvil_access_group }}</a>
+  </dd>
+  <dt class="col-sm-2">AnVIL uploader group</dt><dd class="col-sm-9">
+    <a href="{{ object.anvil_upload_group.get_absolute_url }}">{{ object.anvil_upload_group }}</a>
+  </dd>
+</dl>
+{% endblock panel %}
+
+{% block after_panel %}
+<div class="container m-3">
+  <form method="post">
+
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button type="submit" class="btn btn-success">Save</button>
+  </form>
+</div>
+{% endblock after_panel %}
+
+
+{% block inline_javascript %}
+  {{ form.media }}
+{% endblock inline_javascript %}
