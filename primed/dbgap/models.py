@@ -158,12 +158,19 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         help_text="The principal investigator associated with on this dbGaP application.",
+        related_name="pi_dbgap_applications",
     )
     dbgap_project_id = models.PositiveIntegerField(
         verbose_name=" dbGaP project id",
         validators=[MinValueValidator(1)],
         unique=True,
         help_text="The dbGaP-assigned project_id for this application.",
+    )
+    collaborators = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        help_text="The internal collaborators or trainees covered under this dbGaP application.",
+        blank=True,
+        related_name="collaborator_dbgap_applications",
     )
     anvil_access_group = models.OneToOneField(
         ManagedGroup,

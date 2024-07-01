@@ -37,7 +37,7 @@ from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceF
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 from primed.users.tests.factories import UserFactory
 
-from .. import models, tables, views
+from .. import filters, models, tables, views
 from . import factories
 
 # from .utils import AnVILAPIMockTestMixin
@@ -721,6 +721,66 @@ class StudyListTest(TestCase):
         request.user = self.user
         response = self.get_view()(request)
         self.assertEqual(response.status_code, 200)
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+
+    def test_filterset_class(self):
+        self.model_factory.create()
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        self.assertIn("filter", response.context_data)
+        self.assertIsInstance(response.context_data["filter"], filters.StudyListFilter)
+
+    def test_view_with_filter_return_no_object(self):
+        self.model_factory.create(short_name="TEST", full_name="Test study")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"short_name__icontains": "abc"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+        response = self.client.get(self.get_url(), {"full_name__icontains": "abc"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 0)
+
+    def test_view_with_filter_returns_one_object_exact(self):
+        self.model_factory.create(short_name="TEST", full_name="Test Study")
+        self.model_factory.create(short_name="ABC", full_name="ABC Study")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"short_name__icontains": "TEST"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        response = self.client.get(self.get_url(), {"full_name__icontains": "Test Study"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_view_with_filter_returns_one_object_case_insensitive(self):
+        self.model_factory.create(short_name="TEST", full_name="TEST Study")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"short_name__icontains": "test"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        response = self.client.get(self.get_url(), {"full_name__icontains": "test study"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_view_with_filter_returns_one_object_contains(self):
+        self.model_factory.create(short_name="TEST", full_name="TEST Study")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"short_name__icontains": "TES"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+        response = self.client.get(self.get_url(), {"full_name__icontains": "TES"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 1)
+
+    def test_view_with_filter_returns_all_objects(self):
+        self.model_factory.create(short_name="Test 1", full_name="Test 1 Study")
+        self.model_factory.create(short_name="Test 2", full_name="Test 2 Study")
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(), {"short_name__icontains": "Test"})
+        self.assertIn("table", response.context_data)
+        self.assertEqual(len(response.context_data["table"].rows), 2)
+        response = self.client.get(self.get_url(), {"full_name__icontains": "Test"})
         self.assertIn("table", response.context_data)
         self.assertEqual(len(response.context_data["table"].rows), 2)
 

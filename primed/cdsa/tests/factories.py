@@ -31,7 +31,7 @@ class AgreementVersionFactory(DjangoModelFactory):
         model = models.AgreementVersion
 
     major_version = SubFactory(AgreementMajorVersionFactory)
-    minor_version = Faker("random_int")
+    minor_version = Faker("random_int", min=1)
     date_approved = Faker("date")
 
 

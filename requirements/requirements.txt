@@ -68,7 +68,7 @@ django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
 django-constance==3.1.0
     # via -r requirements/requirements.in
-django-crispy-forms==2.1
+django-crispy-forms==2.2
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -83,7 +83,7 @@ django-extensions==3.2.3
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.17.3
+django-htmx==1.18.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
@@ -109,8 +109,10 @@ fontawesomefree==6.5.1
     # via django-anvil-consortium-manager
 google-auth==2.28.1
     # via django-anvil-consortium-manager
-idna==3.3
-    # via requests
+idna==3.7
+    # via
+    #   -r requirements/requirements.in
+    #   requests
 importlib-metadata==7.0.0
     # via build
 importlib-resources==6.1.1
@@ -184,7 +186,7 @@ referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.31.0
+requests==2.32.3
     # via
     #   -r requirements/requirements.in
     #   django-allauth
@@ -220,13 +222,13 @@ typing-extensions==4.8.0
     # via asgiref
 tzdata==2023.4
     # via pandas
-urllib3==2.1.0
+urllib3==2.2.2
     # via
     #   -r requirements/requirements.in
     #   requests
 wheel==0.42.0
     # via pip-tools
-whitenoise==6.6.0
+whitenoise==6.7.0
     # via -r requirements/requirements.in
 zipp==3.17.0
     # via

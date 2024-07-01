@@ -39,6 +39,21 @@ class SignedAgreementFormTest(TestCase):
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
 
+    def test_valid_with_accessors(self):
+        """Form is valid when accessors are specified."""
+        accessors = UserFactory.create_batch(2)
+        form_data = {
+            "cc_id": 1234,
+            "representative": self.representative,
+            "representative_role": "Test role",
+            "signing_institution": "Test insitution",
+            "version": self.agreement_version,
+            "date_signed": "2023-01-01",
+            "accessors": accessors,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
     def test_missing_representative(self):
         """Form is invalid when missing representative."""
         form_data = {
@@ -237,6 +252,50 @@ class SignedAgreementStatusFormTest(TestCase):
         self.assertIn("valid choice", form.errors["status"][0])
 
 
+class SignedAgreementAccessorsFormTest(TestCase):
+    """Tests for the SignedAgreementAccessorsForm class."""
+
+    form_class = forms.SignedAgreementAccessorsForm
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "accessors": [],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_one_accessor(self):
+        """Form is valid with one accessor."""
+        accessor = UserFactory.create()
+        form_data = {
+            "accessors": [accessor],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_accessors(self):
+        """Form is valid with two accessors."""
+        accessors = UserFactory.create_batch(2)
+        form_data = {
+            "accessors": accessors,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_accessor_wrong_class(self):
+        """Form is invalid when an object is not a User."""
+        form_data = {
+            "accessors": [999],
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("accessors", form.errors)
+        self.assertEqual(len(form.errors["accessors"]), 1)
+        self.assertIn("valid choice", form.errors["accessors"][0])
+
+
 class MemberAgreementFormTest(TestCase):
     """Tests for the MemberAgreementForm class."""
 
@@ -344,6 +403,18 @@ class DataAffiliateAgreementFormTest(TestCase):
             "signed_agreement": self.signed_agreement,
             "is_primary": True,
             "study": self.study,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_with_uploaders(self):
+        """Form is valid when uploaders are specified."""
+        uploaders = UserFactory.create_batch(2)
+        form_data = {
+            "signed_agreement": self.signed_agreement,
+            "is_primary": True,
+            "study": self.study,
+            "uploaders": uploaders,
         }
         form = self.form_class(data=form_data)
         self.assertTrue(form.is_valid())
@@ -467,6 +538,53 @@ class DataAffiliateAgreementFormTest(TestCase):
         self.assertIn("requires_study_review", form.errors)
         self.assertEqual(len(form.errors["requires_study_review"]), 1)
         self.assertIn("can only be True for primary", form.errors["requires_study_review"][0])
+
+
+class DataAffiliateAgreementUploadersFormTest(TestCase):
+    """Tests for the DataAffiliateAgreementUploadersForm class."""
+
+    form_class = forms.DataAffiliateAgreementUploadersForm
+
+    def setUp(self):
+        self.signed_agreement = factories.SignedAgreementFactory.create(type=models.SignedAgreement.DATA_AFFILIATE)
+
+    def test_valid(self):
+        """Form is valid with necessary input."""
+        form_data = {
+            "uploaders": [],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_one_accessor(self):
+        """Form is valid with one accessor."""
+        uploader = UserFactory.create()
+        form_data = {
+            "uploaders": [uploader],
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_two_accessors(self):
+        """Form is valid with two accessors."""
+        uploaders = UserFactory.create_batch(2)
+        form_data = {
+            "uploaders": uploaders,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_uploaders_wrong_class(self):
+        """Form is invalid when an object is not a User."""
+        form_data = {
+            "uploaders": [999],
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("uploaders", form.errors)
+        self.assertEqual(len(form.errors["uploaders"]), 1)
+        self.assertIn("valid choice", form.errors["uploaders"][0])
 
 
 class NonDataAffiliateAgreementFormTest(TestCase):

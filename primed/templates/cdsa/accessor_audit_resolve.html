@@ -2,23 +2,36 @@
 {% load django_tables2 %}
 {% load crispy_forms_tags %}
 
-{% block title %}Resolve dbGaP access audit{% endblock %}
+{% block title %}Resolve dbGaP collaborator audit{% endblock %}
 
 
 {% block content %}
 
-<h1>Resolve dbGaP access audit</h1>
+<h1>Resolve Signed Agreement accessor audit</h1>
 
 <div class="my-3 p-3 bg-light border rounded shadow-sm">
   <ul>
-    <li>dbGaP application: <a href="{{ dbgap_application.get_absolute_url }}">{{ dbgap_application }}</a></li>
-    <li>dbGaP workspace: <a href="{{ dbgap_workspace.get_absolute_url }}">{{ dbgap_workspace }}</a></li>
+    <li>Signed agreement: <a href="{{ signed_agreement.get_absolute_url }}">{{ signed_agreement }}</a></li>
+    <li>User:
+      {% if audit_result.user %}
+        <a href="{{ audit_result.user.get_absolute_url }}">{{ audit_result.user.name }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
+    <li>AnVIL email:
+      {% if audit_result.member %}
+        <a href="{{ audit_result.member.get_absolute_url }}">{{ audit_result.member }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </li>
   </ul>
 </div>
 
 <h2>Audit results</h2>
 
-{% include "dbgap/snippets/audit_explanation.html" %}
+{% include "cdsa/snippets/accessor_audit_explanation.html" %}
 
 <div class="card container-fluid mt-3 mb-3">
   <div class="card-body">

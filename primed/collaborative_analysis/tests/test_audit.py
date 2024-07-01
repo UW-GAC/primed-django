@@ -6,7 +6,7 @@ from anvil_consortium_manager.tests.factories import (
     WorkspaceAuthorizationDomainFactory,
     WorkspaceFactory,
 )
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from primed.cdsa.tests.factories import CDSAWorkspaceFactory
@@ -845,7 +845,22 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
     def test_ignores_primed_admins_group(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         # Add a group to the auth domain.
-        group = ManagedGroupFactory.create(name="PRIMED_CC_ADMINS")
+        group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.first(),
+            child_group=group,
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="FOOBAR")
+    def test_ignores_primed_admins_group_different_setting(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create(name="FOOBAR")
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.first(),
             child_group=group,

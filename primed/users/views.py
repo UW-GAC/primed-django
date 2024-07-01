@@ -7,6 +7,9 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, FormView, RedirectView, UpdateView
 
+from primed.cdsa.models import SignedAgreement
+from primed.dbgap.models import dbGaPApplication
+
 from .forms import UserLookupForm
 
 User = get_user_model()
@@ -16,6 +19,16 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     model = User
     slug_field = "username"
     slug_url_kwarg = "username"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dbgap_applications"] = dbGaPApplication.objects.filter(
+            Q(principal_investigator=self.object) | Q(collaborators=self.object)
+        ).distinct()
+        context["signed_agreements"] = SignedAgreement.objects.filter(
+            Q(representative=self.object) | Q(accessors=self.object) | Q(dataaffiliateagreement__uploaders=self.object)
+        ).distinct()
+        return context
 
 
 user_detail_view = UserDetailView.as_view()

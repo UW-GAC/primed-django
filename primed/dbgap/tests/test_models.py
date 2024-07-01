@@ -589,6 +589,14 @@ class dbGaPApplicationTest(TestCase):
         application = factories.dbGaPApplicationFactory.create()
         self.assertIsInstance(application.get_dbgap_dar_json_url(), str)
 
+    def test_can_add_collaborators(self):
+        """Saving a model with collaborators set is valid."""
+        collaborators = UserFactory.create_batch(2)
+        instance = factories.dbGaPApplicationFactory.create()
+        instance.collaborators.add(*collaborators)
+        self.assertIn(collaborators[0], instance.collaborators.all())
+        self.assertIn(collaborators[1], instance.collaborators.all())
+
 
 class dbGaPDataAccessSnapshotTest(TestCase):
     """Tests for the dbGaPApplication model."""
@@ -1128,7 +1136,7 @@ class dbGaPDataAccessRequestTest(TestCase):
         obj = factories.dbGaPDataAccessRequestFactory.create()
         instance = factories.dbGaPDataAccessRequestFactory.build(
             dbgap_data_access_snapshot=obj.dbgap_data_access_snapshot,
-            dbgap_phs=fake.random_int(),
+            dbgap_phs=fake.random_int(min=1),
             dbgap_dar_id=obj.dbgap_dar_id,
         )
         with self.assertRaises(ValidationError) as e:

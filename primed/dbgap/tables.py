@@ -218,7 +218,13 @@ class dbGaPDataAccessRequestTable(tables.Table):
     )
     dbgap_dar_id = tables.columns.Column(
         verbose_name="DAR",
-        linkify=("dbgap:dars:history", {"dbgap_dar_id": tables.A("dbgap_dar_id")}),
+        linkify=(
+            "dbgap:dars:history",
+            {
+                "dbgap_project_id": tables.A("dbgap_data_access_snapshot__dbgap_application__dbgap_project_id"),
+                "dbgap_dar_id": tables.A("dbgap_dar_id"),
+            },
+        ),
     )
     dbgap_dac = tables.columns.Column(verbose_name="DAC")
     dbgap_accession = dbGaPAccessionColumn(
