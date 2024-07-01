@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.views.generic import CreateView, DetailView, TemplateView
+from django_filters.views import FilterView
 from django_tables2 import MultiTableMixin, SingleTableMixin, SingleTableView
 
 from primed.cdsa.models import DataAffiliateAgreement, MemberAgreement
@@ -34,7 +35,7 @@ from primed.miscellaneous_workspaces.tables import (
 )
 from primed.users.tables import UserTable
 
-from . import helpers, models, tables
+from . import filters, helpers, models, tables
 
 User = get_user_model()
 
@@ -77,11 +78,15 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
             )
 
 
-class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView):
+class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView, FilterView, autocomplete.Select2QuerySetView):
     """View to show a list of `Study`s."""
 
     model = models.Study
     table_class = tables.StudyTable
+    template_name = "primed_anvil/study_list.html"
+
+    filterset_class = filters.StudyListFilter
+    queryset = models.Study.objects.order_by("short_name")
 
 
 class StudyCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMessageMixin, CreateView):

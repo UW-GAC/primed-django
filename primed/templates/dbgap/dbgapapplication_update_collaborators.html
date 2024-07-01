@@ -1,0 +1,32 @@
+{% extends "anvil_consortium_manager/__object_detail.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update dbGaP collaborators{% endblock %}
+
+
+{% block panel %}
+<dl class="row">
+  <dt class="col-sm-2">dbGaP PI</dt> <dd class="col-sm-9">
+    <a href="{{ object.principal_investigator.get_absolute_url }}">
+      {{ object.principal_investigator.name }}
+    </a>
+  </dd>
+  <dt class="col-sm-2">dbGaP Project ID</dt> <dd class="col-sm-9">{{ object.dbgap_project_id }}</dd>
+</dl>
+{% endblock panel %}
+
+{% block after_panel %}
+  <form method="post">
+
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button type="submit" class="btn btn-success">Save dbGaP application</button>
+  </form>
+
+{% endblock after_panel %}
+
+
+{% block inline_javascript %}
+  {{ form.media }}
+{% endblock inline_javascript %}

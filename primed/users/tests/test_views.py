@@ -329,6 +329,19 @@ class UserDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No CDSAs")
 
+    def test_cdsa_representative(self):
+        agreement = MemberAgreementFactory.create(signed_agreement__representative=self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Representative", count=1)
+        self.assertNotContains(response, "No CDSAs")
+        self.assertContains(response, agreement.signed_agreement.cc_id)
+        self.assertContains(response, agreement.get_absolute_url())
+        self.assertIn("signed_agreements", response.context)
+        self.assertEqual(len(response.context["signed_agreements"]), 1)
+        self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
+
     def test_cdsa_accessor_on_one_member_agreement(self):
         agreement = MemberAgreementFactory.create()
         agreement.signed_agreement.accessors.add(self.user)
