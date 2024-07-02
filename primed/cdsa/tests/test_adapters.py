@@ -40,7 +40,7 @@ class CDSAWorkspaceAdapterTest(AnVILAPIMockTestMixin, TestCase):
             status=204,
         )
         # Run the adapter method.
-        self.adapter.before_workspace_create(workspace)
+        self.adapter.before_anvil_create(workspace)
         self.assertEqual(workspace.authorization_domains.count(), 1)
         auth_domain = workspace.authorization_domains.first()
         self.assertEqual(auth_domain.name, "AUTH_foo")
@@ -70,7 +70,7 @@ class CDSAWorkspaceAdapterTest(AnVILAPIMockTestMixin, TestCase):
             status=204,
         )
         # Run the adapter method.
-        self.adapter.before_workspace_create(workspace)
+        self.adapter.before_anvil_create(workspace)
         self.assertEqual(workspace.authorization_domains.count(), 1)
         auth_domain = workspace.authorization_domains.first()
         self.assertEqual(auth_domain.name, "AUTH_foo")
@@ -82,7 +82,7 @@ class CDSAWorkspaceAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.parent_group, auth_domain)
         self.assertEqual(membership.child_group, admins_group)
 
-    def test_after_workspace_create(self):
+    def test_after_anvil_create(self):
         # Create a Workspace instead of CDSAWorkspace to skip factory auth domain behavior.
         cdsa_workspace = factories.CDSAWorkspaceFactory.create(
             workspace__billing_project__name="bar", workspace__name="foo"
@@ -104,7 +104,7 @@ class CDSAWorkspaceAdapterTest(AnVILAPIMockTestMixin, TestCase):
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         # Run the adapter method.
-        self.adapter.after_workspace_create(cdsa_workspace.workspace)
+        self.adapter.after_anvil_create(cdsa_workspace.workspace)
         # Check for WorkspaceGroupSharing.
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()
@@ -114,7 +114,7 @@ class CDSAWorkspaceAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertTrue(sharing.can_compute)
 
     @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
-    def test_after_workspace_create_different_admins_group(self):
+    def test_after_anvil_create_different_admins_group(self):
         admins_group = ManagedGroupFactory.create(name="foobar")
         cdsa_workspace = factories.CDSAWorkspaceFactory.create(
             workspace__billing_project__name="bar", workspace__name="foo"
@@ -136,7 +136,7 @@ class CDSAWorkspaceAdapterTest(AnVILAPIMockTestMixin, TestCase):
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         # Run the adapter method.
-        self.adapter.after_workspace_create(cdsa_workspace.workspace)
+        self.adapter.after_anvil_create(cdsa_workspace.workspace)
         # Check for WorkspaceGroupSharing.
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()

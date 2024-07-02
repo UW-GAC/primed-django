@@ -34,7 +34,7 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
 
         return extra_context
 
-    def before_workspace_create(self, workspace):
+    def before_anvil_create(self, workspace):
         # Create the auth domain for the workspace.
         """Add authorization domain to workspace."""
         auth_domain_name = "AUTH_" + workspace.name
@@ -54,7 +54,7 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
         )
         membership.anvil_create()
 
-    def after_workspace_create(self, workspace):
+    def after_anvil_create(self, workspace):
         # Share the workspace with the ADMINs group as an owner.
         admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
         sharing = WorkspaceGroupSharing.objects.create(
