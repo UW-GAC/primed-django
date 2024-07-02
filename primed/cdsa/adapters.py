@@ -55,7 +55,7 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
         membership.anvil_create()
 
     def after_workspace_create(self, workspace):
-        # Add the ADMINs group as an owner of the workspace.
+        # Share the workspace with the ADMINs group as an owner.
         admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
         sharing = WorkspaceGroupSharing.objects.create(
             workspace=workspace,
