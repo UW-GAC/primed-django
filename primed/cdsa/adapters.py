@@ -32,3 +32,17 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
             extra_context["primary_cdsa"] = None
 
         return extra_context
+
+    def before_workspace_create(self, workspace):
+        # Create the auth domain for the workspace.
+        # Add the ADMINs group as an admin of the auth domain.
+        pass
+
+    def after_workspace_create(self, workspace):
+        # Add the ADMINs group as an owner of the workspace.
+        pass
+
+    def after_workspace_import(self, workspace):
+        # Add the ADMINs group as an owner of the workspace, if it's not already.
+        # Make sure to test for the case where it is already an owner of the workspace.
+        pass
