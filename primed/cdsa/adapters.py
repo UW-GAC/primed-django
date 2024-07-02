@@ -1,8 +1,9 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
-from anvil_consortium_manager.forms import WorkspaceForm
-from anvil_consortium_manager.models import Workspace
+from anvil_consortium_manager.models import GroupGroupMembership, ManagedGroup, Workspace, WorkspaceGroupSharing
+from django.conf import settings
 
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
+from primed.primed_anvil.forms import WorkspaceAuthDomainDisabledForm
 
 from . import forms, models, tables
 
@@ -15,7 +16,7 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
     description = "Workspaces containing data from the Consortium Data Sharing Agreement"
     list_table_class_staff_view = tables.CDSAWorkspaceStaffTable
     list_table_class_view = tables.CDSAWorkspaceUserTable
-    workspace_form_class = WorkspaceForm
+    workspace_form_class = WorkspaceAuthDomainDisabledForm
     workspace_data_model = models.CDSAWorkspace
     workspace_data_form_class = forms.CDSAWorkspaceForm
     workspace_detail_template_name = "cdsa/cdsaworkspace_detail.html"
@@ -35,14 +36,31 @@ class CDSAWorkspaceAdapter(BaseWorkspaceAdapter):
 
     def before_workspace_create(self, workspace):
         # Create the auth domain for the workspace.
+        """Add authorization domain to workspace."""
+        auth_domain_name = "AUTH_" + workspace.name
+        auth_domain = ManagedGroup.objects.create(
+            name=auth_domain_name,
+            is_managed_by_app=True,
+            email=auth_domain_name + "@firecloud.org",
+        )
+        workspace.authorization_domains.add(auth_domain)
+        auth_domain.anvil_create()
         # Add the ADMINs group as an admin of the auth domain.
-        pass
+        admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        membership = GroupGroupMembership.objects.create(
+            parent_group=auth_domain,
+            child_group=admins_group,
+            role=GroupGroupMembership.ADMIN,
+        )
+        membership.anvil_create()
 
     def after_workspace_create(self, workspace):
         # Add the ADMINs group as an owner of the workspace.
-        pass
-
-    def after_workspace_import(self, workspace):
-        # Add the ADMINs group as an owner of the workspace, if it's not already.
-        # Make sure to test for the case where it is already an owner of the workspace.
-        pass
+        admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        sharing = WorkspaceGroupSharing.objects.create(
+            workspace=workspace,
+            group=admins_group,
+            access=WorkspaceGroupSharing.OWNER,
+            can_compute=True,
+        )
+        sharing.anvil_create_or_update()
