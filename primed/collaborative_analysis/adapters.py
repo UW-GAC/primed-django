@@ -1,10 +1,16 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 
+from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapter, WorkspaceAuthDomainAdapter
+
 from . import forms, models, tables
 
 
-class CollaborativeAnalysisWorkspaceAdapter(BaseWorkspaceAdapter):
+class CollaborativeAnalysisWorkspaceAdapter(
+    WorkspaceAuthDomainAdapter,
+    WorkspaceAdminSharingAdapter,
+    BaseWorkspaceAdapter,
+):
     """Adapter for CollaborativeAnalysisWorkspace."""
 
     type = "collab_analysis"
