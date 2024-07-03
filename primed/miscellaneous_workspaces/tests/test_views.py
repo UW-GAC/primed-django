@@ -1,12 +1,14 @@
 """Tests for views related to the `workspaces` app."""
 
 import responses
-from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
+from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace, WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     BillingProjectFactory,
+    ManagedGroupFactory,
     WorkspaceFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import TestCase
@@ -59,6 +61,7 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.requester = UserFactory.create()
         self.workspace_type = "simulated_data"
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -79,6 +82,24 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -100,6 +121,9 @@ class SimulatedDataWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.SimulatedDataWorkspace.objects.count(), 1)
         new_workspace_data = models.SimulatedDataWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
 
 class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -250,6 +274,7 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.requester = UserFactory.create()
         self.workspace_type = "devel"
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -270,6 +295,24 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -291,6 +334,9 @@ class ConsortiumDevelWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ConsortiumDevelWorkspace.objects.count(), 1)
         new_workspace_data = models.ConsortiumDevelWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
 
 class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -441,6 +487,7 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.requester = UserFactory.create()
         self.workspace_type = "resource"
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -461,6 +508,24 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -482,6 +547,9 @@ class ResourceWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.ResourceWorkspace.objects.count(), 1)
         new_workspace_data = models.ResourceWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
 
 class ResourceWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -631,6 +699,7 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
         )
         self.workspace_type = "template"
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -651,6 +720,24 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -673,6 +760,9 @@ class TemplateWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_workspace_data = models.TemplateWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         self.assertEqual(new_workspace_data.intended_usage, "Test usage")
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
 
 class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -828,6 +918,7 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.workspace_type = "open_access"
         self.requester = UserFactory.create()
         self.study = StudyFactory.create()
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -848,6 +939,24 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -875,6 +984,9 @@ class OpenAccessWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.studies.count(), 1)
         self.assertIn(self.study, new_workspace_data.studies.all())
         self.assertEqual(new_workspace_data.data_source, "test source")
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
 
 class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -1051,6 +1163,7 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.requester = UserFactory.create()
         self.target_workspace = WorkspaceFactory.create()
         self.workspace_type = "data_prep"
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1071,6 +1184,24 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -1093,6 +1224,9 @@ class DataPrepWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.DataPrepWorkspace.objects.count(), 1)
         new_workspace_data = models.DataPrepWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
 
 class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
