@@ -48,7 +48,10 @@ class WorkspaceAuthDomainAdapterMixin:
         workspace.authorization_domains.add(auth_domain)
         auth_domain.anvil_create()
         # Add the ADMINs group as an admin of the auth domain.
-        admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
         membership = GroupGroupMembership.objects.create(
             parent_group=auth_domain,
             child_group=admins_group,
@@ -63,7 +66,10 @@ class WorkspaceAdminSharingAdapterMixin:
     def after_anvil_create(self, workspace):
         super().after_anvil_create(workspace)
         # Share the workspace with the ADMINs group as an owner.
-        admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        try:
+            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            return
         sharing = WorkspaceGroupSharing.objects.create(
             workspace=workspace,
             group=admins_group,
