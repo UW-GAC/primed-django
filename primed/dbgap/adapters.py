@@ -3,11 +3,12 @@ from anvil_consortium_manager.forms import WorkspaceForm
 from anvil_consortium_manager.models import Workspace
 
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
+from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapter, WorkspaceAuthDomainAdapter
 
 from . import forms, models, tables
 
 
-class dbGaPWorkspaceAdapter(BaseWorkspaceAdapter):
+class dbGaPWorkspaceAdapter(WorkspaceAuthDomainAdapter, WorkspaceAdminSharingAdapter, BaseWorkspaceAdapter):
     """Adapter for dbGaPWorkspaces."""
 
     type = "dbgap"
