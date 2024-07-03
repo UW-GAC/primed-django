@@ -1,14 +1,14 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 
-from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapter, WorkspaceAuthDomainAdapter
+from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapterMixin, WorkspaceAuthDomainAdapterMixin
 from primed.primed_anvil.forms import WorkspaceAuthDomainDisabledForm
 
 from . import forms, models, tables
 
 
 class CollaborativeAnalysisWorkspaceAdapter(
-    WorkspaceAuthDomainAdapter,
-    WorkspaceAdminSharingAdapter,
+    WorkspaceAuthDomainAdapterMixin,
+    WorkspaceAdminSharingAdapterMixin,
     BaseWorkspaceAdapter,
 ):
     """Adapter for CollaborativeAnalysisWorkspace."""

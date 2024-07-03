@@ -32,7 +32,7 @@ class AccountAdapter(BaseAccountAdapter):
         return "{} ({})".format(name, account.email)
 
 
-class WorkspaceAuthDomainAdapter:
+class WorkspaceAuthDomainAdapterMixin:
     """Helper class to add auth domains to workspaces."""
 
     def before_anvil_create(self, workspace):
@@ -57,7 +57,7 @@ class WorkspaceAuthDomainAdapter:
         membership.anvil_create()
 
 
-class WorkspaceAdminSharingAdapter:
+class WorkspaceAdminSharingAdapterMixin:
     """Helper class to share workspaces with the PRIMED_CC_ADMINs group."""
 
     def after_anvil_create(self, workspace):
