@@ -1,7 +1,7 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
-from anvil_consortium_manager.forms import WorkspaceForm
 
 from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapter, WorkspaceAuthDomainAdapter
+from primed.primed_anvil.forms import WorkspaceAuthDomainDisabledForm
 
 from . import forms, models, tables
 
@@ -18,7 +18,7 @@ class CollaborativeAnalysisWorkspaceAdapter(
     description = "Workspaces used for collaborative analyses"
     list_table_class_staff_view = tables.CollaborativeAnalysisWorkspaceStaffTable
     list_table_class_view = tables.CollaborativeAnalysisWorkspaceUserTable
-    workspace_form_class = WorkspaceForm
+    workspace_form_class = WorkspaceAuthDomainDisabledForm
     workspace_data_model = models.CollaborativeAnalysisWorkspace
     workspace_data_form_class = forms.CollaborativeAnalysisWorkspaceForm
     workspace_detail_template_name = "collaborative_analysis/collaborativeanalysisworkspace_detail.html"
