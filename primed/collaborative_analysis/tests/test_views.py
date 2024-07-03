@@ -8,6 +8,7 @@ from anvil_consortium_manager.models import (
     GroupAccountMembership,
     GroupGroupMembership,
     Workspace,
+    WorkspaceGroupSharing,
 )
 from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.factories import (
@@ -186,6 +187,8 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.custodian = UserFactory.create()
         self.source_workspace = dbGaPWorkspaceFactory.create().workspace
         self.analyst_group = ManagedGroupFactory.create()
+        # Create the admins group.
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -194,11 +197,25 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     def test_creates_workspace(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         billing_project = BillingProjectFactory.create(name="test-billing-project")
+        # url = self.api_client.rawls_entry_point + "/api/workspaces"
+        # json_data = {
+        #     "namespace": "test-billing-project",
+        #     "name": "test-workspace",
+        #     "attributes": {},
+        # }
+        # self.anvil_response_mock.add(
+        #     responses.POST,
+        #     url,
+        #     status=self.api_success_code,
+        #     match=[responses.matchers.json_params_matcher(json_data)],
+        # )
+        # API response for workspace creation.
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
+            "authorizationDomain": [{"membersGroupName": "AUTH_test-workspace"}],
         }
         self.anvil_response_mock.add(
             responses.POST,
@@ -206,6 +223,37 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for auth domain ManagedGroup creation.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_test-workspace",
+            status=self.api_success_code,
+        )
+        # API response for auth domain PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/AUTH_test-workspace/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -230,6 +278,24 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(models.CollaborativeAnalysisWorkspace.objects.count(), 1)
         new_workspace_data = models.CollaborativeAnalysisWorkspace.objects.latest("pk")
         self.assertEqual(new_workspace_data.workspace, new_workspace)
+        # Check that auth domain exists.
+        self.assertEqual(new_workspace.authorization_domains.count(), 1)
+        auth_domain = new_workspace.authorization_domains.first()
+        self.assertEqual(auth_domain.name, "AUTH_test-workspace")
+        self.assertTrue(auth_domain.is_managed_by_app)
+        self.assertEqual(auth_domain.email, "AUTH_test-workspace@firecloud.org")
+        # Check that auth domain admin is correct.
+        membership = GroupGroupMembership.objects.get(
+            parent_group=auth_domain, child_group__name="TEST_PRIMED_CC_ADMINS"
+        )
+        self.assertEqual(membership.role, membership.ADMIN)
+        # Check that workspace sharing is correct.
+        sharing = WorkspaceGroupSharing.objects.get(
+            workspace=new_workspace,
+            group__name="TEST_PRIMED_CC_ADMINS",
+        )
+        self.assertEqual(sharing.access, sharing.OWNER)
+        self.assertEqual(sharing.can_compute, True)
 
 
 class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):

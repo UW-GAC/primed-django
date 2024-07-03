@@ -11,6 +11,7 @@ from anvil_consortium_manager.models import (
     GroupGroupMembership,
     ManagedGroup,
     Workspace,
+    WorkspaceGroupSharing,
 )
 from anvil_consortium_manager.tests.api_factories import ErrorResponseFactory
 from anvil_consortium_manager.tests.factories import (
@@ -947,6 +948,8 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.requester = UserFactory.create()
         self.workspace_type = "dbgap"
+        # Create the admins group.
+        self.admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -956,17 +959,19 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def test_creates_upload_workspace_without_duos(self):
+    def test_creates_workspace_without_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         # Create an extra that won't be specified.
         DataUseModifierFactory.create()
         billing_project = BillingProjectFactory.create(name="test-billing-project")
+        # API response for workspace creation.
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
+            "authorizationDomain": [{"membersGroupName": "AUTH_test-workspace"}],
         }
         self.anvil_response_mock.add(
             responses.POST,
@@ -974,6 +979,37 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for auth domain ManagedGroup creation.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_test-workspace",
+            status=self.api_success_code,
+        )
+        # API response for auth domain PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/AUTH_test-workspace/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
@@ -1011,8 +1047,20 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.data_use_limitations, "test limitations")
         self.assertEqual(new_workspace_data.acknowledgments, "test acknowledgments")
         self.assertEqual(new_workspace_data.requested_by, self.requester)
+        # Check that an auth domain was created.
+        self.assertEqual(new_workspace.authorization_domains.count(), 1)
+        self.assertEqual(new_workspace.authorization_domains.first().name, "AUTH_test-workspace")
+        # Check that the PRIMED_ADMINS group is an admin of the auth domain.
+        membership = GroupGroupMembership.objects.get(
+            parent_group=new_workspace.authorization_domains.first(),
+            child_group=self.admins_group,
+        )
+        self.assertEqual(membership.role, membership.ADMIN)
+        # Check that the workspace was shared with the admins group.
+        sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
+        self.assertEqual(sharing.access, sharing.OWNER)
 
-    def test_creates_upload_workspace_with_duos(self):
+    def test_creates_workspace_with_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
         dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
         data_use_permission = DataUsePermissionFactory.create()
@@ -1021,11 +1069,13 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Create an extra that won't be specified.
         DataUseModifierFactory.create()
         billing_project = BillingProjectFactory.create(name="test-billing-project")
+        # API response for workspace creation.
         url = self.api_client.rawls_entry_point + "/api/workspaces"
         json_data = {
             "namespace": "test-billing-project",
             "name": "test-workspace",
             "attributes": {},
+            "authorizationDomain": [{"membersGroupName": "AUTH_test-workspace"}],
         }
         self.anvil_response_mock.add(
             responses.POST,
@@ -1033,6 +1083,37 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=self.api_success_code,
             match=[responses.matchers.json_params_matcher(json_data)],
         )
+        # API response for auth domain ManagedGroup creation.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_test-workspace",
+            status=self.api_success_code,
+        )
+        # API response for auth domain PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/AUTH_test-workspace/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
