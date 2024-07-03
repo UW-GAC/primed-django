@@ -1,6 +1,9 @@
-from anvil_consortium_manager.models import Account
-from anvil_consortium_manager.tests.factories import AccountFactory
-from django.test import TestCase
+import responses
+from anvil_consortium_manager.adapters.default import DefaultWorkspaceAdapter
+from anvil_consortium_manager.models import Account, GroupGroupMembership, WorkspaceGroupSharing
+from anvil_consortium_manager.tests.factories import AccountFactory, ManagedGroupFactory, WorkspaceFactory
+from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from django.test import TestCase, override_settings
 
 from primed.users.tests.factories import UserFactory
 
@@ -57,3 +60,172 @@ class AccountAdapterTest(TestCase):
         self.assertEqual(len(queryset), 1)
         self.assertIn(account_1, queryset)
         self.assertNotIn(account_2, queryset)
+
+
+class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+
+        class TestAdapter(adapters.WorkspaceAuthDomainAdapterMixin, DefaultWorkspaceAdapter):
+            pass
+
+        self.adapter = TestAdapter()
+
+    def test_before_anvil_create(self):
+        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        workspace = WorkspaceFactory.create(name="foo", workspace_type=self.adapter.get_type())
+        # API response for auth domain ManagedGroup creation.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_foo",
+            status=201,
+        )
+        # API response for auth domain PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_foo/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        # Run the adapter method.
+        self.adapter.before_anvil_create(workspace)
+        self.assertEqual(workspace.authorization_domains.count(), 1)
+        auth_domain = workspace.authorization_domains.first()
+        self.assertEqual(auth_domain.name, "AUTH_foo")
+        self.assertTrue(auth_domain.is_managed_by_app)
+        self.assertEqual(auth_domain.email, "AUTH_foo@firecloud.org")
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, auth_domain)
+        self.assertEqual(membership.child_group, admins_group)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
+    def test_before_anvil_create_different_cc_admins_name(self):
+        admins_group = ManagedGroupFactory.create(name="foobar")
+        # Create a Workspace instead of CDSAWorkspace to skip factory auth domain behavior.
+        workspace = WorkspaceFactory.create(name="foo", workspace_type=self.adapter.get_type())
+        # API response for auth domain ManagedGroup creation.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_foo",
+            status=201,
+        )
+        # API response for auth domain PRIMED_ADMINS membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_foo/admin/foobar@firecloud.org",
+            status=204,
+        )
+        # Run the adapter method.
+        self.adapter.before_anvil_create(workspace)
+        self.assertEqual(workspace.authorization_domains.count(), 1)
+        auth_domain = workspace.authorization_domains.first()
+        self.assertEqual(auth_domain.name, "AUTH_foo")
+        self.assertTrue(auth_domain.is_managed_by_app)
+        self.assertEqual(auth_domain.email, "AUTH_foo@firecloud.org")
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupGroupMembership.objects.count(), 1)
+        membership = GroupGroupMembership.objects.first()
+        self.assertEqual(membership.parent_group, auth_domain)
+        self.assertEqual(membership.child_group, admins_group)
+
+    def test_before_anvil_create_admins_group_does_not_exist(self):
+        """If the admins group does not exist, the workspace is not shared."""
+        workspace = WorkspaceFactory.create(name="foo", workspace_type=self.adapter.get_type())
+        # API response for auth domain ManagedGroup creation.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/AUTH_foo",
+            status=201,
+        )
+        # Run the adapter method.
+        self.adapter.before_anvil_create(workspace)
+        self.assertEqual(workspace.authorization_domains.count(), 1)
+        auth_domain = workspace.authorization_domains.first()
+        self.assertEqual(auth_domain.name, "AUTH_foo")
+        self.assertTrue(auth_domain.is_managed_by_app)
+        self.assertEqual(auth_domain.email, "AUTH_foo@firecloud.org")
+        # No GroupGroupMembership objects were created.
+        self.assertEqual(GroupGroupMembership.objects.count(), 0)
+
+
+class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+
+        class TestAdapter(adapters.WorkspaceAdminSharingAdapterMixin, DefaultWorkspaceAdapter):
+            pass
+
+        self.adapter = TestAdapter()
+
+    def test_after_anvil_create(self):
+        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
+    def test_after_anvil_create_different_admins_group(self):
+        admins_group = ManagedGroupFactory.create(name="foobar")
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "foobar@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
+        self.assertTrue(sharing.can_compute)
+
+    def test_after_anvil_create_no_admins_group(self):
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(workspace)
+        # No WorkspaceGroupSharing objects were created.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
