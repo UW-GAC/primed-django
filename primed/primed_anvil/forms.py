@@ -13,7 +13,8 @@ class WorkspaceAuthDomainDisabledForm(WorkspaceForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["authorization_domains"].disabled = True
-        self.fields["authorization_domains"].help_text = (
-            "An authorization domain will be automatically created " "using the name of the workspace."
-        )
+        if "authorization_domains" in self.fields:
+            self.fields["authorization_domains"].disabled = True
+            self.fields["authorization_domains"].help_text = (
+                "An authorization domain will be automatically created " "using the name of the workspace."
+            )
