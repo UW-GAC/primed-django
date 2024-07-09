@@ -413,6 +413,59 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.workspace, new_workspace)
 
 
+class CollaborativeAnalysisWorkspaceUpdateTest(AnVILAPIMockTestMixin, TestCase):
+    """Tests of the WorkspaceUpdate view from ACM with this app's CollaborativeAnalysisWorkspace model."""
+
+    api_success_code = 201
+
+    def setUp(self):
+        """Set up test class."""
+        # The superclass uses the responses package to mock API responses.
+        super().setUp()
+        # Create a user with both view and edit permissions.
+        self.user = User.objects.create_user(username="test", password="test")
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
+        )
+        self.user.user_permissions.add(
+            Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME)
+        )
+        self.workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a source workspace.
+        self.workspace.source_workspaces.add(dbGaPWorkspaceFactory.create().workspace)
+
+    def get_url(self, *args):
+        """Get the url for the view being tested."""
+        return reverse("anvil_consortium_manager:workspaces:update", args=args)
+
+    def test_updates_workspace_data(self):
+        """Posting valid data to the form creates a workspace data object when using a custom adapter."""
+        # Make the post request
+        self.client.force_login(self.user)
+        response = self.client.post(
+            self.get_url(
+                self.workspace.workspace.billing_project.name,
+                self.workspace.workspace.name,
+            ),
+            {
+                # Workspace data form.
+                "workspacedata-TOTAL_FORMS": 1,
+                "workspacedata-INITIAL_FORMS": 1,
+                "workspacedata-MIN_NUM_FORMS": 1,
+                "workspacedata-MAX_NUM_FORMS": 1,
+                "workspacedata-0-id": self.workspace.pk,
+                "workspacedata-0-workspace": self.workspace.workspace.pk,
+                "workspacedata-0-custodian": self.workspace.custodian.pk,
+                "workspacedata-0-source_workspaces": self.workspace.source_workspaces.values_list("pk", flat=True),
+                "workspacedata-0-purpose": "updated purpose",
+                "workspacedata-0-analyst_group": self.workspace.analyst_group.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.workspace.refresh_from_db()
+        self.assertEqual(self.workspace.purpose, "updated purpose")
+
+
 class WorkspaceAuditTest(TestCase):
     """Tests for the CollaborativeAnalysisWorkspaceAuditTest view."""
 
