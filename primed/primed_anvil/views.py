@@ -5,7 +5,7 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffViewRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
+from anvil_consortium_manager.models import Account, AnVILProjectManagerAccess, Workspace
 from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -128,6 +128,7 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
         UserTable,
         dbGaPApplicationTable,
         MemberAgreementTable,
+        tables.AccountTable,
     ]
 
     # def get_table(self):
@@ -136,7 +137,11 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
         user_qs = User.objects.filter(study_sites=self.object)
         dbgap_qs = dbGaPApplication.objects.filter(principal_investigator__study_sites=self.object)
         cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
-        return [user_qs, dbgap_qs, cdsa_qs]
+        if self.object.member_group:
+            account_qs = Account.objects.filter(groupaccountmembership__group=self.object.member_group)
+        else:
+            account_qs = Account.objects.none()
+        return [user_qs, dbgap_qs, cdsa_qs, account_qs]
 
 
 class StudySiteList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
