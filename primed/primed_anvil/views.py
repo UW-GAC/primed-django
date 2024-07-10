@@ -33,7 +33,6 @@ from primed.miscellaneous_workspaces.tables import (
     OpenAccessWorkspaceStaffTable,
     OpenAccessWorkspaceUserTable,
 )
-from primed.users.tables import UserTable
 
 from . import filters, helpers, models, tables
 
@@ -127,6 +126,10 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
 
     def get_tables(self):
         user_qs = User.objects.filter(study_sites=self.object)
+        if self.object.member_group:
+            user_table = tables.UserAccountSingleGroupMembershipTable(user_qs, managed_group=self.object.member_group)
+        else:
+            user_table = tables.UserAccountTable(user_qs, exclude="study_sites")
         dbgap_qs = dbGaPApplication.objects.filter(principal_investigator__study_sites=self.object)
         cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
         if self.object.member_group:
@@ -134,10 +137,10 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
         else:
             account_qs = Account.objects.none()
         return [
-            UserTable(user_qs),
+            user_table,
             dbGaPApplicationTable(dbgap_qs),
             MemberAgreementTable(cdsa_qs),
-            tables.AccountTable(account_qs, exclude=("number_groups",)),
+            tables.AccountTable(account_qs, exclude=("number_groups")),
         ]
 
 

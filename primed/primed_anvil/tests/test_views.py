@@ -36,7 +36,6 @@ from primed.miscellaneous_workspaces.tables import (
 )
 from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
-from primed.users.tables import UserTable
 from primed.users.tests.factories import UserFactory
 
 from .. import filters, models, tables, views
@@ -852,7 +851,7 @@ class StudySiteDetailTest(TestCase):
         response = self.client.get(self.get_url(obj.pk))
         self.assertIn("tables", response.context_data)
         self.assertEqual(len(response.context_data["tables"]), 4)
-        self.assertIsInstance(response.context_data["tables"][0], UserTable)
+        self.assertIsInstance(response.context_data["tables"][0], tables.UserAccountTable)
         self.assertEqual(len(response.context_data["tables"][0].data), 0)
         self.assertIsInstance(response.context_data["tables"][1], dbGaPApplicationTable)
         self.assertEqual(len(response.context_data["tables"][1].data), 0)
@@ -900,6 +899,16 @@ class StudySiteDetailTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(site_cdsa, table.data)
         self.assertNotIn(other_cdsa, table.data)
+
+    def test_site_user_table_when_member_group_is_set(self):
+        """The site user table is the correct class when the member group is set."""
+        member_group = ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertIsInstance(table, tables.UserAccountSingleGroupMembershipTable)
+        self.assertEqual(table.managed_group, member_group)
 
     def test_member_group_table(self):
         member_group = ManagedGroupFactory.create()
