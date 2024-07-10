@@ -124,16 +124,8 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
-    tables = [
-        UserTable,
-        dbGaPApplicationTable,
-        MemberAgreementTable,
-        tables.AccountTable,
-    ]
 
-    # def get_table(self):
-    #     return UserTable(User.objects.filter(study_sites=self.object))
-    def get_tables_data(self):
+    def get_tables(self):
         user_qs = User.objects.filter(study_sites=self.object)
         dbgap_qs = dbGaPApplication.objects.filter(principal_investigator__study_sites=self.object)
         cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
@@ -141,7 +133,12 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
             account_qs = Account.objects.filter(groupaccountmembership__group=self.object.member_group)
         else:
             account_qs = Account.objects.none()
-        return [user_qs, dbgap_qs, cdsa_qs, account_qs]
+        return [
+            UserTable(user_qs),
+            dbGaPApplicationTable(dbgap_qs),
+            MemberAgreementTable(cdsa_qs),
+            tables.AccountTable(account_qs, exclude=("number_groups",)),
+        ]
 
 
 class StudySiteList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):
