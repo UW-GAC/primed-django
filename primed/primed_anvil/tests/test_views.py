@@ -910,6 +910,19 @@ class StudySiteDetailTest(TestCase):
         self.assertIsInstance(table, tables.UserAccountSingleGroupMembershipTable)
         self.assertEqual(table.managed_group, member_group)
 
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.study_sites.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
+
     def test_member_group_table(self):
         member_group = ManagedGroupFactory.create()
         obj = self.model_factory.create(member_group=member_group)

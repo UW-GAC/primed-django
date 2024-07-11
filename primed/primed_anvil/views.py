@@ -125,7 +125,7 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
     model = models.StudySite
 
     def get_tables(self):
-        user_qs = User.objects.filter(study_sites=self.object)
+        user_qs = User.objects.filter(is_active=True, study_sites=self.object)
         if self.object.member_group:
             user_table = tables.UserAccountSingleGroupMembershipTable(user_qs, managed_group=self.object.member_group)
         else:
