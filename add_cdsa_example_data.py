@@ -70,6 +70,7 @@ cdsa_1001 = factories.MemberAgreementFactory.create(
     signed_agreement__version=v10,
     study_site=cc,
 )
+cdsa_1001.signed_agreement.representative.study_sites.add(cc)
 GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1001.signed_agreement.anvil_access_group)
 
 cdsa_1002 = factories.MemberAgreementFactory.create(
@@ -81,6 +82,7 @@ cdsa_1002 = factories.MemberAgreementFactory.create(
     signed_agreement__version=v10,
     study_site=cardinal,
 )
+cdsa_1002.signed_agreement.representative.study_sites.add(cardinal)
 GroupGroupMembershipFactory.create(parent_group=cdsa_group, child_group=cdsa_1002.signed_agreement.anvil_access_group)
 
 cdsa_1003 = factories.MemberAgreementFactory.create(

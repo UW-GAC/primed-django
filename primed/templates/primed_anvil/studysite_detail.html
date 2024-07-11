@@ -6,6 +6,13 @@
   <dl class="row">
     <dt class="col-sm-2">Full name</dt> <dd class="col-sm-10">{{ object.full_name }}</dd>
     <dt class="col-sm-2">Short name</dt> <dd class="col-sm-10">{{ object.short_name }}</dd>
+    <dt class="col-sm-2">Member group</dt> <dd class="col-sm-10">
+      {% if object.member_group %}
+        <a href="{{ object.member_group.get_absolute_url }}">{{ object.member_group }}</a>
+      {% else %}
+        &mdash;
+      {% endif %}
+    </dd>
   </dl>
 {% endblock panel %}
 
@@ -44,9 +51,50 @@
   </div>
 </div>
 
+<h3>Investigators</h3>
 
-  <h3>Study Site Users</h3>
-  <p class='alert alert-warning'>Study site user list only contains those site users who have created an account on this website.</p>
-  {% render_table tables.0 %}
+<div class="my-3">
+  <div class="accordion" id="accordionMembers">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingMembersOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMembersOne" aria-expanded="false" aria-controls="collapseMembersOne">
+          <span class="fa-solid fa-cloud-arrow-down mx-2"></span>
+          View consortium members with data access
+          <span class="badge mx-2 bg-secondary pill"> {{ tables.1.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseMembersOne" class="accordion-collapse collapse" aria-labelledby="headingMembersOne" data-bs-parent="#accordionMembers">
+        <div class="accordion-body">
+          <p>
+            This table shows Accounts in the member group for this Study Site.
+          </p>
+        {% render_table tables.3 %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="my-3">
+  <div class="accordion" id="accordionStudySiteUsers">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingStudySiteUsersOne">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStudySiteUsersOne" aria-expanded="false" aria-controls="collapseStudySiteUsersOne">
+          <span class="fa-solid fa-user mx-2"></span>
+          Study Site members
+          <span class="badge mx-2 bg-secondary pill"> {{ tables.0.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseStudySiteUsersOne" class="accordion-collapse collapse" aria-labelledby="headingStudySiteUsersOne" data-bs-parent="#accordionStudySiteUsers">
+        <div class="accordion-body">
+          <p>
+            This table shows users who are associated with this Study Site.
+          </p>
+        {% render_table tables.0 %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock after_panel %}
