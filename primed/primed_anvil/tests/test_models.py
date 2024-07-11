@@ -1,5 +1,6 @@
 """Tests of models in the `primed_anvil` app."""
 
+from anvil_consortium_manager.tests.factories import ManagedGroupFactory
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -48,6 +49,7 @@ class StudySiteTest(TestCase):
     def test_model_saving(self):
         """Creation using the model constructor and .save() works."""
         instance = models.StudySite(full_name="Test name", short_name="TEST")
+        instance.full_clean()
         instance.save()
         self.assertIsInstance(instance, models.StudySite)
 
@@ -71,6 +73,24 @@ class StudySiteTest(TestCase):
             instance2.full_clean()
         with self.assertRaises(IntegrityError):
             instance2.save()
+
+    def test_can_set_members_group(self):
+        member_group = ManagedGroupFactory.create()
+        instance = models.StudySite(full_name="Test name", short_name="TEST", member_group=member_group)
+        instance.full_clean()
+        instance.save()
+        self.assertIsInstance(instance, models.StudySite)
+
+    def test_same_member_group_different_sites(self):
+        member_group = ManagedGroupFactory.create()
+        factories.StudySiteFactory.create(member_group=member_group)
+        instance = factories.StudySiteFactory.build(member_group=member_group)
+        with self.assertRaises(ValidationError) as e:
+            instance.full_clean()
+        self.assertEqual(len(e.exception.message_dict), 1)
+        self.assertIn("member_group", e.exception.message_dict)
+        self.assertEqual(len(e.exception.message_dict["member_group"]), 1)
+        self.assertIn("Study site with this Member group already exists.", e.exception.message_dict["member_group"][0])
 
 
 class AvailableDataTest(TestCase):
