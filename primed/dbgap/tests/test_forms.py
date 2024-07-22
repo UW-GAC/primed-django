@@ -857,7 +857,9 @@ class dbGaPDataAccessSnapshotFormTest(TestCase):
     def test_dbgap_project_id_does_not_match(self):
         """Form is not valid when the dbgap_project_id does not match."""
         form_data = {
-            "dbgap_dar_data": json.dumps([factories.dbGaPJSONProjectFactory(Project_id=2)]),
+            "dbgap_dar_data": json.dumps(
+                [factories.dbGaPJSONProjectFactory(Project_id=self.dbgap_application.dbgap_project_id + 1)]
+            ),
             "dbgap_application": self.dbgap_application,
         }
         form = self.form_class(data=form_data)
