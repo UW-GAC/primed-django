@@ -1,3 +1,4 @@
+from anvil_consortium_manager.models import ManagedGroup
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
@@ -36,6 +37,15 @@ class StudySite(TimeStampedModel, models.Model):
 
     full_name = models.CharField(max_length=255)
     """The full name of the Study Sites."""
+
+    member_group = models.OneToOneField(
+        ManagedGroup,
+        on_delete=models.PROTECT,
+        help_text="The AnVIL Managed Group associated with this site.",
+        null=True,
+        blank=True,
+        unique=True,
+    )
 
     drupal_node_id = models.IntegerField(blank=True, null=True)
     """Reference node ID for entity in drupal"""

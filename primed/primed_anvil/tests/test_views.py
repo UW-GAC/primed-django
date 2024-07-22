@@ -3,6 +3,7 @@ import json
 from anvil_consortium_manager import models as acm_models
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
+    GroupAccountMembershipFactory,
     ManagedGroupFactory,
     WorkspaceGroupSharingFactory,
 )
@@ -17,13 +18,13 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
-from primed.cdsa.tables import CDSAWorkspaceStaffTable, CDSAWorkspaceUserTable
+from primed.cdsa.tables import CDSAWorkspaceStaffTable, CDSAWorkspaceUserTable, MemberAgreementTable
 from primed.cdsa.tests.factories import (
     CDSAWorkspaceFactory,
     DataAffiliateAgreementFactory,
     MemberAgreementFactory,
 )
-from primed.dbgap.tables import dbGaPWorkspaceStaffTable, dbGaPWorkspaceUserTable
+from primed.dbgap.tables import dbGaPApplicationTable, dbGaPWorkspaceStaffTable, dbGaPWorkspaceUserTable
 from primed.dbgap.tests.factories import (
     dbGaPApplicationFactory,
     dbGaPStudyAccessionFactory,
@@ -843,6 +844,22 @@ class StudySiteDetailTest(TestCase):
         with self.assertRaises(Http404):
             self.get_view()(request, pk=obj.pk + 1)
 
+    def test_table_classes(self):
+        """Table classes are correct."""
+        obj = self.model_factory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertIn("tables", response.context_data)
+        self.assertEqual(len(response.context_data["tables"]), 4)
+        self.assertIsInstance(response.context_data["tables"][0], tables.UserAccountTable)
+        self.assertEqual(len(response.context_data["tables"][0].data), 0)
+        self.assertIsInstance(response.context_data["tables"][1], dbGaPApplicationTable)
+        self.assertEqual(len(response.context_data["tables"][1].data), 0)
+        self.assertIsInstance(response.context_data["tables"][2], MemberAgreementTable)
+        self.assertEqual(len(response.context_data["tables"][2].data), 0)
+        self.assertIsInstance(response.context_data["tables"][3], tables.AccountTable)
+        self.assertEqual(len(response.context_data["tables"][3].data), 0)
+
     def test_site_user_table(self):
         """Contains a table of site users with the correct users."""
         obj = self.model_factory.create()
@@ -882,6 +899,58 @@ class StudySiteDetailTest(TestCase):
         self.assertEqual(len(table.rows), 1)
         self.assertIn(site_cdsa, table.data)
         self.assertNotIn(other_cdsa, table.data)
+
+    def test_site_user_table_when_member_group_is_set(self):
+        """The site user table is the correct class when the member group is set."""
+        member_group = ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertIsInstance(table, tables.UserAccountSingleGroupMembershipTable)
+        self.assertEqual(table.managed_group, member_group)
+
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.study_sites.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
+
+    def test_member_group_table(self):
+        member_group = ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        account = AccountFactory.create(verified=True)
+        GroupAccountMembershipFactory.create(account=account, group=member_group)
+        other_account = AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][3]
+        self.assertEqual(len(table.rows), 1)
+        self.assertIn(account, table.data)
+        self.assertNotIn(other_account, table.data)
+
+    def test_member_table_group_not_set(self):
+        obj = self.model_factory.create()
+        AccountFactory.create(verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][3]
+        self.assertEqual(len(table.rows), 0)
+
+    def test_link_to_member_group(self):
+        """Response includes a link to the member group if it exists."""
+        member_group = ManagedGroupFactory.create()
+        obj = self.model_factory.create(member_group=member_group)
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        self.assertContains(response, member_group.get_absolute_url())
 
 
 class StudySiteListTest(TestCase):

@@ -5,7 +5,7 @@ from anvil_consortium_manager.auth import (
     AnVILConsortiumManagerStaffViewRequired,
     AnVILConsortiumManagerViewRequired,
 )
-from anvil_consortium_manager.models import AnVILProjectManagerAccess, Workspace
+from anvil_consortium_manager.models import Account, AnVILProjectManagerAccess, Workspace
 from dal import autocomplete
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -33,7 +33,6 @@ from primed.miscellaneous_workspaces.tables import (
     OpenAccessWorkspaceStaffTable,
     OpenAccessWorkspaceUserTable,
 )
-from primed.users.tables import UserTable
 
 from . import filters, helpers, models, tables
 
@@ -124,19 +123,25 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
     """View to show details about a `StudySite`."""
 
     model = models.StudySite
-    tables = [
-        UserTable,
-        dbGaPApplicationTable,
-        MemberAgreementTable,
-    ]
 
-    # def get_table(self):
-    #     return UserTable(User.objects.filter(study_sites=self.object))
-    def get_tables_data(self):
-        user_qs = User.objects.filter(study_sites=self.object)
+    def get_tables(self):
+        user_qs = User.objects.filter(is_active=True, study_sites=self.object)
+        if self.object.member_group:
+            user_table = tables.UserAccountSingleGroupMembershipTable(user_qs, managed_group=self.object.member_group)
+        else:
+            user_table = tables.UserAccountTable(user_qs, exclude="study_sites")
         dbgap_qs = dbGaPApplication.objects.filter(principal_investigator__study_sites=self.object)
         cdsa_qs = MemberAgreement.objects.filter(study_site=self.object)
-        return [user_qs, dbgap_qs, cdsa_qs]
+        if self.object.member_group:
+            account_qs = Account.objects.filter(groupaccountmembership__group=self.object.member_group)
+        else:
+            account_qs = Account.objects.none()
+        return [
+            user_table,
+            dbGaPApplicationTable(dbgap_qs),
+            MemberAgreementTable(cdsa_qs),
+            tables.AccountTable(account_qs, exclude=("number_groups")),
+        ]
 
 
 class StudySiteList(AnVILConsortiumManagerStaffViewRequired, SingleTableView):

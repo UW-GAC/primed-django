@@ -156,8 +156,11 @@ class DataSummaryTable(tables.Table):
         super().__init__(*args, extra_columns=extra_columns, **kwargs)
 
 
-class UserAccountSingleGroupMembershipTable(tables.Table):
-    """A table with users and info about whether they are members of a group."""
+class UserAccountTable(tables.Table):
+    """A table for `User`s with `Account` information."""
+
+    name = tables.Column(linkify=True)
+    account = tables.Column(linkify=True, verbose_name="AnVIL account")
 
     class Meta:
         model = User
@@ -167,8 +170,13 @@ class UserAccountSingleGroupMembershipTable(tables.Table):
         )
         order_by = ("name",)
 
-    name = tables.Column(linkify=lambda record: record.get_absolute_url())
-    account = tables.Column(verbose_name="AnVIL account")
+
+class UserAccountSingleGroupMembershipTable(UserAccountTable):
+    """A table with users and info about whether they are members of a group."""
+
+    class Meta(UserAccountTable.Meta):
+        pass
+
     is_group_member = tables.BooleanColumn(verbose_name="Has access?", default=False)
 
     def __init__(self, *args, managed_group=None, **kwargs):

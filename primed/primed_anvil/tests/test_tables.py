@@ -255,6 +255,35 @@ class WorkspaceSharedWithConsortiumColumnTest(TestCase):
             column.render(None, "foo", None)
 
 
+class UserAccountTableTest(TestCase):
+    """Tests for the UserAccountTable class."""
+
+    def setUp(self):
+        self.managed_group = ManagedGroupFactory.create()
+
+    def test_row_count_with_no_objects(self):
+        table = tables.UserAccountTable(User.objects.all())
+        self.assertEqual(len(table.rows), 0)
+
+    def test_row_count_with_one_object(self):
+        UserFactory.create()
+        table = tables.UserAccountTable(User.objects.all())
+        self.assertEqual(len(table.rows), 1)
+
+    def test_row_count_with_two_objects(self):
+        UserFactory.create_batch(2)
+        table = tables.UserAccountTable(User.objects.all())
+        self.assertEqual(len(table.rows), 2)
+
+    def test_ordering(self):
+        """Users are ordered alphabetically by name"""
+        user_foo = UserFactory.create(name="Foo")
+        user_bar = UserFactory.create(name="Bar")
+        table = tables.UserAccountTable(User.objects.all())
+        self.assertEqual(table.data[0], user_bar)
+        self.assertEqual(table.data[1], user_foo)
+
+
 class UserAccountSingleGroupMembershipTableTest(TestCase):
     """Tests for the UserAccountSingleGroupMembershipTable class."""
 
