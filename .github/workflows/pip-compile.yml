@@ -6,8 +6,6 @@ on:
 
 jobs:
   update-requirements-files:
-    permissions:
-      pull-requests: write
     runs-on: ubuntu-latest
 
     steps:
