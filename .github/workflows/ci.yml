@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.12]
         backend: ["sqlite", "mariadb"]
         mariadb-version: ["10.4"]
         include:
