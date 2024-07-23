@@ -22,10 +22,8 @@ build==1.0.3
     # via pip-tools
 cachetools==5.3.2
     # via google-auth
-certifi==2023.11.17
-    # via
-    #   -r requirements/requirements.in
-    #   requests
+certifi==2024.7.4
+    # via requests
 cffi==1.16.0
     # via
     #   argon2-cffi-bindings
@@ -110,9 +108,7 @@ fontawesomefree==6.5.1
 google-auth==2.28.1
     # via django-anvil-consortium-manager
 idna==3.7
-    # via
-    #   -r requirements/requirements.in
-    #   requests
+    # via requests
 importlib-metadata==7.0.0
     # via build
 importlib-resources==6.1.1
@@ -204,9 +200,7 @@ rsa==4.9
 six==1.16.0
     # via python-dateutil
 sqlparse==0.5.1
-    # via
-    #   -r requirements/requirements.in
-    #   django
+    # via django
 tablib==3.6.1
     # via -r requirements/requirements.in
 tenacity==8.2.3
@@ -223,14 +217,12 @@ typing-extensions==4.8.0
 tzdata==2023.4
     # via pandas
 urllib3==2.2.2
-    # via
-    #   -r requirements/requirements.in
-    #   requests
+    # via requests
 wheel==0.42.0
     # via pip-tools
 whitenoise==6.7.0
     # via -r requirements/requirements.in
-zipp==3.17.0
+zipp==3.19.1
     # via
     #   importlib-metadata
     #   importlib-resources

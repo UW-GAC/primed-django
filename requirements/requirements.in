@@ -67,12 +67,6 @@ tablib
 # for htmx
 django-htmx
 
-# Temporary(?) pins to fix security alerts.
-certifi>=2023.7.22
-urllib3>=2.2.2
-sqlparse>=0.4.4
-idna>=3.7
-
 # Dynamic settings
 django-constance
 django-picklefield  # Required by django-constance for database backend
