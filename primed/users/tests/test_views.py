@@ -574,6 +574,21 @@ class UserDetailTest(TestCase):
         self.assertIn(agreement_1.signed_agreement, response.context["signed_agreements"])
         self.assertIn(agreement_2.signed_agreement, response.context["signed_agreements"])
 
+    def test_inactive_user_inactive_message(self):
+        """Inactive user alert is shown for an inactive user."""
+        user = UserFactory.create(is_active=False)
+        self.client.force_login(self.user)
+        response = self.client.get(user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This user is inactive.")
+
+    def test_active_user_no_inactive_message(self):
+        """Inactive user alert is not shown for an active user."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "This user is inactive.")
+
 
 class UserAutocompleteTest(TestCase):
     def setUp(self):
