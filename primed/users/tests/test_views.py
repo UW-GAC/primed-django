@@ -810,3 +810,21 @@ class UserLookup(TestCase):
         self.assertIn("user", form.errors.keys())
         self.assertEqual(len(form.errors["user"]), 1)
         self.assertIn("required", form.errors["user"][0])
+
+    def test_invalid_inactive_user(self):
+        """Form is invalid with an inactive user."""
+        object = UserFactory.create(
+            username="user1",
+            password="passwd",
+            email="user1@example.com",
+            is_active=False,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"user": object.pk})
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("user", form.errors)
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("valid choice", form.errors["user"][0])
