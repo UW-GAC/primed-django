@@ -574,6 +574,39 @@ class UserDetailTest(TestCase):
         self.assertIn(agreement_1.signed_agreement, response.context["signed_agreements"])
         self.assertIn(agreement_2.signed_agreement, response.context["signed_agreements"])
 
+    def test_inactive_user_inactive_message(self):
+        """Inactive user alert is shown for an inactive user."""
+        user = UserFactory.create(is_active=False)
+        self.client.force_login(self.user)
+        response = self.client.get(user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This user is inactive.")
+
+    def test_active_user_no_inactive_message(self):
+        """Inactive user alert is not shown for an active user."""
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "This user is inactive.")
+
+    def test_inactive_anvil_account_alert_is_inactive(self):
+        """Alert is shown when AnVIL account is inactive."""
+        account = AccountFactory.create(email="foo@bar.com", user=self.user, verified=True)
+        account.status = account.INACTIVE_STATUS
+        account.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This account is inactive.")
+
+    def test_inactive_anvil_account_alert_is_active(self):
+        """Alert is not shown when AnVIL account is active."""
+        AccountFactory.create(email="foo@bar.com", user=self.user, verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "This account is inactive.")
+
 
 class UserAutocompleteTest(TestCase):
     def setUp(self):
@@ -723,6 +756,17 @@ class UserAutocompleteTest(TestCase):
         view.setup(request)
         self.assertEqual(view.get_selected_result_label(instance), "First Last (foo@bar.com)")
 
+    def test_excludes_inactive_users(self):
+        """Queryset excludes excludes inactive users."""
+        UserFactory.create(is_active=False)
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
+        # Only test user.
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids, [self.user.pk])
+
 
 class UserLookup(TestCase):
     """Test for UserLookup view"""
@@ -799,3 +843,21 @@ class UserLookup(TestCase):
         self.assertIn("user", form.errors.keys())
         self.assertEqual(len(form.errors["user"]), 1)
         self.assertIn("required", form.errors["user"][0])
+
+    def test_invalid_inactive_user(self):
+        """Form is invalid with an inactive user."""
+        object = UserFactory.create(
+            username="user1",
+            password="passwd",
+            email="user1@example.com",
+            is_active=False,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url(), {"user": object.pk})
+        self.assertEqual(response.status_code, 200)
+        form = response.context_data["form"]
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("user", form.errors)
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("valid choice", form.errors["user"][0])

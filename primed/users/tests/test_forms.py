@@ -63,3 +63,16 @@ class UserLookupFormTest(TestCase):
         self.assertIn("user", form.errors)
         self.assertEqual(len(form.errors["user"]), 1)
         self.assertIn("required", form.errors["user"][0])
+
+    def test_inactive_user(self):
+        """Form is invalid when user is inactive."""
+        user_obj = UserFactory.create(is_active=False)
+        form_data = {
+            "user": user_obj,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("user", form.errors)
+        self.assertEqual(len(form.errors["user"]), 1)
+        self.assertIn("valid choice", form.errors["user"][0])
