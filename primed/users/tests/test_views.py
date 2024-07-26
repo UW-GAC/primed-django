@@ -723,6 +723,17 @@ class UserAutocompleteTest(TestCase):
         view.setup(request)
         self.assertEqual(view.get_selected_result_label(instance), "First Last (foo@bar.com)")
 
+    def test_excludes_inactive_users(self):
+        """Queryset excludes excludes inactive users."""
+        UserFactory.create(is_active=False)
+        request = self.factory.get(self.get_url())
+        request.user = self.user
+        response = self.get_view()(request)
+        returned_ids = [int(x["id"]) for x in json.loads(response.content.decode("utf-8"))["results"]]
+        # Only test user.
+        self.assertEqual(len(returned_ids), 1)
+        self.assertEqual(returned_ids, [self.user.pk])
+
 
 class UserLookup(TestCase):
     """Test for UserLookup view"""
