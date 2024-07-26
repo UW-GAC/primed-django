@@ -8,7 +8,7 @@
 
   {% if not object.is_active %}
 
-    <p class='alert alert-secondary mt-3'>
+    <p class='alert alert-danger mt-3'>
       <i class="bi bi-exclamation-triangle-fill"></i>
       This user is inactive.
     </p>
@@ -66,6 +66,14 @@
         <div class='card-body'>
           {% if object.account %}
             <p><i class="bi bi-check-circle-fill text-success"></i> Profile has a linked AnVIL account established</p>
+
+            {% if not object.account.status %}
+              <p class='alert alert-danger mt-3'>
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                This account is inactive.
+              </p>
+              {% endif %}
+
             <ul class='list-group'>
               <li class='list-group-item'>
                 <h5>Account Email</h5>
@@ -73,12 +81,6 @@
                 <a href="{{ object.account.get_absolute_url }}">{{ object.account.email }}</a>
                 {% else %}
                 {{ object.account.email }}
-                {% endif %}
-                {% if not object.account.status %}
-                  <p class='alert alert-secondary mt-3'>
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    This account is inactive.
-                  </p>
                 {% endif %}
               </li>
               {% if object.account.verified_email_entry %}
