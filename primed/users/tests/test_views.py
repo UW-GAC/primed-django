@@ -589,6 +589,24 @@ class UserDetailTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "This user is inactive.")
 
+    def test_inactive_anvil_account_alert_is_inactive(self):
+        """Alert is shown when AnVIL account is inactive."""
+        account = AccountFactory.create(email="foo@bar.com", user=self.user, verified=True)
+        account.status = account.INACTIVE_STATUS
+        account.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This account is inactive.")
+
+    def test_inactive_anvil_account_alert_is_active(self):
+        """Alert is not shown when AnVIL account is active."""
+        AccountFactory.create(email="foo@bar.com", user=self.user, verified=True)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "This account is inactive.")
+
 
 class UserAutocompleteTest(TestCase):
     def setUp(self):
