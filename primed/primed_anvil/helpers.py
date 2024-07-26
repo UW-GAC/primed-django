@@ -212,7 +212,6 @@ def get_workspaces_for_phenotype_inventory():
 
     # Combine all querysets and process into the expected output for the AnVIL workflow.
     workspaces = dbgap_workspaces.union(cdsa_workspaces).union(open_access_workspaces)
-
     json = {}
     for key, group in groupby(workspaces, lambda x: x["workspace_name"]):
         study_names = [x["study_names"] if x["study_names"] else "" for x in group]

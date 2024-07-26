@@ -789,3 +789,29 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(res["test-bp-cdsa/test-ws-cdsa"], "TEST 2")
         self.assertIn("test-bp-open/test-ws-open", res)
         self.assertEqual(res["test-bp-open/test-ws-open"], "TEST 3")
+
+    def test_non_consecutive_grouping(self):
+        """Studies are grouped even if workspaces are listed non-consecutively."""
+        # This is attempting to capture an issue where:
+        # 1) there are multiple workspaces for the same set of studies
+        study_1 = StudyFactory.create(short_name="TEST_2")
+        study_2 = StudyFactory.create(short_name="TEST_1")
+        study_accession = dbGaPStudyAccessionFactory.create(studies=[study_1, study_2])
+        workspace_1 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws-1",
+            dbgap_study_accession=study_accession,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        workspace_2 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws-2",
+            dbgap_study_accession=study_accession,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp/test-ws-1", res)
+        self.assertEqual(res["test-bp/test-ws-1"], "TEST_1, TEST_2")
+        self.assertIn("test-bp/test-ws-2", res)
+        self.assertEqual(res["test-bp/test-ws-2"], "TEST_1, TEST_2")
