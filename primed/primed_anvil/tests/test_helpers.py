@@ -860,3 +860,72 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(res["test-a/test-a_c2"], "TEST_1")
         self.assertEqual(res["test-a/test-a_c3"], "TEST_1")
         self.assertEqual(res["test-a/test-a_c4"], "TEST_1")
+
+    def test_order_dbgap(self):
+        """dbGaPWorkspaces are ordered by billing project in results."""
+        workspace_1 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-3",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        workspace_2 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-1",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        workspace_3 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-2",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
+        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
+        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+
+    def test_order_cdsa(self):
+        """CDSAWorkspaces are ordered by billing project in results."""
+        workspace_1 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-3",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        workspace_2 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-1",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        workspace_3 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-2",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
+        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
+        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+
+    def test_order_open_access(self):
+        """OpenAccessWorkspaces are ordered by billing project in results."""
+        workspace_1 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-3",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        workspace_2 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-1",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        workspace_3 = OpenAccessWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-2",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
+        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
+        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
