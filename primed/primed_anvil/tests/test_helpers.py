@@ -808,13 +808,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         workspace_2 = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws-2",
-            dbgap_study_accession=study_accession_1,
+            dbgap_study_accession=study_accession_2,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
         workspace_3 = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws-3",
-            dbgap_study_accession=study_accession_2,
+            dbgap_study_accession=study_accession_1,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
         res = helpers.get_workspaces_for_phenotype_inventory()
@@ -822,6 +822,6 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertIn("test-bp/test-ws-1", res)
         self.assertEqual(res["test-bp/test-ws-1"], "Bar, Foo")
         self.assertIn("test-bp/test-ws-2", res)
-        self.assertEqual(res["test-bp/test-ws-2"], "Bar, Foo")
+        self.assertEqual(res["test-bp/test-ws-2"], "Bar")
         self.assertIn("test-bp/test-ws-3", res)
-        self.assertEqual(res["test-bp/test-ws-3"], "Bar")
+        self.assertEqual(res["test-bp/test-ws-3"], "Bar, Foo")
