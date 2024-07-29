@@ -862,7 +862,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(res["test-a/test-a_c4"], "TEST_1")
 
     def test_order_dbgap(self):
-        """dbGaPWorkspaces are ordered by billing project in results."""
+        """dbGaPWorkspaces are ordered by billing project and workspace in results."""
         workspace_1 = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-2",
             workspace__name="test-ws-3",
@@ -885,7 +885,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
 
     def test_order_cdsa(self):
-        """CDSAWorkspaces are ordered by billing project in results."""
+        """CDSAWorkspaces are ordered by billing project and workspace in results."""
         workspace_1 = CDSAWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-2",
             workspace__name="test-ws-3",
@@ -908,7 +908,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
 
     def test_order_open_access(self):
-        """OpenAccessWorkspaces are ordered by billing project in results."""
+        """OpenAccessWorkspaces are ordered by billing project and workspace in results."""
         workspace_1 = OpenAccessWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-2",
             workspace__name="test-ws-3",
