@@ -130,12 +130,12 @@ def get_summary_table_data():
     return data
 
 
-def get_workspaces_for_phenotype_inventory():
+def get_workspaces_for_inventory():
     """Get input to the primed-phenotype-inventory workflow.
 
     This function generates the input for the "workspaces" field of the primed-phenotype-inventory workflow. Only
     workspaces that have been shared with the consortium are included.
-    See dockstore link: https://dockstore.org/workflows/github.com/UW-GAC/primed-inventory-workflows/primed_phenotype_inventory:main?tab=info
+    See dockstore link: https://dockstore.org/workflows/github.com/UW-GAC/primed-inventory-workflows/primed_inventory:main?tab=info
 
     The "workspaces" field has the format:
     {

@@ -541,7 +541,7 @@ class GetSummaryTableDataTest(TestCase):
 
 
 class GetWorkspacesForPhenotypeInventoryTest(TestCase):
-    """Tests for the helpers.get_workspaces_for_phenotype_inventory method."""
+    """Tests for the helpers.get_workspaces_for_inventory method."""
 
     def setUp(self):
         """Set up the test case."""
@@ -550,18 +550,18 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.primed_all_group = ManagedGroupFactory.create(name="PRIMED_ALL")
 
     def test_no_workspaces(self):
-        """get_workspaces_for_phenotype_inventory with no workspaces."""
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        """get_workspaces_for_inventory with no workspaces."""
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(res, {})
 
     def test_one_dbgap_workspace_not_shared(self):
-        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        """get_workspaces_for_inventory with one dbGaP workspace."""
         dbGaPWorkspaceFactory.create()
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(res, {})
 
     def test_one_dbgap_workspace_shared_one_study(self):
-        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        """get_workspaces_for_inventory with one dbGaP workspace."""
         study = StudyFactory.create(short_name="TEST")
         workspace = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
@@ -569,13 +569,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             dbgap_study_accession__studies=[study],
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 1)
         self.assertIn("test-bp/test-ws", res)
         self.assertEqual(res["test-bp/test-ws"], "TEST")
 
     def test_one_dbgap_workspace_shared_two_studies(self):
-        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        """get_workspaces_for_inventory with one dbGaP workspace."""
         study_1 = StudyFactory.create(short_name="TEST_2")
         study_2 = StudyFactory.create(short_name="TEST_1")
         study_accession = dbGaPStudyAccessionFactory.create(studies=[study_1, study_2])
@@ -585,13 +585,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             dbgap_study_accession=study_accession,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 1)
         self.assertIn("test-bp/test-ws", res)
         self.assertEqual(res["test-bp/test-ws"], "TEST_1, TEST_2")
 
     def test_two_dbgap_workspaces(self):
-        """get_workspaces_for_phenotype_inventory with two dbGaP workspaces."""
+        """get_workspaces_for_inventory with two dbGaP workspaces."""
         study_1 = StudyFactory.create(short_name="TEST 1")
         workspace_1 = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-1",
@@ -606,7 +606,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             dbgap_study_accession__studies=[study_2],
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 2)
         self.assertIn("test-bp-1/test-ws-1", res)
         self.assertEqual(res["test-bp-1/test-ws-1"], "TEST 1")
@@ -614,13 +614,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
 
     def test_one_cdsa_workspace_not_shared(self):
-        """get_workspaces_for_phenotype_inventory with one CDSA workspace."""
+        """get_workspaces_for_inventory with one CDSA workspace."""
         CDSAWorkspaceFactory.create()
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(res, {})
 
     def test_one_cdsa_workspace_shared_one_study(self):
-        """get_workspaces_for_phenotype_inventory with one CDSA workspace."""
+        """get_workspaces_for_inventory with one CDSA workspace."""
         study = StudyFactory.create(short_name="TEST")
         workspace = CDSAWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
@@ -628,13 +628,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             study=study,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 1)
         self.assertIn("test-bp/test-ws", res)
         self.assertEqual(res["test-bp/test-ws"], "TEST")
 
     def test_two_cdsa_workspaces(self):
-        """get_workspaces_for_phenotype_inventory with two CDSA workspaces."""
+        """get_workspaces_for_inventory with two CDSA workspaces."""
         study_1 = StudyFactory.create(short_name="TEST 1")
         workspace_1 = CDSAWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-1",
@@ -649,7 +649,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             study=study_2,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 2)
         self.assertIn("test-bp-1/test-ws-1", res)
         self.assertEqual(res["test-bp-1/test-ws-1"], "TEST 1")
@@ -657,25 +657,25 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
 
     def test_one_open_access_workspace_not_shared(self):
-        """get_workspaces_for_phenotype_inventory with one dbGaP workspace."""
+        """get_workspaces_for_inventory with one dbGaP workspace."""
         OpenAccessWorkspaceFactory.create()
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(res, {})
 
     def test_one_open_access_workspace_shared_no_study(self):
-        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        """get_workspaces_for_inventory with one Open access workspace."""
         workspace = OpenAccessWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws",
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 1)
         self.assertIn("test-bp/test-ws", res)
         self.assertEqual(res["test-bp/test-ws"], "")
 
     def test_one_open_access_workspace_shared_one_study(self):
-        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        """get_workspaces_for_inventory with one Open access workspace."""
         study = StudyFactory.create(short_name="TEST")
         workspace = OpenAccessWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
@@ -683,13 +683,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         workspace.studies.add(study)
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 1)
         self.assertIn("test-bp/test-ws", res)
         self.assertEqual(res["test-bp/test-ws"], "TEST")
 
     def test_one_open_access_workspace_shared_two_studies(self):
-        """get_workspaces_for_phenotype_inventory with one Open access workspace."""
+        """get_workspaces_for_inventory with one Open access workspace."""
         study_1 = StudyFactory.create(short_name="TEST_2")
         study_2 = StudyFactory.create(short_name="TEST_1")
         workspace = OpenAccessWorkspaceFactory.create(
@@ -698,13 +698,13 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         workspace.studies.add(study_1, study_2)
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 1)
         self.assertIn("test-bp/test-ws", res)
         self.assertEqual(res["test-bp/test-ws"], "TEST_1, TEST_2")
 
     def test_two_open_access_workspaces(self):
-        """get_workspaces_for_phenotype_inventory with two Open access workspace."""
+        """get_workspaces_for_inventory with two Open access workspace."""
         workspace_1 = OpenAccessWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-1",
             workspace__name="test-ws-1",
@@ -717,7 +717,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         workspace_2.studies.add(study_2)
         WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 2)
         self.assertIn("test-bp-1/test-ws-1", res)
         self.assertEqual(res["test-bp-1/test-ws-1"], "")
@@ -747,7 +747,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         workspace.studies.add(study)
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 3)
         self.assertIn("test-bp-dbgap/test-ws-dbgap", res)
         self.assertEqual(res["test-bp-dbgap/test-ws-dbgap"], "TEST")
@@ -781,7 +781,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         workspace.studies.add(study_3)
         WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 3)
         self.assertIn("test-bp-dbgap/test-ws-dbgap", res)
         self.assertEqual(res["test-bp-dbgap/test-ws-dbgap"], "TEST 1")
@@ -850,7 +850,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             dbgap_study_accession=study_accession_1,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_1_d.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 8)
         self.assertEqual(res["test-b/test-a-b_c1"], "TEST_1, TEST_2")
         self.assertEqual(res["test-b/test-a-b_c2"], "TEST_1, TEST_2")
@@ -878,7 +878,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             workspace__name="test-ws-2",
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 3)
         self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
         self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
@@ -901,7 +901,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             workspace__name="test-ws-2",
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 3)
         self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
         self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
@@ -924,7 +924,7 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
             workspace__name="test-ws-2",
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
-        res = helpers.get_workspaces_for_phenotype_inventory()
+        res = helpers.get_workspaces_for_inventory()
         self.assertEqual(len(res), 3)
         self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
         self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")

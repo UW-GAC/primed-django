@@ -180,10 +180,10 @@ class DataSummaryView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PhenotypeInventoryInputsView(AnVILConsortiumManagerStaffViewRequired, TemplateView):
-    template_name = "primed_anvil/phenotype_inventory_inputs.html"
+class InventoryInputsView(AnVILConsortiumManagerStaffViewRequired, TemplateView):
+    template_name = "primed_anvil/inventory_inputs.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["workspaces_input"] = json.dumps(helpers.get_workspaces_for_phenotype_inventory(), indent=2)
+        context["workspaces_input"] = json.dumps(helpers.get_workspaces_for_inventory(), indent=2)
         return context
