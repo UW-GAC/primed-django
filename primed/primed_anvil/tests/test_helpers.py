@@ -794,24 +794,34 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         """Studies are grouped even if workspaces are listed non-consecutively."""
         # This is attempting to capture an issue where:
         # 1) there are multiple workspaces for the same set of studies
-        study_1 = StudyFactory.create(short_name="TEST_2")
-        study_2 = StudyFactory.create(short_name="TEST_1")
-        study_accession = dbGaPStudyAccessionFactory.create(studies=[study_1, study_2])
+        study_1 = StudyFactory.create(short_name="Foo")
+        study_2 = StudyFactory.create(short_name="Bar")
+        # study_3 = StudyFactory.create(short_name="Test")
+        study_accession_1 = dbGaPStudyAccessionFactory.create(studies=[study_1, study_2])
+        study_accession_2 = dbGaPStudyAccessionFactory.create(studies=[study_2])
         workspace_1 = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws-1",
-            dbgap_study_accession=study_accession,
+            dbgap_study_accession=study_accession_1,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
         workspace_2 = dbGaPWorkspaceFactory.create(
             workspace__billing_project__name="test-bp",
             workspace__name="test-ws-2",
-            dbgap_study_accession=study_accession,
+            dbgap_study_accession=study_accession_1,
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        workspace_3 = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws-3",
+            dbgap_study_accession=study_accession_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
         res = helpers.get_workspaces_for_phenotype_inventory()
-        self.assertEqual(len(res), 2)
+        self.assertEqual(len(res), 3)
         self.assertIn("test-bp/test-ws-1", res)
-        self.assertEqual(res["test-bp/test-ws-1"], "TEST_1, TEST_2")
+        self.assertEqual(res["test-bp/test-ws-1"], "Bar, Foo")
         self.assertIn("test-bp/test-ws-2", res)
-        self.assertEqual(res["test-bp/test-ws-2"], "TEST_1, TEST_2")
+        self.assertEqual(res["test-bp/test-ws-2"], "Bar, Foo")
+        self.assertIn("test-bp/test-ws-3", res)
+        self.assertEqual(res["test-bp/test-ws-3"], "Bar")
