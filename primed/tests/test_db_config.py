@@ -8,6 +8,7 @@ from django.db import connection
 def test_character_set_and_storage_engine():
     with connection.cursor() as cursor:
         if settings.DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
+            print("Database options: {}".format(settings.DATABASES["default"].get("OPTIONS")))
             # For MariaDB/MySQL
             cursor.execute("SHOW VARIABLES LIKE 'character_set_server';")
             charset = cursor.fetchone()
