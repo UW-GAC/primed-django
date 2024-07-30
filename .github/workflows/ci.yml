@@ -59,12 +59,7 @@ jobs:
 
       - name: Print db options
         run: |
-          mariadb --verbose --help
-
-      - name: Debug with tmate on failure
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
-
+          mysql --verbose --help
 
       - name: Checkout Code Repository
         uses: actions/checkout@v4
