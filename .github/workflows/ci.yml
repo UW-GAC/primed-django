@@ -48,11 +48,11 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: root
-        options: --tmpfs /var/lib/mysql
-        command: >
+        options: >-
           --character-set-server=utf8mb4
           --collation-server=utf8mb4_general_ci
-
+          --tmpfs /var/lib/mysql
+        
     env:
       PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
       # Conditionally set the database url based on the backend.
