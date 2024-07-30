@@ -1,5 +1,5 @@
 # Temporary script to create some test data.
-# Run with: python manage.py shell < add_phenotype_inventory_input_example_data.py
+# Run with: python manage.py shell < add_inventory_input_example_data.py
 
 from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,

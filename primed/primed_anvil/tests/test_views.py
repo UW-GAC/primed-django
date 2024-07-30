@@ -1247,8 +1247,8 @@ class DataSummaryTableTest(TestCase):
         self.assertEqual(len(response.context_data["summary_table"].rows), 1)
 
 
-class PhenotypeInventoryInputsViewTest(TestCase):
-    """Tests for the PhenotypeInventoryInputsView view."""
+class InventoryInputsViewTest(TestCase):
+    """Tests for the InventoryInputsView view."""
 
     def setUp(self):
         """Set up test class."""
@@ -1262,11 +1262,11 @@ class PhenotypeInventoryInputsViewTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("primed_anvil:utilities:phenotype_inventory_inputs", args=args)
+        return reverse("primed_anvil:utilities:inventory_inputs", args=args)
 
     def get_view(self):
         """Return the view being tested."""
-        return views.PhenotypeInventoryInputsView.as_view()
+        return views.InventoryInputsView.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
