@@ -48,7 +48,7 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: root
-        options: --tmpfs /var/lib/mysql
+        options: --tmpfs /var/lib/mysql --default-character-set=utf8mb4
 
     env:
       PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
