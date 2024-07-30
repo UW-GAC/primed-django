@@ -49,13 +49,16 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
         options: --tmpfs /var/lib/mysql
-        
+
     env:
       PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
       # Conditionally set the database url based on the backend.
       DATABASE_URL: ${{ matrix.backend == 'sqlite' && 'sqlite:///db.sqlite3' || 'mysql://root:root@127.0.0.1:3306/test_db?charset=utf8mb4' }}
 
     steps:
+
+      - name: Print db options
+        run: mariadb --verbose --help
 
       - name: Checkout Code Repository
         uses: actions/checkout@v4
