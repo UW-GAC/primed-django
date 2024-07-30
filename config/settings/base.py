@@ -49,6 +49,10 @@ if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
     DATABASES["default"]["OPTIONS"] = {
         "charset": "utf8mb4",  # or other charset
         "collation": "utf8mb4_general_ci",  # or other collation
+        "TEST": {
+            "CHARSET": "utf8mb4",
+            "COLLATION": "utf8mb4_general_ci",  # or other collation
+        },
     }
 
 # DATABASES["default"]["ATOMIC_REQUESTS"] = True
