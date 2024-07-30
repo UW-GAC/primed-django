@@ -61,11 +61,6 @@ jobs:
         run: |
           mysql --verbose --help
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
-
       - name: Checkout Code Repository
         uses: actions/checkout@v4
 
