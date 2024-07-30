@@ -49,6 +49,9 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
         options: --tmpfs /var/lib/mysql
+        command: >
+          --character-set-server=utf8mb4
+          --collation-server=utf8mb4_general_ci
 
     env:
       PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
