@@ -40,9 +40,9 @@ summary_patterns = (
 utilities_patterns = (
     [
         path(
-            "phenotype_inventory_inputs/",
-            views.PhenotypeInventoryInputsView.as_view(),
-            name="phenotype_inventory_inputs",
+            "inventory_inputs/",
+            views.InventoryInputsView.as_view(),
+            name="inventory_inputs",
         ),
     ],
     "utilities",

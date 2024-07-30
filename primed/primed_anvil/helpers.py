@@ -130,12 +130,12 @@ def get_summary_table_data():
     return data
 
 
-def get_workspaces_for_phenotype_inventory():
+def get_workspaces_for_inventory():
     """Get input to the primed-phenotype-inventory workflow.
 
     This function generates the input for the "workspaces" field of the primed-phenotype-inventory workflow. Only
     workspaces that have been shared with the consortium are included.
-    See dockstore link: https://dockstore.org/workflows/github.com/UW-GAC/primed-inventory-workflows/primed_phenotype_inventory:main?tab=info
+    See dockstore link: https://dockstore.org/workflows/github.com/UW-GAC/primed-inventory-workflows/primed_inventory:main?tab=info
 
     The "workspaces" field has the format:
     {
@@ -212,7 +212,8 @@ def get_workspaces_for_phenotype_inventory():
 
     # Combine all querysets and process into the expected output for the AnVIL workflow.
     workspaces = dbgap_workspaces.union(cdsa_workspaces).union(open_access_workspaces)
-
+    # Sort by workspace_name so that itertools.groupby works as expected.
+    workspaces = sorted(workspaces, key=lambda x: x["workspace_name"])
     json = {}
     for key, group in groupby(workspaces, lambda x: x["workspace_name"]):
         study_names = [x["study_names"] if x["study_names"] else "" for x in group]
