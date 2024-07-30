@@ -44,6 +44,13 @@ LOCALE_PATHS = [str(ROOT_DIR / "locale")]
 DATABASES = {
     "default": env.db("DATABASE_URL", default="sqlite:///primed.db"),
 }
+
+if DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+    DATABASES['default']['OPTIONS'] = {
+        'charset': 'utf8mb4',  # or other charset
+        'collation': 'utf8mb4_general_ci',  # or other collation
+    }
+
 # DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
