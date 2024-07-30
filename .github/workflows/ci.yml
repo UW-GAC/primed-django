@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        backend: ["sqlite", "mariadb"]
+        backend: ["mariadb", "sqlite"]
         mariadb-version: ["10.4"]
         include:
           - python-version: "3.10"  # Future ubuntu 22.04 upgrade.
@@ -53,9 +53,13 @@ jobs:
     env:
       PYTEST_ADDOPTS: "--maxfail=20"  # Stop testing after too many failures.
       # Conditionally set the database url based on the backend.
-      DATABASE_URL: ${{ matrix.backend == 'sqlite' && 'sqlite:///db.sqlite3' || 'mysql://root:root@127.0.0.1:3306/mysql' }}
+      DATABASE_URL: ${{ matrix.backend == 'sqlite' && 'sqlite:///db.sqlite3' || 'mysql://root:root@127.0.0.1:3306/test_db?charset=utf8mb4' }}
 
     steps:
+
+      - name: Print db options
+        run: |
+          mysql --verbose --help
 
       - name: Checkout Code Repository
         uses: actions/checkout@v4

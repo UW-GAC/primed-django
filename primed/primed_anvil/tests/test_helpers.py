@@ -789,3 +789,74 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertEqual(res["test-bp-cdsa/test-ws-cdsa"], "TEST 2")
         self.assertIn("test-bp-open/test-ws-open", res)
         self.assertEqual(res["test-bp-open/test-ws-open"], "TEST 3")
+
+    def test_non_consecutive_grouping(self):
+        """Studies are grouped even if workspaces are listed non-consecutively."""
+        # This replicates an issue seen in prod:
+        # 1) there are multiple workspaces for the same set of studies
+        # 2) objects are created in a specific order with specific alphabetizing.
+        # The difference in behavior between sqlite and mariadb is likely due to different ordering
+        # when the queryset results are returned, so debugging is tricky.
+        study_1 = StudyFactory.create(short_name="TEST_2")
+        study_2 = StudyFactory.create(short_name="TEST_1")
+        study_accession_1 = dbGaPStudyAccessionFactory.create(dbgap_phs=964, studies=[study_1, study_2])
+        study_accession_2 = dbGaPStudyAccessionFactory.create(dbgap_phs=286, studies=[study_2])
+        # Two workspaces associated with study_accession_1 (with two studies)
+        workspace_1_a = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-b",
+            workspace__name="test-a-b_c3",
+            dbgap_study_accession=study_accession_1,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1_a.workspace, group=self.primed_all_group)
+        workspace_2_a = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-a",
+            workspace__name="test-a_c3",
+            dbgap_study_accession=study_accession_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2_a.workspace, group=self.primed_all_group)
+        workspace_2_b = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-a",
+            workspace__name="test-a_c4",
+            dbgap_study_accession=study_accession_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2_b.workspace, group=self.primed_all_group)
+        workspace_2_c = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-a",
+            workspace__name="test-a_c2",
+            dbgap_study_accession=study_accession_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2_c.workspace, group=self.primed_all_group)
+        workspace_2_d = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-a",
+            workspace__name="test-a_c1",
+            dbgap_study_accession=study_accession_2,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2_d.workspace, group=self.primed_all_group)
+        workspace_1_b = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-b",
+            workspace__name="test-a-b_c4",
+            dbgap_study_accession=study_accession_1,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1_b.workspace, group=self.primed_all_group)
+        workspace_1_c = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-b",
+            workspace__name="test-a-b_c1",
+            dbgap_study_accession=study_accession_1,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1_c.workspace, group=self.primed_all_group)
+        workspace_1_d = dbGaPWorkspaceFactory.create(
+            workspace__billing_project__name="test-b",
+            workspace__name="test-a-b_c2",
+            dbgap_study_accession=study_accession_1,
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1_d.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_phenotype_inventory()
+        self.assertEqual(len(res), 8)
+        self.assertEqual(res["test-b/test-a-b_c1"], "TEST_1, TEST_2")
+        self.assertEqual(res["test-b/test-a-b_c2"], "TEST_1, TEST_2")
+        self.assertEqual(res["test-b/test-a-b_c3"], "TEST_1, TEST_2")
+        self.assertEqual(res["test-b/test-a-b_c4"], "TEST_1, TEST_2")
+        self.assertEqual(res["test-a/test-a_c1"], "TEST_1")
+        self.assertEqual(res["test-a/test-a_c2"], "TEST_1")
+        self.assertEqual(res["test-a/test-a_c3"], "TEST_1")
+        self.assertEqual(res["test-a/test-a_c4"], "TEST_1")
