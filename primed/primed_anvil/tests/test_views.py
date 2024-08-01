@@ -910,6 +910,19 @@ class StudySiteDetailTest(TestCase):
         self.assertIsInstance(table, tables.UserAccountSingleGroupMembershipTable)
         self.assertEqual(table.managed_group, member_group)
 
+    def test_site_user_table_does_not_include_inactive_users(self):
+        """Site user table does not include inactive users."""
+        obj = self.model_factory.create()
+        inactive_site_user = UserFactory.create()
+        inactive_site_user.study_sites.set([obj])
+        inactive_site_user.is_active = False
+        inactive_site_user.save()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(obj.pk))
+        table = response.context_data["tables"][0]
+        self.assertEqual(len(table.rows), 0)
+        self.assertNotIn(inactive_site_user, table.data)
+
     def test_member_group_table(self):
         member_group = ManagedGroupFactory.create()
         obj = self.model_factory.create(member_group=member_group)
@@ -1234,8 +1247,8 @@ class DataSummaryTableTest(TestCase):
         self.assertEqual(len(response.context_data["summary_table"].rows), 1)
 
 
-class PhenotypeInventoryInputsViewTest(TestCase):
-    """Tests for the PhenotypeInventoryInputsView view."""
+class InventoryInputsViewTest(TestCase):
+    """Tests for the InventoryInputsView view."""
 
     def setUp(self):
         """Set up test class."""
@@ -1249,11 +1262,11 @@ class PhenotypeInventoryInputsViewTest(TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("primed_anvil:utilities:phenotype_inventory_inputs", args=args)
+        return reverse("primed_anvil:utilities:inventory_inputs", args=args)
 
     def get_view(self):
         """Return the view being tested."""
-        return views.PhenotypeInventoryInputsView.as_view()
+        return views.InventoryInputsView.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
