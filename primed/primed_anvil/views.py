@@ -128,6 +128,7 @@ class StudySiteDetail(AnVILConsortiumManagerStaffViewRequired, MultiTableMixin, 
         user_qs = User.objects.filter(is_active=True, study_sites=self.object)
         if self.object.member_group:
             user_table = tables.UserAccountSingleGroupMembershipTable(user_qs, managed_group=self.object.member_group)
+            user_table.columns["is_group_member"].column.verbose_name = "In members group?"
         else:
             user_table = tables.UserAccountTable(user_qs, exclude="study_sites")
         dbgap_qs = dbGaPApplication.objects.filter(principal_investigator__study_sites=self.object)
