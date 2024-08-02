@@ -177,7 +177,7 @@ class UserAccountSingleGroupMembershipTable(UserAccountTable):
     class Meta(UserAccountTable.Meta):
         pass
 
-    is_group_member = tables.BooleanColumn(verbose_name="Has access?", default=False)
+    is_group_member = tables.BooleanColumn(default=False)
 
     def __init__(self, *args, managed_group=None, **kwargs):
         if managed_group is None:
