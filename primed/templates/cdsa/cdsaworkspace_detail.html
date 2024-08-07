@@ -1,7 +1,7 @@
 {% extends "anvil_consortium_manager/workspace_detail.html" %}
 {% load render_table from django_tables2 %}
 
-{% block pills %}
+{% block extra_pills %}
   {% if workspace_data_object.gsr_restricted %}
     {% include "snippets/gsr_restricted_badge.html" %}
   {% endif %}
@@ -27,9 +27,7 @@
     ></span>
   </span>
   {% endif %}
-
-{{ block.super }}
-{% endblock pills %}
+{% endblock extra_pills %}
 
 {% block workspace_data %}
   <dl class="row">
