@@ -391,6 +391,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
     "primed.miscellaneous_workspaces.adapters.DataPrepWorkspaceAdapter",
 ]
 ANVIL_ACCOUNT_ADAPTER = "primed.primed_anvil.adapters.AccountAdapter"
+ANVIL_MANAGED_GROUP_ADAPTER = "primed.primed_anvil.adapters.ManagedGroupAdapter"
 
 # Specify the URL name that AccountLink and AccountLinkVerify redirect to.
 ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
