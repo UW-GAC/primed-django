@@ -356,9 +356,11 @@ class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, Singl
     model = models.MemberAgreement
 
     def get_table(self):
-        return UserAccountSingleGroupMembershipTable(
+        access_group_table = UserAccountSingleGroupMembershipTable(
             self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
         )
+        access_group_table.columns["is_group_member"].column.verbose_name = "In access group?"
+        return access_group_table
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""
@@ -438,14 +440,17 @@ class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin
     model = models.DataAffiliateAgreement
 
     def get_tables(self):
+        access_group_table = UserAccountSingleGroupMembershipTable(
+            self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
+        )
+        access_group_table.columns["is_group_member"].column.verbose_name = "In access group?"
+        upload_group_table = UserAccountSingleGroupMembershipTable(
+            self.object.uploaders.all(), managed_group=self.object.anvil_upload_group
+        )
+        upload_group_table.columns["is_group_member"].column.verbose_name = "In upload group?"
         return (
-            UserAccountSingleGroupMembershipTable(
-                self.object.signed_agreement.accessors.all(),
-                managed_group=self.object.signed_agreement.anvil_access_group,
-            ),
-            UserAccountSingleGroupMembershipTable(
-                self.object.uploaders.all(), managed_group=self.object.anvil_upload_group
-            ),
+            access_group_table,
+            upload_group_table,
         )
 
     def get_object(self, queryset=None):
@@ -519,9 +524,11 @@ class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMi
     model = models.NonDataAffiliateAgreement
 
     def get_table(self):
-        return UserAccountSingleGroupMembershipTable(
+        access_group_table = UserAccountSingleGroupMembershipTable(
             self.object.signed_agreement.accessors.all(), managed_group=self.object.signed_agreement.anvil_access_group
         )
+        access_group_table.columns["is_group_member"].column.verbose_name = "In access group?"
+        return access_group_table
 
     def get_object(self, queryset=None):
         """Look up the agreement by CDSA cc_id."""

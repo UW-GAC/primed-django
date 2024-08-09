@@ -158,11 +158,13 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Mul
             return None
 
     def get_tables(self):
+        access_group_table = UserAccountSingleGroupMembershipTable(
+            self.object.collaborators.all(), managed_group=self.object.anvil_access_group
+        )
+        access_group_table.columns["is_group_member"].column.verbose_name = "In access group?"
         return (
             tables.dbGaPDataAccessSnapshotTable(self.object.dbgapdataaccesssnapshot_set.all()),
-            UserAccountSingleGroupMembershipTable(
-                self.object.collaborators.all(), managed_group=self.object.anvil_access_group
-            ),
+            access_group_table,
         )
 
     def get_context_data(self, *args, **kwargs):

@@ -40,7 +40,7 @@ cryptography==42.0.5
     # via pyjwt
 defusedxml==0.7.1
     # via python3-openid
-django==4.2.14
+django==4.2.15
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -58,7 +58,7 @@ django==4.2.14
     #   django-tables2
 django-allauth==0.54.0
     # via -r requirements/requirements.in
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.24
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.25
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
@@ -107,7 +107,7 @@ google-auth==2.28.1
     # via django-anvil-consortium-manager
 idna==3.7
     # via requests
-jsonapi-requests==0.7.0
+jsonapi-requests==0.8.0
     # via -r requirements/requirements.in
 jsonschema==4.23.0
     # via -r requirements/requirements.in
@@ -131,7 +131,7 @@ packaging==21.3
     # via
     #   build
     #   plotly
-pandas==2.0.3
+pandas==2.2.2
     # via -r requirements/requirements.in
 pip-tools==7.4.1
     # via -r requirements/requirements.in
