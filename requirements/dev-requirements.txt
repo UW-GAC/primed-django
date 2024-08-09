@@ -10,7 +10,7 @@ anyio==4.4.0
     # via
     #   starlette
     #   watchfiles
-asgiref==3.7.2
+asgiref==3.8.1
     # via
     #   -c requirements/requirements.txt
     #   django
@@ -44,7 +44,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.15
+django==5.1
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
