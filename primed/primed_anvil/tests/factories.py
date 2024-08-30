@@ -30,5 +30,5 @@ class AvailableDataFactory(DjangoModelFactory):
     class Meta:
         model = models.AvailableData
 
-    name = Faker("catch_phrase")
+    name = Sequence(lambda n: "data:{0:07d}".format(n))
     description = Faker("paragraph")
