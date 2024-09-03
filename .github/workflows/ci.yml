@@ -130,6 +130,7 @@ jobs:
 
       - name: Merge coverage files
         run: |
+          ls -la ./artifacts/coverage-data*
           python -m coverage combine ./artifacts/coverage-data*/coverage-*
           python -m coverage xml
           ls -la .coverage*
