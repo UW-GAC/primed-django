@@ -92,7 +92,7 @@ jobs:
 
       - name: Run tests
         run:  |
-          pytest --cov=gregor_django -n auto
+          pytest --cov=primed -n auto
           mv .coverage coverage-${{ strategy.job-index }}
 
       - name: List files for debugging purposes
