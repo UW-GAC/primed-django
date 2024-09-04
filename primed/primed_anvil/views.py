@@ -77,7 +77,7 @@ class StudyDetail(AnVILConsortiumManagerViewRequired, MultiTableMixin, DetailVie
             )
 
 
-class StudyList(AnVILConsortiumManagerViewRequired, SingleTableView, FilterView, autocomplete.Select2QuerySetView):
+class StudyList(AnVILConsortiumManagerViewRequired, SingleTableMixin, FilterView):
     """View to show a list of `Study`s."""
 
     model = models.Study
