@@ -135,7 +135,7 @@ pip-tools==7.4.1
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pronto==2.5.7
+pronto==2.5.8
     # via -r requirements/requirements.in
 pyasn1==0.5.1
     # via
