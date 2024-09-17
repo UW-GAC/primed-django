@@ -62,7 +62,7 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.0.1
+django-constance==4.1.1
     # via -r requirements/requirements.in
 django-crispy-forms==2.3
     # via
@@ -85,7 +85,7 @@ django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
 django-maintenance-mode==0.21.1
     # via -r requirements/requirements.in
-django-model-utils==4.5.1
+django-model-utils==5.0.0
     # via -r requirements/requirements.in
 django-picklefield==3.2
     # via -r requirements/requirements.in
@@ -135,7 +135,7 @@ pip-tools==7.4.1
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pronto==2.5.7
+pronto==2.5.8
     # via -r requirements/requirements.in
 pyasn1==0.5.1
     # via
