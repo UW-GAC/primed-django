@@ -189,7 +189,7 @@ six==1.16.0
     # via python-dateutil
 sqlparse==0.5.1
     # via django
-tablib==3.6.1
+tablib==3.7.0
     # via -r requirements/requirements.in
 tenacity==8.2.3
     # via
