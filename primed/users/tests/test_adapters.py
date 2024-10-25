@@ -35,24 +35,11 @@ class SocialAccountAdapterTest(TestCase):
             secret="test-client-secret",
         )
         self.social_app.sites.add(current_site)
-
-    def test_social_login_success(self):
-        # Mock user
-        request = self.factory.get("/")
-        middleware = SessionMiddleware(lambda x: None)
-        middleware.process_request(request)
-        request.session.save()
-        middleware = AuthenticationMiddleware(lambda x: None)
-        middleware.process_request(request)
-        request.user = AnonymousUser()
-        user = User.objects.create(username="testuser", email="testuser@example.com")
-
-        # # Mock social login
-        # Create a mock SocialAccount and link it to the user
+        self.user = User.objects.create(username="testuser", email="testuser@example.com")
         new_first_name = "Bob"
         new_last_name = "Rob"
-        social_account = SocialAccount.objects.create(
-            user=user,
+        self.social_account = SocialAccount.objects.create(
+            user=self.user,
             provider="drupal_oauth_provider",
             uid="12345",
             extra_data={
@@ -64,7 +51,37 @@ class SocialAccountAdapterTest(TestCase):
         )
 
         # Create a mock SocialLogin object and associate the user and social account
-        sociallogin = SocialLogin(user=user, account=social_account)
+        self.sociallogin = SocialLogin(user=self.user, account=self.social_account)
+
+    def test_social_login_success(self):
+        # Mock user
+        request = self.factory.get("/")
+        middleware = SessionMiddleware(lambda x: None)
+        middleware.process_request(request)
+        request.session.save()
+        middleware = AuthenticationMiddleware(lambda x: None)
+        middleware.process_request(request)
+        request.user = AnonymousUser()
+        # user = User.objects.create(username="testuser", email="testuser@example.com")
+
+        # # # Mock social login
+        # # Create a mock SocialAccount and link it to the user
+        new_first_name = "Bob"
+        new_last_name = "Rob"
+        # social_account = SocialAccount.objects.create(
+        #     user=user,
+        #     provider="drupal_oauth_provider",
+        #     uid="12345",
+        #     extra_data={
+        #         "preferred_username": "testuser",
+        #         "first_name": new_first_name,
+        #         "last_name": new_last_name,
+        #         "email": "testuser@example.com",
+        #     },
+        # )
+
+        # # Create a mock SocialLogin object and associate the user and social account
+        # sociallogin = SocialLogin(user=user, account=social_account)
 
         # Simulate social login
         from allauth.account.adapter import get_adapter
@@ -72,18 +89,34 @@ class SocialAccountAdapterTest(TestCase):
         # adapter = SocialAccountAdapter()
         adapter = get_adapter(request)
 
-        adapter.login(request, user)
+        adapter.login(request, self.user)
 
         signals.user_logged_in.send(
-            sender=user.__class__,
+            sender=self.user.__class__,
             request=request,
-            user=user,
-            sociallogin=sociallogin,
+            user=self.user,
+            sociallogin=self.sociallogin,
         )
         # Check if the login completed successfully
-        self.assertEqual(sociallogin.user, user)
-        self.assertEqual(request.user, user)
-        self.assertEqual(user.name, f"{new_first_name} {new_last_name}")
+        self.assertEqual(self.sociallogin.user, self.user)
+        self.assertEqual(request.user, self.user)
+        self.assertEqual(self.user.name, f"{new_first_name} {new_last_name}")
+
+    def test_authentication_error_with_callback(self):
+        """Test authentication error during callback processing"""
+        from django.urls import reverse
+
+        callback_url = reverse("drupal_oauth_provider_callback")
+        response = self.client.get(callback_url, {"error": "access_denied"})
+        self.assertTemplateUsed(
+            response,
+            "socialaccount/authentication_error.%s" % getattr(settings, "ACCOUNT_TEMPLATE_EXTENSION", "html"),
+        )
+        # # Check if the response redirects to the login error page
+        # #self.assertEqual(response.status_code, 302)
+        # import sys
+        # print(f"RESP {response} ", file=sys.stderr)
+        # self.assertIn('socialaccount/authentication_error', response.url)
 
     def test_update_user_info(self):
         adapter = SocialAccountAdapter()
@@ -224,10 +257,14 @@ class SocialAccountAdapterTest(TestCase):
     def test_account_is_open_for_signup(self):
         request = RequestFactory()
         adapter = AccountAdapter()
+        social_adapter = SocialAccountAdapter()
         assert adapter.is_open_for_signup(request) is True
+        assert social_adapter.is_open_for_signup(request=request, sociallogin=self.sociallogin) is True
 
     @override_settings(ACCOUNT_ALLOW_REGISTRATION=False)
     def test_account_is_not_open_for_signup(self):
         request = RequestFactory()
         adapter = AccountAdapter()
+        social_adapter = SocialAccountAdapter()
         assert adapter.is_open_for_signup(request) is False
+        assert social_adapter.is_open_for_signup(request=request, sociallogin=self.sociallogin) is False
