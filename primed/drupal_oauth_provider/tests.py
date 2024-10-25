@@ -1,22 +1,27 @@
 import base64
+import copy
 import datetime
 import hashlib
 import json
+import sys
 from urllib.parse import parse_qs, urlparse
 
 import jwt
 import requests
 from allauth.socialaccount import app_settings
 from allauth.socialaccount.adapter import get_adapter
-from allauth.socialaccount.models import SocialApp
+from allauth.socialaccount.models import SocialAccount, SocialApp, SocialToken
+from allauth.socialaccount.providers.oauth2.client import OAuth2Error
 from allauth.socialaccount.tests import OAuth2TestsMixin
 from allauth.tests import MockedResponse, TestCase
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
 from django.test import RequestFactory
 from django.test.utils import override_settings
+from django.urls import reverse
 
 from .provider import CustomProvider
 
@@ -76,17 +81,20 @@ def sign_id_token(payload):
 
 
 # Mocked version of the test data from /oauth/jwks
-KEY_SERVER_RESP_JSON = json.dumps(
-    {
-        "keys": [
-            {
-                "kty": TESTING_JWT_KEYSET["kty"],
-                "n": TESTING_JWT_KEYSET["n"],
-                "e": TESTING_JWT_KEYSET["e"],
-            }
-        ]
-    }
-)
+KEY_SERVER_RESP = {
+    "keys": [
+        {
+            "kty": TESTING_JWT_KEYSET["kty"],
+            "n": TESTING_JWT_KEYSET["n"],
+            "e": TESTING_JWT_KEYSET["e"],
+        }
+    ]
+}
+KEY_SERVER_RESP_INVALID = copy.deepcopy(KEY_SERVER_RESP)
+KEY_SERVER_RESP_INVALID["keys"][0]["kty"] = "nuts"
+KEY_SERVER_RESP_JSON = json.dumps(KEY_SERVER_RESP)
+KEY_SERVER_RESP_JSON_INVALID = json.dumps(KEY_SERVER_RESP_INVALID)
+print(f"KEY_RESP_VALID: {KEY_SERVER_RESP_JSON}", file=sys.stderr)
 
 
 # disable token storing for testing as it conflicts with drupals use
@@ -97,12 +105,18 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
 
     def setUp(self):
         super(CustomProviderTests, self).setUp()
+        self.factory = RequestFactory()
         # workaround to create a session. see:
         # https://code.djangoproject.com/ticket/11475
         User = get_user_model()
-        User.objects.create_user("testuser", "testuser@testuser.com", "testpw")
+        user = User.objects.create_user("testuser", "testuser@testuser.com", "testpw")
         self.client.login(username="testuser", password="testpw")
         self.setup_time = datetime.datetime.now(datetime.timezone.utc)
+
+        # Create a social account for testing
+        self.social_account = SocialAccount.objects.create(
+            provider=self.provider.id, user=user, uid="1234", extra_data={}
+        )
 
     # Provide two mocked responses, first is to the public key request
     # second is used for the profile request for extra data
@@ -208,6 +222,47 @@ class CustomProviderTests(OAuth2TestsMixin, TestCase):
             response_data["refresh_token"] = "testrf"
         return json.dumps(response_data)
 
+    def test_authentication_error(self):
+        # Create a request
+
+        request = self.factory.get(reverse("drupal_oauth_provider_login"))
+
+        # Add session and messages middleware
+        from django.contrib.sessions.middleware import SessionMiddleware
+
+        middleware = SessionMiddleware(lambda x: x)
+        middleware.process_request(request)
+        request.session.save()
+
+        # Add messages support
+
+        messages = FallbackStorage(request)
+        setattr(request, "_messages", messages)
+
+        # Create adapter instance
+        from primed.drupal_oauth_provider.views import CustomAdapter
+
+        adapter = CustomAdapter(request)
+        # Create a SocialToken instance
+        token = SocialToken(app=self.app, account=self.social_account, token="invalid_token")
+
+        with self.assertRaisesRegex(OAuth2Error, "Invalid id_token"):
+            # Simulate the error condition of a bad token
+            with self.mocked_response(self.get_mocked_response()[0]):
+                adapter.complete_login(request, app=self.app, token=token, response={"error": "invalid_grant"})
+
+        with self.assertRaisesRegex(OAuth2Error, "Error retrieving drupal public key"):
+            # Simulate the error condition of invalid json
+            with self.mocked_response(MockedResponse(200, "[lkjsdd]")):
+                adapter.complete_login(request, app=self.app, token=token, response={"error": "invalid_grant"})
+
+        with self.assertRaisesRegex(OAuth2Error, "failed to convert jwk"):
+            # Simulate the error condition of invalid jwk
+            with self.mocked_response(
+                MockedResponse(200, KEY_SERVER_RESP_JSON_INVALID),
+            ):
+                adapter.complete_login(request, app=self.app, token=token, response={"error": "invalid_grant"})
+
 
 class TestProviderConfig(TestCase):
     def setUp(self):
@@ -235,6 +290,15 @@ class TestProviderConfig(TestCase):
         rf = RequestFactory()
         request = rf.get("/fake-url/")
         custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = None
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
+            with self.assertRaises(ImproperlyConfigured):
+                CustomProvider(request, app=self.app).get_provider_scope_config()
+
+    def test_custom_provider_scope_config_not_list(self):
+        custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = {"not_a_list": 1}
         with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
             with self.assertRaises(ImproperlyConfigured):
                 CustomProvider(request, app=self.app).get_provider_scope_config()
