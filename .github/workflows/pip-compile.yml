@@ -22,6 +22,12 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Temporarily pin pip-compile version
+        # The latest version of pip and pip-tools creates absolute paths instead of relative paths
+        # when compiling requirements files.
+        run: |
+          pip install --upgrade pip==24.3
+
       - name: Update requirements files
         uses: UW-GAC/pip-tools-actions/update-requirements-files@v0.1
         with:
