@@ -37,9 +37,7 @@ crispy-bootstrap5==2024.10
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
 cryptography==43.0.1
-    # via pyjwt
-defusedxml==0.7.1
-    # via python3-openid
+    # via -r requirements/requirements.in
 django==4.2.16
     # via
     #   -r requirements/requirements.in
@@ -56,13 +54,13 @@ django==4.2.16
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==0.54.0
+django-allauth==65.0.2
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.25
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.1.2
+django-constance==4.1.3
     # via -r requirements/requirements.in
 django-crispy-forms==2.3
     # via
@@ -145,8 +143,8 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
-pyjwt[crypto]==2.4.0
-    # via django-allauth
+pyjwt==2.4.0
+    # via -r requirements/requirements.in
 pyparsing==3.1.1
     # via packaging
 pyproject-hooks==1.0.0
@@ -159,8 +157,6 @@ python-dateutil==2.8.2
     #   pronto
 python-fsutil==0.13.1
     # via django-maintenance-mode
-python3-openid==3.2.0
-    # via django-allauth
 pytz==2023.3.post1
     # via
     #   django-anvil-consortium-manager
@@ -173,12 +169,11 @@ referencing==0.33.0
 requests==2.32.3
     # via
     #   -r requirements/requirements.in
-    #   django-allauth
     #   django-anvil-consortium-manager
     #   jsonapi-requests
     #   requests-oauthlib
 requests-oauthlib==1.3.1
-    # via django-allauth
+    # via -r requirements/requirements.in
 rpds-py==0.17.1
     # via
     #   jsonschema

@@ -12,13 +12,11 @@ from allauth.socialaccount.providers.oauth2.views import (
     OAuth2LoginView,
 )
 
-from .provider import CustomProvider
-
 logger = logging.getLogger(__name__)
 
 
 class CustomAdapter(OAuth2Adapter):
-    provider_id = CustomProvider.id
+    provider_id = "drupal_oauth_provider"
 
     provider_settings = app_settings.PROVIDERS.get(provider_id, {})
 
@@ -60,7 +58,8 @@ class CustomAdapter(OAuth2Adapter):
         try:
             public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(public_key_jwk))
         except Exception as e:
-            logger.error(f"[get_public_key] failed to convert jwk to public key {e}")
+            logger.error(f"[get_public_key] failed to convert jwk {public_key_jwk} to public key {e}")
+            raise OAuth2Error(f"[get_public_key] failed to convert jwk {public_key_jwk} to public key {e}")
         else:
             return public_key
 
@@ -74,7 +73,6 @@ class CustomAdapter(OAuth2Adapter):
         scopes = None
 
         try:
-            unverified_header = jwt.get_unverified_header(id_token.token)
             token_payload = jwt.decode(
                 id_token.token,
                 public_key,
@@ -85,9 +83,6 @@ class CustomAdapter(OAuth2Adapter):
         except jwt.PyJWTError as e:
             logger.error(f"Invalid id_token {e} {id_token.token}")
             raise OAuth2Error("Invalid id_token") from e
-        except Exception as e:
-            logger.error(f"Other exception parsing token {e} header {unverified_header} token {id_token}")
-            raise OAuth2Error("Error when decoding token {e}")
         else:
             scopes = token_payload.get("scope")
 
