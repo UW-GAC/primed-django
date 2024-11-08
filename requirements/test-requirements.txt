@@ -25,7 +25,7 @@ exceptiongroup==1.2.0
     # via pytest
 execnet==2.1.1
     # via pytest-xdist
-factory-boy==3.3.0
+factory-boy==3.3.1
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
@@ -53,16 +53,16 @@ pyparsing==3.1.1
     # via
     #   -c requirements/requirements.txt
     #   packaging
-pytest==8.3.2
+pytest==8.3.3
     # via
     #   -r requirements/test-requirements.in
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
     #   pytest-xdist
-pytest-cov==5.0.0
+pytest-cov==6.0.0
     # via -r requirements/test-requirements.in
-pytest-django==4.8.0
+pytest-django==4.9.0
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in

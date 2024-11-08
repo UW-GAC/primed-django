@@ -21,7 +21,7 @@ class AgreementMajorVersionFactory(DjangoModelFactory):
         model = models.AgreementMajorVersion
         django_get_or_create = ("version",)
 
-    version = Faker("random_int", min=1)
+    version = Sequence(lambda n: n + 1)
 
 
 class AgreementVersionFactory(DjangoModelFactory):
