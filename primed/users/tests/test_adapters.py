@@ -1,63 +1,122 @@
 import pytest
 from allauth.account import app_settings as account_settings
-from allauth.socialaccount.helpers import complete_social_login
-from allauth.socialaccount.models import SocialAccount, SocialLogin
-from allauth.utils import get_user_model
+from allauth.account import signals
+from allauth.socialaccount.models import SocialAccount, SocialApp, SocialLogin
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.sites.models import Site
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 
+from primed.drupal_oauth_provider.provider import CustomProvider
 from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.adapters import AccountAdapter, SocialAccountAdapter
 
 from .factories import GroupFactory, UserFactory
 
+User = get_user_model()
 
-@pytest.mark.django_db
-class TestsUserSocialLoginAdapter(object):
-    @override_settings(
-        SOCIALACCOUNT_AUTO_SIGNUP=True,
-        ACCOUNT_SIGNUP_FORM_CLASS=None,
-        ACCOUNT_EMAIL_VERIFICATION=account_settings.EmailVerificationMethod.NONE,  # noqa
-    )
-    def test_drupal_social_login_adapter(self):
-        factory = RequestFactory()
-        request = factory.get("/accounts/login/callback/")
-        request.user = AnonymousUser()
-        SessionMiddleware(lambda request: None).process_request(request)
-        MessageMiddleware(lambda request: None).process_request(request)
 
-        User = get_user_model()
-        user = User()
-        old_name = "Old Name"
-        old_username = "test"
-        old_email = "test@example.com"
-        setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, old_username)
-        setattr(user, "name", old_name)
-        setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, old_email)
-
-        account = SocialAccount(
-            provider="drupal_oauth_provider",
-            uid="123",
-            extra_data=dict(
-                first_name="Old",
-                last_name="Name",
-                email=old_email,
-                preferred_username=old_username,
-            ),
+class SocialAccountAdapterTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        # Setup a mock social app
+        current_site = Site.objects.get_current()
+        self.social_app = SocialApp.objects.create(
+            provider=CustomProvider.id,
+            name="DOA",
+            client_id="test-client-id",
+            secret="test-client-secret",
         )
-        sociallogin = SocialLogin(user=user, account=account)
-        complete_social_login(request, sociallogin)
+        self.social_app.sites.add(current_site)
+        self.user = User.objects.create(username="testuser", email="testuser@example.com")
+        new_first_name = "Bob"
+        new_last_name = "Rob"
+        self.social_account = SocialAccount.objects.create(
+            user=self.user,
+            provider="drupal_oauth_provider",
+            uid="12345",
+            extra_data={
+                "preferred_username": "testuser",
+                "first_name": new_first_name,
+                "last_name": new_last_name,
+                "email": "testuser@example.com",
+            },
+        )
 
-        user = User.objects.get(**{account_settings.USER_MODEL_USERNAME_FIELD: old_username})
-        assert SocialAccount.objects.filter(user=user, uid=account.uid).exists() is True
-        assert user.name == old_name
-        assert user.username == old_username
-        assert user.email == old_email
+        # Create a mock SocialLogin object and associate the user and social account
+        self.sociallogin = SocialLogin(user=self.user, account=self.social_account)
+
+    def test_social_login_success(self):
+        # Mock user
+        request = self.factory.get("/")
+        middleware = SessionMiddleware(lambda x: None)
+        middleware.process_request(request)
+        request.session.save()
+        middleware = AuthenticationMiddleware(lambda x: None)
+        middleware.process_request(request)
+        request.user = AnonymousUser()
+        # user = User.objects.create(username="testuser", email="testuser@example.com")
+
+        # # # Mock social login
+        # # Create a mock SocialAccount and link it to the user
+        new_first_name = "Bob"
+        new_last_name = "Rob"
+        # social_account = SocialAccount.objects.create(
+        #     user=user,
+        #     provider="drupal_oauth_provider",
+        #     uid="12345",
+        #     extra_data={
+        #         "preferred_username": "testuser",
+        #         "first_name": new_first_name,
+        #         "last_name": new_last_name,
+        #         "email": "testuser@example.com",
+        #     },
+        # )
+
+        # # Create a mock SocialLogin object and associate the user and social account
+        # sociallogin = SocialLogin(user=user, account=social_account)
+
+        # Simulate social login
+        from allauth.account.adapter import get_adapter
+
+        # adapter = SocialAccountAdapter()
+        adapter = get_adapter(request)
+
+        adapter.login(request, self.user)
+
+        signals.user_logged_in.send(
+            sender=self.user.__class__,
+            request=request,
+            user=self.user,
+            sociallogin=self.sociallogin,
+        )
+        # Check if the login completed successfully
+        self.assertEqual(self.sociallogin.user, self.user)
+        self.assertEqual(request.user, self.user)
+        self.assertEqual(self.user.name, f"{new_first_name} {new_last_name}")
+
+    def test_authentication_error_with_callback(self):
+        """Test authentication error during callback processing"""
+        from django.urls import reverse
+
+        callback_url = reverse("drupal_oauth_provider_callback")
+        response = self.client.get(callback_url, {"error": "access_denied"})
+        self.assertTemplateUsed(
+            response,
+            "socialaccount/authentication_error.%s" % getattr(settings, "ACCOUNT_TEMPLATE_EXTENSION", "html"),
+        )
+        # # Check if the response redirects to the login error page
+        # #self.assertEqual(response.status_code, 302)
+        # import sys
+        # print(f"RESP {response} ", file=sys.stderr)
+        # self.assertIn('socialaccount/authentication_error', response.url)
 
     def test_update_user_info(self):
         adapter = SocialAccountAdapter()
@@ -122,7 +181,7 @@ class TestsUserSocialLoginAdapter(object):
         assert user.study_sites.all().count() == 1
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-    def test_update_user_study_sites_unknown(self, settings):
+    def test_update_user_study_sites_unknown(self):
         adapter = SocialAccountAdapter()
         user = UserFactory()
 
@@ -198,10 +257,14 @@ class TestsUserSocialLoginAdapter(object):
     def test_account_is_open_for_signup(self):
         request = RequestFactory()
         adapter = AccountAdapter()
+        social_adapter = SocialAccountAdapter()
         assert adapter.is_open_for_signup(request) is True
+        assert social_adapter.is_open_for_signup(request=request, sociallogin=self.sociallogin) is True
 
     @override_settings(ACCOUNT_ALLOW_REGISTRATION=False)
     def test_account_is_not_open_for_signup(self):
         request = RequestFactory()
         adapter = AccountAdapter()
+        social_adapter = SocialAccountAdapter()
         assert adapter.is_open_for_signup(request) is False
+        assert social_adapter.is_open_for_signup(request=request, sociallogin=self.sociallogin) is False

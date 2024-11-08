@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from allauth.socialaccount.models import SocialApp
 from anvil_consortium_manager.models import AnVILProjectManagerAccess
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
@@ -11,6 +12,7 @@ from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.sites.models import Site
 from django.http import HttpRequest
 from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
@@ -22,6 +24,7 @@ from primed.cdsa.tests.factories import (
     NonDataAffiliateAgreementFactory,
 )
 from primed.dbgap.tests.factories import dbGaPApplicationFactory
+from primed.drupal_oauth_provider.provider import CustomProvider
 from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.forms import UserChangeForm
 from primed.users.models import User
@@ -187,6 +190,22 @@ class TestUserDetailView:
         user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
         response = client.get(user_detail_url)
         assert account.get_absolute_url() not in str(response.content)
+
+
+class LoginViewTest(TestCase):
+    def setUp(self):
+        current_site = Site.objects.get_current()
+        self.social_app = SocialApp.objects.create(
+            provider=CustomProvider.id,
+            name="DOA",
+            client_id="test-client-id",
+            secret="test-client-secret",
+        )
+        self.social_app.sites.add(current_site)
+
+    def test_basic_login_view_render(self):
+        response = self.client.get(reverse("account_login"))
+        assert response.status_code == 200
 
 
 class UserDetailTest(TestCase):
