@@ -394,12 +394,6 @@ ANVIL_WORKSPACE_ADAPTERS = [
 ANVIL_ACCOUNT_ADAPTER = "primed.primed_anvil.adapters.AccountAdapter"
 ANVIL_MANAGED_GROUP_ADAPTER = "primed.primed_anvil.adapters.ManagedGroupAdapter"
 
-# Specify the URL name that AccountLink and AccountLinkVerify redirect to.
-ANVIL_ACCOUNT_LINK_REDIRECT = "users:redirect"
-# Specify the subject for AnVIL account verification emails.
-ANVIL_ACCOUNT_LINK_EMAIL_SUBJECT = "Verify your AnVIL account email"
-ANVIL_ACCOUNT_VERIFY_NOTIFICATION_EMAIL = "primedconsortium@uw.edu"
-
 DRUPAL_API_CLIENT_ID = env("DRUPAL_API_CLIENT_ID", default="")
 DRUPAL_API_CLIENT_SECRET = env("DRUPAL_API_CLIENT_SECRET", default="")
 DRUPAL_API_REL_PATH = env("DRUPAL_API_REL_PATH", default="mockapi")
