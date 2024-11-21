@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
@@ -26,6 +27,7 @@ urlpatterns = [
         "collaborative_analysis/",
         include("primed.collaborative_analysis.urls", namespace="collaborative_analysis"),
     ),
+    path("favicon.ico", lambda _: redirect("static/images/favicons/primed-favicon.png", permanent=True)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
