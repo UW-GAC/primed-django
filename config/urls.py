@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -26,6 +27,7 @@ urlpatterns = [
         "collaborative_analysis/",
         include("primed.collaborative_analysis.urls", namespace="collaborative_analysis"),
     ),
+    path("favicon.ico", RedirectView.as_view(url="/static/images/favicons/primed-favicon.png", permanent=True)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
