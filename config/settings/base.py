@@ -310,6 +310,7 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "cdsa:records:user_access",
     "dbgap:records:index",
     "dbgap:records:applications",
+    "favicon",
 ]
 
 # django-dbbackup
