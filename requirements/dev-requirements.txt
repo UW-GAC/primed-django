@@ -44,7 +44,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.16
+django==4.2.17
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -137,7 +137,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.8.1
+ruff==0.8.3
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
