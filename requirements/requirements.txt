@@ -39,7 +39,7 @@ crispy-bootstrap5==2024.10
     #   django-anvil-consortium-manager
 cryptography==44.0.0
     # via -r requirements/requirements.in
-django==4.2.17
+django==4.2.18
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -61,7 +61,7 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.1.3
+django-constance==4.2.0
     # via -r requirements/requirements.in
 django-crispy-forms==2.3
     # via
@@ -70,7 +70,7 @@ django-crispy-forms==2.3
     #   django-anvil-consortium-manager
 django-dbbackup==4.2.1
     # via -r requirements/requirements.in
-django-environ==0.10.0
+django-environ==0.12.0
     # via -r requirements/requirements.in
 django-extensions==3.2.3
     # via
@@ -110,7 +110,7 @@ jsonschema==4.23.0
     # via -r requirements/requirements.in
 jsonschema-specifications==2023.12.1
     # via jsonschema
-mysqlclient==2.2.6
+mysqlclient==2.2.7
     # via -r requirements/requirements.in
 networkx==3.1
     # via
@@ -185,7 +185,7 @@ six==1.16.0
     # via python-dateutil
 sqlparse==0.5.1
     # via django
-tablib==3.7.0
+tablib==3.8.0
     # via -r requirements/requirements.in
 tenacity==8.2.3
     # via
