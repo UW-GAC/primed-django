@@ -32,7 +32,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         user_changed = False
         if user.name != full_name:
             logger.info(
-                f"[SocialAccountAdatpter:update_user_info] user {user} " f"name updated from {user.name} to {full_name}"
+                f"[SocialAccountAdatpter:update_user_info] user {user} name updated from {user.name} to {full_name}"
             )
             user.name = full_name
             user_changed = True
