@@ -101,12 +101,9 @@ class DataUseOntologyModel(models.Model):
         if hasattr(self, "data_use_permission") and self.data_use_permission:
             if self.data_use_permission.requires_disease_term and not self.disease_term:
                 raise ValidationError(
-                    "`disease_term` must not be None " "because data_use_permission requires a disease restriction."
+                    "`disease_term` must not be None because data_use_permission requires a disease restriction."
                 )
             if not self.data_use_permission.requires_disease_term and self.disease_term:
                 raise ValidationError(
-                    (
-                        "`disease_term` must be None "
-                        "because data_use_permission does not require a disease restriction."
-                    )
+                    ("`disease_term` must be None because data_use_permission does not require a disease restriction.")
                 )

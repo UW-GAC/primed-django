@@ -18,6 +18,9 @@ class AccountAdapter(BaseAccountAdapter):
 
     list_table_class = AccountTable
     list_filterset_class = AccountListFilter
+    account_link_verify_message = """Thank you for linking your account!
+    The CC will add your account to appropriate groups on AnVIL.
+    If you do not have access to workspaces that you expect after 24 hours, please contact the CC."""
     account_link_verify_redirect = "users:redirect"
     account_link_email_subject = "Verify your AnVIL account email"
     account_verify_notification_email = "foo@uw.edu"
