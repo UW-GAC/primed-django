@@ -91,6 +91,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "anvil_consortium_manager",
+    "anvil_consortium_manager.auditor",
     "primed.users.apps.UsersConfig",
     # Your stuff: custom apps go here
     "primed.drupal_oauth_provider",
