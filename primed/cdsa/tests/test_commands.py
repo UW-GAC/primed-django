@@ -113,17 +113,13 @@ class RunCDSAAuditTest(TestCase):
         """Test command output."""
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running SignedAgreement access audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
-        )
+        expected_output = "Running SignedAgreement access audit... ok!\n* Verified: 0\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
-        expected_output = (
-            "Running CDSAWorkspace access audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
-        )
+        expected_output = "Running CDSAWorkspace access audit... ok!\n* Verified: 0\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(expected_output, out.getvalue())
-        expected_output = "Running Accessor audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
-        expected_output = "Running Uploader audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Accessor audit... ok!\n* Verified: 0\n* Needs action: 0\n* Errors: 0\n"
+        expected_output = "Running Uploader audit... ok!\n* Verified: 0\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -134,9 +130,7 @@ class RunCDSAAuditTest(TestCase):
         factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running SignedAgreement access audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
-        )
+        expected_output = "Running SignedAgreement access audit... ok!\n* Verified: 1\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -147,10 +141,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), out.getvalue())
@@ -167,10 +158,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 1\n"
+            "Running SignedAgreement access audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), out.getvalue())
@@ -192,10 +180,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         # One message has been sent by default.
@@ -215,10 +200,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
-            "Running SignedAgreement access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 1\n"
+            "Running SignedAgreement access audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:sag:all"), out.getvalue())
@@ -234,9 +216,7 @@ class RunCDSAAuditTest(TestCase):
         factories.CDSAWorkspaceFactory.create()
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running CDSAWorkspace access audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
-        )
+        expected_output = "Running CDSAWorkspace access audit... ok!\n* Verified: 1\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -252,10 +232,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running CDSAWorkspace access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:workspaces:all"), out.getvalue())
@@ -272,10 +249,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running CDSAWorkspace access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 1\n"
+            "Running CDSAWorkspace access audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:workspaces:all"), out.getvalue())
@@ -302,10 +276,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
-            "Running CDSAWorkspace access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         # One message has been sent by default.
@@ -325,10 +296,7 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
-            "Running CDSAWorkspace access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 0\n"
-            "* Errors: 1\n"
+            "Running CDSAWorkspace access audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         )
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:workspaces:all"), out.getvalue())
@@ -344,7 +312,7 @@ class RunCDSAAuditTest(TestCase):
         factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = "Running Accessor audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Accessor audit... ok!\n* Verified: 0\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -356,7 +324,7 @@ class RunCDSAAuditTest(TestCase):
         agreement.signed_agreement.accessors.add(UserFactory.create())
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = "Running Accessor audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Accessor audit... ok!\n* Verified: 1\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -368,9 +336,7 @@ class RunCDSAAuditTest(TestCase):
         agreement.signed_agreement.accessors.add(account.user)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Accessor audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:accessors:all"), out.getvalue())
         # Zero messages have been sent by default.
@@ -384,9 +350,7 @@ class RunCDSAAuditTest(TestCase):
         )
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 1\n"
-        )
+        expected_output = "Running Accessor audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:accessors:all"), out.getvalue())
         # Zero messages have been sent by default.
@@ -412,9 +376,7 @@ class RunCDSAAuditTest(TestCase):
         agreement.signed_agreement.accessors.add(account.user)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
-        expected_output = (
-            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Accessor audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # One message has been sent by default.
         self.assertEqual(len(mail.outbox), 1)
@@ -431,9 +393,7 @@ class RunCDSAAuditTest(TestCase):
         )
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
-        expected_output = (
-            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 1\n"
-        )
+        expected_output = "Running Accessor audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:accessors:all"), out.getvalue())
         # One message has been sent by default.
@@ -448,7 +408,7 @@ class RunCDSAAuditTest(TestCase):
         factories.DataAffiliateAgreementFactory.create(is_primary=False)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = "Running Uploader audit... ok!\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Uploader audit... ok!\n* Verified: 0\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
@@ -460,7 +420,7 @@ class RunCDSAAuditTest(TestCase):
         agreement.uploaders.add(UserFactory.create())
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = "Running Uploader audit... ok!\n" "* Verified: 1\n" "* Needs action: 0\n" "* Errors: 0\n"
+        expected_output = "Running Uploader audit... ok!\n* Verified: 1\n* Needs action: 0\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # Zero messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -472,9 +432,7 @@ class RunCDSAAuditTest(TestCase):
         agreement.uploaders.add(account.user)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Uploader audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), out.getvalue())
         # Zero messages have been sent by default.
@@ -488,9 +446,7 @@ class RunCDSAAuditTest(TestCase):
         )
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
-        expected_output = (
-            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 1\n"
-        )
+        expected_output = "Running Uploader audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), out.getvalue())
         # Zero messages have been sent by default.
@@ -516,9 +472,7 @@ class RunCDSAAuditTest(TestCase):
         agreement.uploaders.add(account.user)
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
-        expected_output = (
-            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Uploader audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # One message has been sent by default.
         self.assertEqual(len(mail.outbox), 1)
@@ -535,9 +489,7 @@ class RunCDSAAuditTest(TestCase):
         )
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
-        expected_output = (
-            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 0\n" "* Errors: 1\n"
-        )
+        expected_output = "Running Uploader audit... problems found.\n* Verified: 0\n* Needs action: 0\n* Errors: 1\n"
         self.assertIn(expected_output, out.getvalue())
         self.assertIn(reverse("cdsa:audit:signed_agreements:uploaders:all"), out.getvalue())
         # One message has been sent by default.
@@ -555,26 +507,16 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", stdout=out)
         expected_output = (
-            "Running CDSAWorkspace access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         expected_output = (
-            "Running SignedAgreement access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
-        expected_output = (
-            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Accessor audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
-        expected_output = (
-            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Uploader audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # No messages have been sent by default.
         self.assertEqual(len(mail.outbox), 0)
@@ -587,26 +529,16 @@ class RunCDSAAuditTest(TestCase):
         out = StringIO()
         call_command("run_cdsa_audit", "--no-color", email="test@example.com", stdout=out)
         expected_output = (
-            "Running CDSAWorkspace access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running CDSAWorkspace access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
         expected_output = (
-            "Running SignedAgreement access audit... problems found.\n"
-            "* Verified: 0\n"
-            "* Needs action: 1\n"
-            "* Errors: 0\n"
+            "Running SignedAgreement access audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         )
         self.assertIn(expected_output, out.getvalue())
-        expected_output = (
-            "Running Accessor audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Accessor audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
-        expected_output = (
-            "Running Uploader audit... problems found.\n" "* Verified: 0\n" "* Needs action: 1\n" "* Errors: 0\n"
-        )
+        expected_output = "Running Uploader audit... problems found.\n* Verified: 0\n* Needs action: 1\n* Errors: 0\n"
         self.assertIn(expected_output, out.getvalue())
         # Two messages has been sent.
         self.assertEqual(len(mail.outbox), 4)
