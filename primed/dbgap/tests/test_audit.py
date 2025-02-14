@@ -1190,6 +1190,54 @@ class dbGaPCollaboratorAuditTest(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.COLLABORATOR_LINKED_ACCOUNT)
 
+    def test_collaborator_linked_account_inactive_in_access_group(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        dbgap_application.collaborators.add(account.user)
+        # Deactivate account.
+        account.deactivate()
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=dbgap_application.anvil_access_group, account=account)
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application_and_object(dbgap_application, account.user)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, collaborator_audit.RemoveAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.INACTIVE_ACCOUNT)
+
+    def test_collaborator_linked_account_inactive_not_in_access_group(self):
+        # Create applications.
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up collaborators.
+        dbgap_application.collaborators.add(account.user)
+        # Deactivate account.
+        account.deactivate()
+        # Set up audit
+        collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
+        # Run audit
+        collab_audit.audit_application_and_object(dbgap_application, account.user)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, collaborator_audit.VerifiedNoAccess)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collaborator_audit.dbGaPCollaboratorAudit.INACTIVE_ACCOUNT)
+
     def test_collaborator_no_account(self):
         # Create applications.
         dbgap_application = factories.dbGaPApplicationFactory.create()
