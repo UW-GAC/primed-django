@@ -3122,6 +3122,54 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         self.assertEqual(record.member, None)
         self.assertEqual(record.note, uploader_audit.UploaderAudit.UPLOADER_NO_ACCOUNT)
 
+    def test_uploader_inactive_account_not_in_access_group(self):
+        # Create agreement.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Deactivate account.
+        account.deactivate()
+        # Set up audit
+        audit = uploader_audit.UploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, uploader_audit.VerifiedNoAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.INACTIVE_ACCOUNT)
+
+    def test_uploader_inactive_account_in_access_group(self):
+        # Create agreement.
+        data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up uploaders.
+        data_affiliate_agreement.uploaders.add(account.user)
+        # Deactivate account.
+        account.deactivate()
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=data_affiliate_agreement.anvil_upload_group, account=account)
+        # Set up audit
+        audit = uploader_audit.UploaderAudit()
+        # Run audit
+        audit.audit_agreement(data_affiliate_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, uploader_audit.RemoveAccess)
+        self.assertEqual(record.data_affiliate_agreement, data_affiliate_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, uploader_audit.UploaderAudit.INACTIVE_ACCOUNT)
+
     def test_user_in_group_not_uploader(self):
         # Create applications.
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()

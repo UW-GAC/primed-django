@@ -128,6 +128,9 @@ class UploaderAudit(PRIMEDAudit):
     NOT_UPLOADER = "Not an uploader."
     GROUP_WITHOUT_ACCESS = "Groups do not have access."
 
+    # message when an account is inactive.
+    INACTIVE_ACCOUNT = "Account is inactive."
+
     # # Unexpected.
     # ERROR_HAS_ACCESS = "Has access for an unknown reason."
     UNEXPECTED_GROUP_ACCESS = "Group should not have access."
@@ -254,17 +257,28 @@ class UploaderAudit(PRIMEDAudit):
             return
 
         is_uploader = user in data_affiliate_agreement.uploaders.all()
+        is_active = account.status == account.ACTIVE_STATUS
 
         if is_in_access_group:
             if is_uploader:
-                self.verified.append(
-                    VerifiedAccess(
-                        data_affiliate_agreement=data_affiliate_agreement,
-                        user=user,
-                        member=account,
-                        note=self.UPLOADER_IN_ACCESS_GROUP,
+                if is_active:
+                    self.verified.append(
+                        VerifiedAccess(
+                            data_affiliate_agreement=data_affiliate_agreement,
+                            user=user,
+                            member=account,
+                            note=self.UPLOADER_IN_ACCESS_GROUP,
+                        )
                     )
-                )
+                else:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            data_affiliate_agreement=data_affiliate_agreement,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
             else:
                 self.needs_action.append(
                     RemoveAccess(
@@ -276,14 +290,24 @@ class UploaderAudit(PRIMEDAudit):
                 )
         else:
             if is_uploader:
-                self.needs_action.append(
-                    GrantAccess(
-                        data_affiliate_agreement=data_affiliate_agreement,
-                        user=user,
-                        member=account,
-                        note=self.UPLOADER_LINKED_ACCOUNT,
+                if is_active:
+                    self.needs_action.append(
+                        GrantAccess(
+                            data_affiliate_agreement=data_affiliate_agreement,
+                            user=user,
+                            member=account,
+                            note=self.UPLOADER_LINKED_ACCOUNT,
+                        )
                     )
-                )
+                else:
+                    self.verified.append(
+                        VerifiedNoAccess(
+                            data_affiliate_agreement=data_affiliate_agreement,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
             else:
                 self.verified.append(
                     VerifiedNoAccess(
