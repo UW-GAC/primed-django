@@ -122,6 +122,8 @@ class AccessorAudit(PRIMEDAudit):
     NOT_ACCESSOR = "Not an accessor."
     GROUP_WITHOUT_ACCESS = "Groups do not have access."
 
+    # Active status
+    INACTIVE_ACCOUNT = "Account is inactive."
     # # Unexpected.
     # ERROR_HAS_ACCESS = "Has access for an unknown reason."
     UNEXPECTED_GROUP_ACCESS = "Group should not have access."
@@ -222,6 +224,7 @@ class AccessorAudit(PRIMEDAudit):
         is_in_access_group = GroupAccountMembership.objects.filter(
             account=account, group=signed_agreement.anvil_access_group
         ).exists()
+        is_active = account.status == account.ACTIVE_STATUS
 
         # Get the user.
         if hasattr(account, "user") and account.user:
@@ -248,36 +251,65 @@ class AccessorAudit(PRIMEDAudit):
             return
 
         is_accessor = user in signed_agreement.accessors.all()
-
         if is_in_access_group:
             if is_accessor:
-                self.verified.append(
-                    VerifiedAccess(
-                        signed_agreement=signed_agreement,
-                        user=user,
-                        member=account,
-                        note=self.ACCESSOR_IN_ACCESS_GROUP,
+                if is_active:
+                    self.verified.append(
+                        VerifiedAccess(
+                            signed_agreement=signed_agreement,
+                            user=user,
+                            member=account,
+                            note=self.ACCESSOR_IN_ACCESS_GROUP,
+                        )
                     )
-                )
+                else:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            signed_agreement=signed_agreement,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
             else:
-                self.needs_action.append(
-                    RemoveAccess(
-                        signed_agreement=signed_agreement,
-                        user=user,
-                        member=account,
-                        note=self.NOT_ACCESSOR,
+                if is_active:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            signed_agreement=signed_agreement,
+                            user=user,
+                            member=account,
+                            note=self.NOT_ACCESSOR,
+                        )
                     )
-                )
+                else:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            signed_agreement=signed_agreement,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
         else:
             if is_accessor:
-                self.needs_action.append(
-                    GrantAccess(
-                        signed_agreement=signed_agreement,
-                        user=user,
-                        member=account,
-                        note=self.ACCESSOR_LINKED_ACCOUNT,
+                if is_active:
+                    self.needs_action.append(
+                        GrantAccess(
+                            signed_agreement=signed_agreement,
+                            user=user,
+                            member=account,
+                            note=self.ACCESSOR_LINKED_ACCOUNT,
+                        )
                     )
-                )
+                else:
+                    self.verified.append(
+                        VerifiedNoAccess(
+                            signed_agreement=signed_agreement,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
             else:
                 self.verified.append(
                     VerifiedNoAccess(

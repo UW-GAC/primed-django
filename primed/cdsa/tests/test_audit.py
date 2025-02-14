@@ -2680,6 +2680,54 @@ class AccessorAuditTest(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, accessor_audit.AccessorAudit.ACCOUNT_NOT_LINKED_TO_USER)
 
+    def test_accessor_inactive_account_not_in_access_group(self):
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up accessors.
+        signed_agreement.accessors.add(account.user)
+        # Deactivate account.
+        account.deactivate()
+        # Set up audit
+        audit = accessor_audit.AccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 1)
+        self.assertEqual(len(audit.needs_action), 0)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.verified[0]
+        self.assertIsInstance(record, accessor_audit.VerifiedNoAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.INACTIVE_ACCOUNT)
+
+    def test_accessor_inactive_account_in_access_group(self):
+        # Create applications.
+        signed_agreement = factories.SignedAgreementFactory.create()
+        # Create accounts.
+        account = AccountFactory.create(verified=True)
+        # Set up accessors.
+        signed_agreement.accessors.add(account.user)
+        # Deactivate account.
+        account.deactivate()
+        # Access group membership.
+        GroupAccountMembershipFactory.create(group=signed_agreement.anvil_access_group, account=account)
+        # Set up audit
+        audit = accessor_audit.AccessorAudit()
+        # Run audit
+        audit.audit_agreement(signed_agreement)
+        self.assertEqual(len(audit.verified), 0)
+        self.assertEqual(len(audit.needs_action), 1)
+        self.assertEqual(len(audit.errors), 0)
+        record = audit.needs_action[0]
+        self.assertIsInstance(record, accessor_audit.RemoveAccess)
+        self.assertEqual(record.signed_agreement, signed_agreement)
+        self.assertEqual(record.user, account.user)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, accessor_audit.AccessorAudit.INACTIVE_ACCOUNT)
+
     def test_two_accessors(self):
         """Audit works when there are two accessors."""
         # Create applications.
