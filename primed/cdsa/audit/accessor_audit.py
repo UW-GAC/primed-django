@@ -272,24 +272,14 @@ class AccessorAudit(PRIMEDAudit):
                         )
                     )
             else:
-                if is_active:
-                    self.needs_action.append(
-                        RemoveAccess(
-                            signed_agreement=signed_agreement,
-                            user=user,
-                            member=account,
-                            note=self.NOT_ACCESSOR,
-                        )
+                self.needs_action.append(
+                    RemoveAccess(
+                        signed_agreement=signed_agreement,
+                        user=user,
+                        member=account,
+                        note=self.NOT_ACCESSOR,
                     )
-                else:
-                    self.needs_action.append(
-                        RemoveAccess(
-                            signed_agreement=signed_agreement,
-                            user=user,
-                            member=account,
-                            note=self.INACTIVE_ACCOUNT,
-                        )
-                    )
+                )
         else:
             if is_accessor:
                 if is_active:
