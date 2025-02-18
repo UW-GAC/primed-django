@@ -7,7 +7,7 @@ from django.db.models.functions import Concat
 
 from primed.cdsa.models import CDSAWorkspace
 from primed.dbgap.models import dbGaPWorkspace
-from primed.miscellaneous_workspaces.models import OpenAccessWorkspace
+from primed.miscellaneous_workspaces.models import OpenAccessWorkspace, SimulatedDataWorkspace
 
 from .models import AvailableData
 
@@ -210,8 +210,28 @@ def get_workspaces_for_inventory():
         )
     )
 
+    simulated_data_workspaces = (
+        SimulatedDataWorkspace.objects.filter(
+            # Just those that are shared with PRIMED_ALL.
+            workspace__workspacegroupsharing__group=primed_all,
+        )
+        .annotate(
+            workspace_name=Concat(
+                F("workspace__billing_project__name"),
+                Value("/"),
+                F("workspace__name"),
+                output_field=CharField(),
+            ),
+            study_names=Value("Simulated data"),
+        )
+        .values(
+            "workspace_name",
+            "study_names",
+        )
+    )
+
     # Combine all querysets and process into the expected output for the AnVIL workflow.
-    workspaces = dbgap_workspaces.union(cdsa_workspaces).union(open_access_workspaces)
+    workspaces = dbgap_workspaces.union(cdsa_workspaces).union(open_access_workspaces).union(simulated_data_workspaces)
     # Sort by workspace_name so that itertools.groupby works as expected.
     workspaces = sorted(workspaces, key=lambda x: x["workspace_name"])
     json = {}
