@@ -11,7 +11,7 @@ from primed.dbgap.tests.factories import (
     dbGaPStudyAccessionFactory,
     dbGaPWorkspaceFactory,
 )
-from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
+from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory, SimulatedDataWorkspaceFactory
 from primed.primed_anvil.tests.factories import AvailableDataFactory, StudyFactory
 
 from .. import helpers
@@ -724,6 +724,43 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         self.assertIn("test-bp-2/test-ws-2", res)
         self.assertEqual(res["test-bp-2/test-ws-2"], "TEST 2")
 
+    def test_one_simulated_data_workspace_shared(self):
+        """get_workspaces_for_inventory with one shared simulated data workspace."""
+        workspace = SimulatedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp",
+            workspace__name="test-ws",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_inventory()
+        self.assertEqual(len(res), 1)
+        self.assertIn("test-bp/test-ws", res)
+        self.assertEqual(res["test-bp/test-ws"], "Simulated data")
+
+    def test_one_simulated_data_workspace_not_shared(self):
+        """get_workspaces_for_inventory with onesimulated data workspace, not shared."""
+        SimulatedDataWorkspaceFactory.create()
+        res = helpers.get_workspaces_for_inventory()
+        self.assertEqual(res, {})
+
+    def test_two_simulated_data_workspaces(self):
+        """get_workspaces_for_inventory with two simulated data workspaces."""
+        workspace_1 = SimulatedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-1",
+        )
+        workspace_2 = SimulatedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-2",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_inventory()
+        self.assertEqual(len(res), 2)
+        self.assertIn("test-bp-1/test-ws-1", res)
+        self.assertEqual(res["test-bp-1/test-ws-1"], "Simulated data")
+        self.assertIn("test-bp-2/test-ws-2", res)
+        self.assertEqual(res["test-bp-2/test-ws-2"], "Simulated data")
+
     def test_multiple_workspace_types_same_study(self):
         study = StudyFactory.create(short_name="TEST")
         # dbgap
@@ -897,6 +934,29 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
         workspace_3 = CDSAWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-1",
+            workspace__name="test-ws-2",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
+        res = helpers.get_workspaces_for_inventory()
+        self.assertEqual(len(res), 3)
+        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
+        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
+        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+
+    def test_order_simulated_data(self):
+        """SimulatedDataWorkspaces are ordered by billing project and workspace in results."""
+        workspace_1 = SimulatedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-3",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_1.workspace, group=self.primed_all_group)
+        workspace_2 = SimulatedDataWorkspaceFactory.create(
+            workspace__billing_project__name="test-bp-2",
+            workspace__name="test-ws-1",
+        )
+        WorkspaceGroupSharingFactory.create(workspace=workspace_2.workspace, group=self.primed_all_group)
+        workspace_3 = SimulatedDataWorkspaceFactory.create(
             workspace__billing_project__name="test-bp-1",
             workspace__name="test-ws-2",
         )
