@@ -44,7 +44,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.18
+django==4.2.19
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -92,7 +92,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.14.1
+mypy==1.15.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -137,7 +137,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.9.4
+ruff==0.9.9
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -190,7 +190,7 @@ types-pytz==2024.1.0.20240203
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.32.0.20241016
+types-requests==2.32.0.20250301
     # via -r requirements/dev-requirements.in
 typing-extensions==4.8.0
     # via
