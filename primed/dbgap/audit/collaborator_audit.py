@@ -131,6 +131,9 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
     NOT_COLLABORATOR = "Not a collaborator."
     GROUP_WITHOUT_ACCESS = "Groups do not have access."
 
+    # Inactive account.
+    INACTIVE_ACCOUNT = "Account is inactive."
+
     # # Unexpected.
     # ERROR_HAS_ACCESS = "Has access for an unknown reason."
     UNEXPECTED_GROUP_ACCESS = "Group should not have access."
@@ -267,6 +270,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
 
         is_pi = user == dbgap_application.principal_investigator
         is_collaborator = user in dbgap_application.collaborators.all()
+        is_active = account.status == account.ACTIVE_STATUS
 
         if is_in_access_group:
             if is_pi:
@@ -279,14 +283,24 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                     )
                 )
             elif is_collaborator:
-                self.verified.append(
-                    VerifiedAccess(
-                        dbgap_application=dbgap_application,
-                        user=user,
-                        member=account,
-                        note=self.COLLABORATOR_IN_ACCESS_GROUP,
+                if is_active:
+                    self.verified.append(
+                        VerifiedAccess(
+                            dbgap_application=dbgap_application,
+                            user=user,
+                            member=account,
+                            note=self.COLLABORATOR_IN_ACCESS_GROUP,
+                        )
                     )
-                )
+                else:
+                    self.needs_action.append(
+                        RemoveAccess(
+                            dbgap_application=dbgap_application,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
             else:
                 self.needs_action.append(
                     RemoveAccess(
@@ -307,14 +321,24 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
                     )
                 )
             elif is_collaborator:
-                self.needs_action.append(
-                    GrantAccess(
-                        dbgap_application=dbgap_application,
-                        user=user,
-                        member=account,
-                        note=self.COLLABORATOR_LINKED_ACCOUNT,
+                if is_active:
+                    self.needs_action.append(
+                        GrantAccess(
+                            dbgap_application=dbgap_application,
+                            user=user,
+                            member=account,
+                            note=self.COLLABORATOR_LINKED_ACCOUNT,
+                        )
                     )
-                )
+                else:
+                    self.verified.append(
+                        VerifiedNoAccess(
+                            dbgap_application=dbgap_application,
+                            user=user,
+                            member=account,
+                            note=self.INACTIVE_ACCOUNT,
+                        )
+                    )
             else:
                 self.verified.append(
                     VerifiedNoAccess(
