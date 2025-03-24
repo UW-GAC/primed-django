@@ -30,4 +30,3 @@ jobs:
           ci_required: true # require all checks to pass before combining
           select_label: dependencies # Optional: only combine PRs with this label
           autoclose: false # do not close the source PRs - dependabot should handle it.
-          combine_branch_name: test-combine-prs # Optional: the name of the branch to combine the PRs into
