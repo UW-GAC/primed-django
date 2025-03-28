@@ -111,7 +111,7 @@ pickleshare==0.7.5
     # via ipython
 platformdirs==4.1.0
     # via virtualenv
-pre-commit==4.1.0
+pre-commit==4.2.0
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
