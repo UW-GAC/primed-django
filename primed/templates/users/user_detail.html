@@ -144,8 +144,8 @@
                 {% if object == agreement.representative %}
                   <li class="list-group-item">
                     Representative: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
-                    <span class="badge {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-danger{% endif %}">
-                      {{ agreement.status }}
+                    <span class="badge mx-2 {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-danger{% endif %}">
+                      {{ agreement.get_status_display }}
                     </span>
                   </li>
                 {% endif %}
