@@ -129,7 +129,7 @@
               {% for app in dbgap_applications %}
               <li class="list-group-item">
                 <a href="{{ app.get_absolute_url }}">{{ app }}</a>
-                <div class="mx-3">
+                <div class="mx-3 mt-1">
                   <ul class="list-unstyled">
                     {% if object == app.principal_investigator %}
                     <li>Principal Investigator</li>
@@ -154,7 +154,7 @@
                 <span class="badge mx-2 {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-danger{% endif %}">
                   {{ agreement.get_status_display }}
                 </span>
-                <div class="mx-3">
+                <div class="mx-3 mt-1">
                   <ul class="list-unstyled">
                     {% if object == agreement.representative %}
                     <li>Representative</li>
