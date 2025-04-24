@@ -129,14 +129,15 @@
               {% for app in dbgap_applications %}
               <li class="list-group-item">
                 <a href="{{ app.get_absolute_url }}">{{ app }}</a>
-                <ul>
-                  {% if object == app.principal_investigator %}
-                  <li>Principal Investigator</li>
-                  {% else %}
-                  <li>Collaborator</li>
-                  {% endif %}
-
-                </ul>
+                <div class="mx-3">
+                  <ul class="list-unstyled">
+                    {% if object == app.principal_investigator %}
+                    <li>Principal Investigator</li>
+                    {% else %}
+                    <li>Collaborator</li>
+                    {% endif %}
+                  </ul>
+                </div>
               </li>
               {% endfor %}
             {% else %}
@@ -153,17 +154,19 @@
                 <span class="badge mx-2 {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-danger{% endif %}">
                   {{ agreement.get_status_display }}
                 </span>
-                <ul>
-                  {% if object == agreement.representative %}
-                  <li>Representative</li>
-                  {% endif %}
-                  {% if object in agreement.accessors.all %}
-                  <li>Accessor</li>
-                  {% endif %}
-                  {% if agreement.dataaffiliateagreement and object in agreement.dataaffiliateagreement.uploaders.all %}
-                  <li>Uploader</li>
-                  {% endif %}
-                </ul>
+                <div class="mx-3">
+                  <ul class="list-unstyled">
+                    {% if object == agreement.representative %}
+                    <li>Representative</li>
+                    {% endif %}
+                    {% if object in agreement.accessors.all %}
+                    <li>Accessor</li>
+                    {% endif %}
+                    {% if agreement.dataaffiliateagreement and object in agreement.dataaffiliateagreement.uploaders.all %}
+                    <li>Uploader</li>
+                    {% endif %}
+                  </ul>
+                </div>
               </li>
 
               {% endfor %}
