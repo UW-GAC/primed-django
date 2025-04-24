@@ -556,7 +556,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge bg-success">active</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-success">Active</span>', html=True)
 
     def test_cdsa_accessor_withdrawn_agreement_shown_correct_badge(self):
         agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.WITHDRAWN)
@@ -564,7 +564,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge bg-danger">withdrawn</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-danger">Withdrawn</span>', html=True)
 
     def test_cdsa_accessor_replaced_agreement_shown_correct_badge(self):
         agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.REPLACED)
@@ -572,7 +572,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge bg-danger">replaced</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-danger">Replaced</span>', html=True)
 
     def test_cdsa_accessor_lapsed_agreement_shown_correct_badge(self):
         agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.LAPSED)
@@ -580,7 +580,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge bg-danger">lapsed</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-danger">Lapsed</span>', html=True)
 
     def test_acm_staff_view(self):
         """Users with staff view permission see dbGaP application info."""
