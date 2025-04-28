@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from anvil_consortium_manager import models as acm_models
-from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory
+from anvil_consortium_manager.tests.factories import GroupGroupMembershipFactory, WorkspaceAuthorizationDomainFactory
 from django.db.models import Count
 from django.test import TestCase
 from django.utils import timezone
@@ -651,9 +651,34 @@ class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
         self.assertNotIn(workspace.workspace.billing_project.name, value)
         self.assertIn("circle-fill", value)
 
+    def test_one_matching_workspace_with_access_two_auth_domains_one_not_managed(self):
+        """Table works if there is a matching workspace with access."""
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(group__is_managed_by_app=False)
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace=auth_domain.workspace)
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=workspace)
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.filter(is_managed_by_app=True).get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        table = self.table_class([dar])
+        value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
+        self.assertIn(workspace.workspace.name, value)
+        self.assertNotIn(workspace.workspace.billing_project.name, value)
+        self.assertIn("circle-fill", value)
+
     def test_one_matching_workspace_without_access(self):
         """Table works if there is a matching workspace with access."""
         workspace = factories.dbGaPWorkspaceFactory.create()
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=workspace)
+        table = self.table_class([dar])
+        value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
+        self.assertIn(workspace.workspace.name, value)
+        self.assertIn("square-fill", value)
+
+    def test_one_matching_workspace_without_access_two_auth_domains_one_not_managed(self):
+        """Table works if there is a matching workspace with access."""
+        auth_domain = WorkspaceAuthorizationDomainFactory.create(group__is_managed_by_app=False)
+        workspace = factories.dbGaPWorkspaceFactory.create(workspace=auth_domain.workspace)
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=workspace)
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
