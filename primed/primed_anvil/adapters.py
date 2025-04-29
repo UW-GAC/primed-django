@@ -23,7 +23,7 @@ class AccountAdapter(BaseAccountAdapter):
     If you do not have access to workspaces that you expect after 24 hours, please contact the CC."""
     account_link_verify_redirect = "users:redirect"
     account_link_email_subject = "Verify your AnVIL account email"
-    account_verify_notification_email = "primedconsortium@uw.edu"
+    account_verification_notification_email = "primedconsortium@uw.edu"
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""

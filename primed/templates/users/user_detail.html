@@ -128,8 +128,16 @@
             {% if dbgap_applications %}
               {% for app in dbgap_applications %}
               <li class="list-group-item">
-                  {% if object == app.principal_investigator %}Principal Investigator{% else %}Collaborator{% endif %}:
                 <a href="{{ app.get_absolute_url }}">{{ app }}</a>
+                <div class="mx-3 mt-1">
+                  <ul class="list-unstyled">
+                    {% if object == app.principal_investigator %}
+                    <li>Principal Investigator</li>
+                    {% else %}
+                    <li>Collaborator</li>
+                    {% endif %}
+                  </ul>
+                </div>
               </li>
               {% endfor %}
             {% else %}
@@ -141,26 +149,32 @@
             <li class="list-group-item"><h5 class>Consortium data sharing agreements</h5></li>
             {% if signed_agreements %}
               {% for agreement in signed_agreements %}
-                {% if object == agreement.representative %}
-                  <li class="list-group-item">
-                    Representative: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
-                  </li>
-                {% endif %}
-                {% if object in agreement.accessors.all %}
-                  <li class="list-group-item">
-                    Accessor: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
-                  </li>
-                {% endif %}
-                {% if agreement.dataaffiliateagreement and object in agreement.dataaffiliateagreement.uploaders.all %}
-                  <li class="list-group-item">
-                    Uploader: <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
-                  </li>
-                {% endif %}
+              <li class="list-group-item">
+                <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
+                <span class="badge mx-2 {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-danger{% endif %}">
+                  {{ agreement.get_status_display }}
+                </span>
+                <div class="mx-3 mt-1">
+                  <ul class="list-unstyled">
+                    {% if object == agreement.representative %}
+                    <li>Representative</li>
+                    {% endif %}
+                    {% if object in agreement.accessors.all %}
+                    <li>Accessor</li>
+                    {% endif %}
+                    {% if agreement.dataaffiliateagreement and object in agreement.dataaffiliateagreement.uploaders.all %}
+                    <li>Uploader</li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </li>
+
               {% endfor %}
             {% else %}
               <li class="list-group-item">No CDSAs</li>
             {% endif %}
           </ul>
+
           <p class='alert alert-secondary'><i class="bi bi-question-circle-fill"></i> If this is incorrect, please contact the CC at <a href="mailto:{{ DCC_CONTACT_EMAIL }}">{{ DCC_CONTACT_EMAIL }}</a></p>
         </div>
       </div>
