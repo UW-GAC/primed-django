@@ -86,7 +86,7 @@ class RunDbGaPAuditTest(TestCase):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dbgap_application = factories.dbGaPApplicationFactory.create()
         GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
             child_group=dbgap_application.anvil_access_group,
         )
         out = StringIO()
@@ -142,7 +142,7 @@ class RunDbGaPAuditTest(TestCase):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dbgap_application = factories.dbGaPApplicationFactory.create()
         GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
             child_group=dbgap_application.anvil_access_group,
         )
         out = StringIO()

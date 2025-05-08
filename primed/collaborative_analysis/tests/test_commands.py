@@ -72,7 +72,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # One group with unexpected access.
-        GroupGroupMembershipFactory.create(parent_group=workspace.workspace.authorization_domains.first())
+        GroupGroupMembershipFactory.create(parent_group=workspace.workspace.authorization_domains.get())
         out = StringIO()
         call_command("run_collaborative_analysis_audit", "--no-color", stdout=out)
         self.assertIn(
@@ -138,7 +138,7 @@ class RunCollaborativeAnalysisAuditTest(TestCase):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         workspace.source_workspaces.add(source_workspace.workspace)
         # One group with unexpected access.
-        GroupGroupMembershipFactory.create(parent_group=workspace.workspace.authorization_domains.first())
+        GroupGroupMembershipFactory.create(parent_group=workspace.workspace.authorization_domains.get())
         out = StringIO()
         call_command(
             "run_collaborative_analysis_audit",

@@ -642,7 +642,7 @@ class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=workspace)
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         table = self.table_class([dar])

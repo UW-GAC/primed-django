@@ -1050,10 +1050,10 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.requested_by, self.requester)
         # Check that an auth domain was created.
         self.assertEqual(new_workspace.authorization_domains.count(), 1)
-        self.assertEqual(new_workspace.authorization_domains.first().name, "AUTH_test-workspace")
+        self.assertEqual(new_workspace.authorization_domains.get().name, "AUTH_test-workspace")
         # Check that the PRIMED_ADMINS group is an admin of the auth domain.
         membership = GroupGroupMembership.objects.get(
-            parent_group=new_workspace.authorization_domains.first(),
+            parent_group=new_workspace.authorization_domains.get(),
             child_group=self.admins_group,
         )
         self.assertEqual(membership.role, membership.ADMIN)
@@ -4032,7 +4032,7 @@ class dbGaPApplicationAccessAuditTest(TestCase):
             dbgap_data_access_snapshot=self.snapshot, dbgap_workspace=workspace
         )
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4119,7 +4119,7 @@ class dbGaPApplicationAccessAuditTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4151,7 +4151,7 @@ class dbGaPApplicationAccessAuditTest(TestCase):
         )
         # Create the membership.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4327,7 +4327,7 @@ class dbGaPWorkspaceAccessAuditTest(TestCase):
         # Add a verified workspace.
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=self.dbgap_workspace)
         GroupGroupMembershipFactory.create(
-            parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=self.dbgap_workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4509,7 +4509,7 @@ class dbGaPWorkspaceAccessAuditTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         GroupGroupMembershipFactory.create(
-            parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=self.dbgap_workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4544,7 +4544,7 @@ class dbGaPWorkspaceAccessAuditTest(TestCase):
         )
         # Create the membership.
         GroupGroupMembershipFactory.create(
-            parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=self.dbgap_workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4575,7 +4575,7 @@ class dbGaPWorkspaceAccessAuditTest(TestCase):
         dbgap_application = factories.dbGaPApplicationFactory.create()
         # Add the application group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=self.dbgap_workspace.workspace.authorization_domains.get(),
             child_group=dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4606,7 +4606,7 @@ class dbGaPWorkspaceAccessAuditTest(TestCase):
         snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
         # Add the application group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=self.dbgap_workspace.workspace.authorization_domains.first(),
+            parent_group=self.dbgap_workspace.workspace.authorization_domains.get(),
             child_group=snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4764,7 +4764,7 @@ class dbGaPAccessAuditTest(TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4851,7 +4851,7 @@ class dbGaPAccessAuditTest(TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -4886,7 +4886,7 @@ class dbGaPAccessAuditTest(TestCase):
         )
         # Create the membership.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Check the table in the context.
@@ -5076,7 +5076,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         workspace = factories.dbGaPWorkspaceFactory.create()
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.client.force_login(self.user)
@@ -5170,7 +5170,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.client.force_login(self.user)
@@ -5204,7 +5204,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         date_created = timezone.now() - timedelta(weeks=3)
         with freeze_time(date_created):
             membership = GroupGroupMembershipFactory.create(
-                parent_group=workspace.workspace.authorization_domains.first(),
+                parent_group=workspace.workspace.authorization_domains.get(),
                 child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
             )
         self.client.force_login(self.user)
@@ -5220,7 +5220,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
-        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.first())
+        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.get())
         self.assertEqual(
             membership.child_group,
             dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -5230,18 +5230,19 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """post with VerifiedAccess audit result, with one not managed by app."""
         # Add a verified workspace.
         workspace = factories.dbGaPWorkspaceFactory.create()
+        auth_domain = workspace.workspace.authorization_domains.get()
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
-        date_created = timezone.now() - timedelta(weeks=3)
-        with freeze_time(date_created):
-            membership = GroupGroupMembershipFactory.create(
-                parent_group=workspace.workspace.authorization_domains.filter(is_managed_by_app=True).get(),
-                child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-            )
         # Add the second auth domain.
         WorkspaceAuthorizationDomainFactory.create(
             workspace=workspace.workspace,
             group__is_managed_by_app=False,
         )
+        date_created = timezone.now() - timedelta(weeks=3)
+        with freeze_time(date_created):
+            membership = GroupGroupMembershipFactory.create(
+                parent_group=auth_domain,
+                child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+            )
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(
@@ -5255,7 +5256,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
-        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.first())
+        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.get())
         self.assertEqual(
             membership.child_group,
             dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
@@ -5327,7 +5328,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # The GroupGroup membership was created.
         self.assertRedirects(response, reverse("dbgap:audit:access:all"))
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
@@ -5335,6 +5336,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_post_grant_access_two_auth_domains_one_not_managed(self):
         """post with GrantAccess audit result."""
         workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        auth_domain = workspace.workspace.authorization_domains.get()
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_workspace=workspace,
         )
@@ -5364,7 +5366,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # The GroupGroup membership was created.
         self.assertRedirects(response, reverse("dbgap:audit:access:all"))
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=auth_domain,
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
@@ -5398,7 +5400,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(response.content.decode(), views.dbGaPAccessAuditResolve.htmx_success)
         # Membership has been created.
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
@@ -5420,7 +5422,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Add API response
@@ -5449,12 +5451,13 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
     def test_post_remove_access_two_auth_domains_one_not_managed(self):
         """needs_action_table shows a record when audit finds that access needs to be removed."""
         workspace = factories.dbGaPWorkspaceFactory.create(workspace__name="TEST_DBGAP")
+        auth_domain = workspace.workspace.authorization_domains.get()
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_workspace=workspace,
             dbgap_current_status=models.dbGaPDataAccessRequest.CLOSED,
         )
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.filter(is_managed_by_app=True).get(),
+            parent_group=auth_domain,
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Add the second auth domain.
@@ -5629,7 +5632,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Add API response
@@ -5680,7 +5683,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             dbgap_current_status=models.dbGaPDataAccessRequest.APPROVED,
         )
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
         # Add API response

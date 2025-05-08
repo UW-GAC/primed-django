@@ -280,7 +280,7 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.workspace, new_workspace)
         # Check that auth domain exists.
         self.assertEqual(new_workspace.authorization_domains.count(), 1)
-        auth_domain = new_workspace.authorization_domains.first()
+        auth_domain = new_workspace.authorization_domains.get()
         self.assertEqual(auth_domain.name, "AUTH_test-workspace")
         self.assertTrue(auth_domain.is_managed_by_app)
         self.assertEqual(auth_domain.email, "AUTH_test-workspace@firecloud.org")
@@ -584,12 +584,12 @@ class WorkspaceAuditTest(TestCase):
         GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
-            group=source_workspace.workspace.authorization_domains.first(),
+            group=source_workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
         GroupAccountMembershipFactory.create(
-            group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(),
+            group=self.collaborative_analysis_workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # Check the table in the context.
@@ -629,12 +629,12 @@ class WorkspaceAuditTest(TestCase):
         GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
-        #     group=source_workspace.workspace.authorization_domains.first(),
+        #     group=source_workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(), account=account
+        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.get(), account=account
         # )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -673,12 +673,12 @@ class WorkspaceAuditTest(TestCase):
         GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
-            group=source_workspace.workspace.authorization_domains.first(),
+            group=source_workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(), account=account
+        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.get(), account=account
         # )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -717,12 +717,12 @@ class WorkspaceAuditTest(TestCase):
         GroupAccountMembershipFactory.create(group=self.collaborative_analysis_workspace.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
-        #     group=source_workspace.workspace.authorization_domains.first(),
+        #     group=source_workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
         GroupAccountMembershipFactory.create(
-            group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(),
+            group=self.collaborative_analysis_workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # Check the table in the context.
@@ -756,7 +756,7 @@ class WorkspaceAuditTest(TestCase):
         # Create accounts.
         group = ManagedGroupFactory.create()
         GroupGroupMembershipFactory.create(
-            parent_group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(),
+            parent_group=self.collaborative_analysis_workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         # Check the table in the context.
@@ -890,12 +890,12 @@ class WorkspaceAuditAllTest(TestCase):
         GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
-            group=source_workspace.workspace.authorization_domains.first(),
+            group=source_workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
         GroupAccountMembershipFactory.create(
-            group=instance.workspace.authorization_domains.first(),
+            group=instance.workspace.authorization_domains.get(),
             account=account,
         )
         # Check the table in the context.
@@ -931,12 +931,12 @@ class WorkspaceAuditAllTest(TestCase):
         GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
-        #     group=source_workspace.workspace.authorization_domains.first(),
+        #     group=source_workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=instance.workspace.authorization_domains.first(), account=account
+        #     group=instance.workspace.authorization_domains.get(), account=account
         # )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -971,12 +971,12 @@ class WorkspaceAuditAllTest(TestCase):
         GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         GroupAccountMembershipFactory.create(
-            group=source_workspace.workspace.authorization_domains.first(),
+            group=source_workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # CollaborativeAnalysisWorkspace auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.first(), account=account
+        #     group=self.collaborative_analysis_workspace.workspace.authorization_domains.get(), account=account
         # )
         # Check the table in the context.
         self.client.force_login(self.user)
@@ -1011,12 +1011,12 @@ class WorkspaceAuditAllTest(TestCase):
         GroupAccountMembershipFactory.create(group=instance.analyst_group, account=account)
         # Source workspace auth domains membership.
         # GroupAccountMembershipFactory.create(
-        #     group=source_workspace.workspace.authorization_domains.first(),
+        #     group=source_workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # CollaborativeAnalysisWorkspace auth domain membership.
         GroupAccountMembershipFactory.create(
-            group=instance.workspace.authorization_domains.first(),
+            group=instance.workspace.authorization_domains.get(),
             account=account,
         )
         # Check the table in the context.
@@ -1046,7 +1046,7 @@ class WorkspaceAuditAllTest(TestCase):
         # Create accounts.
         group = ManagedGroupFactory.create()
         GroupGroupMembershipFactory.create(
-            parent_group=instance.workspace.authorization_domains.first(),
+            parent_group=instance.workspace.authorization_domains.get(),
             child_group=group,
         )
         # Check the table in the context.
@@ -1219,7 +1219,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Auth domain membership.
         GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         self.client.force_login(self.user)
@@ -1249,7 +1249,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         self.client.force_login(self.user)
@@ -1284,7 +1284,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         self.client.force_login(self.user)
@@ -1314,7 +1314,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create()
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         self.client.force_login(self.user)
@@ -1346,7 +1346,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         self.client.force_login(self.user)
@@ -1376,7 +1376,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         self.client.force_login(self.user)
@@ -1411,7 +1411,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         self.client.force_login(self.user)
@@ -1441,7 +1441,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create()
         # Auth domain membership.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         self.client.force_login(self.user)
@@ -1478,7 +1478,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         date_created = timezone.now() - timedelta(weeks=5)
         with freeze_time(date_created):
             membership = GroupAccountMembershipFactory.create(
-                group=workspace.workspace.authorization_domains.first(),
+                group=workspace.workspace.authorization_domains.get(),
                 account=account,
             )
         self.client.force_login(self.user)
@@ -1502,7 +1502,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         date_created = timezone.now() - timedelta(weeks=5)
         with freeze_time(date_created):
             membership = GroupGroupMembershipFactory.create(
-                parent_group=workspace.workspace.authorization_domains.first(),
+                parent_group=workspace.workspace.authorization_domains.get(),
                 child_group=group,
             )
         self.client.force_login(self.user)
@@ -1529,7 +1529,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         self.client.force_login(self.user)
@@ -1551,7 +1551,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create()
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         self.client.force_login(self.user)
@@ -1578,7 +1578,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # Add API response
@@ -1601,7 +1601,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertRedirects(response, workspace.get_absolute_url())
         # A membership was created.
         membership = GroupAccountMembership.objects.get(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         self.assertEqual(membership.role, GroupAccountMembership.MEMBER)
@@ -1612,7 +1612,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         # Add API response
@@ -1637,7 +1637,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertRedirects(response, workspace.get_absolute_url())
         # A membership was created.
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
@@ -1653,7 +1653,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         membership = GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # Add API response
@@ -1683,7 +1683,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         # Add API response
@@ -1718,7 +1718,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # Add API response
@@ -1746,7 +1746,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # A membership was created.
         membership = GroupAccountMembership.objects.get(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         self.assertEqual(membership.role, GroupAccountMembership.MEMBER)
@@ -1757,7 +1757,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         # Add API response
@@ -1787,7 +1787,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # A membership was created.
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
@@ -1803,7 +1803,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         membership = GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # Add API response
@@ -1838,7 +1838,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         # Add API response
@@ -1878,7 +1878,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # Add API response
@@ -1917,7 +1917,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         # Add API response
@@ -1963,7 +1963,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         membership = GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # Add API response
@@ -2002,7 +2002,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         # Add API response
@@ -2046,7 +2046,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # Auth domain membership.
         # GroupAccountMembershipFactory.create(
-        #     group=workspace.workspace.authorization_domains.first(),
+        #     group=workspace.workspace.authorization_domains.get(),
         #     account=account,
         # )
         # Add API response
@@ -2085,7 +2085,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
         # Auth domain membership.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
         # )
         # Add API response
@@ -2131,7 +2131,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # )
         # Auth domain membership.
         membership = GroupAccountMembershipFactory.create(
-            group=workspace.workspace.authorization_domains.first(),
+            group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
         # Add API response
@@ -2170,7 +2170,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         group = ManagedGroupFactory.create(name="test-group")
         # Auth domain membership.
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
         # Add API response
