@@ -18,6 +18,7 @@ from django.shortcuts import resolve_url
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from primed.cdsa.models import SignedAgreement
 from primed.cdsa.tests.factories import (
     DataAffiliateAgreementFactory,
     MemberAgreementFactory,
@@ -548,6 +549,38 @@ class UserDetailTest(TestCase):
         self.assertIn("signed_agreements", response.context)
         self.assertEqual(len(response.context["signed_agreements"]), 1)
         self.assertIn(agreement.signed_agreement, response.context["signed_agreements"])
+
+    def test_cdsa_accessor_active_agreement_shown_correct_badge(self):
+        agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.ACTIVE)
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-success">Active</span>', html=True)
+
+    def test_cdsa_accessor_withdrawn_agreement_shown_correct_badge(self):
+        agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.WITHDRAWN)
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-danger">Withdrawn</span>', html=True)
+
+    def test_cdsa_accessor_replaced_agreement_shown_correct_badge(self):
+        agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.REPLACED)
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-danger">Replaced</span>', html=True)
+
+    def test_cdsa_accessor_lapsed_agreement_shown_correct_badge(self):
+        agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.LAPSED)
+        agreement.signed_agreement.accessors.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-danger">Lapsed</span>', html=True)
 
     def test_acm_staff_view(self):
         """Users with staff view permission see dbGaP application info."""
