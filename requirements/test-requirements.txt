@@ -17,7 +17,7 @@ coverage[toml]==7.5.1
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
     #   pytest-cov
-django-coverage-plugin==3.1.0
+django-coverage-plugin==3.1.1
     # via -r requirements/test-requirements.in
 django-test-migrations==1.5.0
     # via -r requirements/test-requirements.in
@@ -29,7 +29,7 @@ factory-boy==3.3.3
     # via -r requirements/test-requirements.in
 faker==23.2.1
     # via factory-boy
-freezegun==1.5.1
+freezegun==1.5.2
     # via -r requirements/test-requirements.in
 idna==3.7
     # via
@@ -48,7 +48,9 @@ packaging==21.3
     #   pytest
     #   pytest-sugar
 pluggy==1.5.0
-    # via pytest
+    # via
+    #   pytest
+    #   pytest-cov
 pyparsing==3.1.1
     # via
     #   -c requirements/requirements.txt
@@ -60,13 +62,13 @@ pytest==8.3.5
     #   pytest-django
     #   pytest-sugar
     #   pytest-xdist
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via -r requirements/test-requirements.in
 pytest-django==4.11.1
     # via -r requirements/test-requirements.in
 pytest-sugar==1.0.0
     # via -r requirements/test-requirements.in
-pytest-xdist==3.6.1
+pytest-xdist==3.7.0
     # via -r requirements/test-requirements.in
 python-dateutil==2.8.2
     # via

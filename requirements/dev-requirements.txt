@@ -92,7 +92,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.15.0
+mypy==1.16.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -105,6 +105,8 @@ packaging==21.3
     #   sphinx
 parso==0.8.3
     # via jedi
+pathspec==0.12.1
+    # via mypy
 pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
@@ -137,7 +139,7 @@ requests==2.32.3
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.11.10
+ruff==0.12.1
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -190,7 +192,7 @@ types-pytz==2024.1.0.20240203
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.32.0.20250515
+types-requests==2.32.4.20250611
     # via -r requirements/dev-requirements.in
 typing-extensions==4.8.0
     # via
