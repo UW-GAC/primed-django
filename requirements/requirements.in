@@ -9,6 +9,9 @@ oauthlib  # https://github.com/oauthlib/oauthlib
 cryptography # https://github.com/pyca/cryptography
 pyjwt  # https://github.com/jpadilla/pyjwt
 requests-oauthlib  # https://github.com/requests/requests-oauthlib
+# Address security alerts
+requests>=2.32.4  # https://github.com/psf/requests
+urllib3>=2.5.0  # https://github.com/urllib3/urllib3
 
 # Password hashing
 argon2-cffi # https://github.com/hynek/argon2_cffi
