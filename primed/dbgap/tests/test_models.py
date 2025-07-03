@@ -1017,7 +1017,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         )
         with self.assertRaises(ValueError) as e:
             second_snapshot.create_dars_from_json()
-        self.assertIn("dbgap_phs", str(e.exception))
+        self.assertIn("dbgap_phs mismatch. previous_dar: 1234", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
     @responses.activate
@@ -1059,7 +1059,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         )
         with self.assertRaises(ValueError) as e:
             second_snapshot.create_dars_from_json()
-        self.assertIn("dbgap_consent_code", str(e.exception))
+        self.assertIn("dbgap_consent_code mismatch. previous_dar: 1234", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
     @responses.activate
@@ -1099,7 +1099,7 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         )
         with self.assertRaises(ValueError) as e:
             second_snapshot.create_dars_from_json()
-        self.assertIn("project_id", str(e.exception))
+        self.assertIn("project_id mismatch. previous_dar: 1234", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
 
