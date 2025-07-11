@@ -1526,7 +1526,7 @@ class WorkspaceAccessAuditTest(TestCase):
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(study=study)
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1546,7 +1546,7 @@ class WorkspaceAccessAuditTest(TestCase):
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(study=study)
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1564,7 +1564,7 @@ class WorkspaceAccessAuditTest(TestCase):
         workspace = factories.CDSAWorkspaceFactory.create()
         # Do not CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1582,7 +1582,7 @@ class WorkspaceAccessAuditTest(TestCase):
         workspace = factories.CDSAWorkspaceFactory.create()
         # Add the CDSA group to the auth domain - this is an error.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1604,7 +1604,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1626,7 +1626,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1648,7 +1648,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1670,7 +1670,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1690,7 +1690,7 @@ class WorkspaceAccessAuditTest(TestCase):
         factories.DataAffiliateAgreementFactory.create(study=study, is_primary=False)
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1710,7 +1710,7 @@ class WorkspaceAccessAuditTest(TestCase):
         factories.DataAffiliateAgreementFactory.create(study=study, is_primary=False)
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1733,7 +1733,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1763,7 +1763,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1786,7 +1786,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1815,7 +1815,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1844,7 +1844,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1871,7 +1871,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1898,7 +1898,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Do not add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1927,7 +1927,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1956,7 +1956,7 @@ class WorkspaceAccessAuditTest(TestCase):
         )
         # # Add the CDSA group to the auth domain.
         # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.cdsa_group,
         # )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()
@@ -1986,11 +1986,11 @@ class WorkspaceAccessAuditTest(TestCase):
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create(study=study)
         # Add the CDSA group to the auth domain.
         GroupGroupMembershipFactory.create(
-            parent_group=workspace_1.workspace.authorization_domains.first(),
+            parent_group=workspace_1.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         GroupGroupMembershipFactory.create(
-            parent_group=workspace_2.workspace.authorization_domains.first(),
+            parent_group=workspace_2.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         cdsa_audit = workspace_audit.WorkspaceAccessAudit()

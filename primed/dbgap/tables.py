@@ -1,6 +1,7 @@
 """Tables for the `dbgap` app."""
 
 import django_tables2 as tables
+from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
 from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
@@ -298,9 +299,19 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
         """
         items = []
         for dbgap_workspace in value:
-            has_access = dbgap_workspace.workspace.is_in_authorization_domain(
-                record.dbgap_data_access_snapshot.dbgap_application.anvil_access_group
-            )
+            parent_groups = record.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.get_all_parents()
+            try:
+                has_access = dbgap_workspace.workspace.has_group_in_authorization_domain(
+                    record.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+                    all_parent_groups=parent_groups,
+                )
+            except WorkspaceAccessAuthorizationDomainUnknownError:
+                # Just auth domains managed by the app.
+                auth_domains_managed_by_app = dbgap_workspace.workspace.authorization_domains.filter(
+                    is_managed_by_app=True
+                )
+                has_access = set(auth_domains_managed_by_app).issubset(set(parent_groups))
+
             this_context = {
                 "has_access": has_access,
                 "workspace": dbgap_workspace.workspace.name,

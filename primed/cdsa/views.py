@@ -743,7 +743,7 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
 
     def form_valid(self, form):
         cdsa_group = ManagedGroup.objects.get(name=settings.ANVIL_CDSA_GROUP_NAME)
-        auth_domain = self.object.workspace.authorization_domains.first()
+        auth_domain = self.object.workspace.authorization_domains.get()
         # Handle the result.
         try:
             with transaction.atomic():

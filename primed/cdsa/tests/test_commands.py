@@ -243,7 +243,7 @@ class RunCDSAAuditTest(TestCase):
         """Test command output with one error instance."""
         workspace = factories.CDSAWorkspaceFactory.create()
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         out = StringIO()
@@ -290,7 +290,7 @@ class RunCDSAAuditTest(TestCase):
         """Test command output with one error instance."""
         workspace = factories.CDSAWorkspaceFactory.create()
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.cdsa_group,
         )
         out = StringIO()
