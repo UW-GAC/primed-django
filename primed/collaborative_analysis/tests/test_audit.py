@@ -11,6 +11,7 @@ from django.urls import reverse
 
 from primed.cdsa.tests.factories import CDSAWorkspaceFactory
 from primed.dbgap.tests.factories import dbGaPWorkspaceFactory
+from primed.miscellaneous_workspaces.tests.factories import OpenAccessWorkspaceFactory
 
 from .. import audit
 from . import factories
@@ -160,6 +161,9 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
 
+    def test_auth_domain_not_managed_by_app(self):
+        self.fail("finish writing tests")
+
     def test_analyst_in_collab_auth_domain_in_source_auth_domain(self):
         # Create accounts.
         account = AccountFactory.create()
@@ -218,6 +222,26 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_analyst_in_collab_auth_domain_source_auth_domain_not_managed_by_app(self):
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = OpenAccessWorkspaceFactory.create()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.fail("What should happen?")
 
     def test_analyst_not_in_collab_auth_domain_in_source_auth_domain(self):
         # Create accounts.
@@ -281,6 +305,26 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_analyst_not_in_collab_auth_domain_source_auth_domain_not_managed_by_app(self):
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = OpenAccessWorkspaceFactory.create()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.fail("What should happen?")
 
     def test_analyst_in_collab_auth_domain_two_source_auth_domains_in_both(self):
         # Create accounts.
@@ -390,6 +434,53 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_analyst_in_collab_auth_domain_two_source_auth_domains_in_one_and_one_not_managed_by_app(self):
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        source_auth_domain = source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.fail("What should happen?")
+
+    def test_analyst_in_collab_auth_domain_two_source_auth_domains_not_in_one_and_one_not_managed_by_app(self):
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.fail("What should happen?")
 
     def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_in_both(self):
         # Create accounts.
@@ -502,6 +593,53 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_in_one_and_one_not_managed_by_app(self):
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        source_auth_domain = source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.fail("What should happen?")
+
+    def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_not_in_one_and_one_not_managed_by_app(self):
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        # source_auth_domain = source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # Analyst group membership.
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.fail("What should happen?")
 
     def test_in_collab_auth_domain_no_source_workspaces(self):
         # Create accounts.
