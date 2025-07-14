@@ -67,7 +67,7 @@ GroupAccountMembershipFactory.create(account=account_2, group=collaborative_anal
 # auth domains
 GroupAccountMembershipFactory.create(
     account=account_1,
-    group=collaborative_analysis_workspace_1.workspace.authorization_domains.first(),
+    group=collaborative_analysis_workspace_1.workspace.authorization_domains.get(),
 )
 
 # Set up collab analysis workspace two
@@ -77,25 +77,25 @@ GroupAccountMembershipFactory.create(account=account_4, group=collaborative_anal
 # auth domains
 GroupAccountMembershipFactory.create(
     account=account_3,
-    group=collaborative_analysis_workspace_2.workspace.authorization_domains.first(),
+    group=collaborative_analysis_workspace_2.workspace.authorization_domains.get(),
 )
 GroupAccountMembershipFactory.create(
     account=account_3,
-    group=source_workspace_2_1.workspace.authorization_domains.first(),
+    group=source_workspace_2_1.workspace.authorization_domains.get(),
 )
 GroupAccountMembershipFactory.create(
     account=account_3,
-    group=source_workspace_2_2.workspace.authorization_domains.first(),
+    group=source_workspace_2_2.workspace.authorization_domains.get(),
 )
 GroupAccountMembershipFactory.create(
     account=account_4,
-    group=source_workspace_2_1.workspace.authorization_domains.first(),
+    group=source_workspace_2_1.workspace.authorization_domains.get(),
 )
 
 # Set up collab analysis workspace three
 # Managed group to show an error
 managed_group = ManagedGroupFactory.create(name="test-error")
 GroupGroupMembershipFactory.create(
-    parent_group=collaborative_analysis_workspace_3.workspace.authorization_domains.first(),
+    parent_group=collaborative_analysis_workspace_3.workspace.authorization_domains.get(),
     child_group=managed_group,
 )
