@@ -5256,7 +5256,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.created, date_created)
-        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.get())
+        self.assertEqual(membership.parent_group, auth_domain)
         self.assertEqual(
             membership.child_group,
             dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
