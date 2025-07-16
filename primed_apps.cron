@@ -6,7 +6,7 @@ MAILTO="primedweb@uw.edu"
 0 1 * * MON-SAT . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit --cache --traceback --email primedconsortium@uw.edu --errors-only >> cron.log
 
 # sunday night at 01:00
-0 1 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit  --cache--traceback --email primedconsortium@uw.edu >> cron.log
+0 1 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py run_anvil_audit  --cache --traceback --email primedconsortium@uw.edu >> cron.log
 
 # Weekly cdsa_records run Sundays at 03:00 - disabled until permissions issues are resolved
 0 3 * * SUN . /var/www/django/primed_apps/primed-apps-activate.sh; python manage.py cdsa_records --outdir /projects/primed/records/cdsa/$(date +'\%Y-\%m-\%d') >> cron.log
