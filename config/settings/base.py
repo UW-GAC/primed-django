@@ -282,6 +282,21 @@ LOGGING = {
 # we would need to move to postgres to support this type of constraint with filter
 SILENCED_SYSTEM_CHECKS = ["models.W036"]
 
+# Caching
+# ------------------------------------------------------------------------------
+# See https://docs.djangoproject.com/en/dev/topics/cache/
+CACHES = {
+    # Add a cache specific for anvil_consortium_manager auditing:
+    "anvil_audit": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "anvil_audit_cache",
+        "OPTIONS": {
+            "MAX_ENTRIES": 10000,  # Maximum number of entries in the cache.
+        },
+        "TIMEOUT": None,  # Cache entries never expire.
+    },
+}
+
 # django-maintenance-mode
 MAINTENANCE_MODE_IGNORE_SUPERUSER = True
 MAINTENANCE_MODE_IGNORE_TESTS = True
@@ -398,6 +413,7 @@ ANVIL_WORKSPACE_ADAPTERS = [
 ]
 ANVIL_ACCOUNT_ADAPTER = "primed.primed_anvil.adapters.AccountAdapter"
 ANVIL_MANAGED_GROUP_ADAPTER = "primed.primed_anvil.adapters.ManagedGroupAdapter"
+ANVIL_AUDIT_CACHE = "anvil_audit"
 
 DRUPAL_API_CLIENT_ID = env("DRUPAL_API_CLIENT_ID", default="")
 DRUPAL_API_CLIENT_SECRET = env("DRUPAL_API_CLIENT_SECRET", default="")
