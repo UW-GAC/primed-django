@@ -92,6 +92,27 @@
   </div>
 </div>
 
+<div class="my-3">
+  <div class="accordion" id="accordionAssociatedDARs">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingAssociatedDARs">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAssociatedDARs" aria-expanded="false" aria-controls="collapseAssociatedDARs">
+          <span class="fa-solid fa-circle-check mx-2"></span>
+          DARs associated with this workspace
+          <span class="badge mx-2 {% if verified_table.rows|length %}bg-success{% else %}bg-secondary{% endif %} pill"> {{ associated_dars.rows|length }}</span>
+        </button>
+      </h2>
+      <div id="collapseAssociatedDARs" class="accordion-collapse collapse" aria-labelledby="headingAssociatedDARs" data-bs-parent="#accordionAssociatedDARs">
+        <div class="accordion-body">
+
+          {% render_table associated_dars %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
 
 {{block.super}}
