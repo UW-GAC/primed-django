@@ -41,7 +41,7 @@ django-dbbackup # https://github.com/jazzband/django-dbbackup
 django-extensions  # https://github.com/django-extensions/django-extensions
 
 # anvil_consortium_manager
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.30.1
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.32.0
 
 # Simple history - model history tracking
 django-simple-history
