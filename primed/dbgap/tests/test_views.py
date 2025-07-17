@@ -331,6 +331,51 @@ class dbGaPStudyAccessionDetailTest(TestCase):
             ),
         )
 
+    def test_associated_DARs_table(self):
+        """The associated DARs table exists."""
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
+        self.assertIn("associated_dars", response.context_data)
+        self.assertIsInstance(response.context_data["associated_dars"], tables.dbGaPDataAccessRequestTable)
+
+    def test_associated_DARs_table_none(self):
+        """No associated DARs are shown if the dbGaPStudyAccession does not have any DARs."""
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 0)
+
+    def test_associated_DARs_one(self):
+        """One associated DARs is shown if the dbGaPStudyAccession has one DARs."""
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=self.obj.dbgap_phs)
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 1)
+
+    def test_associated_DARs_two(self):
+        """Two associated DARs are shown if the dbGaPStudyAccession has two DARs."""
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=1, dbgap_phs=self.obj.dbgap_phs)
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_dar_id=2, dbgap_phs=self.obj.dbgap_phs)
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 2)
+
+    def test_shows_associated_DARs_for_only_this_dbGaPStudyAccession(self):
+        """Only shows workspaces for this dbGaPStudyAccession."""
+        other_dbgap_study_accession = factories.dbGaPStudyAccessionFactory.create()
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=other_dbgap_study_accession.dbgap_phs)
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 0)
+
 
 class dbGaPStudyAccessionCreateTest(TestCase):
     """Tests for the dbGaPStudyAccessionCreate view."""
