@@ -973,6 +973,51 @@ class dbGaPWorkspaceDetailTest(TestCase):
         self.assertIn("data_prep_active", response.context_data)
         self.assertTrue(response.context["data_prep_active"])
 
+    def test_associated_DARs_table(self):
+        """The associated DARs table exists."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_dars", response.context_data)
+        self.assertIsInstance(response.context_data["associated_dars"], tables.dbGaPDataAccessRequestTable)
+
+    def test_associated_DARs_table_none(self):
+        """No associated DARs are shown if the dbGaPWorkspace does not have any DARs."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 0)
+
+    def test_associated_DARs_one(self):
+        """One associated DARs is shown if the dbGaPWorkspace has one DARs."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=obj)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 1)
+
+    def test_associated_DARs_two(self):
+        """Two associated DARs are shown if the dbGaPWorkspace has two DARs."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=obj)
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=obj)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 2)
+
+    def test_shows_associated_DARs_for_only_this_dbGaPWorkspace(self):
+        """Only shows workspaces for this dbGaPWorkspace."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        other_workspace = factories.dbGaPWorkspaceFactory.create()
+        factories.dbGaPDataAccessRequestForWorkspaceFactory(dbgap_workspace=other_workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertIn("associated_dars", response.context_data)
+        self.assertEqual(len(response.context_data["associated_dars"].rows), 0)
+
 
 class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the WorkspaceCreate view from ACM with this app's dbGaPWorkspace model."""
