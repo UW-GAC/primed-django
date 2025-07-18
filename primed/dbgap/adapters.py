@@ -26,7 +26,6 @@ class dbGaPWorkspaceAdapter(WorkspaceAuthDomainAdapterMixin, WorkspaceAdminShari
         associated_data_prep = Workspace.objects.filter(dataprepworkspace__target_workspace=workspace)
         extra_context["associated_data_prep_workspaces"] = DataPrepWorkspaceUserTable(associated_data_prep)
         extra_context["data_prep_active"] = associated_data_prep.filter(dataprepworkspace__is_active=True).exists()
-        dbgap_workspace = self.workspace_data_model.objects.get(workspace=workspace)
-        data_access_requests = dbgap_workspace.get_data_access_requests(most_recent=True)
+        data_access_requests = workspace.dbgapworkspace.get_data_access_requests(most_recent=True)
         extra_context["associated_dars"] = tables.dbGaPDataAccessRequestTable(data_access_requests)
         return extra_context
