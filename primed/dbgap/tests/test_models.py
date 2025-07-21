@@ -182,6 +182,32 @@ class dbGaPStudyAccessionTest(TestCase):
         self.assertNotIn(dar_1, results)
         self.assertIn(dar_2, results)
 
+    def test_get_data_access_requests_two_applications(self):
+        """Returns 2 results when there are two DARs from two dbGaP applications."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application_1,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application_2,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_1
+        )
+        dar_2 = factories.dbGaPDataAccessRequestFactory(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_2
+        )
+        results = instance.get_data_access_requests(most_recent=True)
+        self.assertEqual(len(results), 2)
+        self.assertIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
 
 class dbGaPWorkspaceTest(TestCase):
     """Tests for the dbGaPWorkspace model."""
