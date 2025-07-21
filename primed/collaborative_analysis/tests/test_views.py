@@ -436,7 +436,7 @@ class CollaborativeAnalysisWorkspaceUpdateTest(AnVILAPIMockTestMixin, TestCase):
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
-        return reverse("anvil_consortium_manager:workspaces:update", args=args)
+        return reverse("anvil_consortium_manager:workspaces:update:internal", args=args)
 
     def test_updates_workspace_data(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""

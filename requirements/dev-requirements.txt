@@ -44,7 +44,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.21
+django==4.2.22
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -134,7 +134,7 @@ pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
     #   pre-commit
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -204,7 +204,7 @@ typing-extensions==4.8.0
     #   django-stubs-ext
     #   mypy
     #   uvicorn
-urllib3==2.2.2
+urllib3==2.5.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
