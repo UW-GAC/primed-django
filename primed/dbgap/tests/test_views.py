@@ -331,6 +331,13 @@ class dbGaPStudyAccessionDetailTest(TestCase):
             ),
         )
 
+    def test_associated_DARs_table_staff_view_user(self):
+        """Staff view users do see the associated DARs table section."""
+        request = self.factory.get(self.get_url(self.obj.dbgap_phs))
+        request.user = self.user
+        response = self.get_view()(request, dbgap_phs=self.obj.dbgap_phs)
+        self.assertContains(response, "DARs associated with this accession")
+
     def test_associated_DARs_table(self):
         """The associated DARs table exists."""
         request = self.factory.get(self.get_url(self.obj.dbgap_phs))
@@ -972,6 +979,25 @@ class dbGaPWorkspaceDetailTest(TestCase):
         response = self.client.get(instance.get_absolute_url())
         self.assertIn("data_prep_active", response.context_data)
         self.assertTrue(response.context["data_prep_active"])
+
+    def test_associated_DARs_table_view_user(self):
+        """View users do not see the associated DARs table section"""
+        user = User.objects.create_user(username="test-view", password="test-view")
+        user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
+
+        obj = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertNotContains(response, "DARs associated with this workspace")
+
+    def test_associated_DARs_table_staff_view_user(self):
+        """Staff view users do see the associated DARs table section."""
+        obj = factories.dbGaPWorkspaceFactory.create()
+        DataPrepWorkspaceFactory.create(target_workspace=obj.workspace)
+        self.client.force_login(self.user)
+        response = self.client.get(obj.get_absolute_url())
+        self.assertContains(response, "DARs associated with this workspace")
 
     def test_associated_DARs_table(self):
         """The associated DARs table exists."""

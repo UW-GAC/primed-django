@@ -92,6 +92,8 @@
   </div>
 </div>
 
+  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+
 <div class="my-3">
   <div class="accordion" id="accordionAssociatedDARs">
     <div class="accordion-item">
@@ -112,6 +114,8 @@
     </div>
   </div>
 </div>
+
+{% endif %}
 
 {% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
 
