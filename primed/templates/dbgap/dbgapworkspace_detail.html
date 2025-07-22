@@ -92,7 +92,11 @@
   </div>
 </div>
 
-  {% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
+{{block.super}}
+
+{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
+
+{% if perms.anvil_consortium_manager.anvil_consortium_manager_staff_view %}
 
 <div class="my-3">
   <div class="accordion" id="accordionAssociatedDARs">
@@ -117,9 +121,6 @@
 
 {% endif %}
 
-{% include "snippets/data_prep_workspace_table.html" with table=associated_data_prep_workspaces is_active=data_prep_active %}
-
-{{block.super}}
 {% endblock after_panel %}
 
 
