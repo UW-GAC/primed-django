@@ -161,9 +161,6 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
 
-    def test_auth_domain_not_managed_by_app(self):
-        self.fail("finish writing tests")
-
     def test_analyst_in_collab_auth_domain_in_source_auth_domain(self):
         # Create accounts.
         account = AccountFactory.create()
@@ -241,7 +238,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
         collab_audit._audit_workspace_and_account(workspace, account)
-        self.fail("What should happen?")
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_in_source_auth_domain(self):
         # Create accounts.
@@ -324,7 +328,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
         collab_audit._audit_workspace_and_account(workspace, account)
-        self.fail("What should happen?")
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_in_collab_auth_domain_two_source_auth_domains_in_both(self):
         # Create accounts.
@@ -457,7 +468,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
         collab_audit._audit_workspace_and_account(workspace, account)
-        self.fail("What should happen?")
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_in_collab_auth_domain_two_source_auth_domains_not_in_one_and_one_not_managed_by_app(self):
         # Create accounts.
@@ -480,7 +498,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
         collab_audit._audit_workspace_and_account(workspace, account)
-        self.fail("What should happen?")
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_in_both(self):
         # Create accounts.
@@ -616,7 +641,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
         collab_audit._audit_workspace_and_account(workspace, account)
-        self.fail("What should happen?")
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
     def test_analyst_not_in_collab_auth_domain_two_source_auth_domains_not_in_one_and_one_not_managed_by_app(self):
         # Create accounts.
@@ -639,7 +671,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         # Run audit
         collab_audit._audit_workspace_and_account(workspace, account)
-        self.fail("What should happen?")
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
     def test_in_collab_auth_domain_no_source_workspaces(self):
         # Create accounts.

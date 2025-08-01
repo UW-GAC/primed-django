@@ -111,7 +111,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
     """Class to audit access to a CollaborativeAnalysisWorkspace."""
 
     # Allowed reasons for access.
-    IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains for this workspace."
+    IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains managed by the app for this workspace."
     DCC_ACCESS = "CC groups are allowed access."
 
     # Allowed reasons for no access.
@@ -255,7 +255,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
             # Loop over all source workspaces.
             for source_workspace in collaborative_analysis_workspace.source_workspaces.all():
                 # Loop over all auth domains for that source workspace.
-                for source_auth_domain in source_workspace.authorization_domains.all():
+                # Only include source auth domains that are managed by the app.
+                # This is intended to handle the federal_data_lockdown auth domain.
+                # We should have enough controls on who gets access that this is ok.
+                for source_auth_domain in source_workspace.authorization_domains.filter(is_managed_by_app=True):
                     # If the user is not in the auth domain, they are not allowed to have access to the workspace.
                     # If so, break out of the loop - not necessary to check membership of the remaining auth domains.
                     # Note that this only breaks out of the inner loop.
