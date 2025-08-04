@@ -44,13 +44,13 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.20
+django==4.2.22
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==5.1.0
+django-debug-toolbar==5.2.0
     # via -r requirements/dev-requirements.in
 django-stubs==4.2.7
     # via -r requirements/dev-requirements.in
@@ -66,7 +66,7 @@ executing==2.0.1
     # via stack-data
 filelock==3.13.1
     # via virtualenv
-h11==0.14.0
+h11==0.16.0
     # via uvicorn
 identify==2.5.34
     # via pre-commit
@@ -92,7 +92,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.15.0
+mypy==1.17.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -105,6 +105,8 @@ packaging==21.3
     #   sphinx
 parso==0.8.3
     # via jedi
+pathspec==0.12.1
+    # via mypy
 pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
@@ -119,8 +121,9 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pygments==2.17.2
+pygments==2.19.2
     # via
+    #   -c requirements/test-requirements.txt
     #   ipython
     #   sphinx
 pyparsing==3.1.1
@@ -132,12 +135,12 @@ pyyaml==6.0.1
     # via
     #   -c requirements/test-requirements.txt
     #   pre-commit
-requests==2.32.3
+requests==2.32.4
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.11.2
+ruff==0.12.4
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -190,7 +193,7 @@ types-pytz==2024.1.0.20240203
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.32.0.20250328
+types-requests==2.32.4.20250611
     # via -r requirements/dev-requirements.in
 typing-extensions==4.8.0
     # via
@@ -202,7 +205,7 @@ typing-extensions==4.8.0
     #   django-stubs-ext
     #   mypy
     #   uvicorn
-urllib3==2.2.2
+urllib3==2.5.0
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt

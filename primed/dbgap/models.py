@@ -55,6 +55,15 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"dbgap_phs": self.dbgap_phs})
 
+    def get_data_access_requests(self, most_recent=False):
+        """Get a list of data access requests associated with this dbGaPStudyAccession."""
+        qs = dbGaPDataAccessRequest.objects.filter(
+            dbgap_phs=self.dbgap_phs,
+        )
+        if most_recent:
+            qs = qs.filter(dbgap_data_access_snapshot__is_most_recent=True)
+        return qs
+
 
 class dbGaPWorkspace(RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""
@@ -296,11 +305,11 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     # Make sure that excepted values match.
                     # Is ValueError the best error to raise?
                     if previous_dar.dbgap_phs != phs:
-                        raise ValueError("dbgap_phs mismatch")
+                        raise ValueError(f"dbgap_phs mismatch. previous_dar: {previous_dar}.")
                     if previous_dar.dbgap_consent_code != request_json["consent_code"]:
-                        raise ValueError("dbgap_consent_code mismatch")
+                        raise ValueError(f"dbgap_consent_code mismatch. previous_dar: {previous_dar}.")
                     if previous_dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id != project_id:
-                        raise ValueError("project_id mismatch")
+                        raise ValueError(f"project_id mismatch. previous_dar: {previous_dar}.")
                     # If everything looks good, pull the original version and participant set from the previous DAR.
                     original_version = previous_dar.original_version
                     original_participant_set = previous_dar.original_participant_set
