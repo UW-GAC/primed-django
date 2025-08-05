@@ -136,7 +136,7 @@ class WorkspaceAccessAudit(PRIMEDAudit):
 
     def _audit_workspace(self, workspace):
         # Check if the access group is in the overall CDSA group.
-        auth_domain = workspace.workspace.authorization_domains.first()
+        auth_domain = workspace.workspace.authorization_domains.get()
         has_cdsa_group_in_auth_domain = GroupGroupMembership.objects.filter(
             parent_group=auth_domain,
             child_group=self.anvil_cdsa_group,

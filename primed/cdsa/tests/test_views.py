@@ -9067,7 +9067,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         agreement = factories.DataAffiliateAgreementFactory.create(study=study)
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         # Check the table in the context.
@@ -9151,7 +9151,7 @@ class CDSAWorkspaceAuditTest(TestCase):
         """error shows a record when audit finds that access needs to be removed."""
         workspace = factories.CDSAWorkspaceFactory.create()
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         self.client.force_login(self.user)
@@ -9267,7 +9267,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         agreement = factories.DataAffiliateAgreementFactory.create(study=study)
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         # Check the table in the context.
@@ -9330,7 +9330,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """get request with RemoveAccess audit result."""
         workspace = factories.CDSAWorkspaceFactory.create()
         GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         self.client.force_login(self.user)
@@ -9351,7 +9351,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         date_created = timezone.now() - timedelta(weeks=3)
         with freeze_time(date_created):
             membership = GroupGroupMembershipFactory.create(
-                parent_group=workspace.workspace.authorization_domains.first(),
+                parent_group=workspace.workspace.authorization_domains.get(),
                 child_group=self.anvil_cdsa_group,
             )
         # Check the response
@@ -9364,7 +9364,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         # Make sure the membership hasn't changed.
         membership.refresh_from_db()
         self.assertEqual(membership.modified, date_created)
-        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.first())
+        self.assertEqual(membership.parent_group, workspace.workspace.authorization_domains.get())
         self.assertEqual(membership.child_group, self.anvil_cdsa_group)
 
     def test_post_verified_no_access(self):
@@ -9372,7 +9372,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         study = StudyFactory.create()
         workspace = factories.CDSAWorkspaceFactory.create(study=study)
         # membership = GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.first(),
+        #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=self.anvil_cdsa_group,
         # )
         # Check the response
@@ -9407,7 +9407,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertRedirects(response, workspace.get_absolute_url())
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
@@ -9436,7 +9436,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(response.content.decode(), views.SignedAgreementAuditResolve.htmx_success)
         # Membership has been created.
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
@@ -9445,7 +9445,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """Get request with RemoveAccess audit result."""
         workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
@@ -9471,7 +9471,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """HTMX post request with RemoveAccess audit result."""
         workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
@@ -9573,7 +9573,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """AnVIL API errors are properly handled."""
         workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
@@ -9607,7 +9607,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         """AnVIL API errors are properly handled."""
         workspace = factories.CDSAWorkspaceFactory.create(workspace__name="TEST_WORKSPACE")
         membership = GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
         # Add API response
@@ -9655,7 +9655,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertRedirects(response, workspace.get_absolute_url())
         membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.first(),
+            parent_group=workspace.workspace.authorization_domains.get(),
             child_group=cdsa_group,
         )
         self.assertEqual(membership.role, membership.MEMBER)
@@ -10353,7 +10353,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(new_workspace_data.requested_by, self.requester)
         # Check that auth domain exists.
         self.assertEqual(new_workspace.authorization_domains.count(), 1)
-        auth_domain = new_workspace.authorization_domains.first()
+        auth_domain = new_workspace.authorization_domains.get()
         self.assertEqual(auth_domain.name, "AUTH_test-workspace")
         self.assertTrue(auth_domain.is_managed_by_app)
         self.assertEqual(auth_domain.email, "AUTH_test-workspace@firecloud.org")

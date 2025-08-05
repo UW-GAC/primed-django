@@ -716,7 +716,7 @@ class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView)
         return reverse("dbgap:audit:access:all")
 
     def form_valid(self, form):
-        auth_domain = self.dbgap_workspace.workspace.authorization_domains.first()
+        auth_domain = self.dbgap_workspace.workspace.authorization_domains.filter(is_managed_by_app=True).get()
         # Handle the result.
         try:
             with transaction.atomic():

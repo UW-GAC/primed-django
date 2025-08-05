@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import django_tables2 as tables
+from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
 from django.db.models import QuerySet
 from django.urls import reverse
 
@@ -172,7 +173,17 @@ class dbGaPAccessAudit(PRIMEDAudit):
 
     def audit_application_and_workspace(self, dbgap_application, dbgap_workspace):
         """Audit access for a specific dbGaP application and a specific workspace."""
-        in_auth_domain = dbgap_workspace.workspace.is_in_authorization_domain(dbgap_application.anvil_access_group)
+        # We can't call workspace.has_group_in_authorization_domain() because it will raise an exception
+        # if at least one of the auth domains is not managed by the app.
+        parent_groups = dbgap_application.anvil_access_group.get_all_parents()
+        try:
+            in_auth_domain = dbgap_workspace.workspace.has_group_in_authorization_domain(
+                dbgap_application.anvil_access_group, all_parent_groups=parent_groups
+            )
+        except WorkspaceAccessAuthorizationDomainUnknownError:
+            # Just auth domains managed by the app.
+            auth_domains_managed_by_app = dbgap_workspace.workspace.authorization_domains.filter(is_managed_by_app=True)
+            in_auth_domain = set(auth_domains_managed_by_app).issubset(set(parent_groups))
 
         # Get the most recent snapshot.
         try:
