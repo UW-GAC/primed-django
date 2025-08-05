@@ -111,7 +111,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
     """Class to audit access to a CollaborativeAnalysisWorkspace."""
 
     # Allowed reasons for access.
-    IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains for this workspace."
+    IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains managed by the app for this workspace."
     DCC_ACCESS = "CC groups are allowed access."
 
     # Allowed reasons for no access.
@@ -148,7 +148,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # Get a list of accounts in the auth domain.
         auth_domain_membership = [
             x.account
-            for x in GroupAccountMembership.objects.filter(group=workspace.workspace.authorization_domains.first())
+            for x in GroupAccountMembership.objects.filter(group=workspace.workspace.authorization_domains.get())
         ]
         for membership in analyst_memberships:
             self._audit_workspace_and_account(workspace, membership.account)
@@ -173,7 +173,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # Check group access. Most groups should not have access.
         group_memberships = (
             GroupGroupMembership.objects.filter(
-                parent_group=workspace.workspace.authorization_domains.first(),
+                parent_group=workspace.workspace.authorization_domains.get(),
             )
             .exclude(
                 # Ignore cc admins group - it is handled differently because it should have admin privileges.
@@ -196,8 +196,8 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         access_allowed = group.name in [
             "PRIMED_CC_WRITERS",
         ]
-        in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.first()
-        auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.first()
+        in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.get()
+        auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.get()
         in_auth_domain = GroupGroupMembership.objects.filter(parent_group=auth_domain, child_group=group).exists()
         if access_allowed and in_auth_domain:
             self.verified.append(
@@ -247,7 +247,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # Check whether the account is in the analyst group.
         in_analyst_group = collaborative_analysis_workspace.analyst_group in account_groups
         # Check whether the account is in the auth domain of the collab workspace.
-        in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.first() in account_groups
+        in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.get() in account_groups
         if in_analyst_group:
             # Check whether access is allowed. Start by assuming yes, and then
             # set to false if the account should not have access.
@@ -255,7 +255,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
             # Loop over all source workspaces.
             for source_workspace in collaborative_analysis_workspace.source_workspaces.all():
                 # Loop over all auth domains for that source workspace.
-                for source_auth_domain in source_workspace.authorization_domains.all():
+                # Only include source auth domains that are managed by the app.
+                # This is intended to handle the federal_data_lockdown auth domain.
+                # We should have enough controls on who gets access that this is ok.
+                for source_auth_domain in source_workspace.authorization_domains.filter(is_managed_by_app=True):
                     # If the user is not in the auth domain, they are not allowed to have access to the workspace.
                     # If so, break out of the loop - not necessary to check membership of the remaining auth domains.
                     # Note that this only breaks out of the inner loop.

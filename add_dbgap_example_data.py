@@ -134,7 +134,7 @@ dar_1_2 = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
 
 # Now add dbGaP access groups.
 GroupGroupMembershipFactory.create(
-    parent_group=workspace_fhs_1.workspace.authorization_domains.first(),
+    parent_group=workspace_fhs_1.workspace.authorization_domains.get(),
     child_group=dbgap_application_1.anvil_access_group,
 )
 

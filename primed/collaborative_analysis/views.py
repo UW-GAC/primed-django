@@ -155,7 +155,7 @@ class CollaborativeAnalysisAuditResolve(AnVILConsortiumManagerStaffEditRequired,
         return self.collaborative_analysis_workspace.get_absolute_url()
 
     def form_valid(self, form):
-        auth_domain = self.collaborative_analysis_workspace.workspace.authorization_domains.first()
+        auth_domain = self.collaborative_analysis_workspace.workspace.authorization_domains.get()
         # Handle the result.
         try:
             with transaction.atomic():

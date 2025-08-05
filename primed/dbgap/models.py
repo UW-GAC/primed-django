@@ -55,6 +55,15 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
     def get_absolute_url(self):
         return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"dbgap_phs": self.dbgap_phs})
 
+    def get_data_access_requests(self, most_recent=False):
+        """Get a list of data access requests associated with this dbGaPStudyAccession."""
+        qs = dbGaPDataAccessRequest.objects.filter(
+            dbgap_phs=self.dbgap_phs,
+        )
+        if most_recent:
+            qs = qs.filter(dbgap_data_access_snapshot__is_most_recent=True)
+        return qs
+
 
 class dbGaPWorkspace(RequesterModel, DataUseOntologyModel, TimeStampedModel, BaseWorkspaceData):
     """A model to track additional data about dbGaP data in a workspace."""

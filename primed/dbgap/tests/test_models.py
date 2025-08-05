@@ -113,6 +113,101 @@ class dbGaPStudyAccessionTest(TestCase):
         self.assertIn(study_1, instance.studies.all())
         self.assertIn(study_2, instance.studies.all())
 
+    def test_get_data_access_requests_no_dars(self):
+        """Returns no results when there no DARs."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        self.assertEqual(len(instance.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_different_phs(self):
+        """Does not return a DAR where participant set doesn't match."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=instance.dbgap_phs + 1)
+        self.assertEqual(len(instance.get_data_access_requests()), 0)
+
+    def test_get_data_access_requests_one_snapshot_one_match(self):
+        """Returns 1 results when there is one matching DARs."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        dar = factories.dbGaPDataAccessRequestFactory.create(dbgap_phs=instance.dbgap_phs)
+        results = instance.get_data_access_requests()
+        self.assertEqual(len(results), 1)
+        self.assertIn(dar, results)
+
+    def test_get_data_access_requests_two_snapshots_most_recent_false(self):
+        """Returns 2 results when there are two matchign DARs from different snapshots of the same study accession."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=False,
+        )
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_1
+        )
+        dar_2 = factories.dbGaPDataAccessRequestFactory(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_2
+        )
+        results = instance.get_data_access_requests()
+        self.assertEqual(len(results), 2)
+        self.assertIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
+    def test_get_data_access_requests_two_snapshots_most_recent_true(self):
+        """Returns 1 results when there are two matchign DARs from different snapshots of the same study accession."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        dbgap_application = factories.dbGaPApplicationFactory.create()
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now() - timedelta(weeks=4),
+            is_most_recent=False,
+        )
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_1
+        )
+        dar_2 = factories.dbGaPDataAccessRequestFactory(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_2
+        )
+        results = instance.get_data_access_requests(most_recent=True)
+        self.assertEqual(len(results), 1)
+        self.assertNotIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
+    def test_get_data_access_requests_two_applications(self):
+        """Returns 2 results when there are two DARs from two dbGaP applications."""
+        instance = models.dbGaPStudyAccession(dbgap_phs=1)
+        dbgap_application_1 = factories.dbGaPApplicationFactory.create()
+        snapshot_1 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application_1,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dbgap_application_2 = factories.dbGaPApplicationFactory.create()
+        snapshot_2 = factories.dbGaPDataAccessSnapshotFactory.create(
+            dbgap_application=dbgap_application_2,
+            created=timezone.now(),
+            is_most_recent=True,
+        )
+        dar_1 = factories.dbGaPDataAccessRequestFactory.create(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_1
+        )
+        dar_2 = factories.dbGaPDataAccessRequestFactory(
+            dbgap_phs=instance.dbgap_phs, dbgap_data_access_snapshot=snapshot_2
+        )
+        results = instance.get_data_access_requests(most_recent=True)
+        self.assertEqual(len(results), 2)
+        self.assertIn(dar_1, results)
+        self.assertIn(dar_2, results)
+
 
 class dbGaPWorkspaceTest(TestCase):
     """Tests for the dbGaPWorkspace model."""

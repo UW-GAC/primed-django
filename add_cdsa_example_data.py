@@ -232,7 +232,7 @@ cdsa_workspace_1 = factories.CDSAWorkspaceFactory.create(
     data_use_permission=dup,
 )
 GroupGroupMembershipFactory.create(
-    parent_group=cdsa_workspace_1.workspace.authorization_domains.first(),
+    parent_group=cdsa_workspace_1.workspace.authorization_domains.get(),
     child_group=cdsa_group,
 )
 
