@@ -74,6 +74,8 @@ class dbGaPStudyAccessionDetail(AnVILConsortiumManagerStaffViewRequired, SingleT
         context = super().get_context_data(**kwargs)
         edit_permission_codename = AnVILProjectManagerAccess.STAFF_EDIT_PERMISSION_CODENAME
         context["show_edit_links"] = self.request.user.has_perm("anvil_consortium_manager." + edit_permission_codename)
+        data_access_requests = self.object.get_data_access_requests(most_recent=True)
+        context["associated_dars"] = tables.dbGaPDataAccessRequestTable(data_access_requests)
         return context
 
 
@@ -714,7 +716,7 @@ class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView)
         return reverse("dbgap:audit:access:all")
 
     def form_valid(self, form):
-        auth_domain = self.dbgap_workspace.workspace.authorization_domains.first()
+        auth_domain = self.dbgap_workspace.workspace.authorization_domains.filter(is_managed_by_app=True).get()
         # Handle the result.
         try:
             with transaction.atomic():
