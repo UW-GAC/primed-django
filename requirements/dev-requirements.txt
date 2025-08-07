@@ -92,7 +92,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.16.1
+mypy==1.17.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy

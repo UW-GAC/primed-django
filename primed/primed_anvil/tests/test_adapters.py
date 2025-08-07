@@ -94,7 +94,7 @@ class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
         # Run the adapter method.
         self.adapter.before_anvil_create(workspace)
         self.assertEqual(workspace.authorization_domains.count(), 1)
-        auth_domain = workspace.authorization_domains.first()
+        auth_domain = workspace.authorization_domains.get()
         self.assertEqual(auth_domain.name, "AUTH_foo")
         self.assertTrue(auth_domain.is_managed_by_app)
         self.assertEqual(auth_domain.email, "AUTH_foo@firecloud.org")
@@ -124,7 +124,7 @@ class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
         # Run the adapter method.
         self.adapter.before_anvil_create(workspace)
         self.assertEqual(workspace.authorization_domains.count(), 1)
-        auth_domain = workspace.authorization_domains.first()
+        auth_domain = workspace.authorization_domains.get()
         self.assertEqual(auth_domain.name, "AUTH_foo")
         self.assertTrue(auth_domain.is_managed_by_app)
         self.assertEqual(auth_domain.email, "AUTH_foo@firecloud.org")
@@ -146,7 +146,7 @@ class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
         # Run the adapter method.
         self.adapter.before_anvil_create(workspace)
         self.assertEqual(workspace.authorization_domains.count(), 1)
-        auth_domain = workspace.authorization_domains.first()
+        auth_domain = workspace.authorization_domains.get()
         self.assertEqual(auth_domain.name, "AUTH_foo")
         self.assertTrue(auth_domain.is_managed_by_app)
         self.assertEqual(auth_domain.email, "AUTH_foo@firecloud.org")
