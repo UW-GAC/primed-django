@@ -37,7 +37,7 @@ crispy-bootstrap5==2025.6
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==45.0.5
+cryptography==45.0.6
     # via -r requirements/requirements.in
 django==4.2.22
     # via
@@ -130,7 +130,7 @@ packaging==21.3
     #   plotly
 pandas==2.3.1
     # via -r requirements/requirements.in
-pip-tools==7.4.1
+pip-tools==7.5.0
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
