@@ -1883,14 +1883,10 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        study = StudyFactory.create()
+        study_site = StudySiteFactory.create()
         # API response to create the associated anvil_access_group.
-        self.anvil_response_mock.add(
-            responses.POST,
-            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
-            status=201,
-            json={"message": "mock message"},
-        )
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
         # CC admins group membership.
         self.anvil_response_mock.add(
             responses.PUT,
@@ -1913,7 +1909,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
                 "agreementtype-MAX_NUM_FORMS": 1,
-                "agreementtype-0-study": study.pk,
+                "agreementtype-0-study_site": study_site.pk,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -5401,7 +5397,6 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.client.force_login(self.user)
         representative = UserFactory.create()
         agreement_version = factories.AgreementVersionFactory.create()
-        study = StudyFactory.create()
         # API response to create the associated anvil_access_group.
         self.anvil_response_mock.add(
             responses.POST,
@@ -5431,7 +5426,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "agreementtype-INITIAL_FORMS": 0,
                 "agreementtype-MIN_NUM_FORMS": 1,
                 "agreementtype-MAX_NUM_FORMS": 1,
-                "agreementtype-0-study": study.pk,
+                "agreementtype-0-affiliation": "Foo Bar",
             },
         )
         self.assertEqual(response.status_code, 302)
