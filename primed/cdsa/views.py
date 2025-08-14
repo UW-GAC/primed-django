@@ -261,12 +261,16 @@ class AgreementTypeCreateMixin:
             with transaction.atomic():
                 self.object = self.get_agreement(form, formset)
                 self.object.save()
+                # Accessors is a many-to-many field, so we need to save it separately.
+                form.save_m2m()
                 if not formset.is_valid():
                     transaction.set_rollback(True)
                     return self.form_invalid(form, formset)
                 # For some reason, signed_agreement isn't getting set unless I set it here.
                 agreement_type = self.get_agreement_type(form, formset)
                 agreement_type.save()
+                # If the formset has many-to-many fields, we need to save them separately.
+                formset.forms[0].save_m2m()
                 self.anvil_create()
                 return super().form_valid(form)
         except ValidationError as e:
