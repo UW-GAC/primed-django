@@ -5,6 +5,7 @@ from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDoma
 from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from primed.primed_anvil.tables import (
     BooleanIconColumn,
@@ -29,7 +30,7 @@ class dbGaPAccessionColumn(tables.Column):
         value = tables.A(self.accessor).resolve(record)
         if self.dbgap_link_accessor:
             url = tables.A(self.dbgap_link_accessor).resolve(record)
-            return format_html(
+            return mark_safe(
                 """<a href="{}" target="_blank">{} <i class="bi bi-box-arrow-up-right"></i></a>""".format(url, value)
             )
         else:
@@ -318,7 +319,10 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
             }
             this = Template(template_code).render(Context(this_context))
             items = items + [this]
-        html = format_html("" + "<br>".join(items))
+        html = format_html(
+            "{items}",
+            items="<br>".join(items),
+        )
         return html
 
 
