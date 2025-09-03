@@ -72,7 +72,7 @@ class TemplateWorkspaceForm(forms.ModelForm):
 class OpenAccessWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelForm):
     """Form for a OpenAccessWorkspace object."""
 
-    data_url = forms.URLField(max_length=255, assume_scheme="https")
+    data_url = forms.URLField(max_length=255, assume_scheme="https", required=False)
 
     class Meta:
         model = models.OpenAccessWorkspace
