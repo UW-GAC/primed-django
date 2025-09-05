@@ -44,7 +44,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.23
+django==4.2.24
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
@@ -113,7 +113,7 @@ pickleshare==0.7.5
     # via ipython
 platformdirs==4.1.0
     # via virtualenv
-pre-commit==4.2.0
+pre-commit==4.3.0
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
@@ -140,7 +140,7 @@ requests==2.32.4
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.12.7
+ruff==0.12.12
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -193,7 +193,7 @@ types-pytz==2024.1.0.20240203
     # via django-stubs
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.32.4.20250611
+types-requests==2.32.4.20250809
     # via -r requirements/dev-requirements.in
 typing-extensions==4.8.0
     # via
