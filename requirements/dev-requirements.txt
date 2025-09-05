@@ -44,7 +44,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.23
+django==4.2.24
     # via
     #   -c requirements/requirements.txt
     #   django-debug-toolbar
