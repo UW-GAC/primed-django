@@ -1,4 +1,5 @@
-How To - Project Documentation
+Developer information
+
 ======================================================================
 
 Get Started
@@ -8,10 +9,10 @@ Documentation can be written as rst files in `primed/docs`.
 
 
 To build and serve docs, use the command::
-    
-    make livehtml 
-    
-from inside the `primed/docs` directory. 
+
+    make livehtml
+
+from inside the `primed/docs` directory.
 
 
 Changes to files in `docs/_source` will be picked up and reloaded automatically.
@@ -29,6 +30,5 @@ For an in-use example, see the `page source <_sources/users.rst.txt>`_ for :ref:
 
 To compile all docstrings automatically into documentation source files, use the command:
     ::
-    
-        make apidocs
 
+        make apidocs

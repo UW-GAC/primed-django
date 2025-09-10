@@ -10,7 +10,7 @@ Welcome to gac-django's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   howto
+   developer
    users
 
 
