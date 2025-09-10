@@ -26,7 +26,7 @@ django.setup()
 
 # -- Project information -----------------------------------------------------
 
-project = "gac-django"
+project = "primed-django"
 copyright = """2021, Jonas Carson"""
 author = "Jonas Carson"
 
