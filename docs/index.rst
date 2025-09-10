@@ -17,6 +17,12 @@ Details specific to the PRIMED consortium will be described in this documentatio
    developer
    users
 
+.. toctree::
+   :maxdepth: 3
+   :caption: Reference
+
+   api/primed
+
 
 
 Indices and tables
