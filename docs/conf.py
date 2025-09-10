@@ -27,8 +27,8 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = "primed-django"
-copyright = """2021, Jonas Carson"""
-author = "Jonas Carson"
+copyright = """2021-2026, Adrienne Stilp"""
+author = "Adrienne Stilp"
 
 
 # -- General configuration ---------------------------------------------------
