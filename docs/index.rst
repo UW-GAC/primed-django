@@ -14,14 +14,18 @@ Details specific to the PRIMED consortium will be described in this documentatio
    :maxdepth: 2
    :caption: General
 
+   primed_anvil
    developer
-   users
 
 .. toctree::
    :maxdepth: 2
    :caption: PRIMED Apps
 
+   cdsa
+   collaborative_analysis
    dbgap
+   duo
+   miscellaneous_workspaces
 
 .. toctree::
    :maxdepth: 3
