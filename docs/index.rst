@@ -12,10 +12,16 @@ Details specific to the PRIMED consortium will be described in this documentatio
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: General
 
    developer
    users
+
+.. toctree::
+   :maxdepth: 2
+   :caption: PRIMED Apps
+
+   dbgap
 
 .. toctree::
    :maxdepth: 3
