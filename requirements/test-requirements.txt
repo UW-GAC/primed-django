@@ -95,7 +95,7 @@ tomli==2.0.1
     #   -c requirements/requirements.txt
     #   coverage
     #   pytest
-typing-extensions==4.8.0
+typing-extensions==4.15.0
     # via
     #   -c requirements/requirements.txt
     #   django-test-migrations
