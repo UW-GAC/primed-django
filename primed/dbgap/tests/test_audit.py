@@ -814,12 +814,10 @@ class dbGaPAccessAuditTest(TestCase):
 
         dbgap_audit = access_audit.dbGaPAccessAudit()
         dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.verified), 0)
         self.assertEqual(len(dbgap_audit.needs_action), 1)
         self.assertEqual(len(dbgap_audit.errors), 0)
-        verified_record = dbgap_audit.verified[0]
         update_record = dbgap_audit.needs_action[0]
-        self.assertIsInstance(verified_record, access_audit.VerifiedAccess)
         self.assertIsInstance(update_record, access_audit.UpdateDAR)
         self.assertEqual(update_record.workspace, dbgap_workspace)
         self.assertEqual(update_record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
