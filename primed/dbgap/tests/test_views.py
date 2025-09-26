@@ -5312,6 +5312,42 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIsNotNone(audit_result.action)
 
+    def test_get_dar_needs_update(self):
+        """needs_action_table shows a record when audit finds that dar needs update."""
+        workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=5),
+        )
+
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(
+            self.get_url(
+                dar.dbgap_data_access_snapshot.dbgap_application.dbgap_project_id,
+                workspace.workspace.billing_project.name,
+                workspace.workspace.name,
+            )
+        )
+        self.assertIn("audit_result", response.context_data)
+        audit_result = response.context_data["audit_result"]
+        self.assertIsInstance(audit_result, access_audit.UpdateDAR)
+        self.assertEqual(audit_result.workspace, workspace)
+        self.assertEqual(
+            audit_result.dbgap_application,
+            dar.dbgap_data_access_snapshot.dbgap_application,
+        )
+        self.assertEqual(audit_result.data_access_request, dar)
+        self.assertEqual(
+            audit_result.note,
+            access_audit.dbGaPAccessAudit.DAR_SNAPSHOT_OLD,
+        )
+        # no action is present
+        self.assertIsNone(audit_result.action)
+
     def test_post_verified_access(self):
         """post with VerifiedAccess audit result."""
         # Add a verified workspace.
