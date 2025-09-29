@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+from datetime import timedelta
+from typing import Optional
 
 import django_tables2 as tables
 from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
 from django.db.models import QuerySet
 from django.urls import reverse
+from django.utils import timezone
 
 from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
@@ -24,7 +27,7 @@ class AccessAuditResult(PRIMEDAuditResult):
     workspace: dbGaPWorkspace
     note: str
     dbgap_application: dbGaPApplication
-    has_access: bool
+    has_access: Optional[bool] = None
     data_access_request: dbGaPDataAccessRequest = None
     action: str = None
 
@@ -116,6 +119,14 @@ class Error(AccessAuditResult):
     pass
 
 
+@dataclass
+class UpdateDAR(AccessAuditResult):
+    """Audit results class for when date of last DAR is prev month"""
+
+    def __str__(self):
+        return f"Update DAR: {self.note}"
+
+
 class dbGaPAccessAuditTable(tables.Table):
     """A table to show results from a dbGaPAccessAudit subclass."""
 
@@ -145,6 +156,8 @@ class dbGaPAccessAudit(PRIMEDAudit):
     NEW_APPROVED_DAR = "New approved DAR."
     NEW_WORKSPACE = "New workspace."
     PREVIOUS_APPROVAL = "Previously approved."
+
+    DAR_SNAPSHOT_OLD = "DAR update needed. Snapshot too old."
 
     # Unexpected.
     ERROR_HAS_ACCESS = "Has access for an unknown reason."
@@ -236,9 +249,20 @@ class dbGaPAccessAudit(PRIMEDAudit):
                 )
             return  # Go to the next workspace.
 
+        # Is DAR snapshot more than 30 days old
+        dar_is_prior = dar_snapshot.created < (timezone.localtime() - timedelta(days=30))
+        if dar_is_prior:
+            self.needs_action.append(
+                UpdateDAR(
+                    workspace=dbgap_workspace,
+                    dbgap_application=dbgap_application,
+                    data_access_request=dar,
+                    note=self.DAR_SNAPSHOT_OLD,
+                )
+            )
         # Is the dbGaP access group associated with the DAR in the auth domain of the workspace?
         # We'll need to know this for future checks.
-        if dar.is_approved and in_auth_domain:
+        elif dar.is_approved and in_auth_domain:
             # Verified access!
             self.verified.append(
                 VerifiedAccess(
