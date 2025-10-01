@@ -73,7 +73,7 @@ The view runs the audit and displays the results in tables, allowing users to ea
 
     To grant or remove access, users can click on the button in the "Action" column of this table to automatically add/remove the application's ``anvil_access_group`` to/from the workspace's auth domain as appropriate.
 
-    - "Errors" table: all records with :class:`~primed.dbgap.audit.collaborator_audit.Error` results (e.g., a group is a member of the `anvil_access_group`)
+    - "Errors" table: all records with :class:`~primed.dbgap.audit.collaborator_audit.Error` results (e.g., a group is a member of the `anvil_access_group`). Typically, resolving these errors requires identifying why the error might have occurred, determining whether it lead to a DMI, and then manually deleting the membership record in ACM.
 
 
 DARs and workspace access
@@ -150,7 +150,7 @@ The view runs the audit and displays the results in tables, allowing users to ea
     - "Action Needed" table: all records where action needs to be taken, but is expected in some way (e.g., a DAR recently was approved for the workspace)
     To grant or remove access, users can click on the button in the "Action" column of this table to automatically add/remove the application's ``anvil_access_group`` to/from the workspace's auth domain as appropriate.
 
-    - "Errors" table: all records with :class:`~primed.dbgap.audit.access_audit.Error` results (e.g., an application never had an approved DAR but is in the auth domain)
+    - "Errors" table: all records with :class:`~primed.dbgap.audit.access_audit.Error` results (e.g., an application never had an approved DAR but is in the auth domain). Typically, resolving these errors requires identifying why the error might have occurred, determining whether it lead to a DMI, and then manually deleting the membership record in ACM.
 
 
 
