@@ -50,7 +50,7 @@ Collaborators are considered to be covered under the application and can be adde
 
 The :class:`~primed.dbgap.audit.collaborator_audit.dbGaPCollaboratorAudit` auditing class is responsible for performing the above checks and storing the results.
 The audit can be run for all applications or for a single application at a time.
-For each application, it checks both the set of listed collaborators as well as any current members of the application's ``anvil_access_group``.
+For each application, it checks both the set of listed collaborators as well as any current members (groups or users) of the application's ``anvil_access_group``.
 
 The following results are possible:
 
