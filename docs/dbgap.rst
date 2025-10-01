@@ -73,7 +73,7 @@ The view runs the audit and displays the results in tables, allowing users to ea
 
     To grant or remove access, users can click on the button in the "Action" column of this table to automatically add/remove the application's ``anvil_access_group`` to/from the workspace's auth domain as appropriate.
 
-    - "Errors" table: all records with :class:`~primed.dbgap.audit.collaborator_audit.Error` results (e.g., a group is a member of the auth domain)
+    - "Errors" table: all records with :class:`~primed.dbgap.audit.collaborator_audit.Error` results (e.g., a group is a member of the `anvil_access_group`)
 
 
 DARs and workspace access
