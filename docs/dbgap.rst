@@ -58,7 +58,7 @@ The following results are possible:
 - :class:`~primed.dbgap.audit.collaborator_audit.VerifiedNoAccess` - The user is not covered under the application (e.g., inactive) and is not a member of the application's ``anvil_access_group``.
 - :class:`~primed.dbgap.audit.collaborator_audit.GrantAccess` - The user is covered under the application, but is not a member of the application's ``anvil_access_group``. Action is needed to add the user to the access group.
 - :class:`~primed.dbgap.audit.collaborator_audit.RemoveAccess` - The user is not covered under the application, but is a member of the application's ``anvil_access_group``. Action is needed to remove the user from the access group.
-- :class:`~primed.dbgap.audit.collaborator_audit.Error` - An unexpected situation occurred and further exploration is necessary.
+- :class:`~primed.dbgap.audit.collaborator_audit.Error` - An unexpected situation occurred and further exploration is necessary. An example of this when another group is a member of the `anvil_access_group`, as a group cannot be listed as a collaborator.
 
 Viewing audit results
 ~~~~~~~~~~~~~~~~~~~~~
