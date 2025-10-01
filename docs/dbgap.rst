@@ -122,7 +122,7 @@ The app also provides convenient views and management commands to run the audits
 Access for a given ``dbGaPApplication`` to a given ``dbGaPWorkspace`` can be granted if:
 
 - A DAR exists in the most recent ``dbGaPDataAccessSnapshot`` for the application
-- The DAR has the same ``dbgap_phs`` and ``dbgap_consent_code`` as the workspace, the DAR's ``original_version`` is less than or equal to the workspace's ``dbgap_version``, and the DAR's ``original_participant_set`` is less than or equal to than the workspace's ``dbgap_participant_set``
+- The DAR has the same ``dbgap_phs`` and ``dbgap_consent_code`` as the workspace, the DAR's ``original_version`` is less than or equal to the workspace's ``dbgap_version``, and the DAR's ``original_participant_set`` is less than or equal to than the workspace's ``dbgap_participant_set``. This means that a DAR that was initially approved for v7 of a study would be able to get access to workspaces containing data from v8 but not those containing data from v6.
 - The DAR's :attr:`~primed.dbgap.models.dbGaPDataAccessRequest.dbgap_current_status` is **approved**
 
 If all of the above are true, then the application has access to the workspace.
