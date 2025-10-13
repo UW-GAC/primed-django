@@ -43,24 +43,22 @@ class AccountAdapter(BaseAccountAdapter):
 
     def after_account_verification(self, account):
         """Add the account to the member group for any StudySites that they are a part of."""
+        super().after_account_verification(account)
         # Get all StudySites that have a member_group
         study_sites = StudySite.objects.select_related("member_group").filter(member_group__isnull=False)
         for site in study_sites:
-            group = site.member_group
-            try:
-                membership = GroupAccountMembership.objects.get(
-                    group=group,
-                    account=account,
-                )
+            if site.member_group:
+                self._add_account_to_group(account, site.member_group)
 
-            except GroupAccountMembership.DoesNotExist:
-                membership = GroupAccountMembership(
-                    group=group,
-                    account=account,
-                    role=GroupAccountMembership.MEMBER,
-                )
-                membership.save()
-                membership.anvil_create()
+    def _add_account_to_group(self, account, group):
+        if not GroupAccountMembership.objects.filter(group=group, account=account).exists():
+            membership = GroupAccountMembership(
+                group=group,
+                account=account,
+                role=GroupAccountMembership.MEMBER,
+            )
+            membership.save()
+            membership.anvil_create()
 
 
 class WorkspaceAuthDomainAdapterMixin:
