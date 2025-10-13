@@ -1,6 +1,6 @@
 import responses
 from anvil_consortium_manager.adapters.default import DefaultWorkspaceAdapter
-from anvil_consortium_manager.models import Account, GroupGroupMembership, WorkspaceGroupSharing
+from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
     ManagedGroupFactory,
@@ -10,12 +10,13 @@ from anvil_consortium_manager.tests.factories import (
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.test import TestCase, override_settings
 
+from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
 from .. import adapters
 
 
-class AccountAdapterTest(TestCase):
+class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
     """Tests of the AccountAdapter, where not tested in other TestCases."""
 
     def test_get_autocomplete_label_linked_user(self):
@@ -65,6 +66,72 @@ class AccountAdapterTest(TestCase):
         self.assertEqual(len(queryset), 1)
         self.assertIn(account_1, queryset)
         self.assertNotIn(account_2, queryset)
+
+    def test_after_account_verification_no_study_sites(self):
+        """Account is not part of any study sites."""
+        StudySiteFactory.create()
+        account = AccountFactory.create(verified=True)
+        adapters.AccountAdapter().after_account_verification(account)
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_after_account_verification_one_study_site(self):
+        """Account is part of one study site."""
+        member_group = ManagedGroupFactory.create()
+        study_site = StudySiteFactory.create(member_group=member_group)
+        user = UserFactory.create()
+        user.study_sites.add(study_site)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for study site membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.first()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_two_study_sites(self):
+        """Account is part of two study sites."""
+        member_group_1 = ManagedGroupFactory.create()
+        study_site_1 = StudySiteFactory.create(member_group=member_group_1)
+        member_group_2 = ManagedGroupFactory.create()
+        study_site_2 = StudySiteFactory.create(member_group=member_group_2)
+        user = UserFactory.create()
+        user.study_sites.add(study_site_1)
+        user.study_sites.add(study_site_2)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for study site membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_1.name}/member/{account.email}",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_2.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 2)
+        membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_one_study_site_no_member_groups(self):
+        """A user is linked to an RC with no members group."""
+        user = UserFactory.create()
+        study_site = StudySiteFactory.create(member_group=None)
+        user.study_sites.add(study_site)
+        account = AccountFactory.create(user=user, verified=True)
+        adapters.AccountAdapter().after_account_verification(account)
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
 
 
 class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):

@@ -1,6 +1,7 @@
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdapter
 from anvil_consortium_manager.models import (
+    GroupAccountMembership,
     GroupGroupMembership,
     ManagedGroup,
     WorkspaceGroupSharing,
@@ -10,6 +11,7 @@ from django.conf import settings
 from django.db.models import Q
 
 from .filters import AccountListFilter
+from .models import StudySite
 from .tables import AccountTable
 
 
@@ -38,6 +40,27 @@ class AccountAdapter(BaseAccountAdapter):
         else:
             name = "---"
         return "{} ({})".format(name, account.email)
+
+    def after_account_verification(self, account):
+        """Add the account to the member group for any StudySites that they are a part of."""
+        # Get all StudySites that have a member_group
+        study_sites = StudySite.objects.select_related("member_group").filter(member_group__isnull=False)
+        for site in study_sites:
+            group = site.member_group
+            try:
+                membership = GroupAccountMembership.objects.get(
+                    group=group,
+                    account=account,
+                )
+
+            except GroupAccountMembership.DoesNotExist:
+                membership = GroupAccountMembership(
+                    group=group,
+                    account=account,
+                    role=GroupAccountMembership.MEMBER,
+                )
+                membership.save()
+                membership.anvil_create()
 
 
 class WorkspaceAuthDomainAdapterMixin:
