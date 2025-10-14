@@ -10,6 +10,7 @@ from anvil_consortium_manager.tests.factories import (
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.test import TestCase, override_settings
 
+from primed.dbgap.tests.factories import dbGaPApplicationFactory
 from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.tests.factories import UserFactory
 
@@ -68,14 +69,14 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertNotIn(account_2, queryset)
 
     def test_after_account_verification_no_study_sites(self):
-        """Account is not part of any study sites."""
+        """A user is not part of any study sites."""
         StudySiteFactory.create()
         account = AccountFactory.create(verified=True)
         adapters.AccountAdapter().after_account_verification(account)
         self.assertEqual(GroupAccountMembership.objects.count(), 0)
 
     def test_after_account_verification_one_study_site(self):
-        """Account is part of one study site."""
+        """A user is part of one study site."""
         member_group = ManagedGroupFactory.create()
         study_site = StudySiteFactory.create(member_group=member_group)
         user = UserFactory.create()
@@ -96,7 +97,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
     def test_after_account_verification_two_study_sites(self):
-        """Account is part of two study sites."""
+        """A user is part of two study sites."""
         member_group_1 = ManagedGroupFactory.create()
         study_site_1 = StudySiteFactory.create(member_group=member_group_1)
         member_group_2 = ManagedGroupFactory.create()
@@ -125,13 +126,109 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
     def test_after_account_verification_one_study_site_no_member_groups(self):
-        """A user is linked to an RC with no members group."""
+        """A user is linked to a study site with no members group."""
         user = UserFactory.create()
         study_site = StudySiteFactory.create(member_group=None)
         user.study_sites.add(study_site)
         account = AccountFactory.create(user=user, verified=True)
+        # No mocked API responses
         adapters.AccountAdapter().after_account_verification(account)
         self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_after_account_verification_no_dbgap_applications(self):
+        """A user is not linked to any dbGaP applications."""
+        dbGaPApplicationFactory.create(anvil_access_group=ManagedGroupFactory.create())
+        account = AccountFactory.create(verified=True)
+        adapters.AccountAdapter().after_account_verification(account)
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_after_account_verification_pi_dbgap_application(self):
+        """A user is the PI on one dbGaP application."""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        dbGaPApplicationFactory.create(principal_investigator=user, anvil_access_group=member_group)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.first()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_collaborator_dbgap_application(self):
+        """A user is a collaborator on one dbGaP application"""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        app = dbGaPApplicationFactory.create(anvil_access_group=member_group)
+        app.collaborators.set([user])
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.first()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_pi_and_collaborator_one_dbgap_application(self):
+        """A User is both PI and collaborator on one dbGaP application."""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        app = dbGaPApplicationFactory.create(principal_investigator=user, anvil_access_group=member_group)
+        app.collaborators.set([user])
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.get(group=member_group, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_pi_and_collaborator_two_dbgap_application(self):
+        """A User is both PI on one dbGaP application and a collaborator on another."""
+        member_group_1 = ManagedGroupFactory.create()
+        member_group_2 = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        dbGaPApplicationFactory.create(principal_investigator=user, anvil_access_group=member_group_1)
+        app_2 = dbGaPApplicationFactory.create(anvil_access_group=member_group_2)
+        app_2.collaborators.set([user])
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_1.name}/member/{account.email}",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_2.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 2)
+        membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
 
 class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
