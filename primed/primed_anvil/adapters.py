@@ -51,10 +51,17 @@ class AccountAdapter(BaseAccountAdapter):
                 self._add_account_to_group(account, site.member_group)
 
         user = account.user
-        dbgap_applications = set(user.pi_dbgap_applications.all()) | set(user.collaborator_dbgap_applications.all())
+        pi_apps = user.pi_dbgap_applications.select_related("anvil_access_group").all()
+        collab_apps = user.collaborator_dbgap_applications.select_related("anvil_access_group").all()
+        dbgap_applications = set(pi_apps) | set(collab_apps)
         for app in dbgap_applications:
             if app.anvil_access_group:
                 self._add_account_to_group(account, app.anvil_access_group)
+
+        signed_agreements = set(user.accessor_signed_agreements.select_related("anvil_access_group").all())
+        for sa in signed_agreements:
+            if sa.anvil_access_group:
+                self._add_account_to_group(account, sa.anvil_access_group)
 
     def _add_account_to_group(self, account, group):
         if not GroupAccountMembership.objects.filter(group=group, account=account).exists():
