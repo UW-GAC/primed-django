@@ -44,13 +44,14 @@ class AccountAdapter(BaseAccountAdapter):
     def after_account_verification(self, account):
         """Add the account to the member group for any StudySites that they are a part of."""
         super().after_account_verification(account)
-        # Get all StudySites that have a member_group
+        # Add the user to member groups for any StudySites that they are a part of.
         study_sites = StudySite.objects.select_related("member_group").filter(member_group__isnull=False)
         for site in study_sites:
             if site.member_group:
                 self._add_account_to_group(account, site.member_group)
 
         user = account.user
+        # Add the user to any dbGaP access groups that they are associated with.
         pi_apps = user.pi_dbgap_applications.select_related("anvil_access_group").all()
         collab_apps = user.collaborator_dbgap_applications.select_related("anvil_access_group").all()
         dbgap_applications = set(pi_apps) | set(collab_apps)
@@ -58,10 +59,17 @@ class AccountAdapter(BaseAccountAdapter):
             if app.anvil_access_group:
                 self._add_account_to_group(account, app.anvil_access_group)
 
-        signed_agreements = set(user.accessor_signed_agreements.select_related("anvil_access_group").all())
+        # Add the user to any CDSA SignedAgreement access groups that they are associated with.
+        signed_agreements = user.accessor_signed_agreements.select_related("anvil_access_group").all()
         for sa in signed_agreements:
             if sa.anvil_access_group:
                 self._add_account_to_group(account, sa.anvil_access_group)
+
+        # Add the user to DataAffiliateAgreement uploader groups that they are associated with.
+        data_affiliate_agreements = user.uploader_signed_agreements.select_related("anvil_upload_group").all()
+        for daa in data_affiliate_agreements:
+            if daa.anvil_upload_group:
+                self._add_account_to_group(account, daa.anvil_upload_group)
 
     def _add_account_to_group(self, account, group):
         if not GroupAccountMembership.objects.filter(group=group, account=account).exists():

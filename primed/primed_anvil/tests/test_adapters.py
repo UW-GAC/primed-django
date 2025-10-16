@@ -10,7 +10,7 @@ from anvil_consortium_manager.tests.factories import (
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
 from django.test import TestCase, override_settings
 
-from primed.cdsa.tests.factories import SignedAgreementFactory
+from primed.cdsa.tests.factories import DataAffiliateAgreementFactory, SignedAgreementFactory
 from primed.dbgap.tests.factories import dbGaPApplicationFactory
 from primed.primed_anvil.tests.factories import StudySiteFactory
 from primed.users.tests.factories import UserFactory
@@ -254,13 +254,13 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         adapters.AccountAdapter().after_account_verification(account)
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 1)
-        membership = GroupAccountMembership.objects.get()
+        membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
-    def test_after_account_verification_multiple_signed_agreements(self):
-        """A user is an accessor on multiple signed agreements."""
+    def test_after_account_verification_two_signed_agreements(self):
+        """A user is an accessor on two signed agreements."""
         member_group_1 = ManagedGroupFactory.create()
         member_group_2 = ManagedGroupFactory.create()
         user = UserFactory.create()
@@ -268,6 +268,64 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         sa1.accessors.add(user)
         sa2 = SignedAgreementFactory.create(anvil_access_group=member_group_2)
         sa2.accessors.add(user)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_1.name}/member/{account.email}",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_2.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 2)
+        membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_no_data_affiliate_agreements(self):
+        """A user is not an uploader on any signed data affiliate CDSAs"""
+        DataAffiliateAgreementFactory.create(anvil_upload_group=ManagedGroupFactory.create())
+        account = AccountFactory.create(verified=True)
+        adapters.AccountAdapter().after_account_verification(account)
+        self.assertEqual(GroupAccountMembership.objects.count(), 0)
+
+    def test_after_account_verification_one_data_affiliate_agreements(self):
+        """A user is an uploader on one signed data affiliate CDSA"""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        daa = DataAffiliateAgreementFactory.create(anvil_upload_group=member_group)
+        daa.uploaders.add(user)
+        account = AccountFactory.create(user=user, verified=True)
+        print(type(account))
+        # API response for membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.first()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_two_data_affiliate_agreements(self):
+        """A user is an uploader on two signed data affiliate CDSA"""
+        member_group_1 = ManagedGroupFactory.create()
+        member_group_2 = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        daa_1 = DataAffiliateAgreementFactory.create(anvil_upload_group=member_group_1)
+        daa_1.uploaders.add(user)
+        daa_2 = DataAffiliateAgreementFactory.create(anvil_upload_group=member_group_2)
+        daa_2.uploaders.add(user)
         account = AccountFactory.create(user=user, verified=True)
         # API response for membership.
         self.anvil_response_mock.add(
