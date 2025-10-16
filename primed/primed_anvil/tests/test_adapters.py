@@ -384,7 +384,7 @@ class WorkspaceSharingAdapterMixinTest:
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=workspace,
             group=share_group,
-            access=self.adapter.workspace_share_group,
+            access=self.adapter.workspace_share_permission,
             can_compute=old_can_compute,
         )
         # API response to update sharing.
