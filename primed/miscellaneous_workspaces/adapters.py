@@ -3,7 +3,7 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 
-from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapterMixin
+from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin
 from primed.primed_anvil.tables import (
     DefaultWorkspaceStaffTable,
     DefaultWorkspaceUserTable,
@@ -12,7 +12,9 @@ from primed.primed_anvil.tables import (
 from . import forms, models, tables
 
 
-class SimulatedDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class SimulatedDataWorkspaceAdapter(
+    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
+):
     """Adapter for SimulatedDataWorkspaces."""
 
     type = "simulated_data"
@@ -26,7 +28,9 @@ class SimulatedDataWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorks
     workspace_detail_template_name = "miscellaneous_workspaces/simulateddataworkspace_detail.html"
 
 
-class ConsortiumDevelWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class ConsortiumDevelWorkspaceAdapter(
+    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
+):
     """Adapter for ConsortiumDevelWorkspaces."""
 
     type = "devel"
@@ -40,7 +44,9 @@ class ConsortiumDevelWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWor
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
 
 
-class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class ResourceWorkspaceAdapter(
+    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
+):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"
@@ -54,7 +60,9 @@ class ResourceWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
 
 
-class TemplateWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class TemplateWorkspaceAdapter(
+    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
+):
     """Adapter for TemplateWorkspaces."""
 
     type = "template"
@@ -68,7 +76,9 @@ class TemplateWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceA
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
 
 
-class OpenAccessWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class OpenAccessWorkspaceAdapter(
+    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
+):
     """Adapter for TemplateWorkspaces."""
 
     type = "open_access"
@@ -82,7 +92,9 @@ class OpenAccessWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspac
     workspace_detail_template_name = "miscellaneous_workspaces/openaccessworkspace_detail.html"
 
 
-class DataPrepWorkspaceAdapter(WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class DataPrepWorkspaceAdapter(
+    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
+):
     """Adapter for DataPrepWorkspace."""
 
     type = "data_prep"

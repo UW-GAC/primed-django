@@ -154,27 +154,29 @@ class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(GroupGroupMembership.objects.count(), 0)
 
 
-class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
+class WorkspaceSharingAdapterMixinTest:
+    adapter_class = None
+
     def setUp(self):
         super().setUp()
 
-        class TestAdapter(adapters.WorkspaceAdminSharingAdapterMixin, DefaultWorkspaceAdapter):
+        class TestAdapter(self.adapter_class, DefaultWorkspaceAdapter):
             pass
 
         self.adapter = TestAdapter()
 
     def test_after_anvil_create(self):
-        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        share_group = ManagedGroupFactory.create(name=self.adapter.workspace_share_group)
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
         # API response for PRIMED_ADMINS workspace owner.
         acls = [
             {
-                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
-                "accessLevel": "OWNER",
+                "email": f"{self.adapter.workspace_share_group}@firecloud.org",
+                "accessLevel": self.adapter.workspace_share_permission,
                 "canShare": False,
-                "canCompute": True,
+                "canCompute": self.adapter.workspace_share_can_compute,
             }
         ]
         self.anvil_response_mock.add(
@@ -185,18 +187,19 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
         # Run the adapter method.
+
         self.adapter.after_anvil_create(workspace)
         # Check for WorkspaceGroupSharing.
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
 
-    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar", ANVIL_CC_WRITERS_GROUP_NAME="foobar")
     def test_after_anvil_create_different_admins_group(self):
-        admins_group = ManagedGroupFactory.create(name="foobar")
+        share_group = ManagedGroupFactory.create(name="foobar")
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
@@ -204,9 +207,9 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         acls = [
             {
                 "email": "foobar@firecloud.org",
-                "accessLevel": "OWNER",
+                "accessLevel": self.adapter.workspace_share_permission,
                 "canShare": False,
-                "canCompute": True,
+                "canCompute": self.adapter.workspace_share_can_compute,
             }
         ]
         self.anvil_response_mock.add(
@@ -222,11 +225,11 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
 
-    def test_after_anvil_create_no_admins_group(self):
+    def test_after_anvil_create_no_share_group(self):
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
@@ -236,17 +239,17 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
 
     def test_after_anvil_import(self):
-        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        share_group = ManagedGroupFactory.create(name=self.adapter.workspace_share_group)
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
         # API response for admin group workspace owner.
         acls = [
             {
-                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
-                "accessLevel": "OWNER",
+                "email": f"{self.adapter.workspace_share_group}@firecloud.org",
+                "accessLevel": self.adapter.workspace_share_permission,
                 "canShare": False,
-                "canCompute": True,
+                "canCompute": self.adapter.workspace_share_can_compute,
             }
         ]
         self.anvil_response_mock.add(
@@ -262,13 +265,13 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
 
-    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
+    @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar", ANVIL_CC_WRITERS_GROUP_NAME="foobar")
     def test_after_anvil_import_different_admins_group(self):
-        admins_group = ManagedGroupFactory.create(name="foobar")
+        share_group = ManagedGroupFactory.create(name="foobar")
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
@@ -276,9 +279,9 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         acls = [
             {
                 "email": "foobar@firecloud.org",
-                "accessLevel": "OWNER",
+                "accessLevel": self.adapter.workspace_share_permission,
                 "canShare": False,
-                "canCompute": True,
+                "canCompute": self.adapter.workspace_share_can_compute,
             }
         ]
         self.anvil_response_mock.add(
@@ -294,9 +297,9 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
 
     def test_after_anvil_import_no_admins_group(self):
         workspace = WorkspaceFactory.create(
@@ -308,13 +311,13 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
 
     def test_after_anvil_import_already_shared(self):
-        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        share_group = ManagedGroupFactory.create(name=self.adapter.workspace_share_group)
         workspace = WorkspaceFactory.create(workspace_type=self.adapter.get_type())
         WorkspaceGroupSharingFactory.create(
             workspace=workspace,
-            group=admins_group,
-            access=WorkspaceGroupSharing.OWNER,
-            can_compute=True,
+            group=share_group,
+            access=self.adapter.workspace_share_permission,
+            can_compute=self.adapter.workspace_share_can_compute,
         )
         # No API call - record already exists.
         # Run the adapter method.
@@ -323,28 +326,33 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing = WorkspaceGroupSharing.objects.first()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
 
     def test_after_anvil_import_already_shared_wrong_access(self):
-        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        share_group = ManagedGroupFactory.create(name=self.adapter.workspace_share_group)
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
+        # set old access to not match desired access
+        old_access = WorkspaceGroupSharing.OWNER
+        if self.adapter.workspace_share_permission == old_access:
+            old_access = WorkspaceGroupSharing.WRITER
+
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=workspace,
-            group=admins_group,
-            access=WorkspaceGroupSharing.READER,
-            can_compute=True,
+            group=share_group,
+            access=old_access,
+            can_compute=self.adapter.workspace_share_can_compute,
         )
         # API response to update sharing.
         acls = [
             {
-                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
-                "accessLevel": "OWNER",
+                "email": f"{self.adapter.workspace_share_group}@firecloud.org",
+                "accessLevel": self.adapter.workspace_share_permission,
                 "canShare": False,
-                "canCompute": True,
+                "canCompute": self.adapter.workspace_share_can_compute,
             }
         ]
         self.anvil_response_mock.add(
@@ -360,28 +368,32 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing.refresh_from_db()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
 
     def test_after_anvil_import_already_shared_wrong_can_compute(self):
-        admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        share_group = ManagedGroupFactory.create(name=self.adapter.workspace_share_group)
         workspace = WorkspaceFactory.create(
             billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
         )
+        # Set to opposite of what it should be
+        old_can_compute = False
+        if self.adapter.workspace_share_can_compute is False:
+            old_can_compute = True
         sharing = WorkspaceGroupSharingFactory.create(
             workspace=workspace,
-            group=admins_group,
-            access=WorkspaceGroupSharing.OWNER,
-            can_compute=False,
+            group=share_group,
+            access=self.adapter.workspace_share_group,
+            can_compute=old_can_compute,
         )
         # API response to update sharing.
         acls = [
             {
-                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
-                "accessLevel": "OWNER",
+                "email": f"{self.adapter.workspace_share_group}@firecloud.org",
+                "accessLevel": self.adapter.workspace_share_permission,
                 "canShare": False,
-                "canCompute": True,
+                "canCompute": self.adapter.workspace_share_can_compute,
             }
         ]
         self.anvil_response_mock.add(
@@ -397,9 +409,17 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
         sharing.refresh_from_db()
         self.assertEqual(sharing.workspace, workspace)
-        self.assertEqual(sharing.group, admins_group)
-        self.assertEqual(sharing.access, WorkspaceGroupSharing.OWNER)
-        self.assertTrue(sharing.can_compute)
+        self.assertEqual(sharing.group, share_group)
+        self.assertEqual(sharing.access, self.adapter.workspace_share_permission)
+        self.assertEqual(sharing.can_compute, self.adapter.workspace_share_can_compute)
+
+
+class WorkspaceAdminSharingAdapterMixinTest(WorkspaceSharingAdapterMixinTest, AnVILAPIMockTestMixin, TestCase):
+    adapter_class = adapters.WorkspaceAdminSharingAdapterMixin
+
+
+class WorkspaceWriterSharingAdapterMixinTest(WorkspaceSharingAdapterMixinTest, AnVILAPIMockTestMixin, TestCase):
+    adapter_class = adapters.WorkspaceWriterSharingAdapterMixin
 
 
 class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
