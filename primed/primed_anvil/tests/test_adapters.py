@@ -402,6 +402,267 @@ class WorkspaceAdminSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
         self.assertTrue(sharing.can_compute)
 
 
+class WorkspaceWriterSharingAdapterMixin(AnVILAPIMockTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+
+        class TestAdapter(adapters.WorkspaceWriterSharingAdapterMixin, DefaultWorkspaceAdapter):
+            pass
+
+        self.adapter = TestAdapter()
+
+    def test_after_anvil_create(self):
+        share_group = self.adapter.workspace_writer_share_group
+        share_permission = self.adapter.workspace_writer_share_permission
+
+        admins_group = ManagedGroupFactory.create(name=share_group)
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": f"{share_group}@firecloud.org",
+                "accessLevel": share_permission,
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+    @override_settings(ANVIL_CC_WRITERS_GROUP_NAME="foobar")
+    def test_after_anvil_create_different_admins_group(self):
+        share_permission = self.adapter.workspace_writer_share_permission
+        admins_group = ManagedGroupFactory.create(name="foobar")
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "foobar@firecloud.org",
+                "accessLevel": share_permission,
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+    def test_after_anvil_create_no_admins_group(self):
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_create(workspace)
+        # No WorkspaceGroupSharing objects were created.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_after_anvil_import(self):
+        share_group = self.adapter.workspace_writer_share_group
+        share_permission = self.adapter.workspace_writer_share_permission
+        admins_group = ManagedGroupFactory.create(name=share_group)
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # API response for admin group workspace owner.
+        acls = [
+            {
+                "email": f"{share_group}@firecloud.org",
+                "accessLevel": share_permission,
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_import(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+    @override_settings(ANVIL_CC_WRITERS_GROUP_NAME="foobar")
+    def test_after_anvil_import_different_admins_group(self):
+        share_permission = self.adapter.workspace_writer_share_permission
+        admins_group = ManagedGroupFactory.create(name="foobar")
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # API response for admin group workspace owner.
+        acls = [
+            {
+                "email": "foobar@firecloud.org",
+                "accessLevel": share_permission,
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_import(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+    def test_after_anvil_import_no_admins_group(self):
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_import(workspace)
+        # No WorkspaceGroupSharing objects were created.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 0)
+
+    def test_after_anvil_import_already_shared(self):
+        share_group = self.adapter.workspace_writer_share_group
+        share_permission = self.adapter.workspace_writer_share_permission
+        admins_group = ManagedGroupFactory.create(name=share_group)
+        workspace = WorkspaceFactory.create(workspace_type=self.adapter.get_type())
+        WorkspaceGroupSharingFactory.create(
+            workspace=workspace,
+            group=admins_group,
+            access=share_permission,
+            can_compute=True,
+        )
+        # No API call - record already exists.
+        # Run the adapter method.
+        self.adapter.after_anvil_import(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing = WorkspaceGroupSharing.objects.first()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+    def test_after_anvil_import_already_shared_wrong_access(self):
+        share_group = self.adapter.workspace_writer_share_group
+        share_permission = self.adapter.workspace_writer_share_permission
+        admins_group = ManagedGroupFactory.create(name=share_group)
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=workspace,
+            group=admins_group,
+            access=WorkspaceGroupSharing.READER,
+            can_compute=True,
+        )
+        # API response to update sharing.
+        acls = [
+            {
+                "email": f"{share_group}@firecloud.org",
+                "accessLevel": share_permission,
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_import(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+    def test_after_anvil_import_already_shared_wrong_can_compute(self):
+        share_group = self.adapter.workspace_writer_share_group
+        share_permission = self.adapter.workspace_writer_share_permission
+        admins_group = ManagedGroupFactory.create(name=share_group)
+        workspace = WorkspaceFactory.create(
+            billing_project__name="bar", name="foo", workspace_type=self.adapter.get_type()
+        )
+        sharing = WorkspaceGroupSharingFactory.create(
+            workspace=workspace,
+            group=admins_group,
+            access=share_permission,
+            can_compute=False,
+        )
+        # API response to update sharing.
+        acls = [
+            {
+                "email": f"{share_group}@firecloud.org",
+                "accessLevel": share_permission,
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point + "/api/workspaces/bar/foo/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # Run the adapter method.
+        self.adapter.after_anvil_import(workspace)
+        # Check for WorkspaceGroupSharing.
+        self.assertEqual(WorkspaceGroupSharing.objects.count(), 1)
+        sharing.refresh_from_db()
+        self.assertEqual(sharing.workspace, workspace)
+        self.assertEqual(sharing.group, admins_group)
+        self.assertEqual(sharing.access, share_permission)
+        self.assertTrue(sharing.can_compute)
+
+
 class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
     """Tests for the custom PRIMED ManagedGroupAdapter."""
 

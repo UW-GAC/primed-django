@@ -1067,6 +1067,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.workspace_type = "dbgap"
         # Create the admins group.
         self.admins_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_ADMINS")
+        self.writers_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1109,6 +1110,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             + "/api/groups/v1/AUTH_test-workspace/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
             status=204,
         )
+
         # API response for PRIMED_ADMINS workspace owner.
         acls = [
             {
@@ -1118,6 +1120,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "canCompute": True,
             }
         ]
+
         self.anvil_response_mock.add(
             responses.PATCH,
             self.api_client.rawls_entry_point
@@ -1126,6 +1129,24 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
+        )
+
         # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
@@ -1176,6 +1197,8 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         # Check that the workspace was shared with the admins group.
         sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
         self.assertEqual(sharing.access, sharing.OWNER)
+        writer_sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.writers_group)
+        self.assertEqual(writer_sharing.access, sharing.WRITER)
 
     def test_creates_workspace_with_duos(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -1222,6 +1245,14 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
                 "canCompute": True,
             }
         ]
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
         self.anvil_response_mock.add(
             responses.PATCH,
             self.api_client.rawls_entry_point
@@ -1229,6 +1260,14 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=200,
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
         )
         # Make the post request
         self.client.force_login(self.user)
@@ -1285,6 +1324,8 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.requester = UserFactory.create()
         self.workspace_type = "dbgap"
+        self.writers_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_WRITERS_GROUP_NAME)
+        self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -1342,6 +1383,41 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
             + workspace_name
             + "/acl"
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/billing-project/workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writers = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/billing-project/workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writers)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writers},
+        )
+
         self.anvil_response_mock.add(
             responses.GET,
             api_url_acl,
@@ -1446,6 +1522,41 @@ class dbGaPWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 }
             },
         )
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/billing-project/workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writers = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/billing-project/workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writers)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writers},
+        )
+
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
