@@ -561,7 +561,7 @@ class TestUserDataAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
-        call_command("sync-drupal-data", "--email=test@example.com --error_email=test2@example.com", stdout=out)
+        call_command("sync-drupal-data", email="test@example.com", error_email="test2@example.com", stdout=out)
         self.assertIn("SiteAudit summary: status ok: False", out.getvalue())
         self.assertIn("UserAudit summary: status ok: False", out.getvalue())
 
