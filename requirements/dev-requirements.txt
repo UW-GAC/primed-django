@@ -13,6 +13,7 @@ anyio==4.4.0
 asgiref==3.8.1
     # via
     #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django
 asttokens==2.4.1
     # via stack-data
@@ -47,14 +48,15 @@ distlib==0.3.8
 django==4.2.25
     # via
     #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
 django-debug-toolbar==6.0.0
     # via -r requirements/dev-requirements.in
-django-stubs==5.2.5
+django-stubs==5.2.7
     # via -r requirements/dev-requirements.in
-django-stubs-ext==5.2.5
+django-stubs-ext==5.2.7
     # via django-stubs
 docutils==0.20.1
     # via
@@ -142,7 +144,7 @@ requests==2.32.4
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.13.2
+ruff==0.14.2
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -180,6 +182,7 @@ sphinxcontrib-serializinghtml==1.1.5
 sqlparse==0.5.1
     # via
     #   -c requirements/requirements.txt
+    #   -c requirements/test-requirements.txt
     #   django
     #   django-debug-toolbar
 stack-data==0.6.3
