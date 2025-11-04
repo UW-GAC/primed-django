@@ -143,7 +143,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         adapters.AccountAdapter().after_account_verification(account)
         self.assertEqual(GroupAccountMembership.objects.count(), 0)
 
-    def test_after_account_verification_pi_dbgap_application(self):
+    def test_after_account_verification_pi_one_dbgap_application(self):
         """A user is the PI on one dbGaP application."""
         member_group = ManagedGroupFactory.create()
         user = UserFactory.create()
@@ -163,7 +163,34 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.account, account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
-    def test_after_account_verification_collaborator_dbgap_application(self):
+    def test_after_account_verification_pi_two_dbgap_applications(self):
+        """A user is the PI on one dbGaP application."""
+        member_group_1 = ManagedGroupFactory.create()
+        member_group_2 = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        dbGaPApplicationFactory.create(principal_investigator=user, anvil_access_group=member_group_1)
+        dbGaPApplicationFactory.create(principal_investigator=user, anvil_access_group=member_group_2)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_1.name}/member/{account.email}",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_2.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 2)
+        membership = GroupAccountMembership.objects.get(account=account, group=member_group_1)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        membership = GroupAccountMembership.objects.get(account=account, group=member_group_2)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_collaborator_one_dbgap_application(self):
         """A user is a collaborator on one dbGaP application"""
         member_group = ManagedGroupFactory.create()
         user = UserFactory.create()
@@ -182,6 +209,36 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_collaborator_two_dbgap_applications(self):
+        """A user is a collaborator on one dbGaP application"""
+        member_group_1 = ManagedGroupFactory.create()
+        member_group_2 = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        app_1 = dbGaPApplicationFactory.create(anvil_access_group=member_group_1)
+        app_1.collaborators.add(user)
+        app_2 = dbGaPApplicationFactory.create(anvil_access_group=member_group_2)
+        app_2.collaborators.add(user)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for membership
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_1.name}/member/{account.email}",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_2.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 2)
+        membership = GroupAccountMembership.objects.first()
+        membership = GroupAccountMembership.objects.get(account=account, group=member_group_1)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        membership = GroupAccountMembership.objects.get(account=account, group=member_group_2)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
     def test_after_account_verification_pi_and_collaborator_one_dbgap_application(self):
