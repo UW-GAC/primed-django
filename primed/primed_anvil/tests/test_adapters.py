@@ -3,6 +3,7 @@ from anvil_consortium_manager.adapters.default import DefaultWorkspaceAdapter
 from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, WorkspaceGroupSharing
 from anvil_consortium_manager.tests.factories import (
     AccountFactory,
+    GroupAccountMembershipFactory,
     ManagedGroupFactory,
     WorkspaceFactory,
     WorkspaceGroupSharingFactory,
@@ -402,6 +403,25 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_get_account_verification_notification_context(self):
+        account = AccountFactory.create(verified=True)
+        context = adapters.AccountAdapter().get_account_verification_notification_context(account)
+        self.assertEqual(context["email"], account.email)
+        self.assertEqual(context["user"], account.user)
+        self.assertIn("memberships", context)
+        self.assertEqual(len(context["memberships"]), 0)
+        # One membership
+        membership_1 = GroupAccountMembershipFactory.create(account=account)
+        context = adapters.AccountAdapter().get_account_verification_notification_context(account)
+        self.assertEqual(len(context["memberships"]), 1)
+        self.assertIn(membership_1, context["memberships"])
+        # Two memberships
+        membership_2 = GroupAccountMembershipFactory.create(account=account)
+        context = adapters.AccountAdapter().get_account_verification_notification_context(account)
+        self.assertEqual(len(context["memberships"]), 2)
+        self.assertIn(membership_1, context["memberships"])
+        self.assertIn(membership_2, context["memberships"])
 
 
 class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):

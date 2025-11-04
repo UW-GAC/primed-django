@@ -26,6 +26,7 @@ class AccountAdapter(BaseAccountAdapter):
     account_link_verify_redirect = "users:redirect"
     account_link_email_subject = "Verify your AnVIL account email"
     account_verification_notification_email = "primedconsortium@uw.edu"
+    account_verification_notification_template = "primed_anvil/account_notification_email.html"
 
     def get_autocomplete_queryset(self, queryset, q):
         """Filter to Accounts where the email or the associated user name matches the query `q`."""
@@ -80,6 +81,14 @@ class AccountAdapter(BaseAccountAdapter):
             )
             membership.save()
             membership.anvil_create()
+
+    def get_account_verification_notification_context(self, account):
+        """Get the context for the account verification notification email."""
+        context = super().get_account_verification_notification_context(account)
+        # Add the list of groups that the account is already in.
+        memberships = GroupAccountMembership.objects.filter(account=account)
+        context["memberships"] = memberships
+        return context
 
 
 class WorkspaceAuthDomainAdapterMixin:
