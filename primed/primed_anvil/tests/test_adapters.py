@@ -127,6 +127,24 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
+    def test_after_account_verification_already_member(self):
+        """The account is already a member of the study site member group."""
+        member_group = ManagedGroupFactory.create()
+        study_site = StudySiteFactory.create(member_group=member_group)
+        user = UserFactory.create()
+        user.study_sites.add(study_site)
+        account = AccountFactory.create(user=user, verified=True)
+        # Add as a member.
+        membership = GroupAccountMembershipFactory.create(account=account, group=member_group)
+        # No API call expected.
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
     def test_after_account_verification_one_study_site_no_member_groups(self):
         """A user is linked to a study site with no members group."""
         user = UserFactory.create()
@@ -191,6 +209,22 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_2)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
+    def test_after_account_verification_pi_already_member(self):
+        """The account is already a member of the dbGaP access group."""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        dbGaPApplicationFactory.create(principal_investigator=user, anvil_access_group=member_group)
+        account = AccountFactory.create(user=user, verified=True)
+        membership = GroupAccountMembershipFactory.create(account=account, group=member_group)
+        # No API call expected.
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
     def test_after_account_verification_collaborator_one_dbgap_application(self):
         """A user is a collaborator on one dbGaP application"""
         member_group = ManagedGroupFactory.create()
@@ -240,6 +274,23 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_1)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_2)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_collaborator_already_member(self):
+        """The account is already a member of the access group."""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        app = dbGaPApplicationFactory.create(anvil_access_group=member_group)
+        app.collaborators.add(user)
+        account = AccountFactory.create(user=user, verified=True)
+        membership = GroupAccountMembershipFactory.create(account=account, group=member_group)
+        # No API call expected.
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
     def test_after_account_verification_pi_and_collaborator_one_dbgap_application(self):
@@ -346,6 +397,23 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
+    def test_after_account_verification_one_signed_agreement_alraedy_member(self):
+        """A user is already a member of the access group."""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        sa = SignedAgreementFactory.create(anvil_access_group=member_group)
+        sa.accessors.add(user)
+        account = AccountFactory.create(user=user, verified=True)
+        membership = GroupAccountMembershipFactory.create(group=member_group, account=account)
+        # No API call expected.
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
     def test_after_account_verification_no_data_affiliate_agreements(self):
         """A user is not an uploader on any signed data affiliate CDSAs"""
         DataAffiliateAgreementFactory.create(anvil_upload_group=ManagedGroupFactory.create())
@@ -402,6 +470,23 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+
+    def test_after_account_verification_one_data_affiliate_agreement_already_member(self):
+        """The account is already a member of the CDSA uploader group."""
+        member_group = ManagedGroupFactory.create()
+        user = UserFactory.create()
+        daa = DataAffiliateAgreementFactory.create(anvil_upload_group=member_group)
+        daa.uploaders.add(user)
+        account = AccountFactory.create(user=user, verified=True)
+        membership = GroupAccountMembershipFactory.create(account=account, group=member_group)
+        # No API call expected.
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership.refresh_from_db()
+        self.assertEqual(membership.group, member_group)
+        self.assertEqual(membership.account, account)
         self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
 
     def test_get_account_verification_notification_context(self):
