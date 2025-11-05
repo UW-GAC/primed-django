@@ -261,19 +261,9 @@ class dbGaPAccessAudit(PRIMEDAudit):
                 )
             return  # Go to the next workspace.
 
-        # Is DAR snapshot more than 30 days old
-        dar_is_prior = app_snapshot.created < (timezone.localtime() - timedelta(days=30))
-        if dar_is_prior:
-            self.needs_action.append(
-                UpdateSnapshot(
-                    workspace=dbgap_workspace,
-                    dbgap_application=dbgap_application,
-                    note=self.DAR_SNAPSHOT_OLD,
-                )
-            )
         # Is the dbGaP access group associated with the DAR in the auth domain of the workspace?
         # We'll need to know this for future checks.
-        elif dar.is_approved and in_auth_domain:
+        if dar.is_approved and in_auth_domain:
             # Verified access!
             self.verified.append(
                 VerifiedAccess(
