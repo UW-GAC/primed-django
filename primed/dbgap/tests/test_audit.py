@@ -778,7 +778,7 @@ class dbGaPAccessAuditTest(TestCase):
     def test_two_applications_two_workspaces(self):
         pass
 
-    def test_dbgap_dar_does_not_need_update(self):
+    def test_dbgap_snapshot_does_not_need_update(self):
         # Create a workspace and matching DAR. Dar snapshot older than cutoff
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=2))
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
@@ -799,7 +799,7 @@ class dbGaPAccessAuditTest(TestCase):
 
         self.assertTrue(dbgap_audit.ok())
 
-    def test_dbgap_dar_needs_update(self):
+    def test_dbgap_snapshot_needs_update(self):
         # Create a workspace and matching DAR. Dar snapshot older than cutoff
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
@@ -818,11 +818,11 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(len(dbgap_audit.needs_action), 1)
         self.assertEqual(len(dbgap_audit.errors), 0)
         update_record = dbgap_audit.needs_action[0]
-        self.assertIsInstance(update_record, access_audit.UpdateDAR)
+        self.assertIsInstance(update_record, access_audit.UpdateSnapshot)
         self.assertEqual(update_record.workspace, dbgap_workspace)
         self.assertEqual(update_record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
-        self.assertEqual(update_record.data_access_request, dar)
-        self.assertEqual(update_record.note, access_audit.dbGaPAccessAudit.DAR_SNAPSHOT_OLD)
+
+        self.assertEqual(update_record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
         self.assertIn(update_record.note, str(update_record))
         self.assertFalse(dbgap_audit.ok())
 

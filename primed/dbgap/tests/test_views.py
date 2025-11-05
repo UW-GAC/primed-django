@@ -5312,7 +5312,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIsNotNone(audit_result.action)
 
-    def test_get_dar_needs_update(self):
+    def test_get_snapshot_needs_update(self):
         """needs_action_table shows a record when audit finds that dar needs update."""
         workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
@@ -5334,16 +5334,16 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, access_audit.UpdateDAR)
+        self.assertIsInstance(audit_result, access_audit.UpdateSnapshot)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(
             audit_result.dbgap_application,
             dar.dbgap_data_access_snapshot.dbgap_application,
         )
-        self.assertEqual(audit_result.data_access_request, dar)
+
         self.assertEqual(
             audit_result.note,
-            access_audit.dbGaPAccessAudit.DAR_SNAPSHOT_OLD,
+            access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD,
         )
         # no action is present
         self.assertIsNone(audit_result.action)
