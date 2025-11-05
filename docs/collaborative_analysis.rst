@@ -2,8 +2,7 @@ Collaborative analysis
 ======================================================================
 
 The ``collaborative_analysis`` app tracks workspaces created for cross-site collaborative analysis.
-The sharing strategy for these workspaces is different than the standard sharing strategy for PRIMED workspaces (see :ref:`primed_anvil`).
-
+The sharing strategy for these workspaces is different than the standard sharing strategy for most workspaces in PRIMED (see :ref:`primed_anvil`).
 
 Workspaces
 ------
@@ -46,8 +45,8 @@ The following results are possible:
 
 - :class:`~primed.collaborative_analysis.audit.VerifiedAccess` - The account meets all criteria for access and is in the workspace authorization domain.
 - :class:`~primed.collaborative_analysis.audit.VerifiedNoAccess` - The account **does not** meet all criteria for access and is **not** in the workspace authorization domain.
-- :class:`~primed.collaborative_analysis.audit.GrantAccess` - The account **does not** meet all criteria for access and is in the workspace authorization domain.
-- :class:`~primed.collaborative_analysis.audit.RemoveAccess` - The account meet all criteria for access and is **not** in the workspace authorization domain.
+- :class:`~primed.collaborative_analysis.audit.GrantAccess` - The account meets all criteria for access and is **not** in the workspace authorization domain.
+- :class:`~primed.collaborative_analysis.audit.RemoveAccess` - The account **does not** meet all criteria for access and is in the workspace authorization domain.
 
 Viewing audit results
 ~~~~~~~~~~~~~~~~~~~~~
