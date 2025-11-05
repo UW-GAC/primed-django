@@ -9,6 +9,7 @@ from anvil_consortium_manager.tests.factories import (
     WorkspaceGroupSharingFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from django.core import mail
 from django.test import TestCase, override_settings
 
 from primed.cdsa.tests.factories import DataAffiliateAgreementFactory, SignedAgreementFactory
@@ -507,6 +508,22 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(context["memberships"]), 2)
         self.assertIn(membership_1, context["memberships"])
         self.assertIn(membership_2, context["memberships"])
+
+    def test_send_account_verification_notification_email_includes_memberships(self):
+        """The account verification notification email includes a list of the account memberships."""
+        account = AccountFactory.create(verified=True)
+        membership = GroupAccountMembershipFactory.create(account=account)
+        with self.assertTemplateUsed("primed_anvil/account_notification_email.html"):
+            adapters.AccountAdapter().send_account_verification_notification_email(account)
+        # Check that the email was sent.
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        # Check that the email contains the account email.
+        self.assertIn(account.email, email.body)
+        # Check that the email contains the username
+        self.assertIn(account.user.username, email.body)
+        # Check that the email contains the membership info.
+        self.assertIn(str(membership), email.body)
 
 
 class WorkspaceAuthDomainAdapterMixinTest(AnVILAPIMockTestMixin, TestCase):
