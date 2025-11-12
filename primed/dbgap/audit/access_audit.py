@@ -121,7 +121,7 @@ class Error(AccessAuditResult):
 
 @dataclass
 class UpdateSnapshot(AccessAuditResult):
-    """Audit results class for when date of last DAR is prev month"""
+    """Audit results class for when date of last snapshot is more than 30 days old"""
 
     def __str__(self):
         return f"Update Snapshot: {self.note}"
@@ -157,7 +157,9 @@ class dbGaPAccessAudit(PRIMEDAudit):
     NEW_WORKSPACE = "New workspace."
     PREVIOUS_APPROVAL = "Previously approved."
 
-    APP_SNAPSHOT_OLD = "DAR update needed. Snapshot too old."
+    APP_SNAPSHOT_OLD = "dbGaP data access snapshot too old."
+
+    APP_SNAPSHOT_OLD_DAYS = 30
 
     # Unexpected.
     ERROR_HAS_ACCESS = "Has access for an unknown reason."
@@ -223,8 +225,10 @@ class dbGaPAccessAudit(PRIMEDAudit):
                 )
             return  # Go to the next workspace.
 
-        # Is DAR snapshot more than 30 days old
-        snapshot_is_prior = app_snapshot.created < (timezone.localtime() - timedelta(days=30))
+        # Is snapshot more than 30 days old
+        snapshot_is_prior = app_snapshot.created.date() <= (
+            timezone.localdate() - timedelta(days=self.APP_SNAPSHOT_OLD_DAYS)
+        )
         if snapshot_is_prior:
             self.needs_action.append(
                 UpdateSnapshot(
