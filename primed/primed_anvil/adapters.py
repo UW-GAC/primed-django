@@ -68,118 +68,108 @@ class WorkspaceAuthDomainAdapterMixin:
         membership.anvil_create()
 
 
-class WorkspaceAdminSharingAdapterMixin:
+class WorkspaceSharingAdapterMixin:
+    def _after_anvil_create_share(self, workspace, group_name, share_permission, can_compute):
+        try:
+            admins_group = ManagedGroup.objects.get(name=group_name)
+        except ManagedGroup.DoesNotExist:
+            return
+        sharing = WorkspaceGroupSharing.objects.create(
+            workspace=workspace,
+            group=admins_group,
+            access=share_permission,
+            can_compute=can_compute,
+        )
+        sharing.anvil_create_or_update()
+
+    def _after_anvil_import_share(self, workspace, group_name, share_permission, can_compute):
+        try:
+            admins_group = ManagedGroup.objects.get(name=group_name)
+        except ManagedGroup.DoesNotExist:
+            return
+        try:
+            sharing = WorkspaceGroupSharing.objects.get(
+                workspace=workspace,
+                group=admins_group,
+            )
+        except WorkspaceGroupSharing.DoesNotExist:
+            sharing = WorkspaceGroupSharing.objects.create(
+                workspace=workspace,
+                group=admins_group,
+                access=share_permission,
+                can_compute=can_compute,
+            )
+            sharing.save()
+            sharing.anvil_create_or_update()
+        else:
+            # If the existing sharing record exists, make sure it has the correct permissions.
+            if sharing.can_compute != can_compute or sharing.access != share_permission:
+                sharing.can_compute = can_compute
+                sharing.access = share_permission
+                sharing.save()
+                sharing.anvil_create_or_update()
+
+
+class WorkspaceAdminSharingAdapterMixin(WorkspaceSharingAdapterMixin):
     """Helper class to share workspaces with the PRIMED_CC_ADMINs group."""
 
     workspace_share_permission = WorkspaceGroupSharing.OWNER
     workspace_share_can_compute = True
 
+    # This needs to be a property as tests override the setting
+    # so you cannot set at the class level
     @property
     def workspace_share_group(self) -> str:
         return settings.ANVIL_CC_ADMINS_GROUP_NAME
 
     def after_anvil_create(self, workspace):
-        super().after_anvil_create(workspace)
-        try:
-            admins_group = ManagedGroup.objects.get(name=self.workspace_share_group)
-        except ManagedGroup.DoesNotExist:
-            return
-        sharing = WorkspaceGroupSharing.objects.create(
+        self._after_anvil_create_share(
             workspace=workspace,
-            group=admins_group,
-            access=self.workspace_share_permission,
+            group_name=self.workspace_share_group,
+            share_permission=self.workspace_share_permission,
             can_compute=self.workspace_share_can_compute,
         )
-        sharing.anvil_create_or_update()
+        super().after_anvil_create(workspace)
 
     def after_anvil_import(self, workspace):
+        self._after_anvil_import_share(
+            workspace=workspace,
+            group_name=self.workspace_share_group,
+            share_permission=self.workspace_share_permission,
+            can_compute=self.workspace_share_can_compute,
+        )
         super().after_anvil_import(workspace)
-        # # Check if the workspace is already shared with the ADMINs group.
-        try:
-            admins_group = ManagedGroup.objects.get(name=self.workspace_share_group)
-        except ManagedGroup.DoesNotExist:
-            return
-        try:
-            sharing = WorkspaceGroupSharing.objects.get(
-                workspace=workspace,
-                group=admins_group,
-            )
-        except WorkspaceGroupSharing.DoesNotExist:
-            sharing = WorkspaceGroupSharing.objects.create(
-                workspace=workspace,
-                group=admins_group,
-                access=self.workspace_share_permission,
-                can_compute=self.workspace_share_can_compute,
-            )
-            sharing.save()
-            sharing.anvil_create_or_update()
-        else:
-            # If the existing sharing record exists, make sure it has the correct permissions.
-            if (
-                sharing.can_compute != self.workspace_share_can_compute
-                or sharing.access != self.workspace_share_permission
-            ):
-                sharing.can_compute = self.workspace_share_can_compute
-                sharing.access = self.workspace_share_permission
-                sharing.save()
-                sharing.anvil_create_or_update()
 
 
-class WorkspaceWriterSharingAdapterMixin:
+class WorkspaceWriterSharingAdapterMixin(WorkspaceSharingAdapterMixin):
     """Helper class to share workspaces with the PRIMED_CC_WRITERs group."""
 
     workspace_writer_share_permission = WorkspaceGroupSharing.WRITER
     workspace_writer_share_can_compute = True
 
+    # This needs to be a property as tests override the setting
+    # so you cannot set at the class level
     @property
     def workspace_writer_share_group(self) -> str:
         return settings.ANVIL_CC_WRITERS_GROUP_NAME
 
     def after_anvil_create(self, workspace):
-        super().after_anvil_create(workspace)
-        try:
-            admins_group = ManagedGroup.objects.get(name=self.workspace_writer_share_group)
-        except ManagedGroup.DoesNotExist:
-            return
-        sharing = WorkspaceGroupSharing.objects.create(
+        self._after_anvil_create_share(
             workspace=workspace,
-            group=admins_group,
-            access=self.workspace_writer_share_permission,
-            can_compute=self.workspace_writer_share_can_compute,
+            group_name=self.workspace_writer_share_group,
+            share_permission=WorkspaceWriterSharingAdapterMixin.workspace_writer_share_permission,
+            can_compute=WorkspaceWriterSharingAdapterMixin.workspace_writer_share_can_compute,
         )
-        sharing.anvil_create_or_update()
+        super().after_anvil_create(workspace)
 
     def after_anvil_import(self, workspace):
+        self._after_anvil_import_share(
+            workspace=workspace,
+            group_name=self.workspace_writer_share_group,
+            share_permission=WorkspaceWriterSharingAdapterMixin.workspace_writer_share_permission,
+            can_compute=WorkspaceWriterSharingAdapterMixin.workspace_writer_share_can_compute,
+        )
         super().after_anvil_import(workspace)
-        # # Check if the workspace is already shared with the ADMINs group.
-        try:
-            admins_group = ManagedGroup.objects.get(name=self.workspace_writer_share_group)
-        except ManagedGroup.DoesNotExist:
-            return
-        try:
-            sharing = WorkspaceGroupSharing.objects.get(
-                workspace=workspace,
-                group=admins_group,
-            )
-        except WorkspaceGroupSharing.DoesNotExist:
-            sharing = WorkspaceGroupSharing.objects.create(
-                workspace=workspace,
-                group=admins_group,
-                access=self.workspace_writer_share_permission,
-                can_compute=self.workspace_writer_share_can_compute,
-            )
-            sharing.save()
-            sharing.anvil_create_or_update()
-        else:
-            # If the existing sharing record exists, make sure it has the correct permissions.
-            if (
-                sharing.can_compute != self.workspace_writer_share_can_compute
-                or sharing.access != self.workspace_writer_share_permission
-            ):
-                sharing.can_compute = self.workspace_writer_share_can_compute
-                sharing.access = self.workspace_writer_share_permission
-                sharing.save()
-                sharing.anvil_create_or_update()
 
 
 class ManagedGroupAdapter(BaseManagedGroupAdapter):
