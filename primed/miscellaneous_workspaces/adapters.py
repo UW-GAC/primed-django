@@ -3,7 +3,7 @@
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 
-from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin
+from primed.primed_anvil.adapters import PrimedWorkspacePermissions, WorkspaceSharingAdapterMixin
 from primed.primed_anvil.tables import (
     DefaultWorkspaceStaffTable,
     DefaultWorkspaceUserTable,
@@ -12,9 +12,7 @@ from primed.primed_anvil.tables import (
 from . import forms, models, tables
 
 
-class SimulatedDataWorkspaceAdapter(
-    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
-):
+class SimulatedDataWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for SimulatedDataWorkspaces."""
 
     type = "simulated_data"
@@ -26,11 +24,10 @@ class SimulatedDataWorkspaceAdapter(
     workspace_data_model = models.SimulatedDataWorkspace
     workspace_data_form_class = forms.SimulatedDataWorkspaceForm
     workspace_detail_template_name = "miscellaneous_workspaces/simulateddataworkspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
 
-class ConsortiumDevelWorkspaceAdapter(
-    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
-):
+class ConsortiumDevelWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ConsortiumDevelWorkspaces."""
 
     type = "devel"
@@ -42,11 +39,10 @@ class ConsortiumDevelWorkspaceAdapter(
     workspace_data_model = models.ConsortiumDevelWorkspace
     workspace_data_form_class = forms.ConsortiumDevelWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
 
-class ResourceWorkspaceAdapter(
-    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
-):
+class ResourceWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for ResourceWorkspaces."""
 
     type = "resource"
@@ -58,11 +54,10 @@ class ResourceWorkspaceAdapter(
     workspace_data_model = models.ResourceWorkspace
     workspace_data_form_class = forms.ResourceWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
 
-class TemplateWorkspaceAdapter(
-    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
-):
+class TemplateWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for TemplateWorkspaces."""
 
     type = "template"
@@ -74,11 +69,10 @@ class TemplateWorkspaceAdapter(
     workspace_data_model = models.TemplateWorkspace
     workspace_data_form_class = forms.TemplateWorkspaceForm
     workspace_detail_template_name = "anvil_consortium_manager/workspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
 
-class OpenAccessWorkspaceAdapter(
-    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
-):
+class OpenAccessWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for TemplateWorkspaces."""
 
     type = "open_access"
@@ -90,11 +84,10 @@ class OpenAccessWorkspaceAdapter(
     workspace_data_model = models.OpenAccessWorkspace
     workspace_data_form_class = forms.OpenAccessWorkspaceForm
     workspace_detail_template_name = "miscellaneous_workspaces/openaccessworkspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
 
-class DataPrepWorkspaceAdapter(
-    WorkspaceAdminSharingAdapterMixin, WorkspaceWriterSharingAdapterMixin, BaseWorkspaceAdapter
-):
+class DataPrepWorkspaceAdapter(WorkspaceSharingAdapterMixin, BaseWorkspaceAdapter):
     """Adapter for DataPrepWorkspace."""
 
     type = "data_prep"
@@ -106,3 +99,4 @@ class DataPrepWorkspaceAdapter(
     workspace_data_model = models.DataPrepWorkspace
     workspace_data_form_class = forms.DataPrepWorkspaceForm
     workspace_detail_template_name = "miscellaneous_workspaces/dataprepworkspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
