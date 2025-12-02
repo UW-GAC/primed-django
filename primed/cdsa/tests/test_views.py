@@ -1876,6 +1876,50 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(views.MemberAgreementCreate.success_message, str(messages[0]))
 
+    def test_can_add_accessors(self):
+        """Can add accessors to the agreement."""
+        # Create an accessor user.
+        accessor = UserFactory.create()
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study_site = StudySiteFactory.create()
+        # API response to create the associated anvil_access_group.
+        api_url = self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234"
+        self.anvil_response_mock.add(responses.POST, api_url, status=201, json={"message": "mock message"})
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "accessors": [accessor.pk],
+                "agreementtype-0-is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study_site": study_site.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # New objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)
+        new_agreement = models.SignedAgreement.objects.latest("pk")
+        # Check accessors.
+        self.assertEqual(new_agreement.accessors.count(), 1)
+        self.assertIn(accessor, new_agreement.accessors.all())
+
     def test_error_missing_cc_id(self):
         """Form shows an error when cc_id is missing."""
         self.client.force_login(self.user)
@@ -3400,6 +3444,126 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             "only allowed for primary",
             formset.forms[0].errors["additional_limitations"][0],
         )
+
+    def test_can_add_accessors(self):
+        """Can add accessors to the agreement."""
+        # Create an accessor user.
+        accessor = UserFactory.create()
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "accessors": [accessor.pk],
+                "agreementtype-0-is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # New objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)
+        new_agreement = models.SignedAgreement.objects.latest("pk")
+        # Check accessors.
+        self.assertEqual(new_agreement.accessors.count(), 1)
+        self.assertIn(accessor, new_agreement.accessors.all())
+
+    def test_can_add_uploaders(self):
+        """Can add accessors to the agreement."""
+        # Create an accessor user.
+        uploader = UserFactory.create()
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        study = StudyFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_UPLOAD_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "agreementtype-0-is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-study": study.pk,
+                "agreementtype-0-uploaders": [uploader.pk],
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # New objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)
+        new_agreement = models.SignedAgreement.objects.latest("pk")
+        # Check uploaders.
+        self.assertEqual(new_agreement.dataaffiliateagreement.uploaders.count(), 1)
+        self.assertIn(uploader, new_agreement.dataaffiliateagreement.uploaders.all())
 
     def test_error_missing_cc_id(self):
         """Form shows an error when cc_id is missing."""
@@ -5225,6 +5389,53 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 1)
         self.assertEqual(views.NonDataAffiliateAgreementCreate.success_message, str(messages[0]))
+
+    def test_can_add_accessors(self):
+        """Can add accessors to the agreement."""
+        # Create an accessor user.
+        accessor = UserFactory.create()
+        self.client.force_login(self.user)
+        representative = UserFactory.create()
+        agreement_version = factories.AgreementVersionFactory.create()
+        # API response to create the associated anvil_access_group.
+        self.anvil_response_mock.add(
+            responses.POST,
+            self.api_client.sam_entry_point + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234",
+            status=201,
+            json={"message": "mock message"},
+        )
+        # CC admins group membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point
+            + "/api/groups/v1/TEST_PRIMED_CDSA_ACCESS_1234/admin/TEST_PRIMED_CC_ADMINS@firecloud.org",
+            status=204,
+        )
+        response = self.client.post(
+            self.get_url(),
+            {
+                "cc_id": 1234,
+                "representative": representative.pk,
+                "representative_role": "Test role",
+                "signing_institution": "Test institution",
+                "version": agreement_version.pk,
+                "date_signed": "2023-01-01",
+                "accessors": [accessor.pk],
+                "agreementtype-0-is_primary": True,
+                "agreementtype-TOTAL_FORMS": 1,
+                "agreementtype-INITIAL_FORMS": 0,
+                "agreementtype-MIN_NUM_FORMS": 1,
+                "agreementtype-MAX_NUM_FORMS": 1,
+                "agreementtype-0-affiliation": "Foo Bar",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # New objects were created.
+        self.assertEqual(models.SignedAgreement.objects.count(), 1)
+        new_agreement = models.SignedAgreement.objects.latest("pk")
+        # Check accessors.
+        self.assertEqual(new_agreement.accessors.count(), 1)
+        self.assertIn(accessor, new_agreement.accessors.all())
 
     def test_error_missing_cc_id(self):
         """Form shows an error when cc_id is missing."""
@@ -10265,6 +10476,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.workspace_type = "cdsa"
         # Create the admins group.
         ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        ManagedGroupFactory.create(name=settings.ANVIL_CC_WRITERS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -10321,6 +10533,23 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
+        )
         # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
@@ -10369,6 +10598,12 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(sharing.access, sharing.OWNER)
         self.assertEqual(sharing.can_compute, True)
+        writer_sharing = WorkspaceGroupSharing.objects.get(
+            workspace=new_workspace,
+            group__name="TEST_PRIMED_CC_WRITERS",
+        )
+        self.assertEqual(writer_sharing.access, sharing.WRITER)
+        self.assertEqual(writer_sharing.can_compute, True)
 
     def test_creates_upload_workspace_with_duo_modifiers(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -10422,6 +10657,23 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=200,
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
         )
         # Make the post request
         self.client.force_login(self.user)
@@ -10501,6 +10753,23 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=200,
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
         )
         # Make the post request
         self.client.force_login(self.user)

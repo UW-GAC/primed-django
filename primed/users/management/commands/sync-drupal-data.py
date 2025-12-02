@@ -35,11 +35,26 @@ class Command(BaseCommand):
             help="""Email to which to send audit result details that need action or have errors.""",
         )
 
+        parser.add_argument(
+            "--error-email",
+            default=None,
+            dest="error_email",
+            help="""Email to which to send audit result details that need action or have errors.""",
+        )
+
     def _send_email(self, user_audit, site_audit):
         # Send email if requested and there are problems.
         if user_audit.ok() is False or site_audit.ok() is False:
+            # If any errors encountered and we have a error email
+            # also send report to them.
+            has_error = user_audit.errors or site_audit.errors
+            recipient_list = [self.email]
+            if has_error and self.error_email:
+                recipient_list.append(self.error_email)
+
             # django-tables2 requires request context, so we create an empty one
             # if we wanted to linkify any of our data we would need to do more here
+
             request = HttpRequest()
             subject = "[command:sync-drupal-data] report"
             html_body = render_to_string(
@@ -55,7 +70,7 @@ class Command(BaseCommand):
                 subject,
                 "Drupal data audit problems or changes found. Please see attached report.",
                 None,
-                [self.email],
+                recipient_list,
                 fail_silently=False,
                 html_message=html_body,
             )
@@ -63,6 +78,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.apply_changes = options.get("update")
         self.email = options["email"]
+        self.error_email = options["error_email"]
         self.ignore_threshold = options["ignore_threshold"]
 
         notification_content = (
@@ -101,5 +117,6 @@ class Command(BaseCommand):
             notification_content += user_audit.get_errors_table().render_to_text()
 
         self.stdout.write(notification_content)
+
         if self.email:
             self._send_email(user_audit, site_audit)

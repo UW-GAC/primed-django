@@ -189,6 +189,7 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.analyst_group = ManagedGroupFactory.create()
         # Create the admins group.
         self.admins_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        self.writers_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_WRITERS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -253,6 +254,24 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writers = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writers)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writers},
+        )
+
         # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
@@ -296,6 +315,8 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(sharing.access, sharing.OWNER)
         self.assertEqual(sharing.can_compute, True)
+        writer_sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.writers_group)
+        self.assertEqual(writer_sharing.access, writer_sharing.WRITER)
 
 
 class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
@@ -319,6 +340,9 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         self.source_workspace = dbGaPWorkspaceFactory.create().workspace
         self.workspace_type = "collab_analysis"
         self.analyst_group = ManagedGroupFactory.create()
+
+        self.writers_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_WRITERS_GROUP_NAME)
+        self.writers_group = ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -388,6 +412,42 @@ class CollaborativeAnalysisWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
                 }
             },
         )
+
+        # API response for PRIMED_ADMINS workspace owner.
+        acls = [
+            {
+                "email": "TEST_PRIMED_CC_ADMINS@firecloud.org",
+                "accessLevel": "OWNER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/billing-project/workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writers = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/billing-project/workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writers)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writers},
+        )
+
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(self.workspace_type),
