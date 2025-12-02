@@ -162,6 +162,7 @@ python-fsutil==0.13.1
 pytz==2023.3.post1
     # via
     #   django-anvil-consortium-manager
+    #   django-dbbackup
     #   pandas
 referencing==0.33.0
     # via
