@@ -786,7 +786,7 @@ class dbGaPAccessAuditTest(TestCase):
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
         dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
             dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            dbgap_data_access_snapshot__created=timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
             - timedelta(days=access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD_DAYS),
         )
         # Add the anvil group to the auth group for the workspace.
