@@ -50,7 +50,7 @@ Collaborators are considered to be covered under the application and can be adde
 
 The :class:`~primed.dbgap.audit.collaborator_audit.dbGaPCollaboratorAudit` auditing class is responsible for performing the above checks and storing the results.
 The audit can be run for all applications or for a single application at a time.
-For each application, it checks both the set of listed collaborators as well as any current members of the application's ``anvil_access_group``.
+For each application, it checks both the set of listed collaborators as well as any current members (groups or users) of the application's ``anvil_access_group``.
 
 The following results are possible:
 
@@ -58,7 +58,7 @@ The following results are possible:
 - :class:`~primed.dbgap.audit.collaborator_audit.VerifiedNoAccess` - The user is not covered under the application (e.g., inactive) and is not a member of the application's ``anvil_access_group``.
 - :class:`~primed.dbgap.audit.collaborator_audit.GrantAccess` - The user is covered under the application, but is not a member of the application's ``anvil_access_group``. Action is needed to add the user to the access group.
 - :class:`~primed.dbgap.audit.collaborator_audit.RemoveAccess` - The user is not covered under the application, but is a member of the application's ``anvil_access_group``. Action is needed to remove the user from the access group.
-- :class:`~primed.dbgap.audit.collaborator_audit.Error` - An unexpected situation occurred and further exploration is necessary.
+- :class:`~primed.dbgap.audit.collaborator_audit.Error` - An unexpected situation occurred and further exploration is necessary. An example of this when another group is a member of the `anvil_access_group`, as a group cannot be listed as a collaborator.
 
 Viewing audit results
 ~~~~~~~~~~~~~~~~~~~~~
@@ -73,7 +73,7 @@ The view runs the audit and displays the results in tables, allowing users to ea
 
     To grant or remove access, users can click on the button in the "Action" column of this table to automatically add/remove the application's ``anvil_access_group`` to/from the workspace's auth domain as appropriate.
 
-    - "Errors" table: all records with :class:`~primed.dbgap.audit.collaborator_audit.Error` results (e.g., a group is a member of the auth domain)
+    - "Errors" table: all records with :class:`~primed.dbgap.audit.collaborator_audit.Error` results (e.g., a group is a member of the `anvil_access_group`). Typically, resolving these errors requires identifying why the error might have occurred, determining whether it lead to a DMI, and then manually deleting the membership record in ACM.
 
 
 DARs and workspace access
@@ -122,7 +122,7 @@ The app also provides convenient views and management commands to run the audits
 Access for a given ``dbGaPApplication`` to a given ``dbGaPWorkspace`` can be granted if:
 
 - A DAR exists in the most recent ``dbGaPDataAccessSnapshot`` for the application
-- The DAR has the same ``dbgap_phs`` and ``dbgap_consent_code`` as the workspace, the DAR's ``original_version`` is less than or equal to the workspace's ``dbgap_version``, and the DAR's ``original_participant_set`` is less than or equal to than the workspace's ``dbgap_participant_set``
+- The DAR has the same ``dbgap_phs`` and ``dbgap_consent_code`` as the workspace, the DAR's ``original_version`` is less than or equal to the workspace's ``dbgap_version``, and the DAR's ``original_participant_set`` is less than or equal to than the workspace's ``dbgap_participant_set``. This means that a DAR that was initially approved for v7 of a study would be able to get access to workspaces containing data from v8 but not those containing data from v6.
 - The DAR's :attr:`~primed.dbgap.models.dbGaPDataAccessRequest.dbgap_current_status` is **approved**
 
 If all of the above are true, then the application has access to the workspace.
@@ -150,7 +150,7 @@ The view runs the audit and displays the results in tables, allowing users to ea
     - "Action Needed" table: all records where action needs to be taken, but is expected in some way (e.g., a DAR recently was approved for the workspace)
     To grant or remove access, users can click on the button in the "Action" column of this table to automatically add/remove the application's ``anvil_access_group`` to/from the workspace's auth domain as appropriate.
 
-    - "Errors" table: all records with :class:`~primed.dbgap.audit.access_audit.Error` results (e.g., an application never had an approved DAR but is in the auth domain)
+    - "Errors" table: all records with :class:`~primed.dbgap.audit.access_audit.Error` results (e.g., an application never had an approved DAR but is in the auth domain). Typically, resolving these errors requires identifying why the error might have occurred, determining whether it lead to a DMI, and then manually deleting the membership record in ACM.
 
 
 

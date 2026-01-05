@@ -2,13 +2,21 @@ from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.models import Workspace
 
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
-from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapterMixin, WorkspaceAuthDomainAdapterMixin
+from primed.primed_anvil.adapters import (
+    PrimedWorkspacePermissions,
+    WorkspaceAuthDomainAdapterMixin,
+    WorkspaceSharingAdapterMixin,
+)
 from primed.primed_anvil.forms import WorkspaceAuthDomainDisabledForm
 
 from . import forms, models, tables
 
 
-class CDSAWorkspaceAdapter(WorkspaceAuthDomainAdapterMixin, WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class CDSAWorkspaceAdapter(
+    WorkspaceAuthDomainAdapterMixin,
+    WorkspaceSharingAdapterMixin,
+    BaseWorkspaceAdapter,
+):
     """Adapter for CDSAWorkspaces."""
 
     type = "cdsa"
@@ -20,6 +28,7 @@ class CDSAWorkspaceAdapter(WorkspaceAuthDomainAdapterMixin, WorkspaceAdminSharin
     workspace_data_model = models.CDSAWorkspace
     workspace_data_form_class = forms.CDSAWorkspaceForm
     workspace_detail_template_name = "cdsa/cdsaworkspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
     def get_extra_detail_context_data(self, workspace, request):
         extra_context = {}
