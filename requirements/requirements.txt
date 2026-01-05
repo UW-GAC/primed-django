@@ -68,7 +68,7 @@ django-crispy-forms==2.5
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==4.3.0
+django-dbbackup==5.1.0
     # via -r requirements/requirements.in
 django-environ==0.12.0
     # via -r requirements/requirements.in
@@ -162,7 +162,6 @@ python-fsutil==0.13.1
 pytz==2023.3.post1
     # via
     #   django-anvil-consortium-manager
-    #   django-dbbackup
     #   pandas
 referencing==0.33.0
     # via
