@@ -10476,6 +10476,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         self.workspace_type = "cdsa"
         # Create the admins group.
         ManagedGroupFactory.create(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
+        ManagedGroupFactory.create(name=settings.ANVIL_CC_WRITERS_GROUP_NAME)
 
     def get_url(self, *args):
         """Get the url for the view being tested."""
@@ -10532,6 +10533,23 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
         )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
+        )
         # Make the post request
         self.client.force_login(self.user)
         response = self.client.post(
@@ -10580,6 +10598,12 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(sharing.access, sharing.OWNER)
         self.assertEqual(sharing.can_compute, True)
+        writer_sharing = WorkspaceGroupSharing.objects.get(
+            workspace=new_workspace,
+            group__name="TEST_PRIMED_CC_WRITERS",
+        )
+        self.assertEqual(writer_sharing.access, sharing.WRITER)
+        self.assertEqual(writer_sharing.can_compute, True)
 
     def test_creates_upload_workspace_with_duo_modifiers(self):
         """Posting valid data to the form creates a workspace data object when using a custom adapter."""
@@ -10633,6 +10657,23 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=200,
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
         )
         # Make the post request
         self.client.force_login(self.user)
@@ -10712,6 +10753,23 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             status=200,
             match=[responses.matchers.json_params_matcher(acls)],
             json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls},
+        )
+        # API response for PRIMED_WRITERS workspace owner.
+        acls_writer = [
+            {
+                "email": "TEST_PRIMED_CC_WRITERS@firecloud.org",
+                "accessLevel": "WRITER",
+                "canShare": False,
+                "canCompute": True,
+            }
+        ]
+        self.anvil_response_mock.add(
+            responses.PATCH,
+            self.api_client.rawls_entry_point
+            + "/api/workspaces/test-billing-project/test-workspace/acl?inviteUsersNotFound=false",
+            status=200,
+            match=[responses.matchers.json_params_matcher(acls_writer)],
+            json={"invitesSent": {}, "usersNotFound": {}, "usersUpdated": acls_writer},
         )
         # Make the post request
         self.client.force_login(self.user)
