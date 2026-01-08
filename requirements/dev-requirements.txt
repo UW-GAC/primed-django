@@ -45,7 +45,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==4.2.26
+django==4.2.27
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -202,7 +202,7 @@ typing-extensions==4.15.0
     #   django-stubs-ext
     #   mypy
     #   starlette
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
