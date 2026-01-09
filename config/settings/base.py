@@ -5,6 +5,7 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+from django.conf import global_settings
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # primed/
@@ -332,9 +333,15 @@ LOGIN_REQUIRED_IGNORE_VIEW_NAMES = [
     "favicon",
 ]
 
-# django-dbbackup
-DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
-DBBACKUP_STORAGE_OPTIONS = {"location": ROOT_DIR / "dbbackups"}
+# django-dbbackup settings
+# Copy the django created storage settings and add the dbbackup settings
+STORAGES = global_settings.STORAGES.copy()
+STORAGES["dbbackup"] = {
+    "BACKEND": "django.core.files.storage.FileSystemStorage",
+    "OPTIONS": {
+        "location": ROOT_DIR / "dbbackups",
+    },
+}
 
 # PRIMED
 # ------------------------------------------------------------------------------
