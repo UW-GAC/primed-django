@@ -286,29 +286,29 @@ class UserAccessRecordsTableTest(TestCase):
 
     def test_row_count_with_one_agreement(self):
         member_agreement = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create(group__signedagreement=member_agreement.signed_agreement)
+        GroupAccountMembershipFactory.create(group=member_agreement.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 1)
 
     def test_row_count_with_one_agreement_multiple_members(self):
         member_agreement = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(5, group__signedagreement=member_agreement.signed_agreement)
+        GroupAccountMembershipFactory.create_batch(5, group=member_agreement.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 5)
 
     def test_row_count_with_two_agreements_multiple_members(self):
         member_agreement_1 = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(2, group__signedagreement=member_agreement_1.signed_agreement)
+        GroupAccountMembershipFactory.create_batch(2, group=member_agreement_1.signed_agreement.anvil_access_group)
         member_agreement_2 = factories.MemberAgreementFactory.create()
-        GroupAccountMembershipFactory.create_batch(3, group__signedagreement=member_agreement_2.signed_agreement)
+        GroupAccountMembershipFactory.create_batch(3, group=member_agreement_2.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 5)
 
     def test_includes_components(self):
         agreement_1 = factories.MemberAgreementFactory.create(is_primary=True)
-        GroupAccountMembershipFactory.create(group__signedagreement=agreement_1.signed_agreement)
+        GroupAccountMembershipFactory.create(group=agreement_1.signed_agreement.anvil_access_group)
         agreement_2 = factories.MemberAgreementFactory.create(is_primary=False)
-        GroupAccountMembershipFactory.create(group__signedagreement=agreement_2.signed_agreement)
+        GroupAccountMembershipFactory.create(group=agreement_2.signed_agreement.anvil_access_group)
         table = self.table_class(self.model.objects.all())
         self.assertEqual(len(table.rows), 2)
 
@@ -316,19 +316,19 @@ class UserAccessRecordsTableTest(TestCase):
         table = self.table_class(self.model.objects.all())
         # Members.
         agreement = factories.MemberAgreementFactory(study_site__short_name="Test Site")
-        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement.signed_agreement)
+        record = GroupAccountMembershipFactory.create(group=agreement.signed_agreement.anvil_access_group)
         self.assertEqual(table.render_signing_group(record), "Test Site")
         # Data affiliates.
         agreement = factories.DataAffiliateAgreementFactory(study__short_name="Test Study")
-        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement.signed_agreement)
+        record = GroupAccountMembershipFactory.create(group=agreement.signed_agreement.anvil_access_group)
         self.assertEqual(table.render_signing_group(record), "Test Study")
         # Non-data affiliates.
         agreement = factories.NonDataAffiliateAgreementFactory(affiliation="Test affil")
-        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement.signed_agreement)
+        record = GroupAccountMembershipFactory.create(group=agreement.signed_agreement.anvil_access_group)
         self.assertEqual(table.render_signing_group(record), "Test affil")
         # Other catch-all case that shouldn't happen.
         agreement = factories.SignedAgreementFactory()
-        record = GroupAccountMembershipFactory.create(group__signedagreement=agreement)
+        record = GroupAccountMembershipFactory.create(group=agreement.anvil_access_group)
         self.assertIsNone(table.render_signing_group(record))
 
     def test_ordering(self):
@@ -336,12 +336,12 @@ class UserAccessRecordsTableTest(TestCase):
         agreement = factories.MemberAgreementFactory.create()
         user_1 = UserFactory.create(name="zzz")
         instance_1 = GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement.signed_agreement,
+            group=agreement.signed_agreement.anvil_access_group,
             account__user=user_1,
         )
         user_2 = UserFactory.create(name="aaa")
         instance_2 = GroupAccountMembershipFactory.create(
-            group__signedagreement=agreement.signed_agreement,
+            group=agreement.signed_agreement.anvil_access_group,
             account__user=user_2,
         )
         table = self.table_class(self.model.objects.all())
