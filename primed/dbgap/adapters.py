@@ -2,13 +2,21 @@ from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.models import Workspace
 
 from primed.miscellaneous_workspaces.tables import DataPrepWorkspaceUserTable
-from primed.primed_anvil.adapters import WorkspaceAdminSharingAdapterMixin, WorkspaceAuthDomainAdapterMixin
+from primed.primed_anvil.adapters import (
+    PrimedWorkspacePermissions,
+    WorkspaceAuthDomainAdapterMixin,
+    WorkspaceSharingAdapterMixin,
+)
 from primed.primed_anvil.forms import WorkspaceAuthDomainDisabledForm
 
 from . import forms, models, tables
 
 
-class dbGaPWorkspaceAdapter(WorkspaceAuthDomainAdapterMixin, WorkspaceAdminSharingAdapterMixin, BaseWorkspaceAdapter):
+class dbGaPWorkspaceAdapter(
+    WorkspaceAuthDomainAdapterMixin,
+    WorkspaceSharingAdapterMixin,
+    BaseWorkspaceAdapter,
+):
     """Adapter for dbGaPWorkspaces."""
 
     type = "dbgap"
@@ -20,6 +28,7 @@ class dbGaPWorkspaceAdapter(WorkspaceAuthDomainAdapterMixin, WorkspaceAdminShari
     workspace_data_model = models.dbGaPWorkspace
     workspace_data_form_class = forms.dbGaPWorkspaceForm
     workspace_detail_template_name = "dbgap/dbgapworkspace_detail.html"
+    share_permissions = [PrimedWorkspacePermissions.PRIMED_CC_ADMIN, PrimedWorkspacePermissions.PRIMED_CC_WRITER]
 
     def get_extra_detail_context_data(self, workspace, request):
         extra_context = {}
