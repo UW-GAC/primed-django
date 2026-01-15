@@ -64,7 +64,7 @@ docutils==0.20.1
     #   sphinx-rtd-theme
 executing==2.0.1
     # via stack-data
-filelock==3.20.1
+filelock==3.20.3
     # via virtualenv
 h11==0.16.0
     # via uvicorn
@@ -142,7 +142,7 @@ requests==2.32.4
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.14.10
+ruff==0.14.11
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -161,7 +161,7 @@ sphinx==7.1.2
     #   sphinxcontrib-jquery
 sphinx-autobuild==2024.10.3
     # via -r requirements/dev-requirements.in
-sphinx-rtd-theme==3.0.2
+sphinx-rtd-theme==3.1.0
     # via -r requirements/dev-requirements.in
 sphinxcontrib-applehelp==1.0.4
     # via sphinx
@@ -210,7 +210,7 @@ urllib3==2.6.3
     #   types-requests
 uvicorn==0.30.5
     # via sphinx-autobuild
-virtualenv==20.26.6
+virtualenv==20.36.1
     # via pre-commit
 watchfiles==0.22.0
     # via sphinx-autobuild
@@ -218,7 +218,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==12.0
     # via sphinx-autobuild
-werkzeug==3.1.4
+werkzeug==3.1.5
     # via -r requirements/dev-requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
