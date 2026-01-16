@@ -39,7 +39,7 @@ crispy-bootstrap5==2025.6
     #   django-anvil-consortium-manager
 cryptography==46.0.3
     # via -r requirements/requirements.in
-django==4.2.26
+django==5.2.10
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -55,7 +55,7 @@ django==4.2.26
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.13.0
+django-allauth==65.13.1
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.33.0
     # via -r requirements/requirements.in
@@ -68,7 +68,7 @@ django-crispy-forms==2.5
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
     #   django-anvil-consortium-manager
-django-dbbackup==4.3.0
+django-dbbackup==5.1.2
     # via -r requirements/requirements.in
 django-environ==0.12.0
     # via -r requirements/requirements.in
@@ -78,7 +78,7 @@ django-extensions==4.1
     #   django-anvil-consortium-manager
 django-filter==23.5
     # via django-anvil-consortium-manager
-django-htmx==1.26.0
+django-htmx==1.27.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
@@ -86,15 +86,15 @@ django-maintenance-mode==0.22.0
     # via -r requirements/requirements.in
 django-model-utils==5.0.0
     # via -r requirements/requirements.in
-django-picklefield==3.3
+django-picklefield==3.4.0
     # via -r requirements/requirements.in
-django-simple-history==3.10.1
+django-simple-history==3.11.0
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
 django-tables2==2.7.0
     # via django-anvil-consortium-manager
-django-tree-queries==0.22.0
+django-tree-queries==0.23.0
     # via -r requirements/requirements.in
 fastobo==0.13.0
     # via pronto
@@ -106,7 +106,7 @@ idna==3.7
     # via requests
 jsonapi-requests==0.8.0
     # via -r requirements/requirements.in
-jsonschema==4.25.1
+jsonschema==4.26.0
     # via -r requirements/requirements.in
 jsonschema-specifications==2023.12.1
     # via jsonschema
@@ -135,7 +135,7 @@ pip-tools==7.5.2
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pronto==2.7.2
+pronto==2.7.3
     # via -r requirements/requirements.in
 pyasn1==0.5.1
     # via
@@ -162,7 +162,6 @@ python-fsutil==0.13.1
 pytz==2023.3.post1
     # via
     #   django-anvil-consortium-manager
-    #   django-dbbackup
     #   pandas
 referencing==0.33.0
     # via
@@ -176,7 +175,7 @@ requests==2.32.4
     #   requests-oauthlib
 requests-oauthlib==2.0.0
     # via -r requirements/requirements.in
-rpds-py==0.17.1
+rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
@@ -194,7 +193,7 @@ tenacity==8.2.3
     #   plotly
 tzdata==2023.4
     # via pandas
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -r requirements/requirements.in
     #   requests

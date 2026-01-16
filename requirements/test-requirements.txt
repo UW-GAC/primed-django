@@ -21,7 +21,7 @@ coverage[toml]==7.10.6
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
     #   pytest-cov
-django==4.2.26
+django==5.2.10
     # via
     #   -c requirements/requirements.txt
     #   django-coverage-plugin
@@ -43,7 +43,7 @@ idna==3.7
     #   requests
 iniconfig==2.0.0
     # via pytest
-marshmallow==3.20.1
+marshmallow==3.26.2
     # via marshmallow-jsonapi
 marshmallow-jsonapi==0.24.0
     # via -r requirements/test-requirements.in
@@ -102,7 +102,7 @@ termcolor==2.4.0
     # via pytest-sugar
 typing-extensions==4.15.0
     # via django-test-migrations
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -c requirements/requirements.txt
     #   requests

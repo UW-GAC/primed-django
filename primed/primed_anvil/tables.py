@@ -3,6 +3,7 @@ from anvil_consortium_manager.models import Account, ManagedGroup, Workspace
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from . import models
 
@@ -33,12 +34,16 @@ class BooleanIconColumn(tables.BooleanColumn):
         value = self._get_bool_value(record, value, bound_column)
         if value:
             rendered_value = format_html(
-                f"""<i class="bi bi-{self.true_icon} bi-align-center px-2" style="color: {self.true_color};"></i>"""
+                """<i class="bi bi-{icon} bi-align-center px-2" style="color: {color};"></i>""",
+                icon=self.true_icon,
+                color=self.true_color,
             )
         else:
             if self.show_false_icon:
                 rendered_value = format_html(
-                    f"""<i class="bi bi-{self.false_icon} bi-align-center px-2" style="color: {self.false_color};"></i>"""  # noqa: E501
+                    """<i class="bi bi-{icon} bi-align-center px-2" style="color: {color};"></i>""",
+                    icon=self.false_icon,
+                    color=self.false_color,
                 )
             else:
                 rendered_value = ""
@@ -194,11 +199,11 @@ class UserAccountSingleGroupMembershipTable(UserAccountTable):
             value = False
         # Copied from BooleanIconColumn - maybe there is a DRYer way to do this?
         if value:
-            rendered_value = format_html(
+            rendered_value = mark_safe(
                 """<i class="bi bi-check-circle-fill bi-align-center px-2" style="color: green;"></i>"""
             )
         else:
-            rendered_value = format_html(
+            rendered_value = mark_safe(
                 """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""  # noqa: E501
             )
         return rendered_value
