@@ -4,6 +4,7 @@ from typing import Optional
 
 import django_tables2 as tables
 from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
+from constance import config
 from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils import timezone
@@ -159,8 +160,6 @@ class dbGaPAccessAudit(PRIMEDAudit):
 
     APP_SNAPSHOT_OLD = "dbGaP data access snapshot too old."
 
-    APP_SNAPSHOT_OLD_DAYS = 30
-
     # Unexpected.
     ERROR_HAS_ACCESS = "Has access for an unknown reason."
 
@@ -227,7 +226,7 @@ class dbGaPAccessAudit(PRIMEDAudit):
 
         # Is snapshot more than 30 days old
         snapshot_is_prior = app_snapshot.created.date() <= (
-            timezone.localdate() - timedelta(days=self.APP_SNAPSHOT_OLD_DAYS)
+            timezone.localdate() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS)
         )
         if snapshot_is_prior:
             self.needs_action.append(
