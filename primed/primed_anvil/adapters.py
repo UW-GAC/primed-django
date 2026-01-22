@@ -1,11 +1,9 @@
-from dataclasses import dataclass
-from typing import List
-
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdapter
 from anvil_consortium_manager.adapters.mixins import (
     GroupGroupMembershipAdapterMixin,
     GroupGroupMembershipRole,
+    WorkspaceSharingPermission,
 )
 from anvil_consortium_manager.models import (
     GroupAccountMembership,
@@ -126,13 +124,6 @@ class WorkspaceAuthDomainAdapterMixin:
         membership.anvil_create()
 
 
-@dataclass(frozen=True)
-class WorkspaceSharingPermission:
-    group_name: str
-    access: WorkspaceGroupSharing
-    can_compute: bool
-
-
 class PrimedWorkspacePermissions:
     """Predefined permission sets"""
 
@@ -147,64 +138,6 @@ class PrimedWorkspacePermissions:
         access=WorkspaceGroupSharing.WRITER,
         can_compute=True,
     )
-
-
-class WorkspaceSharingAdapterMixin:
-    share_permissions: List[WorkspaceSharingPermission] = None
-
-    def get_share_permissions(self):
-        """Validate and return the permissions to grant."""
-        if self.share_permissions is None:
-            raise NotImplementedError(
-                "WorkspaceSharingAdapterMixin: You must define share_permissions"
-                " in the subclass or override get_share_permissions()."
-            )
-        if not self.share_permissions:
-            raise ValueError("WorkspaceSharingAdapterMixin: share_permissions cannot be empty.")
-        return self.share_permissions
-
-    def after_anvil_create(self, workspace):
-        """Share the workspace with specified groups after creation."""
-        super().after_anvil_create(workspace)
-        self._share_workspace_with_groups(workspace)
-
-    def after_anvil_import(self, workspace):
-        """Share the workspace with specified groups after import."""
-        super().after_anvil_import(workspace)
-        self._share_workspace_with_groups(workspace)
-
-    def _share_workspace_with_groups(self, workspace):
-        """Loop over all gropus and share the workspace with the specified permission for that group."""
-        for sharing in self.get_share_permissions():
-            self._share_workspace_with_group(workspace, sharing.group_name, sharing.access, sharing.can_compute)
-
-    def _share_workspace_with_group(self, workspace, group_name, access, can_compute):
-        """Share the workspace with a specific group."""
-        try:
-            group = ManagedGroup.objects.get(name=group_name)
-        except ManagedGroup.DoesNotExist:
-            return
-        try:
-            sharing = WorkspaceGroupSharing.objects.get(
-                workspace=workspace,
-                group=group,
-            )
-        except WorkspaceGroupSharing.DoesNotExist:
-            sharing = WorkspaceGroupSharing.objects.create(
-                workspace=workspace,
-                group=group,
-                access=access,
-                can_compute=can_compute,
-            )
-            sharing.save()
-            sharing.anvil_create_or_update()
-        else:
-            # If the existing sharing record exists, make sure it has the correct permissions.
-            if sharing.can_compute != can_compute or sharing.access != access:
-                sharing.can_compute = can_compute
-                sharing.access = access
-                sharing.save()
-                sharing.anvil_create_or_update()
 
 
 class ManagedGroupAdapter(GroupGroupMembershipAdapterMixin, BaseManagedGroupAdapter):

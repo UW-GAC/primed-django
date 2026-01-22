@@ -1,9 +1,10 @@
 """Adapters for the `workspaces` app."""
 
+from anvil_consortium_manager.adapters.mixins import WorkspaceSharingAdapterMixin
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 from anvil_consortium_manager.forms import WorkspaceForm
 
-from primed.primed_anvil.adapters import PrimedWorkspacePermissions, WorkspaceSharingAdapterMixin
+from primed.primed_anvil.adapters import PrimedWorkspacePermissions
 from primed.primed_anvil.tables import (
     DefaultWorkspaceStaffTable,
     DefaultWorkspaceUserTable,

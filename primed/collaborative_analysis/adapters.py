@@ -1,9 +1,9 @@
+from anvil_consortium_manager.adapters.mixins import WorkspaceSharingAdapterMixin
 from anvil_consortium_manager.adapters.workspace import BaseWorkspaceAdapter
 
 from primed.primed_anvil.adapters import (
     PrimedWorkspacePermissions,
     WorkspaceAuthDomainAdapterMixin,
-    WorkspaceSharingAdapterMixin,
 )
 from primed.primed_anvil.forms import WorkspaceAuthDomainDisabledForm
 
