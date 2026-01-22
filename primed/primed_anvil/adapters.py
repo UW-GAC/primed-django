@@ -3,6 +3,10 @@ from typing import List
 
 from anvil_consortium_manager.adapters.account import BaseAccountAdapter
 from anvil_consortium_manager.adapters.managed_group import BaseManagedGroupAdapter
+from anvil_consortium_manager.adapters.mixins import (
+    GroupGroupMembershipAdapterMixin,
+    GroupGroupMembershipRole,
+)
 from anvil_consortium_manager.models import (
     GroupAccountMembership,
     GroupGroupMembership,
@@ -203,21 +207,15 @@ class WorkspaceSharingAdapterMixin:
                 sharing.anvil_create_or_update()
 
 
-class ManagedGroupAdapter(BaseManagedGroupAdapter):
+class ManagedGroupAdapter(GroupGroupMembershipAdapterMixin, BaseManagedGroupAdapter):
     """Adapter for ManagedGroups."""
 
     list_table_class = ManagedGroupStaffTable
-
-    def after_anvil_create(self, managed_group):
-        super().after_anvil_create(managed_group)
-        # Add the ADMINs group as an admin of the auth domain.
-        try:
-            admins_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_ADMINS_GROUP_NAME)
-        except ManagedGroup.DoesNotExist:
-            return
-        membership = GroupGroupMembership.objects.create(
-            parent_group=managed_group,
-            child_group=admins_group,
-            role=GroupGroupMembership.RoleChoices.ADMIN,
-        )
-        membership.anvil_create()
+    membership_roles = [
+        GroupGroupMembershipRole(
+            # Name of the group to add as a member.
+            child_group_name=settings.ANVIL_CC_ADMINS_GROUP_NAME,
+            # Role that this group should have.
+            role="ADMIN",
+        ),
+    ]
