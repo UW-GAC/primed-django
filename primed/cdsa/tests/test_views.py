@@ -2439,7 +2439,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_membership = GroupGroupMembership.objects.get(
             parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
         )
-        self.assertEqual(new_membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(new_membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_groups_different_setting_access_group_prefix(self):
@@ -2522,7 +2522,7 @@ class MemberAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_object.anvil_access_group,
             child_group=admin_group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -4102,12 +4102,12 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_membership_1 = GroupGroupMembership.objects.get(
             parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
         )
-        self.assertEqual(new_membership_1.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(new_membership_1.role, GroupGroupMembership.RoleChoices.ADMIN)
         new_membership_2 = GroupGroupMembership.objects.get(
             parent_group=new_object.dataaffiliateagreement.anvil_upload_group,
             child_group=self.cc_admins_group,
         )
-        self.assertEqual(new_membership_2.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(new_membership_2.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_access_group_different_setting(self):
@@ -4225,12 +4225,12 @@ class DataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_object.anvil_access_group,
             child_group=admin_group,
         )
-        self.assertEqual(membership_1.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership_1.role, GroupGroupMembership.RoleChoices.ADMIN)
         membership_2 = GroupGroupMembership.objects.get(
             parent_group=new_object.dataaffiliateagreement.anvil_upload_group,
             child_group=admin_group,
         )
-        self.assertEqual(membership_2.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership_2.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_access_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -5858,7 +5858,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
         new_membership = GroupGroupMembership.objects.get(
             parent_group=new_object.anvil_access_group, child_group=self.cc_admins_group
         )
-        self.assertEqual(new_membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(new_membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_groups_different_setting(self):
@@ -5937,7 +5937,7 @@ class NonDataAffiliateAgreementCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_object.anvil_access_group,
             child_group=admin_group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -6885,7 +6885,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=self.anvil_cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_htmx_grant_access(self):
         """Context with GrantAccess."""
@@ -6913,7 +6913,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=self.anvil_cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_get_only_this_signed_agreement(self):
         """Only runs on the specified signed_agreement."""
@@ -6957,7 +6957,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=self.anvil_cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_anvil_api_error_grant(self):
         """AnVIL API errors are properly handled."""
@@ -7115,7 +7115,7 @@ class SignedAgreementAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=cdsa_group,
             child_group=member_agreement.signed_agreement.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
 
 class AccessorAuditTest(TestCase):
@@ -7867,7 +7867,7 @@ class AccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=member_agreement.signed_agreement.anvil_access_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_account_email(self):
         """post with GrantAccess audit result."""
@@ -7899,7 +7899,7 @@ class AccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=member_agreement.signed_agreement.anvil_access_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_htmx(self):
         """Context with GrantAccess."""
@@ -7932,7 +7932,7 @@ class AccessorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=member_agreement.signed_agreement.anvil_access_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_remove_access_user_email(self):
         """post request with remove access for an user."""
@@ -8912,7 +8912,7 @@ class UploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=data_affiliate_agreement.anvil_upload_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_account_email(self):
         """post with GrantAccess audit result."""
@@ -8944,7 +8944,7 @@ class UploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=data_affiliate_agreement.anvil_upload_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_htmx(self):
         """Context with GrantAccess."""
@@ -8977,7 +8977,7 @@ class UploaderAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=data_affiliate_agreement.anvil_upload_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_remove_access_user_email(self):
         """post request with remove access for an user."""
@@ -9621,7 +9621,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_htmx(self):
         """Context with GrantAccess."""
@@ -9650,7 +9650,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=self.anvil_cdsa_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_remove_access(self):
         """Get request with RemoveAccess audit result."""
@@ -9869,7 +9869,7 @@ class CDSAWorkspaceAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=cdsa_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
 
 class StudyRecordsList(TestCase):
@@ -10590,7 +10590,7 @@ class CDSAWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.get(
             parent_group=auth_domain, child_group__name="TEST_PRIMED_CC_ADMINS"
         )
-        self.assertEqual(membership.role, membership.ADMIN)
+        self.assertEqual(membership.role, membership.RoleChoices.ADMIN)
         # Check that workspace sharing is correct.
         sharing = WorkspaceGroupSharing.objects.get(
             workspace=new_workspace,

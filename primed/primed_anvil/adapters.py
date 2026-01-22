@@ -80,7 +80,7 @@ class AccountAdapter(BaseAccountAdapter):
             membership = GroupAccountMembership(
                 group=group,
                 account=account,
-                role=GroupAccountMembership.MEMBER,
+                role=GroupAccountMembership.RoleChoices.MEMBER,
             )
             membership.save()
             membership.anvil_create()
@@ -117,7 +117,7 @@ class WorkspaceAuthDomainAdapterMixin:
         membership = GroupGroupMembership.objects.create(
             parent_group=auth_domain,
             child_group=admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         membership.anvil_create()
 
@@ -218,6 +218,6 @@ class ManagedGroupAdapter(BaseManagedGroupAdapter):
         membership = GroupGroupMembership.objects.create(
             parent_group=managed_group,
             child_group=admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         membership.anvil_create()

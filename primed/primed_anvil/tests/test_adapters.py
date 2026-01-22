@@ -99,7 +99,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_two_study_sites(self):
         """A user is part of two study sites."""
@@ -126,9 +126,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_already_member(self):
         """The account is already a member of the study site member group."""
@@ -146,7 +146,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_one_study_site_no_member_groups(self):
         """A user is linked to a study site with no members group."""
@@ -183,7 +183,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_pi_two_dbgap_applications(self):
         """A user is the PI on one dbGaP application."""
@@ -208,9 +208,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_1)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_2)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_pi_already_member(self):
         """The account is already a member of the dbGaP access group."""
@@ -226,7 +226,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_collaborator_one_dbgap_application(self):
         """A user is a collaborator on one dbGaP application"""
@@ -247,7 +247,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_collaborator_two_dbgap_applications(self):
         """A user is a collaborator on one dbGaP application"""
@@ -275,9 +275,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.first()
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_1)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(account=account, group=member_group_2)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_collaborator_already_member(self):
         """The account is already a member of the access group."""
@@ -294,7 +294,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_pi_and_collaborator_one_dbgap_application(self):
         """A User is both PI and collaborator on one dbGaP application."""
@@ -313,7 +313,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 1)
         membership = GroupAccountMembership.objects.get(group=member_group, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_pi_and_collaborator_two_dbgap_application(self):
         """A User is both PI on one dbGaP application and a collaborator on another."""
@@ -339,9 +339,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_no_signed_agreements(self):
         """A user is not associated with any signed agreements."""
@@ -369,7 +369,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_two_signed_agreements(self):
         """A user is an accessor on two signed agreements."""
@@ -396,9 +396,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_one_signed_agreement_alraedy_member(self):
         """A user is already a member of the access group."""
@@ -415,7 +415,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_no_data_affiliate_agreements(self):
         """A user is not an uploader on any signed data affiliate CDSAs"""
@@ -444,7 +444,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupAccountMembership.objects.first()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_two_data_affiliate_agreements(self):
         """A user is an uploader on two signed data affiliate CDSA"""
@@ -471,9 +471,9 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         # Check for GroupGroupMembership.
         self.assertEqual(GroupAccountMembership.objects.count(), 2)
         membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
         membership = GroupAccountMembership.objects.get(group=member_group_2, account=account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_after_account_verification_one_data_affiliate_agreement_already_member(self):
         """The account is already a member of the CDSA uploader group."""
@@ -490,7 +490,7 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership.refresh_from_db()
         self.assertEqual(membership.group, member_group)
         self.assertEqual(membership.account, account)
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_get_account_verification_notification_context(self):
         account = AccountFactory.create(verified=True)
@@ -948,7 +948,7 @@ class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, managed_group)
         self.assertEqual(membership.child_group, admins_group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foobar")
     def test_after_anvil_create_different_admins_group(self):
@@ -967,7 +967,7 @@ class ManagedGroupAdapterTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, managed_group)
         self.assertEqual(membership.child_group, admins_group)
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_after_anvil_create_no_admins_group(self):
         managed_group = ManagedGroupFactory.create(name="test-group")

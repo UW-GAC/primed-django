@@ -165,13 +165,13 @@ class CollaborativeAnalysisAuditResolve(AnVILConsortiumManagerStaffEditRequired,
                         membership = GroupAccountMembership(
                             group=auth_domain,
                             account=self.member,
-                            role=GroupAccountMembership.MEMBER,
+                            role=GroupAccountMembership.RoleChoices.MEMBER,
                         )
                     elif isinstance(self.member, ManagedGroup):
                         membership = GroupGroupMembership(
                             parent_group=auth_domain,
                             child_group=self.member,
-                            role=GroupGroupMembership.MEMBER,
+                            role=GroupGroupMembership.RoleChoices.MEMBER,
                         )
                     membership.full_clean()
                     membership.save()
@@ -182,13 +182,13 @@ class CollaborativeAnalysisAuditResolve(AnVILConsortiumManagerStaffEditRequired,
                         membership = GroupAccountMembership.objects.get(
                             group=auth_domain,
                             account=self.member,
-                            role=GroupAccountMembership.MEMBER,
+                            role=GroupAccountMembership.RoleChoices.MEMBER,
                         )
                     elif isinstance(self.member, ManagedGroup):
                         membership = GroupGroupMembership.objects.get(
                             parent_group=auth_domain,
                             child_group=self.member,
-                            role=GroupGroupMembership.MEMBER,
+                            role=GroupGroupMembership.RoleChoices.MEMBER,
                         )
                     membership.delete()
                     membership.anvil_delete()

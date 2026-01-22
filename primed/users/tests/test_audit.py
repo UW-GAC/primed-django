@@ -469,7 +469,7 @@ class TestUserDataAudit(TestCase):
         GroupAccountMembership.objects.create(
             group=new_anvil_managed_group,
             account=new_anvil_account,
-            role=GroupAccountMembership.MEMBER,
+            role=GroupAccountMembership.RoleChoices.MEMBER,
         )
 
         with self.settings(DRUPAL_DATA_AUDIT_DEACTIVATE_USERS=True):

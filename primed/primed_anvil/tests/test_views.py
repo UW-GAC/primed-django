@@ -1361,4 +1361,4 @@ class ManagedGroupCreateTest(AnVILAPIMockTestMixin, TestCase):
         membership = acm_models.GroupGroupMembership.objects.first()
         self.assertEqual(membership.parent_group, new_group)
         self.assertEqual(membership.child_group, self.admins_group)
-        self.assertEqual(membership.role, acm_models.GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, acm_models.GroupGroupMembership.RoleChoices.ADMIN)

@@ -233,7 +233,7 @@ class dbGaPApplicationCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
                 membership = GroupGroupMembership.objects.create(
                     parent_group=managed_group,
                     child_group=cc_admins_group,
-                    role=GroupGroupMembership.ADMIN,
+                    role=GroupGroupMembership.RoleChoices.ADMIN,
                 )
                 membership.full_clean()
                 membership.anvil_create()
@@ -725,7 +725,7 @@ class dbGaPAccessAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView)
                     membership = GroupGroupMembership(
                         parent_group=auth_domain,
                         child_group=self.dbgap_application.anvil_access_group,
-                        role=GroupGroupMembership.MEMBER,
+                        role=GroupGroupMembership.RoleChoices.MEMBER,
                     )
                     membership.full_clean()
                     membership.save()
@@ -834,7 +834,7 @@ class dbGaPCollaboratorAuditResolve(AnVILConsortiumManagerStaffEditRequired, For
                     membership = GroupAccountMembership(
                         group=self.dbgap_application.anvil_access_group,
                         account=self.audit_result.member,
-                        role=GroupAccountMembership.MEMBER,
+                        role=GroupAccountMembership.RoleChoices.MEMBER,
                     )
                     membership.full_clean()
                     membership.save()
