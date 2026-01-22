@@ -129,7 +129,7 @@ packaging==21.3
     # via
     #   build
     #   plotly
-pandas==2.3.3
+pandas==3.0.0
     # via -r requirements/requirements.in
 pip-tools==7.5.2
     # via -r requirements/requirements.in
@@ -160,9 +160,7 @@ python-dateutil==2.8.2
 python-fsutil==0.13.1
     # via django-maintenance-mode
 pytz==2023.3.post1
-    # via
-    #   django-anvil-consortium-manager
-    #   pandas
+    # via django-anvil-consortium-manager
 referencing==0.33.0
     # via
     #   jsonschema
@@ -191,8 +189,6 @@ tenacity==8.2.3
     # via
     #   jsonapi-requests
     #   plotly
-tzdata==2023.4
-    # via pandas
 urllib3==2.6.3
     # via
     #   -r requirements/requirements.in
