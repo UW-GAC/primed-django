@@ -1193,7 +1193,7 @@ class dbGaPWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_workspace.authorization_domains.get(),
             child_group=self.admins_group,
         )
-        self.assertEqual(membership.role, membership.ADMIN)
+        self.assertEqual(membership.role, membership.RoleChoices.ADMIN)
         # Check that the workspace was shared with the admins group.
         sharing = WorkspaceGroupSharing.objects.get(workspace=new_workspace, group=self.admins_group)
         self.assertEqual(sharing.access, sharing.OWNER)
@@ -2209,7 +2209,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_group,
             child_group=self.cc_admin_group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_DATA_ACCESS_GROUP_PREFIX="foo")
     def test_creates_anvil_access_group_different_setting_data_access_group_prefix(
@@ -2240,7 +2240,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_group,
             child_group=self.cc_admin_group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     @override_settings(ANVIL_CC_ADMINS_GROUP_NAME="foo")
     def test_creates_anvil_access_group_different_setting_cc_admin_group(self):
@@ -2270,7 +2270,7 @@ class dbGaPApplicationCreateTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=new_group,
             child_group=admin_group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.ADMIN)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.ADMIN)
 
     def test_manage_group_create_api_error(self):
         """Nothing is created when the form is valid but there is an API error when creating the group."""
@@ -5594,7 +5594,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_two_auth_domains_one_not_managed(self):
         """post with GrantAccess audit result."""
@@ -5632,7 +5632,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=auth_domain,
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_htmx(self):
         """Context with GrantAccess."""
@@ -5666,7 +5666,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_remove_access(self):
         """needs_action_table shows a record when audit finds that access needs to be removed."""
@@ -6674,7 +6674,7 @@ class dbGaPCollaboratorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=dbgap_application.anvil_access_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_account_email(self):
         """post with GrantAccess audit result."""
@@ -6705,7 +6705,7 @@ class dbGaPCollaboratorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=dbgap_application.anvil_access_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_grant_access_htmx(self):
         """Context with GrantAccess."""
@@ -6737,7 +6737,7 @@ class dbGaPCollaboratorAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=dbgap_application.anvil_access_group,
             account=account,
         )
-        self.assertEqual(membership.role, membership.MEMBER)
+        self.assertEqual(membership.role, membership.RoleChoices.MEMBER)
 
     def test_post_remove_access_user_email(self):
         """post request with remove access for an user."""
