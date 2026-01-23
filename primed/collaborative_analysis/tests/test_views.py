@@ -307,7 +307,7 @@ class CollaborativeAnalysisWorkspaceCreateTest(AnVILAPIMockTestMixin, TestCase):
         membership = GroupGroupMembership.objects.get(
             parent_group=auth_domain, child_group__name="TEST_PRIMED_CC_ADMINS"
         )
-        self.assertEqual(membership.role, membership.ADMIN)
+        self.assertEqual(membership.role, membership.RoleChoices.ADMIN)
         # Check that workspace sharing is correct.
         sharing = WorkspaceGroupSharing.objects.get(
             workspace=new_workspace,
@@ -1664,7 +1664,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
-        self.assertEqual(membership.role, GroupAccountMembership.MEMBER)
+        self.assertEqual(membership.role, GroupAccountMembership.RoleChoices.MEMBER)
 
     def test_post_grant_access_group(self):
         """Get request with verified access for a group."""
@@ -1700,7 +1700,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_remove_access_account(self):
         """Get request with verified access."""
@@ -1809,7 +1809,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             group=workspace.workspace.authorization_domains.get(),
             account=account,
         )
-        self.assertEqual(membership.role, GroupAccountMembership.MEMBER)
+        self.assertEqual(membership.role, GroupAccountMembership.RoleChoices.MEMBER)
 
     def test_post_grant_access_group_htmx(self):
         """Get request with verified access for a group."""
@@ -1850,7 +1850,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
         )
-        self.assertEqual(membership.role, GroupGroupMembership.MEMBER)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_remove_access_account_htmx(self):
         """Get request with verified access."""
