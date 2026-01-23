@@ -232,7 +232,7 @@ class AgreementTypeCreateMixin:
         self.admin_access_membership = GroupGroupMembership(
             parent_group=access_group,
             child_group=cc_admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.admin_access_membership.full_clean()
         self.admin_access_membership.save()
@@ -346,7 +346,7 @@ class DataAffiliateAgreementCreate(
         self.admin_upload_membership = GroupGroupMembership(
             parent_group=upload_group,
             child_group=cc_admins_group,
-            role=GroupGroupMembership.ADMIN,
+            role=GroupGroupMembership.RoleChoices.ADMIN,
         )
         self.admin_upload_membership.full_clean()
         self.admin_upload_membership.save()
@@ -642,7 +642,7 @@ class SignedAgreementAuditResolve(AnVILConsortiumManagerStaffEditRequired, Singl
                     membership = GroupGroupMembership(
                         parent_group=cdsa_group,
                         child_group=self.object.anvil_access_group,
-                        role=GroupGroupMembership.MEMBER,
+                        role=GroupGroupMembership.RoleChoices.MEMBER,
                     )
                     membership.anvil_create()
                     membership.full_clean()
@@ -756,7 +756,7 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
                     membership = GroupGroupMembership(
                         parent_group=auth_domain,
                         child_group=cdsa_group,
-                        role=GroupGroupMembership.MEMBER,
+                        role=GroupGroupMembership.RoleChoices.MEMBER,
                     )
                     membership.full_clean()
                     membership.save()
@@ -864,7 +864,7 @@ class AccessorAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
                     membership = GroupAccountMembership(
                         group=self.signed_agreement.anvil_access_group,
                         account=self.audit_result.member,
-                        role=GroupAccountMembership.MEMBER,
+                        role=GroupAccountMembership.RoleChoices.MEMBER,
                     )
                     membership.full_clean()
                     membership.save()
@@ -977,7 +977,7 @@ class UploaderAuditResolve(AnVILConsortiumManagerStaffEditRequired, FormView):
                     membership = GroupAccountMembership(
                         group=self.data_affiliate_agreement.anvil_upload_group,
                         account=self.audit_result.member,
-                        role=GroupAccountMembership.MEMBER,
+                        role=GroupAccountMembership.RoleChoices.MEMBER,
                     )
                     membership.full_clean()
                     membership.save()

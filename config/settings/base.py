@@ -396,6 +396,7 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 # ------------------------------------------------------------------------------
 CONSTANCE_CONFIG = {
     "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
+    "DBGAP_SNAPSHOT_OLD_DAYS": (30, "Number of days before a dbGaP snapshot is considered old", int),
 }
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
