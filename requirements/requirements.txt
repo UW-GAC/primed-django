@@ -125,10 +125,11 @@ oauthlib==3.3.1
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
-packaging==21.3
+packaging==26.0
     # via
     #   build
     #   plotly
+    #   wheel
 pandas==2.3.3
     # via -r requirements/requirements.in
 pip-tools==7.5.2
@@ -147,8 +148,6 @@ pycparser==2.21
     # via cffi
 pyjwt==2.10.1
     # via -r requirements/requirements.in
-pyparsing==3.1.1
-    # via packaging
 pyproject-hooks==1.0.0
     # via
     #   build
@@ -197,7 +196,7 @@ urllib3==2.6.3
     # via
     #   -r requirements/requirements.in
     #   requests
-wheel==0.42.0
+wheel==0.46.2
     # via pip-tools
 whitenoise==6.11.0
     # via -r requirements/requirements.in
