@@ -386,6 +386,83 @@ class MemberAgreementFormTest(TestCase):
         self.assertEqual(len(form.errors["signed_agreement"]), 1)
         self.assertIn("expected type", form.errors["signed_agreement"][0])
 
+    def test_invalid_representative_inactive(self):
+        """Form is invalid when the representative is not an active user."""
+        representative = UserFactory.create(is_active=False)
+
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.MEMBER, representative=representative
+        )
+
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "is_primary": True,
+            "study_site": self.study_site,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn("__all__", form.errors)
+        self.assertIn("must be an active user", form.errors["__all__"][0])
+
+    def test_invalid_study_site_not_in_representative_study_sites(self):
+        """Form is invalid when study_site is not one of representative's study_sites."""
+        representative_study_site = StudySiteFactory.create()
+        representative = UserFactory.create()
+        representative.study_sites.add(representative_study_site)
+
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.MEMBER,
+            representative=representative,
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "is_primary": True,
+            "study_site": self.study_site,
+        }
+        form = self.form_class(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("__all__", form.errors)
+        self.assertEqual(len(form.errors["__all__"]), 1)
+        self.assertIn("study site", form.errors["__all__"][0])
+
+    def test_valid_study_site_in_representative_study_sites(self):
+        """Form is valid when study_site matches representative's study_site."""
+        representative = UserFactory.create()
+        representative.study_sites.add(self.study_site)
+
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.MEMBER,
+            representative=representative,
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "is_primary": True,
+            "study_site": self.study_site,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_valid_representative_has_two_study_sites(self):
+        """Form is valid when study_site is one of representative's two study sites."""
+        study_site_1 = StudySiteFactory.create()
+        study_site_2 = StudySiteFactory.create()
+
+        representative = UserFactory.create()
+        representative.study_sites.add(study_site_1, study_site_2)
+
+        signed_agreement = factories.SignedAgreementFactory.create(
+            type=models.SignedAgreement.MEMBER,
+            representative=representative,
+        )
+        form_data = {
+            "signed_agreement": signed_agreement,
+            "is_primary": True,
+            "study_site": study_site_1,
+        }
+        form = self.form_class(data=form_data)
+        self.assertTrue(form.is_valid())
+
 
 class DataAffiliateAgreementFormTest(TestCase):
     """Tests for the DataAffiliateAgreementForm class."""

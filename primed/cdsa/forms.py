@@ -3,6 +3,7 @@
 from anvil_consortium_manager.forms import Bootstrap5MediaFormMixin
 from dal import autocomplete
 from django import forms
+from django.core.exceptions import ValidationError
 from tree_queries.forms import TreeNodeMultipleChoiceField
 
 from primed.primed_anvil.forms import CustomDateInput
@@ -87,6 +88,35 @@ class MemberAgreementForm(forms.ModelForm):
             "study_site",
             "is_primary",
         )
+
+    def clean(self):
+        """Custom checks:
+
+        - the study_site associated with the MemberAgreement should match one of the study sites of the representative.
+        - the representative should be an active user.
+        """
+        cleaned_data = super().clean()
+        study_site = cleaned_data.get("study_site")
+        signed_agreement = cleaned_data.get("signed_agreement")
+
+        if not signed_agreement:
+            return cleaned_data
+
+        representative = signed_agreement.representative
+
+        # Check if representative is an active user
+        if representative and not representative.is_active:
+            raise ValidationError("The representative must be an active user.")
+
+        if study_site and representative:
+            if not representative.study_sites.exists():
+                return cleaned_data
+
+            # Check if study_site is one of representative's study_sites
+            if study_site not in representative.study_sites.all():
+                raise ValidationError("The study site must be one of the representative's study sites.")
+
+        return cleaned_data
 
 
 class DataAffiliateAgreementForm(Bootstrap5MediaFormMixin, forms.ModelForm):
