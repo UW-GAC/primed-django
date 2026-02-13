@@ -45,7 +45,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==5.2.10
+django==5.2.11
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
