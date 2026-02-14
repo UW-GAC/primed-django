@@ -66,7 +66,7 @@ class MemberAgreementFactory(DjangoModelFactory):
 
     @post_generation
     def add_study_site_to_representative(self, create, extracted, **kwargs):
-        #Add the study_site to the representative's study_sites.
+        # Add the study_site to the representative's study_sites.
         if not create:
             # Simple build, do nothing.
             return
