@@ -44,9 +44,9 @@ class SignedAgreementTable(tables.Table):
         accessor="anvil_access_group__groupaccountmembership_set__count",
     )
     agreement_group = tables.Column(
-        linkify=lambda record: record.agreement_group.get_absolute_url()
-        if hasattr(record.agreement_group, "get_absolute_url")
-        else None
+        linkify=lambda record: (
+            record.agreement_group.get_absolute_url() if hasattr(record.agreement_group, "get_absolute_url") else None
+        )
     )
     version = tables.Column(linkify=True)
 

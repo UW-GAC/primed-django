@@ -75,9 +75,9 @@ class DataAffiliateAgreementFactory(DjangoModelFactory):
     anvil_upload_group = SubFactory(
         ManagedGroupFactory,
         name=LazyAttribute(
-            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX
-            + "_CDSA_UPLOAD_"
-            + str(o.factory_parent.signed_agreement.cc_id)
+            lambda o: (
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX + "_CDSA_UPLOAD_" + str(o.factory_parent.signed_agreement.cc_id)
+            )
         ),
     )
 
