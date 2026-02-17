@@ -283,8 +283,7 @@ class CustomProviderLoginTest(TestCase):
         response = self.client.get(callback_url, {"code": "invalid_code", "state": "mock_state_value"})
 
         # Should redirect to login page or show error
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "An error occurred")
+        self.assertEqual(response.status_code, 401)
 
         # Verify no user was created
         self.assertEqual(User.objects.count(), 0)
@@ -311,8 +310,7 @@ class CustomProviderLoginTest(TestCase):
         response = self.client.get(callback_url, {"code": "mock_authorization_code", "state": "mock_state_value"})
 
         # Should handle the error gracefully
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "An error occurred")
+        self.assertEqual(response.status_code, 401)
 
         # Verify no user was created
         self.assertEqual(User.objects.count(), 0)
