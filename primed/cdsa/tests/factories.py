@@ -78,6 +78,7 @@ class MemberAgreementFactory(DjangoModelFactory):
         model = models.MemberAgreement
         skip_postgeneration_save = True
 
+
 class DataAffiliateAgreementFactory(DjangoModelFactory):
     signed_agreement = SubFactory(SignedAgreementFactory, type=models.SignedAgreement.DATA_AFFILIATE)
     study = SubFactory(StudyFactory)
