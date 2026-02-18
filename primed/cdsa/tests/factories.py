@@ -66,12 +66,13 @@ class MemberAgreementFactory(DjangoModelFactory):
 
     @post_generation
     def add_study_site_to_representative(self, create, extracted, **kwargs):
-        # Add the study_site to the representative's study_sites.
+        # check and add study site to representative study sites
         if not create:
             # Simple build, do nothing.
             return
-        # Add the study site to the representative
-        self.signed_agreement.representative.study_sites.add(self.study_site)
+        # Add the study site to the representative if not already associated with this study site
+        if self.study_site not in self.signed_agreement.representative.study_sites.all():
+            self.signed_agreement.representative.study_sites.add(self.study_site)
 
     class Meta:
         model = models.MemberAgreement
