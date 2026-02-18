@@ -64,8 +64,19 @@ class MemberAgreementFactory(DjangoModelFactory):
     study_site = SubFactory(StudySiteFactory)
     is_primary = True
 
+    @post_generation
+    def add_study_site_to_representative(self, create, extracted, **kwargs):
+        # check and add study site to representative study sites
+        if not create:
+            # Simple build, do nothing.
+            return
+        # Add the study site to the representative if not already associated with this study site
+        if self.study_site not in self.signed_agreement.representative.study_sites.all():
+            self.signed_agreement.representative.study_sites.add(self.study_site)
+
     class Meta:
         model = models.MemberAgreement
+        skip_postgeneration_save = True
 
 
 class DataAffiliateAgreementFactory(DjangoModelFactory):

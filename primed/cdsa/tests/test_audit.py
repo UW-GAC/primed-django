@@ -304,6 +304,63 @@ class SignedAgreementAccessAuditTest(TestCase):
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
         self.assertEqual(record.note, cdsa_audit.INACTIVE_AGREEMENT)
 
+    def test_member_primary_study_site_match(self):
+        """Member primary agreement with study site match."""
+        study_site = StudySiteFactory.create()
+        representative = UserFactory.create()
+        representative.study_sites.add(study_site)
+        this_agreement = factories.MemberAgreementFactory.create(
+            study_site=study_site,
+            signed_agreement__representative=representative,
+        )
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        # No error from study site check
+        self.assertEqual(len(cdsa_audit.errors), 0)
+
+    def test_member_primary_representative_has_no_study_sites(self):
+        """Member primary agreement when representative has no study sites."""
+        study_site = StudySiteFactory.create()
+        representative = UserFactory.create()
+        this_agreement = factories.MemberAgreementFactory.create(
+            study_site=study_site,
+            signed_agreement__representative=representative,
+        )
+        # Override the representative's study sites to none
+        this_agreement.signed_agreement.representative.study_sites.set([])
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 1)
+        record = cdsa_audit.errors[0]
+        self.assertIsInstance(record, signed_agreement_audit.OtherError)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.REPRESENTATIVE_STUDY_SITE_MISMATCH)
+
+    def test_member_primary_study_site_mismatch(self):
+        """Member primary agreement with study site mismatch."""
+        study_site_1 = StudySiteFactory.create()
+        study_site_2 = StudySiteFactory.create()
+        representative = UserFactory.create()
+        # Create agreement for study_site_2
+        this_agreement = factories.MemberAgreementFactory.create(
+            study_site=study_site_2,
+            signed_agreement__representative=representative,
+        )
+        # Override the representative's study sites to associated with only study_site_1
+        this_agreement.signed_agreement.representative.study_sites.set([study_site_1])
+
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 1)
+        record = cdsa_audit.errors[0]
+        self.assertIsInstance(record, signed_agreement_audit.OtherError)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.REPRESENTATIVE_STUDY_SITE_MISMATCH)
+
     def test_member_component_has_primary_in_group(self):
         """Member component agreement, with valid version, with primary with valid version, in CDSA group."""
         study_site = StudySiteFactory.create()
@@ -663,6 +720,71 @@ class SignedAgreementAccessAuditTest(TestCase):
         self.assertIsInstance(record, signed_agreement_audit.VerifiedNoAccess)
         self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
         self.assertEqual(record.note, cdsa_audit.NO_PRIMARY_AGREEMENT)
+
+    def test_member_component_study_site_match(self):
+        """Member component agreement with study site match."""
+        study_site = StudySiteFactory.create()
+        factories.MemberAgreementFactory.create(study_site=study_site)
+        representative = UserFactory.create()
+        representative.study_sites.add(study_site)
+        this_agreement = factories.MemberAgreementFactory.create(
+            is_primary=False,
+            study_site=study_site,
+            signed_agreement__representative=representative,
+        )
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        # No error from study site check
+        self.assertEqual(len(cdsa_audit.errors), 0)
+
+    def test_member_component_representative_has_no_study_sites(self):
+        """Member component agreement when representative has no study sites."""
+        study_site = StudySiteFactory.create()
+        factories.MemberAgreementFactory.create(study_site=study_site)
+        representative = UserFactory.create()
+        this_agreement = factories.MemberAgreementFactory.create(
+            is_primary=False,
+            study_site=study_site,
+            signed_agreement__representative=representative,
+        )
+        # Override the representative's study sites to none
+        this_agreement.signed_agreement.representative.study_sites.set([])
+
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 1)
+        record = cdsa_audit.errors[0]
+        self.assertIsInstance(record, signed_agreement_audit.OtherError)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.REPRESENTATIVE_STUDY_SITE_MISMATCH)
+
+    def test_member_component_study_site_mismatch(self):
+        """Member component agreement with study site mismatch."""
+        study_site_1 = StudySiteFactory.create()
+        study_site_2 = StudySiteFactory.create()
+        # Create primary for study_site_2
+        factories.MemberAgreementFactory.create(study_site=study_site_2)
+        representative = UserFactory.create()
+        # Create component agreement for study_site_2
+        this_agreement = factories.MemberAgreementFactory.create(
+            is_primary=False,
+            study_site=study_site_2,
+            signed_agreement__representative=representative,
+        )
+        # Override the representative's study sites to associated with only study_site_1
+        this_agreement.signed_agreement.representative.study_sites.set([study_site_1])
+
+        cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
+        cdsa_audit._audit_signed_agreement(this_agreement.signed_agreement)
+        self.assertEqual(len(cdsa_audit.verified), 0)
+        self.assertEqual(len(cdsa_audit.needs_action), 0)
+        self.assertEqual(len(cdsa_audit.errors), 1)
+        record = cdsa_audit.errors[0]
+        self.assertIsInstance(record, signed_agreement_audit.OtherError)
+        self.assertEqual(record.signed_agreement, this_agreement.signed_agreement)
+        self.assertEqual(record.note, cdsa_audit.REPRESENTATIVE_STUDY_SITE_MISMATCH)
 
     def test_data_affiliate_primary_in_group(self):
         """Member primary agreement with valid version in CDSA group."""
