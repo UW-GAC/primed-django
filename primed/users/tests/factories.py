@@ -39,9 +39,8 @@ class UserFactory(DjangoModelFactory):
             # Simple build, or nothing to add, do nothing.
             return
 
-        print(extracted)
         # Add the iterable of groups using bulk addition
-        # self.study_sites.add(*extracted)
+        self.study_sites.add(*extracted)
 
 
 class GroupFactory(DjangoModelFactory):
