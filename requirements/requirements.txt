@@ -39,7 +39,7 @@ crispy-bootstrap5==2025.6
     #   django-anvil-consortium-manager
 cryptography==46.0.5
     # via -r requirements/requirements.in
-django==5.2.10
+django==5.2.11
     # via
     #   -r requirements/requirements.in
     #   crispy-bootstrap5
@@ -182,7 +182,7 @@ rsa==4.9
     # via google-auth
 six==1.16.0
     # via python-dateutil
-sqlparse==0.5.1
+sqlparse==0.5.4
     # via django
 tablib==3.9.0
     # via -r requirements/requirements.in
