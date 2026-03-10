@@ -1,4 +1,5 @@
 import argparse
+import json
 import re
 from dataclasses import dataclass, field
 
@@ -18,6 +19,18 @@ class dbGaPDAR:
     current_version: int
     current_status: str
 
+    def get_json(self):
+        return {
+            "DAC_abbrev": self.dac,
+            # "consent_string": self.full_consent,
+            "consent_abbrev": self.consent_abbreviation,
+            "consent_code": self.consent_code,
+            "DAR": self.id,
+            "current_version": self.current_version,
+            "current_DAR_status": self.current_status,
+            "was_approved": "unknown",
+        }
+
 
 @dataclass
 class dbGaPStudy:
@@ -27,6 +40,13 @@ class dbGaPStudy:
     participant_set: int
     dars: list[dbGaPDAR] = field(default_factory=list)
 
+    def get_json(self):
+        return {
+            "study_name": self.name,
+            "study_accession": f"phs{self.phs:06d}",
+            "requests": [x.get_json() for x in self.dars],
+        }
+
 
 @dataclass
 class dbGaPApplication:
@@ -35,7 +55,7 @@ class dbGaPApplication:
     pi_name: str = None
     project_id: int = None
     project_closed: str = None
-    studies: list[dbGaPStudy] = field(default_factory=list)
+    studies: dict[str, dbGaPStudy] = field(default_factory=dict)
     html: str = None
     verbose: bool = True
 
@@ -75,12 +95,140 @@ class dbGaPApplication:
             raise ValueError("Could not parse project id from html")
         return int(match.group(1))
 
-    def add_dar(self, table_row_dict):
-        """Add a DAR to the application based on a dict of values from the HTML table.
+    def _parse_study_consent_string(self, study_consent_string):
+        """Parse the "Study, Consent" field from the DAR table and extract relevant information.
 
         Args:
-            table_row_dict (dict): A dict containing the values from a row of the DAR table in the HTML.
+            study_consent_string (str): The string from the "Study, Consent" field in the DAR table.
+
+        Returns: A re.match object with the following groups:
+            - study_name
+            - phs
+            - phs_version
+            - phs_participant_set
+            - phs_consent_code
+            - dac
         """
+        pattern = r"(?P<study_name>.+?)\n +\(phs\d{6}\.v\d{1,}\.p\d{1,}\)\n +\n(?P<consent_string>.+)\n.+\(phs(?P<phs>\d{6})\.v(?P<phs_version>\d{1,})\.p(?P<phs_participant_set>\d{1,})\.c(?P<phs_consent_code>\d{1,})\)\, (?P<dac>.+)"  # noqa: E501
+        match = re.search(pattern, study_consent_string)
+        if match is None:
+            raise ValueError(f"Could not parse Study, Consent field: {study_consent_string}")
+        d = match.groupdict()
+        d["phs"] = int(d["phs"])
+        d["phs_version"] = int(d["phs_version"])
+        d["phs_participant_set"] = int(d["phs_participant_set"])
+        d["phs_consent_code"] = int(d["phs_consent_code"])
+        d["consent_string"] = d["consent_string"].strip()
+        d["dac"] = d["dac"].strip()
+        return d
+
+    def _get_or_add_dbgap_study(self, phs, study_name, version, participant_set):
+        """Get an existing study or create a new one."""
+        phs_string = f"phs{phs:06d}"
+        try:
+            dbgap_study = self.studies[phs_string]
+        except KeyError:
+            dbgap_study = dbGaPStudy(phs=phs, name=study_name, version=version, participant_set=participant_set)
+            self.studies[phs_string] = dbgap_study
+            if self.verbose:
+                print(f"- {phs_string}: created new study for {study_name}")
+        else:
+            # If the record exists, check that the information has not changed.
+            if dbgap_study.name != study_name:
+                raise ValueError(f"Study name mismatch for {phs_string}: {dbgap_study.name} != {study_name}")
+            if dbgap_study.version != version:
+                raise ValueError(f"Study version mismatch for {phs_string}: {dbgap_study.version} != {version}")
+            if dbgap_study.participant_set != participant_set:
+                raise ValueError(
+                    f"Participant set mismatch for {phs_string}: {dbgap_study.participant_set} != {participant_set}"
+                )
+        return dbgap_study
+
+    def _get_dar_status(self, status_string):
+        # Set current DAR status.
+        if "approved" in status_string.lower():
+            return "approved"
+        elif "expired" in status_string.lower():
+            return "expired"
+        elif "rejected" in status_string.lower():
+            return "rejected"
+        elif "closed" in status_string.lower():
+            return "closed"
+        elif "new" in status_string.lower():
+            return "new"
+        else:
+            raise ValueError(f"Unknown DAR status: {status_string}")
+
+    def _add_dar(self, table_row, table_header):
+        """Add a DAR to the application based on the row of the HTML DAR table.
+
+        Args:
+            table_row (bs4.element.Tag): A BeautifulSoup tag representing a row in the DAR table.
+            table_header (list): A list of BeautifulSoup tags representing the header cells in the DAR table.
+        """
+        # First, create a dictionary mapping for this row.
+        d = {}
+        keys = [x.text.strip() for x in table_header]
+        tds = [x.text.strip() for x in table_row.find_all("td")]
+        for i, td in enumerate(tds):
+            # Replace non-breaking space with regular space.
+            d[keys[i]] = td.replace("\xa0", " ")  # .replace("\n", ";")
+
+        # Parse out specific information from the "Study, Consent" field
+        # groups: study_name, phs, phs_version, phs_participant_set_version, phs_consent_code, dac
+        matches = self._parse_study_consent_string(d["Study, Consent"])
+
+        # If needed, add the associated accession to the application.
+        dbgap_study = self._get_or_add_dbgap_study(
+            phs=matches["phs"],
+            study_name=matches["study_name"],
+            version=matches["phs_version"],
+            participant_set=matches["phs_participant_set"],
+        )
+
+        # Now add the DAR to this study.
+        this_dar = dbGaPDAR(
+            id=int(d["DAR #"].split("-")[0]),
+            dac=matches["dac"],
+            full_consent=matches["consent_string"],
+            consent_abbreviation="",
+            consent_code=matches["phs_consent_code"],
+            current_version=int(d["DAR #"].split("-")[1]),
+            current_status=self._get_dar_status(d["Status"]),
+        )
+
+        if self.verbose:
+            print(f"  - DAR {this_dar.id}")
+        dbgap_study.dars.append(this_dar)
+
+        return this_dar
+
+    def populate_studies_and_dars(self):
+        """Populate the studies and dars for this application by parsing the DAR table in the HTML."""
+        if self.verbose:
+            print("Populating studies and DARs...")
+        # First, get the table with DAR information. It should be the only table on the page.
+        tables = self.html.find_all("table")
+        assert len(tables) == 1
+        table = tables[0]
+        # Save the header and the rows separately, as we'll be using them to add dars one by one.
+        table_header = table.find("thead").find_all("th")
+        table_rows = table.find("tbody").find_all("tr")
+        for row in table_rows:
+            self._add_dar(row, table_header)
+
+    def get_json(self):
+        return {
+            "Project_id": self.project_id,
+            "PI_name": self.pi_name,
+            "Project_closed": "unknown",
+            "studies": [x.get_json() for x in self.studies.values()],
+        }
+
+    def write_json(self, output_file):
+        """Write the application information to a json file."""
+        with open(output_file, "w") as json_file:
+            json.dump(self.get_json(), json_file, indent=4)
 
 
 if __name__ == "__main__":
@@ -91,164 +239,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     application = dbGaPApplication(args.mhtml)
-
-# def parse_html(mhtml_file):
-#     html_content = convert_mhtml(mhtml_file)
-#     return BeautifulSoup(html_content, "html.parser")
-
-
-# def get_consent_mapping_for_study(phs, version):
-#     url = "https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/phs{:06.0f}.v{}/summary".format(phs, version)
-#     response = requests.get(url)
-#     mapping = response.json()["study"]["consent_groups"]
-#     return mapping
-
-
-# def get_dar_list_from_html(soup):
-
-#     # Get the table with DAR info.
-#     table = soup.find("table")
-#     table_header = table.find("thead").find_all("th")
-#     table_rows = table.find("tbody").find_all("tr")
-
-#     # Get the column names in a readable format, ignore HTML attributes and whitespace.
-#     keys = [x.text.strip() for x in table_header]
-
-#     phs_dac_pattern = r"\((phs\d{6})\.v(\d+?).p(\d+?).c(\d+?)\), (.+)"
-
-#     # Now loop over the table rows and create a list of dicts.
-#     data = []
-#     for row in table_rows:
-#         row_dict = {}
-#         tds = [x.text.strip() for x in row.find_all("td")]
-#         for i, td in enumerate(tds):
-#             # Replace non-breaking space with regular space.
-#             # Replace newlines with semicolons
-#             row_dict[keys[i]] = td.replace("\xa0", " ")  # .replace("\n", ";")
-#         # Now parse out more specific information from the "Study, Consent" field.
-#         tmp = [x.strip() for x in row_dict["Study, Consent"].split("\n")]
-#         d = {}
-#         d["study_name"] = tmp[0]
-#         d["consent_string"] = tmp[3]
-#         # Now try regex matching...
-#         match = re.match(phs_dac_pattern, tmp[4])
-#         if match is None:
-#             raise ValueError(f"Could not parse row: {row}")
-#         d["phs"] = match.group(1)
-#         d["phs_version"] = int(match.group(2))
-#         d["phs_participant_set_version"] = int(match.group(3))
-#         d["phs_consent_code"] = int(match.group(4))
-#         d["dac"] = match.group(5)
-#         # Now split the DAR string into the id and the version.
-#         tmp = row_dict["DAR #"].split("-")
-#         assert len(tmp) == 2
-#         d["dar_id"] = int(tmp[0])
-#         d["dar_version"] = int(tmp[1])
-#         row_dict.update(d)
-#         data.append(row_dict)
-
-#     return data
-
-
-# def reformat_dar_list_by_study(data):
-#     # Now we will loop over accessions and create a new dict with the relevant DARs for that phs.
-#     study_dict = {}
-#     for row in data:
-#         phs = row["phs"]
-#         if phs not in study_dict:
-#             d = {
-#                 "study_name": row["study_name"],
-#                 "study_accession": row["phs"],
-#                 "phs_version": row["phs_version"],
-#                 "requests": [],
-#             }
-#         else:
-#             d = study_dict[phs]
-#             # Verify that the study name is the same across rows with the same phs.
-#             assert row["study_name"] == d["study_name"]
-#             assert row["phs"] == d["study_accession"]
-#         # Now add the DAR info.
-#         dar_dict = {}
-#         dar_dict["DAC_abbrev"] = row["dac"]
-#         dar_dict["consent_string"] = row["consent_string"]
-#         dar_dict["consent_abbrev"] = ""  # Needs to be created from consent_string, but not sure how to do that yet.
-#         dar_dict["consent_code"] = row["phs_consent_code"]
-#         dar_dict["DAR"] = row["dar_id"]
-#         dar_dict["current_version"] = row["dar_version"]
-#         # Set current DAR status.
-#         if "approved" in row["Status"].lower():
-#             dar_dict["current_DAR_status"] = "approved"
-#         elif "expired" in row["Status"].lower():
-#             dar_dict["current_DAR_status"] = "expired"
-#         elif "rejected" in row["Status"].lower():
-#             dar_dict["current_DAR_status"] = "rejected"
-#         elif "closed" in row["Status"].lower():
-#             dar_dict["current_DAR_status"] = "closed"
-#         elif "new" in row["Status"].lower():
-#             dar_dict["current_DAR_status"] = "new"
-#         else:
-#             raise ValueError(f"Unknown DAR status: {row['Status']}")
-#         dar_dict["was_approved"] = "unknown"
-#         d["requests"].append(dar_dict)
-#         study_dict.update({phs: d})
-#     # Extract the values - we don't care about the key/mapping anymore.
-#     return [x for x in study_dict.values()]
-
-
-# def add_consent_abbreviation(study_dict):
-
-#     pass
-
-
-# def get_project_id_from_html(soup):
-#     # Get the project id.
-#     elements = soup.find_all("h2")
-#     assert len(elements) == 1
-#     elements[0].text
-#     pattern = r"#(\d{5}):"
-#     match = re.search(pattern, elements[0].text)
-#     if match is None:
-#         raise ValueError("Could not parse project id from html")
-#     project_id = int(match.group(1))
-#     return project_id
-
-
-# def get_pi_name_from_html(soup):
-#     x = soup(text=re.compile("Principal Investigator's"))
-#     assert len(x) == 1
-#     pi_name = x[0].parent.parent.text.replace("\xa0", " ").split(": ")[1].strip()
-#     return pi_name
-
-
-# if __name__ == "__main__":
-#     # Parse command line arguments.
-#     parser = argparse.ArgumentParser(description="Parse DAR info from an mhtml file.")
-#     parser.add_argument("--mhtml", type=str, help="Path to the mhtml file to parse.")
-#     parser.add_argument("--output", type=str, help="Path to the output json file.")
-#     args = parser.parse_args()
-
-#     # Convert the mhtml and read the converting html.
-#     mhtml_file = args.mhtml
-#     soup = parse_html(mhtml_file)
-
-#     # Extract and process DARs to match the expected json format.
-#     dars = get_dar_list_from_html(soup)
-#     dars_by_study = reformat_dar_list_by_study(dars)
-#     dars_by_study_with_consent_abbreviation = add_consent_abbreviation(dars_by_study)
-
-#     # Extract other relevant information for creating the json.
-#     pi_name = get_pi_name_from_html(soup)
-#     project_id = get_project_id_from_html(soup)
-
-#     # Finally, create the json output.
-#     x = {
-#         "Project_id": project_id,
-#         "PI_name": pi_name,
-#         "Project_closed": "unknown",
-#         "studies": [x for x in dars_by_study_with_consent_abbreviation.values()],
-#     }
-
-#     # Write the json to a file.
-#     output_file = args.output
-#     with open(output_file, "w") as json_file:
-#         json.dump(x, json_file, indent=4)
+    application.populate_studies_and_dars()
+    application.write_json(args.output)
