@@ -51,10 +51,12 @@ class dbGaPApplication:
         return self.__str__()
 
     def _convert_mhtml(self):
+        """Convert the mhtml file to html and return a BeautifulSoup object."""
         html_content = convert_mhtml(self.mhtml_file)
         return BeautifulSoup(html_content, "html.parser")
 
     def _get_pi_name(self):
+        """Extract the PI name from the html."""
         x = self.html(text=re.compile("Principal Investigator's"))
         assert len(x) == 1
         if self.verbose:
@@ -62,6 +64,7 @@ class dbGaPApplication:
         return x[0].parent.parent.text.replace("\xa0", " ").split(": ")[1].strip()
 
     def _get_project_id(self):
+        """Extract the project ID from the html."""
         elements = self.html.find_all("h2")
         assert len(elements) == 1
         if self.verbose:
@@ -71,6 +74,13 @@ class dbGaPApplication:
         if match is None:
             raise ValueError("Could not parse project id from html")
         return int(match.group(1))
+
+    def add_dar(self, table_row_dict):
+        """Add a DAR to the application based on a dict of values from the HTML table.
+
+        Args:
+            table_row_dict (dict): A dict containing the values from a row of the DAR table in the HTML.
+        """
 
 
 if __name__ == "__main__":
