@@ -1,0 +1,8 @@
+-c requirements.txt
+-c test-requirements.txt
+-c dev-requirements.txt
+
+requests
+beautifulsoup4
+mhtml-to-html-py
+lxml # XML parser for BeautifulSoup4
