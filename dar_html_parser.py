@@ -3,8 +3,7 @@ import json
 import re
 from dataclasses import dataclass, field
 
-# import json
-# import requests
+import requests
 from bs4 import BeautifulSoup
 from mhtml_converter import convert_mhtml
 
@@ -14,16 +13,22 @@ class dbGaPDAR:
     id: int
     dac: str
     full_consent: str
-    consent_abbreviation: str
     consent_code: int
     current_version: int
     current_status: str
 
-    def get_json(self):
+    def get_json(self, consent_map):
+        try:
+            this_code = consent_map[self.consent_code]
+        except KeyError:
+            print(f"Could not find consent code {self.consent_code} in consent map for DAR {self.id}")
+            raise
+        # Check that the full string matches, ignoring case.
+        if self.full_consent.lower() != this_code.get("name").lower():
+            raise ValueError(f"Consent string mismatch for code {self.consent_code} (DAR {self.id})")
         return {
             "DAC_abbrev": self.dac,
-            # "consent_string": self.full_consent,
-            "consent_abbrev": self.consent_abbreviation,
+            "consent_abbrev": this_code.get("short_name"),
             "consent_code": self.consent_code,
             "DAR": self.id,
             "current_version": self.current_version,
@@ -39,13 +44,71 @@ class dbGaPStudy:
     version: int
     participant_set: int
     dars: list[dbGaPDAR] = field(default_factory=list)
+    consent_code_map: list[dict] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.consent_code_map = self._get_consent_code_map()
+
+    def _get_consent_code_map(self):
+        # First, check if we've hardcoded any overrides.
+        map = self._get_consent_code_map_hardcoded()
+        # Parsing the XML is faster, so we'll try that first.
+        if not map:
+            try:
+                map = self._get_consent_code_map_from_xml()
+            except requests.HTTPError:
+                map = self._get_consent_code_map_from_api()
+        return map
+
+    def _get_consent_code_map_hardcoded(self):
+        # A place we can hard-code consent code mappings if needed.
+        return None
+
+    def _get_consent_code_map_from_api(self):
+        url = f"https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/phs{self.phs:06d}.v{self.version}/summary"
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()["study"]["consent_groups"]
+
+    def _get_consent_code_map_from_xml(self):
+        full_accession_string = f"phs{self.phs:06d}.v{self.version}.p{self.participant_set}"
+        url = f"https://ftp.ncbi.nlm.nih.gov/dbgap/studies/phs{self.phs:06d}/{full_accession_string}/GapExchange_{full_accession_string}.xml"
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "xml")
+        d = {}
+        # First look at the ConsentGroup elements.
+        consent_group_elements = soup.find_all("ConsentGroup")
+        for x in consent_group_elements:
+            d[int(x.attrs.get("groupNum"))] = {
+                "name": x.attrs.get("longName"),
+                "short_name": x.attrs.get("shortName"),
+            }
+        # THen look at the ParticipantSet elements, and add those that don't exist.
+        consent_group_elements = soup.find_all("ParticipantSet")
+        for x in consent_group_elements:
+            try:
+                mapping = d[int(x.attrs.get("groupNum-REF"))]
+            except KeyError:
+                # Add the new code
+                d[int(x.attrs.get("groupNum-REF"))] = {
+                    "name": x.find("ConsentName").text,
+                    "short_name": x.find("ConsentAbbrev").text,
+                }
+            else:
+                # Make sure the other strings match.
+                assert mapping["short_name"] == x.find("ConsentAbbrev").text
+
+        return d
 
     def get_json(self):
-        return {
-            "study_name": self.name,
-            "study_accession": f"phs{self.phs:06d}",
-            "requests": [x.get_json() for x in self.dars],
-        }
+        return [
+            {
+                "study_name": self.name,
+                "study_accession": f"phs{self.phs:06d}",
+                "requests": [x.get_json(self.consent_code_map) for x in self.dars],
+            }
+        ]
 
 
 @dataclass
@@ -191,7 +254,6 @@ class dbGaPApplication:
             id=int(d["DAR #"].split("-")[0]),
             dac=matches["dac"],
             full_consent=matches["consent_string"],
-            consent_abbreviation="",
             consent_code=matches["phs_consent_code"],
             current_version=int(d["DAR #"].split("-")[1]),
             current_status=self._get_dar_status(d["Status"]),
@@ -203,7 +265,7 @@ class dbGaPApplication:
 
         return this_dar
 
-    def populate_studies_and_dars(self):
+    def populate_studies_and_dars(self, n_dars=None):
         """Populate the studies and dars for this application by parsing the DAR table in the HTML."""
         if self.verbose:
             print("Populating studies and DARs...")
@@ -214,7 +276,11 @@ class dbGaPApplication:
         # Save the header and the rows separately, as we'll be using them to add dars one by one.
         table_header = table.find("thead").find_all("th")
         table_rows = table.find("tbody").find_all("tr")
-        for row in table_rows:
+        for i, row in enumerate(table_rows):
+            if i == n_dars:
+                if self.verbose:
+                    print(f"Reached n_dars={n_dars}, stopping parsing of DARs.")
+                break
             self._add_dar(row, table_header)
 
     def get_json(self):
@@ -236,8 +302,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse DAR info from an mhtml file.")
     parser.add_argument("--mhtml", type=str, help="Path to the mhtml file to parse.")
     parser.add_argument("--output", type=str, help="Path to the output json file.")
+    parser.add_argument("--n-dars", type=int, default=None, help="Number of DARs to populate for; None means all DARs.")
     args = parser.parse_args()
 
     application = dbGaPApplication(args.mhtml)
-    application.populate_studies_and_dars()
+    application.populate_studies_and_dars(n_dars=args.n_dars)
     application.write_json(args.output)
