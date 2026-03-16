@@ -102,13 +102,11 @@ class dbGaPStudy:
         return d
 
     def get_json(self):
-        return [
-            {
-                "study_name": self.name,
-                "study_accession": f"phs{self.phs:06d}",
-                "requests": [x.get_json(self.consent_code_map) for x in self.dars],
-            }
-        ]
+        return {
+            "study_name": self.name,
+            "study_accession": f"phs{self.phs:06d}",
+            "requests": [x.get_json(self.consent_code_map) for x in self.dars],
+        }
 
 
 @dataclass
@@ -284,12 +282,14 @@ class dbGaPApplication:
             self._add_dar(row, table_header)
 
     def get_json(self):
-        return {
-            "Project_id": self.project_id,
-            "PI_name": self.pi_name,
-            "Project_closed": "unknown",
-            "studies": [x.get_json() for x in self.studies.values()],
-        }
+        return [
+            {
+                "Project_id": self.project_id,
+                "PI_name": self.pi_name,
+                "Project_closed": "unknown",
+                "studies": [x.get_json() for x in self.studies.values()],
+            }
+        ]
 
     def write_json(self, output_file):
         """Write the application information to a json file."""
