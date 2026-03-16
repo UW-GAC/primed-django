@@ -317,7 +317,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     application = dbGaPApplication(args.mhtml)
-    application.populate_studies_and_dars(n_dars=args.n_dars)
-    application.write_json(args.output_json)
     if args.output_html:
         application.write_html(args.output_html)
+
+    application.populate_studies_and_dars(n_dars=args.n_dars)
+    application.write_json(args.output_json)
