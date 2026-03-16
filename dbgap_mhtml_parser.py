@@ -296,15 +296,28 @@ class dbGaPApplication:
         with open(output_file, "w") as json_file:
             json.dump(self.get_json(), json_file, indent=4)
 
+    def write_html(self, output_file):
+        """Write the application information to an html file."""
+        with open(output_file, "w") as html_file:
+            html_file.write(self.html.prettify())
+
 
 if __name__ == "__main__":
     # Parse command line arguments.
     parser = argparse.ArgumentParser(description="Parse DAR info from an mhtml file.")
     parser.add_argument("--mhtml", type=str, help="Path to the mhtml file to parse.")
-    parser.add_argument("--output", type=str, help="Path to the output json file.")
+    parser.add_argument("--output-json", type=str, help="Path to the output json file.")
+    parser.add_argument(
+        "--output-html",
+        type=str,
+        help="Path to the output html file. If None, no file will be written.",
+        default=None,
+    )
     parser.add_argument("--n-dars", type=int, default=None, help="Number of DARs to populate for; None means all DARs.")
     args = parser.parse_args()
 
     application = dbGaPApplication(args.mhtml)
     application.populate_studies_and_dars(n_dars=args.n_dars)
-    application.write_json(args.output)
+    application.write_json(args.output_json)
+    if args.output_html:
+        application.write_html(args.output_html)
