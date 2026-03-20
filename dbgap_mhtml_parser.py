@@ -207,9 +207,7 @@ class dbGaPApplication:
 
     def _get_dar_status(self, status_string):
         # Set current DAR status.
-        if "approved" in status_string.lower():
-            return "approved"
-        elif "expired" in status_string.lower():
+        if "expired" in status_string.lower():
             return "expired"
         elif "rejected" in status_string.lower():
             return "rejected"
@@ -217,6 +215,12 @@ class dbGaPApplication:
             return "closed"
         elif "new" in status_string.lower():
             return "new"
+        elif "rev. requested" in status_string.lower():
+            return "rejected"
+        elif "approved" in status_string.lower():
+            return "approved"
+        elif "granted" in status_string.lower():
+            return "approved"
         else:
             raise ValueError(f"Unknown DAR status: {status_string}")
 
