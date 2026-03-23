@@ -342,13 +342,14 @@ class SignedAgreementAccessAuditTest(TestCase):
         """Member primary agreement with study site mismatch."""
         study_site_1 = StudySiteFactory.create()
         study_site_2 = StudySiteFactory.create()
-        representative = UserFactory.create()
+        representative = UserFactory.create(study_sites=[study_site_1])
         # Create agreement for study_site_2
         this_agreement = factories.MemberAgreementFactory.create(
             study_site=study_site_2,
             signed_agreement__representative=representative,
         )
         # Override the representative's study sites to associated with only study_site_1
+        # This is necessary because the factory adds the study site to the representative by default.
         this_agreement.signed_agreement.representative.study_sites.set([study_site_1])
 
         cdsa_audit = signed_agreement_audit.SignedAgreementAccessAudit()
