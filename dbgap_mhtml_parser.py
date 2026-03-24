@@ -217,9 +217,7 @@ class dbGaPApplication:
             return "new"
         elif "rev. requested" in status_string.lower():
             return "rejected"
-        elif "approved" in status_string.lower():
-            return "approved"
-        elif "granted" in status_string.lower():
+        elif "approved" in status_string.lower() and "granted" in status_string.lower():
             return "approved"
         else:
             raise ValueError(f"Unknown DAR status: {status_string}")
