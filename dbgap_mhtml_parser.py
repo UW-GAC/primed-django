@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from mhtml_converter import convert_mhtml
 
 
@@ -16,6 +16,7 @@ class dbGaPDAR:
     consent_code: int
     current_version: int
     current_status: str
+    raw_html: Tag = None
 
     def get_json(self, consent_map):
         try:
@@ -119,6 +120,10 @@ class dbGaPApplication:
     studies: dict[str, dbGaPStudy] = field(default_factory=dict)
     html: str = None
     verbose: bool = True
+    html_table: BeautifulSoup = None
+    html_table_index_dar_id: int = None
+    html_table_index_dar_status: int = None
+    html_table_index_study_consent: int = None
 
     def __post_init__(self):
         self.html = self._convert_mhtml()
@@ -156,7 +161,7 @@ class dbGaPApplication:
             raise ValueError("Could not parse project id from html")
         return int(match.group(1))
 
-    def _parse_study_consent_string(self, study_consent_string):
+    def _parse_study_consent_string(self, study_consent_element):
         """Parse the "Study, Consent" field from the DAR table and extract relevant information.
 
         Args:
@@ -170,6 +175,7 @@ class dbGaPApplication:
             - phs_consent_code
             - dac
         """
+        study_consent_string = study_consent_element.text.strip().replace("\xa0", " ")
         pattern = r"(?P<study_name>.+?)\n +\(phs\d{6}\.v\d{1,}\.p\d{1,}\)\n +\n(?P<consent_string>.+)\n.+\(phs(?P<phs>\d{6})\.v(?P<phs_version>\d{1,})\.p(?P<phs_participant_set>\d{1,})\.c(?P<phs_consent_code>\d{1,})\)\, (?P<dac>.+)"  # noqa: E501
         match = re.search(pattern, study_consent_string)
         if match is None:
@@ -205,41 +211,61 @@ class dbGaPApplication:
                 )
         return dbgap_study
 
-    def _get_dar_status(self, status_string):
-        # Set current DAR status.
-        if "expired" in status_string.lower():
-            return "expired"
-        elif "rejected" in status_string.lower():
-            return "rejected"
-        elif "closed" in status_string.lower():
-            return "closed"
-        elif "new" in status_string.lower():
-            return "new"
-        elif "rev. requested" in status_string.lower():
-            return "rejected"
-        elif "approved" in status_string.lower() and "granted" in status_string.lower():
-            return "approved"
-        else:
-            raise ValueError(f"Unknown DAR status: {status_string}")
+    def _get_dar_status(self, status_element):
+        # First, parse out the class of the status element.
+        x = status_element.find_all("span", {"class": "status"})
+        assert len(x) == 1
+        # Parse out the classes and the text of the status element, and use those to determine the DAR status.
+        status_text = [y.strip().lower() for y in x[0].text.split("\n")]
+        status_text = set([y for y in status_text if len(y) > 0])
+        status_classes = x[0].attrs.get("class")
+        status_classes.remove("status")
+        status_classes = set(status_classes)
 
-    def _add_dar(self, table_row, table_header):
+        if self.verbose:
+            print("    - html:")
+            print("      - status text:", status_text)
+            print("      - status classes:", status_classes)
+
+        if status_classes == set(["approved"]) and status_text == set(["approved", "granted"]):
+            status = "approved"
+        elif status_classes == set(["rejected"]) and status_text == set(["rejected"]):
+            status = "rejected"
+        elif status_classes == set() and status_text == set(["closed"]):
+            status = "closed"
+        elif status_classes == set(["revision_requested"]) and status_text == set(["rev. requested", "expired"]):
+            status = "expired"
+        elif status_classes == set(["revision_requested"]) and status_text == set(["rev. requested"]):
+            status = "new"
+        elif status_classes == set(["staff_queued"]) and status_text == set(["dac review", "granted"]):
+            status = "approved"
+        else:
+            raise (ValueError("Unknown DAR status"))
+
+        if self.verbose:
+            print(f"    - parsed DAR status: {status}")
+        return status
+
+    def _set_html_table_indices(self):
+        table_header = self.html_table.find("thead").find_all("th")
+        header = [x.text.lower().strip() for x in table_header]
+
+        self.html_table_index_dar_id = header.index("dar #")
+        self.html_table_index_dar_status = header.index("status")
+        self.html_table_index_study_consent = header.index("study, consent")
+
+    def _add_dar(self, table_row):
         """Add a DAR to the application based on the row of the HTML DAR table.
 
         Args:
             table_row (bs4.element.Tag): A BeautifulSoup tag representing a row in the DAR table.
-            table_header (list): A list of BeautifulSoup tags representing the header cells in the DAR table.
         """
-        # First, create a dictionary mapping for this row.
-        d = {}
-        keys = [x.text.strip() for x in table_header]
-        tds = [x.text.strip() for x in table_row.find_all("td")]
-        for i, td in enumerate(tds):
-            # Replace non-breaking space with regular space.
-            d[keys[i]] = td.replace("\xa0", " ")  # .replace("\n", ";")
+
+        table_columns = table_row.find_all("td")
 
         # Parse out specific information from the "Study, Consent" field
         # groups: study_name, phs, phs_version, phs_participant_set_version, phs_consent_code, dac
-        matches = self._parse_study_consent_string(d["Study, Consent"])
+        matches = self._parse_study_consent_string(table_columns[self.html_table_index_study_consent])
 
         # If needed, add the associated accession to the application.
         dbgap_study = self._get_or_add_dbgap_study(
@@ -249,39 +275,50 @@ class dbGaPApplication:
             participant_set=matches["phs_participant_set"],
         )
 
+        # Get the DAR identifier and version.
+        dar_id_and_version = table_columns[self.html_table_index_dar_id].text.strip()
+        dar_id = dar_id_and_version.split("-")[0]
+        dar_version = dar_id_and_version.split("-")[1]
+
+        if self.verbose:
+            print(f"  - DAR {dar_id}")
+
+        # Get the status of this DAR.
+        dar_status = self._get_dar_status(table_columns[self.html_table_index_dar_status])
+
         # Now add the DAR to this study.
         this_dar = dbGaPDAR(
-            id=int(d["DAR #"].split("-")[0]),
+            id=int(dar_id),
             dac=matches["dac"],
             full_consent=matches["consent_string"],
             consent_code=matches["phs_consent_code"],
-            current_version=int(d["DAR #"].split("-")[1]),
-            current_status=self._get_dar_status(d["Status"]),
+            current_version=int(dar_version),
+            current_status=dar_status,
+            raw_html=table_row,
         )
-
-        if self.verbose:
-            print(f"  - DAR {this_dar.id}")
         dbgap_study.dars.append(this_dar)
-
-        return this_dar
 
     def populate_studies_and_dars(self, n_dars=None):
         """Populate the studies and dars for this application by parsing the DAR table in the HTML."""
         if self.verbose:
             print("Populating studies and DARs...")
+
         # First, get the table with DAR information. It should be the only table on the page.
         tables = self.html.find_all("table")
         assert len(tables) == 1
-        table = tables[0]
-        # Save the header and the rows separately, as we'll be using them to add dars one by one.
-        table_header = table.find("thead").find_all("th")
-        table_rows = table.find("tbody").find_all("tr")
+        self.html_table = tables[0]
+
+        # Set the indices where we will look for specific information in the table rows.
+        self._set_html_table_indices()
+
+        # Each row in the table body represents a single DAR.
+        table_rows = self.html_table.find("tbody").find_all("tr")
         for i, row in enumerate(table_rows):
             if i == n_dars:
                 if self.verbose:
                     print(f"Reached n_dars={n_dars}, stopping parsing of DARs.")
                 break
-            self._add_dar(row, table_header)
+            self._add_dar(row)
 
     def get_json(self):
         return [
