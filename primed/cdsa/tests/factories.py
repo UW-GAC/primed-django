@@ -60,19 +60,16 @@ class SignedAgreementFactory(DjangoModelFactory):
 
 
 class MemberAgreementFactory(DjangoModelFactory):
-    signed_agreement = SubFactory(SignedAgreementFactory, type=models.SignedAgreement.MEMBER)
     study_site = SubFactory(StudySiteFactory)
+    signed_agreement = SubFactory(
+        SignedAgreementFactory,
+        type=models.SignedAgreement.MEMBER,
+        representative=SubFactory(
+            UserFactory,
+            study_sites=LazyAttribute(lambda user: [user.factory_parent.factory_parent.factory_parent.study_site]),
+        ),
+    )
     is_primary = True
-
-    @post_generation
-    def add_study_site_to_representative(self, create, extracted, **kwargs):
-        # check and add study site to representative study sites
-        if not create:
-            # Simple build, do nothing.
-            return
-        # Add the study site to the representative if not already associated with this study site
-        if self.study_site not in self.signed_agreement.representative.study_sites.all():
-            self.signed_agreement.representative.study_sites.add(self.study_site)
 
     class Meta:
         model = models.MemberAgreement
@@ -86,9 +83,9 @@ class DataAffiliateAgreementFactory(DjangoModelFactory):
     anvil_upload_group = SubFactory(
         ManagedGroupFactory,
         name=LazyAttribute(
-            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX
-            + "_CDSA_UPLOAD_"
-            + str(o.factory_parent.signed_agreement.cc_id)
+            lambda o: (
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX + "_CDSA_UPLOAD_" + str(o.factory_parent.signed_agreement.cc_id)
+            )
         ),
     )
 
