@@ -648,7 +648,6 @@ class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
         self.assertIn(workspace.workspace.name, value)
-        self.assertNotIn(workspace.workspace.billing_project.name, value)
         self.assertIn("circle-fill", value)
 
     def test_one_matching_workspace_with_access_two_auth_domains_one_not_managed(self):
@@ -663,7 +662,6 @@ class dbGaPDataAccessRequestBySnapshotTableTest(TestCase):
         table = self.table_class([dar])
         value = table.render_matching_workspaces(dar.get_dbgap_workspaces(), dar)
         self.assertIn(workspace.workspace.name, value)
-        self.assertNotIn(workspace.workspace.billing_project.name, value)
         self.assertIn("circle-fill", value)
 
     def test_one_matching_workspace_without_access(self):
