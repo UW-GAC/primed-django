@@ -18,18 +18,34 @@ class dbGaPDAR:
     current_status: str
     raw_html: Tag = None
 
-    def get_json(self, consent_map):
+    def _get_consent_abbreviation(self, consent_map):
         try:
             this_code = consent_map[self.consent_code]
         except KeyError:
             print(f"Could not find consent code {self.consent_code} in consent map for DAR {self.id}")
             raise
         # Check that the full string matches, ignoring case.
-        if self.full_consent.lower() != this_code.get("name").lower():
-            raise ValueError(f"Consent string mismatch for code {self.consent_code} (DAR {self.id})")
+        name_consent_group = this_code.get("name_consent_group")
+        name_participant_set = this_code.get("name_participant_set")
+        if name_consent_group and self.full_consent.lower() == name_consent_group.lower():
+            pass
+        elif name_participant_set and self.full_consent.lower() == name_participant_set.lower():
+            pass
+        else:
+            # Sometimes the string has the consent abbreviation in parentheses. Check that next.
+            full_consent_with_code = f"{self.full_consent} ({this_code.get('short_name')})"
+            if name_consent_group and full_consent_with_code.lower() == name_consent_group.lower():
+                pass
+            elif name_participant_set and full_consent_with_code.lower() == name_participant_set.lower():
+                pass
+            else:
+                raise ValueError(f"Consent string mismatch for code {self.consent_code} (DAR {self.id})")
+        return this_code.get("short_name")
+
+    def get_json(self, consent_map):
         return {
             "DAC_abbrev": self.dac,
-            "consent_abbrev": this_code.get("short_name"),
+            "consent_abbrev": self._get_consent_abbreviation(consent_map),
             "consent_code": self.consent_code,
             "DAR": self.id,
             "current_version": self.current_version,
@@ -77,30 +93,35 @@ class dbGaPStudy:
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "xml")
-        d = {}
+        consent_map = {}
         # First look at the ConsentGroup elements.
         consent_group_elements = soup.find_all("ConsentGroup")
         for x in consent_group_elements:
-            d[int(x.attrs.get("groupNum"))] = {
-                "name": x.attrs.get("longName"),
+            consent_map[int(x.attrs.get("groupNum"))] = {
+                "name_consent_group": x.attrs.get("longName"),
+                "name_participant_set": None,
                 "short_name": x.attrs.get("shortName"),
             }
+
         # THen look at the ParticipantSet elements, and add those that don't exist.
         consent_group_elements = soup.find_all("ParticipantSet")
         for x in consent_group_elements:
             try:
-                mapping = d[int(x.attrs.get("groupNum-REF"))]
+                mapping = consent_map[int(x.attrs.get("groupNum-REF"))]
             except KeyError:
                 # Add the new code
-                d[int(x.attrs.get("groupNum-REF"))] = {
-                    "name": x.find("ConsentName").text,
+                consent_map[int(x.attrs.get("groupNum-REF"))] = {
+                    "name_consent_group": None,
+                    "name_participant_set": x.find("ConsentName").text,
                     "short_name": x.find("ConsentAbbrev").text,
                 }
             else:
-                # Make sure the other strings match.
+                # Make sure the code matches.
                 assert mapping["short_name"] == x.find("ConsentAbbrev").text
+                # Store the full string for this consent group.
+                mapping["name_participant_set"] = x.find("ConsentName").text
 
-        return d
+        return consent_map
 
     def get_json(self):
         return {
