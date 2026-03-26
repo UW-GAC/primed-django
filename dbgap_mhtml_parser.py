@@ -298,7 +298,7 @@ class dbGaPApplication:
         )
         dbgap_study.dars.append(this_dar)
 
-    def populate_studies_and_dars(self, n_dars=None):
+    def populate_studies_and_dars(self, n_dars=None, phs=None):
         """Populate the studies and dars for this application by parsing the DAR table in the HTML."""
         if self.verbose:
             print("Populating studies and DARs...")
@@ -313,6 +313,10 @@ class dbGaPApplication:
 
         # Each row in the table body represents a single DAR.
         table_rows = self.html_table.find("tbody").find_all("tr")
+        if phs:
+            table_rows = [x for x in table_rows if f"(phs{int(phs):06d}." in x.text]
+            if self.verbose:
+                print(f"Filtered DARs to only those for phs{int(phs):06d}, {len(table_rows)} DARs remain.")
         for i, row in enumerate(table_rows):
             if i == n_dars:
                 if self.verbose:
@@ -353,11 +357,14 @@ if __name__ == "__main__":
         default=None,
     )
     parser.add_argument("--n-dars", type=int, default=None, help="Number of DARs to populate for; None means all DARs.")
+    parser.add_argument(
+        "--phs", type=int, default=None, help="Only parse DARs for this PHS accession (e.g. 93 for phs000093)."
+    )
     args = parser.parse_args()
 
     application = dbGaPApplication(args.mhtml)
     if args.output_html:
         application.write_html(args.output_html)
 
-    application.populate_studies_and_dars(n_dars=args.n_dars)
+    application.populate_studies_and_dars(n_dars=args.n_dars, phs=args.phs)
     application.write_json(args.output_json)
