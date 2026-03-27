@@ -152,13 +152,12 @@ class dbGaPAccessAudit(PRIMEDAudit):
     NO_SNAPSHOTS = "No snapshots for this application."
     NO_DAR = "No matching DAR."
     DAR_NOT_APPROVED = "DAR is not approved."
+    APP_SNAPSHOT_OLD = "dbGaP data access snapshot too old."
 
     # Allowed reasons to grant or remove access.
     NEW_APPROVED_DAR = "New approved DAR."
     NEW_WORKSPACE = "New workspace."
     PREVIOUS_APPROVAL = "Previously approved."
-
-    APP_SNAPSHOT_OLD = "dbGaP data access snapshot too old."
 
     # Unexpected.
     ERROR_HAS_ACCESS = "Has access for an unknown reason."
@@ -228,15 +227,6 @@ class dbGaPAccessAudit(PRIMEDAudit):
         snapshot_is_prior = app_snapshot.created.date() <= (
             timezone.localdate() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS)
         )
-        if snapshot_is_prior:
-            self.needs_action.append(
-                UpdateSnapshot(
-                    workspace=dbgap_workspace,
-                    dbgap_application=dbgap_application,
-                    note=self.APP_SNAPSHOT_OLD,
-                )
-            )
-            return
 
         try:
             # There should only be one DAR from this snapshot associated with a given workspace.
@@ -267,19 +257,40 @@ class dbGaPAccessAudit(PRIMEDAudit):
         # Is the dbGaP access group associated with the DAR in the auth domain of the workspace?
         # We'll need to know this for future checks.
         if dar.is_approved and in_auth_domain:
-            # Verified access!
-            self.verified.append(
-                VerifiedAccess(
-                    workspace=dbgap_workspace,
-                    dbgap_application=dbgap_application,
-                    data_access_request=dar,
-                    note=self.APPROVED_DAR,
+            if snapshot_is_prior:
+                self.needs_action.append(
+                    RemoveAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        data_access_request=dar,
+                        note=self.APP_SNAPSHOT_OLD,
+                    )
                 )
-            )
+                return
+            else:
+                # Verified access!
+                self.verified.append(
+                    VerifiedAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        data_access_request=dar,
+                        note=self.APPROVED_DAR,
+                    )
+                )
+
         elif dar.is_approved and not in_auth_domain:
+            if snapshot_is_prior:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        data_access_request=dar,
+                        note=self.APP_SNAPSHOT_OLD,
+                    )
+                )
             # Check why we should grant access.
             # Do we need to differentiate between NEW and UPDATED dars? I don't think so.
-            if dbgap_workspace.created > dar.dbgap_data_access_snapshot.created:
+            elif dbgap_workspace.created > dar.dbgap_data_access_snapshot.created:
                 self.needs_action.append(
                     GrantAccess(
                         workspace=dbgap_workspace,
