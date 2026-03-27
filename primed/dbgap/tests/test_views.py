@@ -5446,6 +5446,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
         self.assertIsInstance(audit_result, access_audit.UpdateSnapshot)
+        self.assertIsInstance(audit_result, access_audit.RemoveAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(
             audit_result.dbgap_application,
@@ -5457,7 +5458,7 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD,
         )
         # no action is present
-        self.assertIsNone(audit_result.action)
+        self.assertIsNotNone(audit_result.action)
 
     def test_post_verified_access(self):
         """post with VerifiedAccess audit result."""

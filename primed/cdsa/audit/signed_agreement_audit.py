@@ -113,6 +113,7 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
     # INVALID_AGREEMENT_VERSION = "CDSA version is not valid."
     NO_PRIMARY_AGREEMENT = "No primary CDSA for this group exists."
     PRIMARY_NOT_ACTIVE = "Primary agreement for this CDSA is not active."
+    REPRESENTATIVE_STUDY_SITE_MISMATCH = "Agreement study site does not match representative study site."
 
     # Other errors
     ERROR_OTHER_CASE = "Signed Agreement did not match any expected situations."
@@ -135,11 +136,24 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         """Audit a single component signed agreement.
 
         The following items are checked:
+        * if the representative's study_sites include the agreement study_site (only MemberAgreement)
         * if the primary agreement is active.
         * if the primary agreement is in the CDSA group.
 
         This audit does *not* check if the AgreementMajorVersion associated with the SignedAgreement is valid.
         """
+        if hasattr(signed_agreement, "memberagreement"):
+            representative = signed_agreement.representative
+            study_site = signed_agreement.memberagreement.study_site
+            if study_site not in representative.study_sites.all():
+                self.errors.append(
+                    OtherError(
+                        signed_agreement=signed_agreement,
+                        note=self.REPRESENTATIVE_STUDY_SITE_MISMATCH,
+                    )
+                )
+                return
+
         in_cdsa_group = signed_agreement.is_in_cdsa_group()
         is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
 
@@ -188,14 +202,27 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         """Audit a single component signed agreement.
 
         The following items are checked:
+        * If the representative's study_sites include the agreement study_site (only MemberAgreement)
         * If a primary agreement exists
-        # If the primary agreement is active
+        * If the primary agreement is active
         * if the component agreement is active
         * if the component agreement is in the CDSA group
 
         This audit does *not* check if the AgreementMajorVersion associated with either the
         SignedAgreement or its component is valid.
         """
+        if hasattr(signed_agreement, "memberagreement"):
+            representative = signed_agreement.representative
+            study_site = signed_agreement.memberagreement.study_site
+            if study_site not in representative.study_sites.all():
+                self.errors.append(
+                    OtherError(
+                        signed_agreement=signed_agreement,
+                        note=self.REPRESENTATIVE_STUDY_SITE_MISMATCH,
+                    )
+                )
+                return
+
         in_cdsa_group = signed_agreement.is_in_cdsa_group()
         is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
 

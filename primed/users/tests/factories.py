@@ -33,6 +33,15 @@ class UserFactory(DjangoModelFactory):
         django_get_or_create = ["username"]
         skip_postgeneration_save = True
 
+    @post_generation
+    def study_sites(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            # Simple build, or nothing to add, do nothing.
+            return
+
+        # Add the iterable of groups using bulk addition
+        self.study_sites.add(*extracted)
+
 
 class GroupFactory(DjangoModelFactory):
     name = Faker("name")

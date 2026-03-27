@@ -121,7 +121,7 @@ class Error(AccessAuditResult):
 
 
 @dataclass
-class UpdateSnapshot(AccessAuditResult):
+class UpdateSnapshot(RemoveAccess):
     """Audit results class for when date of last snapshot is more than 30 days old"""
 
     def __str__(self):
