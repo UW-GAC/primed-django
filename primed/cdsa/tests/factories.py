@@ -60,12 +60,20 @@ class SignedAgreementFactory(DjangoModelFactory):
 
 
 class MemberAgreementFactory(DjangoModelFactory):
-    signed_agreement = SubFactory(SignedAgreementFactory, type=models.SignedAgreement.MEMBER)
     study_site = SubFactory(StudySiteFactory)
+    signed_agreement = SubFactory(
+        SignedAgreementFactory,
+        type=models.SignedAgreement.MEMBER,
+        representative=SubFactory(
+            UserFactory,
+            study_sites=LazyAttribute(lambda user: [user.factory_parent.factory_parent.factory_parent.study_site]),
+        ),
+    )
     is_primary = True
 
     class Meta:
         model = models.MemberAgreement
+        skip_postgeneration_save = True
 
 
 class DataAffiliateAgreementFactory(DjangoModelFactory):
@@ -75,9 +83,9 @@ class DataAffiliateAgreementFactory(DjangoModelFactory):
     anvil_upload_group = SubFactory(
         ManagedGroupFactory,
         name=LazyAttribute(
-            lambda o: settings.ANVIL_DATA_ACCESS_GROUP_PREFIX
-            + "_CDSA_UPLOAD_"
-            + str(o.factory_parent.signed_agreement.cc_id)
+            lambda o: (
+                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX + "_CDSA_UPLOAD_" + str(o.factory_parent.signed_agreement.cc_id)
+            )
         ),
     )
 
