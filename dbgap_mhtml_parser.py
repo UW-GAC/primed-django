@@ -2,6 +2,7 @@ import argparse
 import json
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -357,11 +358,15 @@ class dbGaPApplication:
 
     def write_json(self, output_file):
         """Write the application information to a json file."""
+        if not output_file:
+            output_file = f"dbgap_{self.project_id}_{datetime.now().strftime('%Y-%m-%d')}.json"
         with open(output_file, "w") as json_file:
             json.dump(self.get_json(), json_file, indent=4)
 
     def write_html(self, output_file):
         """Write the application information to an html file."""
+        if not output_file:
+            output_file = f"dbgap_{self.project_id}_{datetime.now().strftime('%Y-%m-%d')}.html"
         with open(output_file, "w") as html_file:
             html_file.write(self.html.prettify())
 
@@ -370,11 +375,16 @@ if __name__ == "__main__":
     # Parse command line arguments.
     parser = argparse.ArgumentParser(description="Parse DAR info from an mhtml file.")
     parser.add_argument("--mhtml", type=str, help="Path to the mhtml file to parse.")
-    parser.add_argument("--output-json", type=str, help="Path to the output json file.")
+    parser.add_argument(
+        "--output-json",
+        default=None,
+        type=str,
+        help="Path to the output json file. If None, the file will be named dbgap_{project_id}_YYYY-MM-DD.json.",
+    )
     parser.add_argument(
         "--output-html",
         type=str,
-        help="Path to the output html file. If None, no file will be written.",
+        help="Path to the output html file. If None, the file will be named dbgap_{project_id}.html.",
         default=None,
     )
     parser.add_argument("--n-dars", type=int, default=None, help="Number of DARs to populate for; None means all DARs.")
@@ -384,8 +394,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     application = dbGaPApplication(args.mhtml)
-    if args.output_html:
-        application.write_html(args.output_html)
+    application.write_html(output_file=args.output_html)
 
     application.populate_studies_and_dars(n_dars=args.n_dars, phs=args.phs)
-    application.write_json(args.output_json)
+    application.write_json(output_file=args.output_json)
