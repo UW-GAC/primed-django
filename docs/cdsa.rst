@@ -55,6 +55,7 @@ Accessors are considered to be covered under the agreement can be added to the a
     - The user is listed as an accessor under the Signed Agreement. Note that the signing representative is not automatically considered as an accessor unless they are explicitly listed.
     - The user has a linked AnVIL account
     - The user's AnVIL account is active
+    - For MemberAgreements only: The study site associated with the MemberAgreement should match the study site of the signing representative. If this check fails, the agreement is flagged as an Error.
 
 
 The :class:`~primed.cdsa.audit.accessor_audit.AccessorAudit` auditing class is responsible for performing the above checks and storing the results.
@@ -67,7 +68,7 @@ The following results are possible:
     - :class:`~primed.cdsa.audit.accessor_audit.VerifiedNoAccess` - The user is not listed as an accessor under the agreement and is not a member of the agreement's ``anvil_access_group``.
     - :class:`~primed.cdsa.audit.accessor_audit.GrantAccess` - The user is listed as an accessor on the agreement, but is not a member of the agreement's ``anvil_access_group``. Action is needed to add the user to the access group.
     - :class:`~primed.cdsa.audit.accessor_audit.RemoveAccess` - The user is not listed as an accessor on the agreement, but is a member of the agreement's ``anvil_access_group``. Action is needed to remove the user from the access group.
-    - :class:`~primed.cdsa.audit.accessor_audit.Error` - An unexpected situation occurred and further exploration is necessary (e.g., a group is a member of the agreement's ``anvil_access_group``).
+    - :class:`~primed.cdsa.audit.accessor_audit.Error` - An unexpected situation occurred and further exploration is necessary (e.g., a group is a member of the agreement's ``anvil_access_group``, or the representative's study site does not match the MemberAgreement's study site).
 
 Viewing audit results
 `````````````````````

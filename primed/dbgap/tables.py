@@ -4,7 +4,7 @@ import django_tables2 as tables
 from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
 from anvil_consortium_manager.models import Workspace
 from django.template import Context, Template
-from django.utils.html import format_html
+from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
 from primed.primed_anvil.tables import (
@@ -293,12 +293,7 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
         )
 
     def render_matching_workspaces(self, value, record):
-        template_code = """
-        <i class="bi bi-{% if has_access %}check-circle-fill"
-        style="color: green{% else %}x-square-fill" style="color: red{% endif %};"></i>
-        <a href="{{workspace.get_absolute_url}}">{{workspace}}</a>
-        """
-        items = []
+        contexts = []
         for dbgap_workspace in value:
             parent_groups = record.dbgap_data_access_snapshot.dbgap_application.anvil_access_group.get_all_parents()
             try:
@@ -314,15 +309,18 @@ class dbGaPDataAccessRequestBySnapshotTable(dbGaPDataAccessRequestTable):
                 has_access = set(auth_domains_managed_by_app).issubset(set(parent_groups))
 
             this_context = {
-                "has_access": has_access,
-                "workspace": dbgap_workspace.workspace.name,
+                "icon": "check-circle-fill" if has_access else "x-square-fill",
+                "color": "green" if has_access else "red",
+                "workspace_name": dbgap_workspace.workspace.name,
+                "workspace_url": dbgap_workspace.workspace.get_absolute_url(),
             }
-            this = Template(template_code).render(Context(this_context))
-            items = items + [this]
-        html = format_html(
-            "{items}",
-            items="<br>".join(items),
-        )
+            contexts = contexts + [this_context]
+
+        template_code = """
+        <i class="bi bi-{icon}" style="color: {color};"></i>
+        <a href="{workspace_url}">{workspace_name}</a>
+        """
+        html = format_html_join(mark_safe("<br>"), template_code, contexts)
         return html
 
 
