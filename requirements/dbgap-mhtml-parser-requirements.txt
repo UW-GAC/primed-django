@@ -28,7 +28,7 @@ lxml==6.0.2
     # via -r requirements/dbgap-mhtml-parser-requirements.in
 mhtml-to-html-py==0.1.0
     # via -r requirements/dbgap-mhtml-parser-requirements.in
-requests==2.32.4
+requests==2.33.0
     # via
     #   -c requirements/dev-requirements.txt
     #   -c requirements/requirements.txt
