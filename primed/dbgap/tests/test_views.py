@@ -5445,7 +5445,6 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, access_audit.UpdateSnapshot)
         self.assertIsInstance(audit_result, access_audit.RemoveAccess)
         self.assertEqual(audit_result.workspace, workspace)
         self.assertEqual(
