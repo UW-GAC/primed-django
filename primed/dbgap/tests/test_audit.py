@@ -273,6 +273,63 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.data_access_request, dar)
         self.assertTrue(dbgap_audit.ok())
 
+    def test_verified_access_dar_outdated_day_prior_to_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day prior to cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS - 1),
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.verified[0]
+        self.assertIsInstance(record, access_audit.VerifiedAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertTrue(dbgap_audit.ok())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
+    def test_verified_access_dar_outdated_custom_day_prior_to_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day prior to cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=1),
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.verified[0]
+        self.assertIsInstance(record, access_audit.VerifiedAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertTrue(dbgap_audit.ok())
+
     def test_two_workspaces(self):
         """run_audit with one application and two workspaces with different access."""
         dbgap_snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
@@ -369,6 +426,65 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, dbgap_application)
         self.assertIsNone(record.data_access_request)
         self.assertEqual(record.note, access_audit.dbGaPAccessAudit.NO_DAR)
+        self.assertTrue(dbgap_audit.ok())
+
+    def test_verified_no_access_dar_outdated_day_after_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day prior to cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS + 1),
+        )
+        # Do not add the anvil group to the auth group for the workspace.
+        # GroupGroupMembershipFactory(
+        #     parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+        #     child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        # )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.verified[0]
+        self.assertIsInstance(record, access_audit.VerifiedNoAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
+        self.assertTrue(dbgap_audit.ok())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
+    def test_verified_no_access_dar_outdated_custom_day_after_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day prior to cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=3),
+        )
+        # Do not add the anvil group to the auth group for the workspace.
+        # GroupGroupMembershipFactory(
+        #     parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+        #     child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        # )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.verified[0]
+        self.assertIsInstance(record, access_audit.VerifiedNoAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
         self.assertTrue(dbgap_audit.ok())
 
     def test_grant_access_new_approved_dar(self):
@@ -471,7 +587,7 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.note, access_audit.dbGaPAccessAudit.NEW_WORKSPACE)
         self.assertFalse(dbgap_audit.ok())
 
-    def test_remove_access_udpated_dar(self):
+    def test_remove_access_updated_dar(self):
         # Create a workspace and matching DAR.
         dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
         dbgap_application = factories.dbGaPApplicationFactory.create()
@@ -545,6 +661,138 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
         self.assertEqual(record.data_access_request, dar)
         self.assertEqual(record.note, access_audit.dbGaPAccessAudit.PREVIOUS_APPROVAL)
+        self.assertFalse(dbgap_audit.ok())
+
+    def test_remove_access_dar_outdated_day_of_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day of cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+            - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS),
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.needs_action[0]
+        self.assertIsInstance(record, access_audit.RemoveAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertFalse(dbgap_audit.ok())
+
+    def test_remove_access_dar_outdated_day_after_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day of cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS + 1),
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.needs_action[0]
+        self.assertIsInstance(record, access_audit.RemoveAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertFalse(dbgap_audit.ok())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
+    def test_remove_access_dar_outdated_custom_day_of_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day of cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+            - timedelta(days=2),
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.needs_action[0]
+        self.assertIsInstance(record, access_audit.RemoveAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
+        self.assertFalse(dbgap_audit.ok())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
+    def test_remove_access_dar_outdated_custom_day_after_cutoff(self):
+        """
+        Create a workspace and matching snapshot.
+        Snapshot day of cutoff
+        """
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
+        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=3),
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
+        )
+
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.needs_action[0]
+        self.assertIsInstance(record, access_audit.RemoveAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
+        self.assertEqual(record.data_access_request, dar)
         self.assertFalse(dbgap_audit.ok())
 
     def test_error_remove_access_unknown_reason(self):
@@ -779,179 +1027,6 @@ class dbGaPAccessAuditTest(TestCase):
 
     def test_two_applications_two_workspaces(self):
         pass
-
-    def test_dbgap_snapshot_needs_update_day_of(self):
-        """
-        Create a workspace and matching snapshot.
-        Snapshot day of cutoff
-        """
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
-            - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS),
-        )
-        # Add the anvil group to the auth group for the workspace.
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-
-        dbgap_audit = access_audit.dbGaPAccessAudit()
-        dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.needs_action), 1)
-        self.assertEqual(len(dbgap_audit.errors), 0)
-        update_record = dbgap_audit.needs_action[0]
-        self.assertIsInstance(update_record, access_audit.UpdateSnapshot)
-        self.assertEqual(update_record.workspace, dbgap_workspace)
-        self.assertEqual(update_record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
-
-        self.assertEqual(update_record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
-        self.assertIn(update_record.note, str(update_record))
-        self.assertFalse(dbgap_audit.ok())
-
-    def test_dbgap_snapshot_needs_update_day_prior(self):
-        """
-        Create a workspace and matching snapshot.
-        Snapshot one day prior to cutoff days
-        """
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS + 1),
-        )
-        # Add the anvil group to the auth group for the workspace.
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-
-        dbgap_audit = access_audit.dbGaPAccessAudit()
-        dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.needs_action), 1)
-        self.assertEqual(len(dbgap_audit.errors), 0)
-        update_record = dbgap_audit.needs_action[0]
-        self.assertIsInstance(update_record, access_audit.UpdateSnapshot)
-        self.assertEqual(update_record.workspace, dbgap_workspace)
-        self.assertEqual(update_record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
-
-        self.assertEqual(update_record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
-        self.assertIn(update_record.note, str(update_record))
-        self.assertFalse(dbgap_audit.ok())
-
-    def test_dbgap_snapshot_needs_update_day_after(self):
-        """
-        Create a workspace and matching snapshot.
-        Snapshot one day after cutoff
-        """
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS - 1),
-        )
-        # Add the anvil group to the auth group for the workspace.
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-
-        dbgap_audit = access_audit.dbGaPAccessAudit()
-        dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 1)
-        self.assertEqual(len(dbgap_audit.needs_action), 0)
-        self.assertEqual(len(dbgap_audit.errors), 0)
-
-        self.assertTrue(dbgap_audit.ok())
-
-    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
-    def test_dbgap_snapshot_custom_days_needs_update_day_of(self):
-        """
-        Create a workspace and matching snapshot.
-        Snapshot day of cutoff, custom constance config for DBGAP_SNAPSHOT_OLD_DAYS
-        """
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
-            - timedelta(days=2),
-        )
-        # Add the anvil group to the auth group for the workspace.
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-
-        dbgap_audit = access_audit.dbGaPAccessAudit()
-        dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.needs_action), 1)
-        self.assertEqual(len(dbgap_audit.errors), 0)
-        update_record = dbgap_audit.needs_action[0]
-        self.assertIsInstance(update_record, access_audit.UpdateSnapshot)
-        self.assertEqual(update_record.workspace, dbgap_workspace)
-        self.assertEqual(update_record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
-
-        self.assertEqual(update_record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
-        self.assertIn(update_record.note, str(update_record))
-        self.assertFalse(dbgap_audit.ok())
-
-    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
-    def test_dbgap_snapshot_custom_days_needs_update_day_prior(self):
-        """
-        Create a workspace and matching snapshot.
-        Snapshot one day prior to cutoff days, custom constance config for DBGAP_SNAPSHOT_OLD_DAYS
-        """
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=3),
-        )
-        # Add the anvil group to the auth group for the workspace.
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-
-        dbgap_audit = access_audit.dbGaPAccessAudit()
-        dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 0)
-        self.assertEqual(len(dbgap_audit.needs_action), 1)
-        self.assertEqual(len(dbgap_audit.errors), 0)
-        update_record = dbgap_audit.needs_action[0]
-        self.assertIsInstance(update_record, access_audit.UpdateSnapshot)
-        self.assertEqual(update_record.workspace, dbgap_workspace)
-        self.assertEqual(update_record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
-
-        self.assertEqual(update_record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
-        self.assertIn(update_record.note, str(update_record))
-        self.assertFalse(dbgap_audit.ok())
-
-    @override_config(DBGAP_SNAPSHOT_OLD_DAYS=2)
-    def test_dbgap_snapshot_custom_days_needs_update_day_after(self):
-        """
-        Create a workspace and matching snapshot.
-        Snapshot one day after cutoff, custom constance config for DBGAP_SNAPSHOT_OLD_DAYS
-        """
-        dbgap_workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=dbgap_workspace,
-            dbgap_data_access_snapshot__created=timezone.now() - timedelta(days=1),
-        )
-        # Add the anvil group to the auth group for the workspace.
-        GroupGroupMembershipFactory(
-            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
-            child_group=dar.dbgap_data_access_snapshot.dbgap_application.anvil_access_group,
-        )
-
-        dbgap_audit = access_audit.dbGaPAccessAudit()
-        dbgap_audit.run_audit()
-        self.assertEqual(len(dbgap_audit.verified), 1)
-        self.assertEqual(len(dbgap_audit.needs_action), 0)
-        self.assertEqual(len(dbgap_audit.errors), 0)
-
-        self.assertTrue(dbgap_audit.ok())
 
     def test_ok_with_verified_and_needs_action(self):
         # Create a workspace and matching DAR.
