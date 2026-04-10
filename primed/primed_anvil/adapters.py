@@ -16,7 +16,6 @@ from django.conf import settings
 from django.db.models import Q
 
 from .filters import AccountListFilter
-from .models import StudySite
 from .tables import AccountTable
 
 
@@ -50,13 +49,15 @@ class AccountAdapter(BaseAccountAdapter):
     def after_account_verification(self, account):
         """Add the account to the member group for any StudySites that they are a part of."""
         super().after_account_verification(account)
+
+        user = account.user
+
         # Add the user to member groups for any StudySites that they are a part of.
-        study_sites = StudySite.objects.select_related("member_group").filter(member_group__isnull=False)
+        study_sites = user.study_sites.all()
         for site in study_sites:
             if site.member_group:
                 self._add_account_to_group(account, site.member_group)
 
-        user = account.user
         # Add the user to any dbGaP access groups that they are associated with.
         pi_apps = user.pi_dbgap_applications.select_related("anvil_access_group").all()
         collab_apps = user.collaborator_dbgap_applications.select_related("anvil_access_group").all()
