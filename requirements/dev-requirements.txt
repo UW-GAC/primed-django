@@ -45,7 +45,7 @@ decorator==5.1.1
     #   ipython
 distlib==0.3.8
     # via virtualenv
-django==5.2.12
+django==5.2.13
     # via
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
@@ -123,7 +123,7 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   -c requirements/test-requirements.txt
     #   ipython
