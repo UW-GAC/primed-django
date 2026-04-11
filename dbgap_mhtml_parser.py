@@ -261,6 +261,8 @@ class dbGaPApplication:
             status = "new"
         elif status_classes == set(["staff_queued"]) and status_text == set(["dac review", "granted"]):
             status = "approved"
+        elif status_classes == set(["staff_processing"]) and status_text == set(["dac review", "granted"]):
+            status = "approved"
         else:
             raise (ValueError("Unknown DAR status"))
 
