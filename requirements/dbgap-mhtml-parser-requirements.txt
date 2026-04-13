@@ -24,7 +24,7 @@ idna==3.7
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   requests
-lxml==6.0.3
+lxml==6.0.4
     # via -r requirements/dbgap-mhtml-parser-requirements.in
 mhtml-to-html-py==0.1.0
     # via -r requirements/dbgap-mhtml-parser-requirements.in
