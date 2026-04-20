@@ -129,6 +129,10 @@
               {% for app in dbgap_applications %}
               <li class="list-group-item">
                 <a href="{{ app.get_absolute_url }}">{{ app }}</a>
+                <span class="badge mx-2 {% if app.status == app.StatusChoices.ACTIVE %}bg-success{% else %}bg-secondary{% endif %}">
+                  {{ app.get_status_display }}
+                </span>
+
                 <div class="mx-3 mt-1">
                   <ul class="list-unstyled">
                     {% if object == app.principal_investigator %}
@@ -151,7 +155,7 @@
               {% for agreement in signed_agreements %}
               <li class="list-group-item">
                 <a href="{{ agreement.get_absolute_url }}">{{ agreement }}</a>
-                <span class="badge mx-2 {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-danger{% endif %}">
+                <span class="badge mx-2 {% if agreement.status == agreement.StatusChoices.ACTIVE %}bg-success{% else %}bg-secondary{% endif %}">
                   {{ agreement.get_status_display }}
                 </span>
                 <div class="mx-3 mt-1">
