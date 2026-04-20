@@ -487,6 +487,27 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.note, access_audit.dbGaPAccessAudit.APP_SNAPSHOT_OLD)
         self.assertTrue(dbgap_audit.ok())
 
+    def test_verified_no_access_inactive(self):
+        """run_audit with one inactive application and one workspace that has verified no access."""
+        # Create a workspace and matching DAR.
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        dbgap_application = factories.dbGaPApplicationFactory.create(
+            status=models.dbGaPApplication.StatusChoices.INACTIVE
+        )
+        # Do not add the anvil group to the auth group for the workspace.
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 1)
+        self.assertEqual(len(dbgap_audit.needs_action), 0)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.verified[0]
+        self.assertIsInstance(record, access_audit.VerifiedNoAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertIsNone(record.data_access_request)
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.INACTIVE_APPLICATION)
+        self.assertTrue(dbgap_audit.ok())
+
     def test_grant_access_new_approved_dar(self):
         # Create a workspace and matching DAR.
         # Workspace was created before the snapshot.
@@ -793,6 +814,36 @@ class dbGaPAccessAuditTest(TestCase):
         self.assertEqual(record.workspace, dbgap_workspace)
         self.assertEqual(record.dbgap_application, dar.dbgap_data_access_snapshot.dbgap_application)
         self.assertEqual(record.data_access_request, dar)
+        self.assertFalse(dbgap_audit.ok())
+
+    def test_remove_access_inactive(self):
+        """run_audit with one inactive application and one workspace that has verified no access."""
+        # Create a workspace and application.
+        dbgap_workspace = factories.dbGaPWorkspaceFactory.create()
+        dbgap_application = factories.dbGaPApplicationFactory.create(
+            status=models.dbGaPApplication.StatusChoices.INACTIVE
+        )
+        # Create a matching dar.
+        factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
+            dbgap_workspace=dbgap_workspace,
+            dbgap_data_access_snapshot__dbgap_application=dbgap_application,
+        )
+        # Add the anvil group to the auth group for the workspace.
+        GroupGroupMembershipFactory(
+            parent_group=dbgap_workspace.workspace.authorization_domains.get(),
+            child_group=dbgap_application.anvil_access_group,
+        )
+        dbgap_audit = access_audit.dbGaPAccessAudit()
+        dbgap_audit.run_audit()
+        self.assertEqual(len(dbgap_audit.verified), 0)
+        self.assertEqual(len(dbgap_audit.needs_action), 1)
+        self.assertEqual(len(dbgap_audit.errors), 0)
+        record = dbgap_audit.needs_action[0]
+        self.assertIsInstance(record, access_audit.RemoveAccess)
+        self.assertEqual(record.workspace, dbgap_workspace)
+        self.assertEqual(record.dbgap_application, dbgap_application)
+        self.assertIsNone(record.data_access_request)
+        self.assertEqual(record.note, access_audit.dbGaPAccessAudit.INACTIVE_APPLICATION)
         self.assertFalse(dbgap_audit.ok())
 
     def test_error_remove_access_unknown_reason(self):

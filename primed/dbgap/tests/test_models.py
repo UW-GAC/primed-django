@@ -679,6 +679,21 @@ class dbGaPApplicationTest(TestCase):
             e.exception.error_dict["dbgap_project_id"][0].messages[0],
         )
 
+    def test_status_field(self):
+        # default
+        instance = factories.dbGaPApplicationFactory.create()
+        self.assertEqual(instance.status, instance.StatusChoices.ACTIVE)
+        instance.full_clean()
+        # other choices
+        instance = factories.dbGaPApplicationFactory.create(status=models.dbGaPApplication.StatusChoices.INACTIVE)
+        self.assertEqual(instance.status, instance.StatusChoices.INACTIVE)
+        instance.full_clean()
+
+        # not allowed
+        instance = factories.dbGaPApplicationFactory.create(status="foo")
+        with self.assertRaises(ValidationError):
+            instance.full_clean()
+
     def test_get_dbgap_dar_json_url(self):
         """get_dbgap_dar_json_url returns a string."""
         application = factories.dbGaPApplicationFactory.create()
