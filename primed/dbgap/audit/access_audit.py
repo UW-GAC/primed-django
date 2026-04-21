@@ -153,6 +153,7 @@ class dbGaPAccessAudit(PRIMEDAudit):
     NO_DAR = "No matching DAR."
     DAR_NOT_APPROVED = "DAR is not approved."
     APP_SNAPSHOT_OLD = "dbGaP data access snapshot too old."
+    INACTIVE_APPLICATION = "dbGaP application is not active."
 
     # Allowed reasons to grant or remove access.
     NEW_APPROVED_DAR = "New approved DAR."
@@ -197,6 +198,29 @@ class dbGaPAccessAudit(PRIMEDAudit):
             # Just auth domains managed by the app.
             auth_domains_managed_by_app = dbgap_workspace.workspace.authorization_domains.filter(is_managed_by_app=True)
             in_auth_domain = set(auth_domains_managed_by_app).issubset(set(parent_groups))
+
+        # Is the application active?
+        is_active = dbgap_application.status == dbgap_application.StatusChoices.ACTIVE
+        if not is_active:
+            if in_auth_domain:
+                self.needs_action.append(
+                    RemoveAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        data_access_request=None,
+                        note=self.INACTIVE_APPLICATION,
+                    )
+                )
+                return
+            else:
+                self.verified.append(
+                    VerifiedNoAccess(
+                        workspace=dbgap_workspace,
+                        dbgap_application=dbgap_application,
+                        note=self.INACTIVE_APPLICATION,
+                    )
+                )
+                return
 
         # Get the most recent snapshot.
         try:

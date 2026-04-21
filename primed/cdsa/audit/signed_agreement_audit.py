@@ -142,7 +142,10 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
 
         This audit does *not* check if the AgreementMajorVersion associated with the SignedAgreement is valid.
         """
-        if hasattr(signed_agreement, "memberagreement"):
+        is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
+        in_cdsa_group = signed_agreement.is_in_cdsa_group()
+
+        if is_active and hasattr(signed_agreement, "memberagreement"):
             representative = signed_agreement.representative
             study_site = signed_agreement.memberagreement.study_site
             if study_site not in representative.study_sites.all():
@@ -153,9 +156,6 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
                     )
                 )
                 return
-
-        in_cdsa_group = signed_agreement.is_in_cdsa_group()
-        is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
 
         if is_active:
             if in_cdsa_group:
@@ -211,7 +211,11 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
         This audit does *not* check if the AgreementMajorVersion associated with either the
         SignedAgreement or its component is valid.
         """
-        if hasattr(signed_agreement, "memberagreement"):
+
+        in_cdsa_group = signed_agreement.is_in_cdsa_group()
+        is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
+
+        if is_active and hasattr(signed_agreement, "memberagreement"):
             representative = signed_agreement.representative
             study_site = signed_agreement.memberagreement.study_site
             if study_site not in representative.study_sites.all():
@@ -222,9 +226,6 @@ class SignedAgreementAccessAudit(PRIMEDAudit):
                     )
                 )
                 return
-
-        in_cdsa_group = signed_agreement.is_in_cdsa_group()
-        is_active = signed_agreement.status == models.SignedAgreement.StatusChoices.ACTIVE
 
         # Get the set of potential primary agreements for this component.
         if hasattr(signed_agreement, "memberagreement"):
