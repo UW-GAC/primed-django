@@ -147,6 +147,7 @@ class dbGaPApplicationTable(tables.Table):
     principal_investigator__study_sites = tables.columns.ManyToManyColumn(
         verbose_name="Study site(s)",
     )
+    status = tables.columns.Column()
     number_approved_dars = tables.columns.ManyToManyColumn(
         accessor="dbgapdataaccesssnapshot_set",
         filter=lambda qs: qs.filter(is_most_recent=True),
@@ -170,6 +171,7 @@ class dbGaPApplicationTable(tables.Table):
         fields = (
             "dbgap_project_id",
             "principal_investigator",
+            "status",
         )
         order_by = ("dbgap_project_id",)
 

@@ -254,13 +254,9 @@ class AgreementMajorVersionDetailTest(TestCase):
 
     def test_response_signed_agreement_table_three_agreements(self):
         """signed_agreement_table includes all types of agreements."""
-        factories.MemberAgreementFactory.create(signed_agreement__version__major_version__version=self.obj.version)
-        factories.DataAffiliateAgreementFactory.create(
-            signed_agreement__version__major_version__version=self.obj.version
-        )
-        factories.NonDataAffiliateAgreementFactory.create(
-            signed_agreement__version__major_version__version=self.obj.version
-        )
+        factories.MemberAgreementFactory.create(signed_agreement__version__major_version=self.obj)
+        factories.DataAffiliateAgreementFactory.create(signed_agreement__version__major_version=self.obj)
+        factories.NonDataAffiliateAgreementFactory.create(signed_agreement__version__major_version=self.obj)
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.obj.version))
         self.assertEqual(response.status_code, 200)
