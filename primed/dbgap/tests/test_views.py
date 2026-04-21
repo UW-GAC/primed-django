@@ -3328,7 +3328,7 @@ class dbGaPDataAccessSnapshotCreateMultipleTest(dbGaPResponseTestMixin, TestCase
         """Shows an error when one dbGaP application does not exist."""
         dbgap_application_1 = factories.dbGaPApplicationFactory.create()
         project_json_1 = factories.dbGaPJSONProjectFactory(dbgap_application=dbgap_application_1)
-        project_json_2 = factories.dbGaPJSONProjectFactory()
+        project_json_2 = factories.dbGaPJSONProjectFactory(Project_id=dbgap_application_1.dbgap_project_id + 999)
         self.client.force_login(self.user)
         response = self.client.post(
             self.get_url(),
