@@ -113,16 +113,17 @@ class AgreementVersionTest(TestCase):
 
     def test_full_version(self):
         """full_version property works as expected."""
+        major_version = factories.AgreementMajorVersionFactory.create(version=1)
         self.assertEqual(
-            factories.AgreementVersionFactory(major_version__version=1, minor_version=0).full_version,
+            factories.AgreementVersionFactory(major_version=major_version, minor_version=0).full_version,
             "v1.0",
         )
         self.assertEqual(
-            factories.AgreementVersionFactory(major_version__version=1, minor_version=5).full_version,
+            factories.AgreementVersionFactory(major_version=major_version, minor_version=5).full_version,
             "v1.5",
         )
         self.assertEqual(
-            factories.AgreementVersionFactory(major_version__version=1, minor_version=10).full_version,
+            factories.AgreementVersionFactory(major_version=major_version, minor_version=10).full_version,
             "v1.10",
         )
         self.assertEqual(
