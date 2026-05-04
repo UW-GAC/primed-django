@@ -119,7 +119,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
     INACTIVE_ACCOUNT = "Account is inactive."
 
     # Errors.
-    UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
+    GROUP_NOT_ALLOWED = "Groups should not be in the auth domain."
 
     results_table_class = AccessAuditResultsTable
 
@@ -199,7 +199,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
                 RemoveAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
                     member=group,
-                    note=self.UNEXPECTED_GROUP_ACCESS,
+                    note=self.GROUP_NOT_ALLOWED,
                 )
             )
         else:
@@ -207,7 +207,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
                 VerifiedNoAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
                     member=group,
-                    note=self.NON_DCC_GROUP,
+                    note=self.GROUP_NOT_ALLOWED,
                 )
             )
 

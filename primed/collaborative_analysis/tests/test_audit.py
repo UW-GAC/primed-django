@@ -1921,7 +1921,22 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, collab_audit.UNEXPECTED_GROUP_ACCESS)
+        self.assertEqual(record.note, collab_audit.GROUP_NOT_ALLOWED)
+
+    def test_group_not_in_auth_domain(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create()
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace_and_group(workspace, group)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collab_audit.GROUP_NOT_ALLOWED)
 
     def test_ignores_primed_admins_group(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -1994,7 +2009,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, collab_audit.UNEXPECTED_GROUP_ACCESS)
+        self.assertEqual(record.note, collab_audit.GROUP_NOT_ALLOWED)
 
     def test_error_for_primed_cc_writers_group(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -2013,7 +2028,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, group)
-        self.assertEqual(record.note, collab_audit.UNEXPECTED_GROUP_ACCESS)
+        self.assertEqual(record.note, collab_audit.GROUP_NOT_ALLOWED)
 
     def test_no_access_for_primed_cc_members_group(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
