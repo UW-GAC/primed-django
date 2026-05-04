@@ -680,7 +680,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
-    def test_in_collab_auth_domain_no_source_workspaces(self):
+    def test_analyst_in_collab_auth_domain_no_source_workspaces(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -706,7 +706,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
-    def test_not_in_collab_auth_domain_no_source_workspaces(self):
+    def test_analyst_not_in_collab_auth_domain_no_source_workspaces(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -734,7 +734,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
-    def test_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
+    def test_analyst_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -770,7 +770,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
-    def test_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
+    def test_analyst_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -806,7 +806,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
-    def test_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(self):
+    def test_analyst_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -842,7 +842,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
-    def test_not_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
+    def test_analyst_not_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -880,7 +880,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
-    def test_not_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
+    def test_analyst_not_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
         # Create accounts.
         account = AccountFactory.create()
         # Set up workspace.
@@ -918,7 +918,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, account)
         self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
 
-    def test_not_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(
+    def test_analyst_not_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(
         self,
     ):
         # Create accounts.
@@ -983,7 +983,899 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(record.member, analyst_1)
         self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
 
-    def test_not_in_analyst_group(self):
+    def test_cc_writer_in_collab_auth_domain_in_source_auth_domain(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace.workspace.authorization_domains.get(),
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_not_in_source_auth_domain(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_source_auth_domain_not_managed_by_app(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = OpenAccessWorkspaceFactory.create()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_in_source_auth_domain(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace.workspace.authorization_domains.get(),
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_not_in_source_auth_domain(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_source_auth_domain_not_managed_by_app(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = OpenAccessWorkspaceFactory.create()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_auth_domains_in_both(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace.workspace.authorization_domains.all()[0],
+            account=account,
+        )
+        GroupAccountMembershipFactory.create(
+            group=source_auth_domain_2.group,
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_auth_domains_in_one(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # add an extra auth doamin
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace.workspace.authorization_domains.first(),
+            account=account,
+        )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_auth_domain_2.group,
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_auth_domains_in_neither(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # add an extra auth doamin
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_auth_domain_2.group,
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_auth_domains_in_one_and_one_not_managed_by_app(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        source_auth_domain = source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_auth_domains_not_in_one_and_one_not_managed_by_app(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_auth_domains_in_both(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        source_auth_domain_1 = source_workspace.workspace.authorization_domains.get()
+        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_auth_domain_1,
+            account=account,
+        )
+        GroupAccountMembershipFactory.create(
+            group=source_auth_domain_2.group,
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_auth_domains_in_one(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        source_auth_domain_2 = WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_auth_domain_1,
+        #     account=account,
+        # )
+        GroupAccountMembershipFactory.create(
+            group=source_auth_domain_2.group,
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_auth_domains_in_neither(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace.workspace)
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_auth_domain_1,
+        #     account=account,
+        # )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_auth_domain_2.group,
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_auth_domains_in_one_and_one_not_managed_by_app(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        source_auth_domain = source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_auth_domains_not_in_one_and_one_not_managed_by_app(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = dbGaPWorkspaceFactory.create()
+        # source_auth_domain = source_workspace.workspace.authorization_domains.get()
+        # Add an auth domain not managed by the app.
+        WorkspaceAuthorizationDomainFactory.create(workspace=source_workspace.workspace, group__is_managed_by_app=False)
+        workspace.source_workspaces.add(source_workspace.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(group=source_auth_domain, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_no_source_workspaces(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = WorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_no_source_workspaces(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace = WorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace_1 = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_1.workspace)
+        source_workspace_2 = CDSAWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_2.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace_1.workspace.authorization_domains.get(),
+            account=account,
+        )
+        GroupAccountMembershipFactory.create(
+            group=source_workspace_2.workspace.authorization_domains.get(),
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace_1 = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_1.workspace)
+        source_workspace_2 = CDSAWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_2.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace_1.workspace.authorization_domains.get(),
+            account=account,
+        )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace_2.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace_1 = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_1.workspace)
+        source_workspace_2 = CDSAWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_2.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace_1.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace_2.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_workspaces_in_both_auth_domains(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace_1 = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_1.workspace)
+        source_workspace_2 = CDSAWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_2.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace_1.workspace.authorization_domains.get(),
+            account=account,
+        )
+        GroupAccountMembershipFactory.create(
+            group=source_workspace_2.workspace.authorization_domains.get(),
+            account=account,
+        )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_workspaces_in_one_auth_domains(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace_1 = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_1.workspace)
+        source_workspace_2 = CDSAWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_2.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        GroupAccountMembershipFactory.create(
+            group=source_workspace_1.workspace.authorization_domains.get(),
+            account=account,
+        )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace_2.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_cc_writer_not_in_collab_auth_domain_two_source_workspaces_in_neither_auth_domains(
+        self,
+    ):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Set up source workspaces.
+        source_workspace_1 = dbGaPWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_1.workspace)
+        source_workspace_2 = CDSAWorkspaceFactory.create()
+        workspace.source_workspaces.add(source_workspace_2.workspace)
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # Source workspace auth domains membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace_1.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # GroupAccountMembershipFactory.create(
+        #     group=source_workspace_2.workspace.authorization_domains.get(),
+        #     account=account,
+        # )
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        # GroupAccountMembershipFactory.create(
+        #     group=workspace.workspace.authorization_domains.get(), account=account
+        # )
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedNoAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.NOT_IN_SOURCE_AUTH_DOMAINS)
+
+    def test_two_cc_writers(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Create an cc_writer that needs access.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        cc_writer_1 = AccountFactory.create()
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=cc_writer_1)
+        # Create an cc_writer that has access.
+        cc_writer_2 = AccountFactory.create()
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=cc_writer_2)
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=cc_writer_2)
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, cc_writer_2)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+        record = collab_audit.needs_action[0]
+        self.assertIsInstance(record, audit.GrantAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, cc_writer_1)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_in_both_analyst_group_and_cc_writer_group(self):
+        account = AccountFactory.create()
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
+        # Member of both CC writers and analyst group
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        GroupAccountMembershipFactory.create(group=workspace.analyst_group, account=account)
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
+    def test_not_in_analyst_group_or_cc_writer_group_in_collab_auth_domain(self):
         # Create an analyst that needs access.
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         # Create an analyst that has access but is not in the analyst group.
@@ -998,7 +1890,19 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertIsInstance(record, audit.RemoveAccess)
         self.assertEqual(record.collaborative_analysis_workspace, workspace)
         self.assertEqual(record.member, analyst)
-        self.assertEqual(record.note, collab_audit.NOT_IN_ANALYST_GROUP)
+        self.assertEqual(record.note, collab_audit.NOT_IN_ANALYST_OR_CC_GROUP)
+
+    def test_not_in_analyst_group_or_cc_writer_group_not_in_collab_auth_domain(self):
+        # Create an analyst that needs access.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Create an analyst that has access but is not in the analyst group.
+        AccountFactory.create()
+        # GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=analyst)
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
 
     def test_unexpected_group_in_auth_domain(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -1048,10 +1952,54 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
 
+    @override_settings(ANVIL_CC_WRITERS_GROUP_NAME="FOOBAR")
+    def test_different_cc_writers_group_name(self):
+        # CC writer group
+        cc_writer_group = ManagedGroupFactory.create(name="FOOBAR")
+        # Create accounts.
+        account = AccountFactory.create()
+        # Set up workspace.
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # cc_writer group membership.
+        GroupAccountMembershipFactory.create(group=cc_writer_group, account=account)
+        # CollaborativeAnalysisWorkspace auth domain membership.
+        GroupAccountMembershipFactory.create(group=workspace.workspace.authorization_domains.get(), account=account)
+        # Set up audit
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        # Run audit
+        collab_audit._audit_workspace_and_account(workspace, account)
+        self.assertEqual(len(collab_audit.verified), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 0)
+        record = collab_audit.verified[0]
+        self.assertIsInstance(record, audit.VerifiedAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, account)
+        self.assertEqual(record.note, collab_audit.IN_SOURCE_AUTH_DOMAINS)
+
     def test_error_for_primed_cc_members_group(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         # Add a group to the auth domain.
         group = ManagedGroupFactory.create(name="PRIMED_CC_MEMBERS")
+        GroupGroupMembershipFactory.create(
+            parent_group=workspace.workspace.authorization_domains.get(),
+            child_group=group,
+        )
+        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
+        collab_audit._audit_workspace(workspace)
+        self.assertEqual(len(collab_audit.verified), 0)
+        self.assertEqual(len(collab_audit.needs_action), 0)
+        self.assertEqual(len(collab_audit.errors), 1)
+        record = collab_audit.errors[0]
+        self.assertIsInstance(record, audit.RemoveAccess)
+        self.assertEqual(record.collaborative_analysis_workspace, workspace)
+        self.assertEqual(record.member, group)
+        self.assertEqual(record.note, collab_audit.UNEXPECTED_GROUP_ACCESS)
+
+    def test_error_for_primed_cc_writers_group(self):
+        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
+        # Add a group to the auth domain.
+        group = ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.get(),
             child_group=group,
@@ -1081,29 +2029,10 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
 
-    def test_verified_access_for_primed_cc_writers_group(self):
+    def test_no_access_for_primed_cc_writers_group(self):
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
         # Add a group to the auth domain.
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.get(),
-            child_group=group,
-        )
-        collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
-        collab_audit._audit_workspace(workspace)
-        self.assertEqual(len(collab_audit.verified), 1)
-        self.assertEqual(len(collab_audit.needs_action), 0)
-        self.assertEqual(len(collab_audit.errors), 0)
-        record = collab_audit.verified[0]
-        self.assertIsInstance(record, audit.VerifiedAccess)
-        self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.member, group)
-        self.assertEqual(record.note, collab_audit.DCC_ACCESS)
-
-    def test_grant_access_for_primed_cc_writers_group(self):
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        # Add a group to the auth domain.
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
+        ManagedGroupFactory.create(name="TEST_PRIMED_CC_WRITERS")
         # GroupGroupMembershipFactory.create(
         #     parent_group=workspace.workspace.authorization_domains.get(),
         #     child_group=group,
@@ -1111,13 +2040,8 @@ class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
         collab_audit = audit.CollaborativeAnalysisWorkspaceAccessAudit()
         collab_audit._audit_workspace(workspace)
         self.assertEqual(len(collab_audit.verified), 0)
-        self.assertEqual(len(collab_audit.needs_action), 1)
+        self.assertEqual(len(collab_audit.needs_action), 0)
         self.assertEqual(len(collab_audit.errors), 0)
-        record = collab_audit.needs_action[0]
-        self.assertIsInstance(record, audit.GrantAccess)
-        self.assertEqual(record.collaborative_analysis_workspace, workspace)
-        self.assertEqual(record.member, group)
-        self.assertEqual(record.note, collab_audit.DCC_ACCESS)
 
     def test_two_workspaces(self):
         # Create a workspace with an analyst that needs access.

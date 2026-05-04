@@ -112,18 +112,14 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
 
     # Allowed reasons for access.
     IN_SOURCE_AUTH_DOMAINS = "Account is in all source auth domains managed by the app for this workspace."
-    DCC_ACCESS = "CC groups are allowed access."
 
     # Allowed reasons for no access.
     NOT_IN_SOURCE_AUTH_DOMAINS = "Account is not in all source auth domains for this workspace."
-    NOT_IN_ANALYST_GROUP = "Account is not in the analyst group for this workspace."
+    NOT_IN_ANALYST_OR_CC_GROUP = "Account is not in the analyst or CC writer group for this workspace."
     INACTIVE_ACCOUNT = "Account is inactive."
-    NON_DCC_GROUP = "Non-CC groups are not allowed access."
 
     # Errors.
     UNEXPECTED_GROUP_ACCESS = "Unexpected group added to the auth domain."
-
-    ALLOWED_GROUP_NAMES = ("PRIMED_CC_WRITERS",)
 
     results_table_class = AccessAuditResultsTable
 
@@ -144,78 +140,61 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # In the loop, run the _audit_workspace_and_account method.
         # Any remainig accounts in the auth domain that are not in the analyst group should be *errors*.
         analyst_group = workspace.analyst_group
-        analyst_memberships = GroupAccountMembership.objects.filter(group=analyst_group)
+        # CC group
+        try:
+            cc_group = ManagedGroup.objects.get(name=settings.ANVIL_CC_WRITERS_GROUP_NAME)
+        except ManagedGroup.DoesNotExist:
+            cc_group = None
+            accounts = Account.objects.filter(groupaccountmembership__group=analyst_group).distinct()
+            # GroupAccountMembership.objects.filter(group=analyst_group)
+        else:
+            accounts = Account.objects.filter(groupaccountmembership__group__in=[analyst_group, cc_group]).distinct()
+
         # Get a list of accounts in the auth domain.
-        auth_domain_membership = [
+        auth_domain_accounts = [
             x.account
             for x in GroupAccountMembership.objects.filter(group=workspace.workspace.authorization_domains.get())
         ]
-        for membership in analyst_memberships:
-            self._audit_workspace_and_account(workspace, membership.account)
+
+        for account in accounts:
+            self._audit_workspace_and_account(workspace, account)
             try:
-                auth_domain_membership.remove(membership.account)
+                auth_domain_accounts.remove(account)
             except ValueError:
                 # This is fine - this happens if the account is not in the auth domain.
                 pass
 
         # Loop over remaining accounts in the auth domain.
-        for account in auth_domain_membership:
+        for account in auth_domain_accounts:
             # Should this be an error, or a needs_action?
             # eg if an analyst is removed on purpose, it should be needs_action.
             self.errors.append(
                 RemoveAccess(
                     collaborative_analysis_workspace=workspace,
                     member=account,
-                    note=self.NOT_IN_ANALYST_GROUP,
+                    note=self.NOT_IN_ANALYST_OR_CC_GROUP,
                 )
             )
 
         # Check group access. Most groups should not have access.
-        group_memberships = (
-            GroupGroupMembership.objects.filter(
-                parent_group=workspace.workspace.authorization_domains.get(),
-            )
-            .exclude(
-                # Ignore cc admins group - it is handled differently because it should have admin privileges.
-                child_group__name=settings.ANVIL_CC_ADMINS_GROUP_NAME,
-            )
-            .exclude(
-                # Ignore allowed groups - they will be checked separately later.
-                child_group__name__in=self.ALLOWED_GROUP_NAMES,
-            )
+        group_memberships = GroupGroupMembership.objects.filter(
+            parent_group=workspace.workspace.authorization_domains.get(),
+        ).exclude(
+            # Ignore cc admins group - it is handled differently because it should have admin privileges.
+            child_group__name=settings.ANVIL_CC_ADMINS_GROUP_NAME,
         )
         for membership in group_memberships:
             self._audit_workspace_and_group(workspace, membership.child_group)
-        # Audit allowed groups
-        for group in ManagedGroup.objects.filter(name__in=self.ALLOWED_GROUP_NAMES):
-            self._audit_workspace_and_group(workspace, group)
+        # # Audit allowed groups
+        # for group in ManagedGroup.objects.filter(name__in=self.ALLOWED_GROUP_NAMES):
+        #     self._audit_workspace_and_group(workspace, group)
 
     def _audit_workspace_and_group(self, collaborative_analysis_workspace, group):
         """Audit access for a specific CollaborativeAnalysisWorkspace and group."""
-        # CC_WRITERS group should have access.
-        access_allowed = group.name in [
-            "PRIMED_CC_WRITERS",
-        ]
         in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.get()
         auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.get()
         in_auth_domain = GroupGroupMembership.objects.filter(parent_group=auth_domain, child_group=group).exists()
-        if access_allowed and in_auth_domain:
-            self.verified.append(
-                VerifiedAccess(
-                    collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    member=group,
-                    note=self.DCC_ACCESS,
-                )
-            )
-        elif access_allowed and not in_auth_domain:
-            self.needs_action.append(
-                GrantAccess(
-                    collaborative_analysis_workspace=collaborative_analysis_workspace,
-                    member=group,
-                    note=self.DCC_ACCESS,
-                )
-            )
-        elif not access_allowed and in_auth_domain:
+        if in_auth_domain:
             self.errors.append(
                 RemoveAccess(
                     collaborative_analysis_workspace=collaborative_analysis_workspace,
@@ -244,11 +223,15 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
         # - an account is in the workspace auth domain, but is not in the analyst group.
         # Get all groups for the account.
         account_groups = account.get_all_groups()
-        # Check whether the account is in the analyst group.
+        # Check whether the account is in the analyst group or any of the allowed CC groups.
         in_analyst_group = collaborative_analysis_workspace.analyst_group in account_groups
+        in_allowed_cc_group = GroupAccountMembership.objects.filter(
+            group__name__iexact=settings.ANVIL_CC_WRITERS_GROUP_NAME, account=account
+        ).exists()
+        in_allowed_group = in_analyst_group or in_allowed_cc_group
         # Check whether the account is in the auth domain of the collab workspace.
         in_auth_domain = collaborative_analysis_workspace.workspace.authorization_domains.get() in account_groups
-        if in_analyst_group:
+        if in_allowed_group:
             # Check whether access is allowed. Start by assuming yes, and then
             # set to false if the account should not have access.
             access_allowed = True
@@ -304,7 +287,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
                     RemoveAccess(
                         collaborative_analysis_workspace=collaborative_analysis_workspace,
                         member=account,
-                        note=self.NOT_IN_ANALYST_GROUP,
+                        note=self.NOT_IN_ANALYST_OR_CC_GROUP,
                     )
                 )
             else:
@@ -312,7 +295,7 @@ class CollaborativeAnalysisWorkspaceAccessAudit(PRIMEDAudit):
                     VerifiedNoAccess(
                         collaborative_analysis_workspace=collaborative_analysis_workspace,
                         member=account,
-                        note=self.NOT_IN_ANALYST_GROUP,
+                        note=self.NOT_IN_ANALYST_OR_CC_GROUP,
                     )
                 )
 

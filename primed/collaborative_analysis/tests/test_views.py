@@ -1365,7 +1365,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(
             audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_GROUP,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_OR_CC_GROUP,
         )
 
     def test_get_verified_no_access_group(self):
@@ -1492,7 +1492,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(
             audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_GROUP,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_OR_CC_GROUP,
         )
 
     def test_get_remove_access_group(self):
