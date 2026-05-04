@@ -841,7 +841,7 @@ class WorkspaceAuditTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("member"), group)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.UNEXPECTED_GROUP_ACCESS,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.GROUP_NOT_ALLOWED,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -1126,7 +1126,7 @@ class WorkspaceAuditAllTest(TestCase):
         self.assertEqual(table.rows[0].get_cell_value("member"), group)
         self.assertEqual(
             table.rows[0].get_cell_value("note"),
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.UNEXPECTED_GROUP_ACCESS,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.GROUP_NOT_ALLOWED,
         )
         self.assertIsNotNone(table.rows[0].get_cell_value("action"))
 
@@ -1303,36 +1303,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             audit.CollaborativeAnalysisWorkspaceAccessAudit.IN_SOURCE_AUTH_DOMAINS,
         )
 
-    def test_get_verified_access_group(self):
-        """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        GroupGroupMembershipFactory.create(
-            parent_group=workspace.workspace.authorization_domains.get(),
-            child_group=group,
-        )
-        self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
-            )
-        )
-        self.assertIn("audit_result", response.context_data)
-        audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.VerifiedAccess)
-        self.assertEqual(audit_result.collaborative_analysis_workspace, workspace)
-        self.assertEqual(
-            audit_result.member,
-            group,
-        )
-        self.assertEqual(
-            audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.DCC_ACCESS,
-        )
-
     def test_get_verified_no_access_account(self):
         """Get request with verified no access for an account."""
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -1365,7 +1335,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(
             audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_GROUP,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_OR_CC_GROUP,
         )
 
     def test_get_verified_no_access_group(self):
@@ -1392,7 +1362,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(audit_result.member, group)
         self.assertEqual(
             audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.NON_DCC_GROUP,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.GROUP_NOT_ALLOWED,
         )
 
     def test_get_grant_access_account(self):
@@ -1430,36 +1400,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             audit.CollaborativeAnalysisWorkspaceAccessAudit.IN_SOURCE_AUTH_DOMAINS,
         )
 
-    def test_get_grant_access_group(self):
-        """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.get(),
-        #     child_group=group,
-        # )
-        self.client.force_login(self.user)
-        response = self.client.get(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
-            )
-        )
-        self.assertIn("audit_result", response.context_data)
-        audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.GrantAccess)
-        self.assertEqual(audit_result.collaborative_analysis_workspace, workspace)
-        self.assertEqual(
-            audit_result.member,
-            group,
-        )
-        self.assertEqual(
-            audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.DCC_ACCESS,
-        )
-
     def test_get_remove_access_account(self):
         """Get request with verified access."""
         workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
@@ -1492,7 +1432,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(
             audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_GROUP,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.NOT_IN_ANALYST_OR_CC_GROUP,
         )
 
     def test_get_remove_access_group(self):
@@ -1522,7 +1462,7 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertEqual(
             audit_result.note,
-            audit.CollaborativeAnalysisWorkspaceAccessAudit.UNEXPECTED_GROUP_ACCESS,
+            audit.CollaborativeAnalysisWorkspaceAccessAudit.GROUP_NOT_ALLOWED,
         )
 
     def test_post_verified_access_account(self):
@@ -1547,30 +1487,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
                 workspace.workspace.billing_project.name,
                 workspace.workspace.name,
                 account.email,
-            ),
-            {},
-        )
-        self.assertRedirects(response, workspace.get_absolute_url())
-        membership.refresh_from_db()
-        self.assertEqual(membership.created, date_created)
-
-    def test_post_verified_access_group(self):
-        """Post request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create()
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        date_created = timezone.now() - timedelta(weeks=5)
-        with freeze_time(date_created):
-            membership = GroupGroupMembershipFactory.create(
-                parent_group=workspace.workspace.authorization_domains.get(),
-                child_group=group,
-            )
-        self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
             ),
             {},
         )
@@ -1665,42 +1581,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             account=account,
         )
         self.assertEqual(membership.role, GroupAccountMembership.RoleChoices.MEMBER)
-
-    def test_post_grant_access_group(self):
-        """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.get(),
-        #     child_group=group,
-        # )
-        # Add API response
-        # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
-        )
-        self.anvil_response_mock.add(
-            responses.PUT,
-            api_url,
-            status=204,
-        )
-        self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
-            ),
-            {},
-        )
-        self.assertRedirects(response, workspace.get_absolute_url())
-        # A membership was created.
-        membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.get(),
-            child_group=group,
-        )
-        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_remove_access_account(self):
         """Get request with verified access."""
@@ -1810,47 +1690,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
             account=account,
         )
         self.assertEqual(membership.role, GroupAccountMembership.RoleChoices.MEMBER)
-
-    def test_post_grant_access_group_htmx(self):
-        """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.get(),
-        #     child_group=group,
-        # )
-        # Add API response
-        # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
-        )
-        self.anvil_response_mock.add(
-            responses.PUT,
-            api_url,
-            status=204,
-        )
-        self.client.force_login(self.user)
-        header = {"HTTP_HX-Request": "true"}
-        response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
-            ),
-            {},
-            **header,
-        )
-        self.assertEqual(
-            response.content.decode(),
-            views.CollaborativeAnalysisAuditResolve.htmx_success,
-        )
-        # A membership was created.
-        membership = GroupGroupMembership.objects.get(
-            parent_group=workspace.workspace.authorization_domains.get(),
-            child_group=group,
-        )
-        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
     def test_post_remove_access_account_htmx(self):
         """Get request with verified access."""
@@ -1962,47 +1801,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         # No new membership was created.
         self.assertEqual(GroupAccountMembership.objects.count(), 1)
-        # Audit result is the same.
-        self.assertIn("audit_result", response.context_data)
-        audit_result = response.context_data["audit_result"]
-        self.assertIsInstance(audit_result, audit.GrantAccess)
-        # A message was added.
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertEqual(len(messages), 1)
-        self.assertIn("AnVIL API Error", str(messages[0]))
-
-    def test_anvil_error_grant_access_group(self):
-        """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.get(),
-        #     child_group=group,
-        # )
-        # Add API response
-        # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
-        )
-        self.anvil_response_mock.add(
-            responses.PUT,
-            api_url,
-            status=500,
-            json=ErrorResponseFactory().response,
-        )
-        self.client.force_login(self.user)
-        response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
-            ),
-            {},
-        )
-        self.assertEqual(response.status_code, 200)
-        # No membership was created.
-        self.assertEqual(GroupGroupMembership.objects.count(), 0)
         # Audit result is the same.
         self.assertIn("audit_result", response.context_data)
         audit_result = response.context_data["audit_result"]
@@ -2135,47 +1933,6 @@ class CollaborativeAnalysisAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         # No new membership was created.
         self.assertEqual(GroupAccountMembership.objects.count(), 1)
-        # No message was added.
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertEqual(len(messages), 0)
-
-    def test_anvil_error_grant_access_group_htmx(self):
-        """Get request with verified access for a group."""
-        workspace = factories.CollaborativeAnalysisWorkspaceFactory.create(workspace__name="TEST_COLLAB")
-        group = ManagedGroupFactory.create(name="PRIMED_CC_WRITERS")
-        # Auth domain membership.
-        # GroupGroupMembershipFactory.create(
-        #     parent_group=workspace.workspace.authorization_domains.get(),
-        #     child_group=group,
-        # )
-        # Add API response
-        # Note that the auth domain group is created automatically by the factory using the workspace name.
-        api_url = (
-            self.api_client.sam_entry_point + "/api/groups/v1/auth_TEST_COLLAB/member/PRIMED_CC_WRITERS@firecloud.org"
-        )
-        self.anvil_response_mock.add(
-            responses.PUT,
-            api_url,
-            status=500,
-            json=ErrorResponseFactory().response,
-        )
-        self.client.force_login(self.user)
-        header = {"HTTP_HX-Request": "true"}
-        response = self.client.post(
-            self.get_url(
-                workspace.workspace.billing_project.name,
-                workspace.workspace.name,
-                group.email,
-            ),
-            {},
-            **header,
-        )
-        self.assertEqual(
-            response.content.decode(),
-            views.CollaborativeAnalysisAuditResolve.htmx_error,
-        )
-        # No new membership was created.
-        self.assertEqual(GroupGroupMembership.objects.count(), 0)
         # No message was added.
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertEqual(len(messages), 0)
