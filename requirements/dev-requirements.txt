@@ -15,6 +15,8 @@ asgiref==3.8.1
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   django
+ast-serialize==0.3.0
+    # via mypy
 asttokens==2.4.1
     # via stack-data
 babel==2.14.0
@@ -86,7 +88,7 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.6
     # via sphinx
-librt==0.8.1
+librt==0.10.0
     # via mypy
 markupsafe==2.1.5
     # via
@@ -94,7 +96,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.20.0
+mypy==2.0.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
