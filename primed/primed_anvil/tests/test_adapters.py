@@ -98,7 +98,28 @@ class AccountAdapterTest(AnVILAPIMockTestMixin, TestCase):
         self.assertEqual(membership.account, account)
         self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
 
-    def test_after_account_verification_two_study_sites(self):
+    def test_after_account_verification_two_study_sites_member_of_one(self):
+        """A user is part of two study sites."""
+        member_group_1 = ManagedGroupFactory.create()
+        study_site_1 = StudySiteFactory.create(member_group=member_group_1)
+        member_group_2 = ManagedGroupFactory.create()
+        StudySiteFactory.create(member_group=member_group_2)
+        user = UserFactory.create()
+        user.study_sites.add(study_site_1)
+        account = AccountFactory.create(user=user, verified=True)
+        # API response for study site membership.
+        self.anvil_response_mock.add(
+            responses.PUT,
+            self.api_client.sam_entry_point + f"/api/groups/v1/{member_group_1.name}/member/{account.email}",
+            status=204,
+        )
+        adapters.AccountAdapter().after_account_verification(account)
+        # Check for GroupGroupMembership.
+        self.assertEqual(GroupAccountMembership.objects.count(), 1)
+        membership = GroupAccountMembership.objects.get(group=member_group_1, account=account)
+        self.assertEqual(membership.role, GroupGroupMembership.RoleChoices.MEMBER)
+
+    def test_after_account_verification_two_study_sites_member_of_both(self):
         """A user is part of two study sites."""
         member_group_1 = ManagedGroupFactory.create()
         study_site_1 = StudySiteFactory.create(member_group=member_group_1)

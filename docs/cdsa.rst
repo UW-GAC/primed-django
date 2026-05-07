@@ -166,6 +166,7 @@ A Signed Agreement's ``anvil_access_group`` should be part of the ``settings.ANV
 
     - The ``SignedAgreement`` has **Active** status.
     - The ``SignedAgreement`` is a primary agreement, or has an associated primary agreement with **Active** status.
+    - For ``MemberAgreements`` only: The study site associated with the MemberAgreement should match the study site of the signing representative.
 
 The :class:`~primed.cdsa.audit.access_audit.SignedAgreementAccessAudit` auditing class is responsible for performing the above checks and storing the results.
 The audit can be run for all ``SignedAgreements`` together or for a single agreement at a time.

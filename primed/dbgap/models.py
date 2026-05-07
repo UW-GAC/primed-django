@@ -19,6 +19,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django_extensions.db.models import TimeStampedModel
+from model_utils.models import StatusModel
 from simple_history.models import HistoricalRecords
 
 from primed.duo.models import DataUseOntologyModel
@@ -160,7 +161,23 @@ class dbGaPWorkspace(RequesterModel, DataUseOntologyModel, TimeStampedModel, Bas
         return url
 
 
-class dbGaPApplication(TimeStampedModel, models.Model):
+class dbGaPApplicationStatusMixin:
+    """Mixin to define status choices for SignedAgreements."""
+
+    # This is required because we are using django-model-util's StatusModel with django-simple-history:
+    # See GitHub issue: https://github.com/jazzband/django-simple-history/issues/190
+
+    class StatusChoices(models.TextChoices):
+        ACTIVE = "active", "Active"
+        """dbGaP that are currently active."""  # pragma: no cover
+
+        INACTIVE = "inactive", "Inactive"
+        """dbGaP applications that are not currently active."""
+
+    STATUS = StatusChoices.choices
+
+
+class dbGaPApplication(TimeStampedModel, dbGaPApplicationStatusMixin, StatusModel, models.Model):
     """A model to track dbGaP applications."""
 
     principal_investigator = models.ForeignKey(
@@ -188,7 +205,7 @@ class dbGaPApplication(TimeStampedModel, models.Model):
         help_text="The AnVIL managed group that can will access to workspaces under this dbGaP application.",
     )
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(bases=[TimeStampedModel, dbGaPApplicationStatusMixin, StatusModel, models.Model])
 
     class Meta:
         verbose_name = " dbGaP application"

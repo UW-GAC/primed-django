@@ -19,7 +19,6 @@ class AgreementMajorVersionFactory(DjangoModelFactory):
 
     class Meta:
         model = models.AgreementMajorVersion
-        django_get_or_create = ("version",)
 
     version = Sequence(lambda n: n + 1)
 

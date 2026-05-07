@@ -24,6 +24,7 @@ from primed.cdsa.tests.factories import (
     MemberAgreementFactory,
     NonDataAffiliateAgreementFactory,
 )
+from primed.dbgap.models import dbGaPApplication
 from primed.dbgap.tests.factories import dbGaPApplicationFactory
 from primed.drupal_oauth_provider.provider import CustomProvider
 from primed.primed_anvil.tests.factories import StudySiteFactory
@@ -333,6 +334,36 @@ class UserDetailTest(TestCase):
         self.assertEqual(len(response.context["dbgap_applications"]), 1)
         self.assertIn(dbgap_application, response.context["dbgap_applications"])
 
+    def test_dbgap_active_pi_shown_correct_badge(self):
+        dbGaPApplicationFactory.create(principal_investigator=self.user, status=dbGaPApplication.StatusChoices.ACTIVE)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-success">Active</span>', html=True)
+
+    def test_dbgap_inactive_pi_shown_correct_badge(self):
+        dbGaPApplicationFactory.create(principal_investigator=self.user, status=dbGaPApplication.StatusChoices.INACTIVE)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-secondary">Inactive</span>', html=True)
+
+    def test_dbgap_active_collaborator_shown_correct_badge(self):
+        dbgap_application = dbGaPApplicationFactory.create(status=dbGaPApplication.StatusChoices.ACTIVE)
+        dbgap_application.collaborators.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-success">Active</span>', html=True)
+
+    def test_dbgap_inactive_collaborator_shown_correct_badge(self):
+        dbgap_application = dbGaPApplicationFactory.create(status=dbGaPApplication.StatusChoices.INACTIVE)
+        dbgap_application.collaborators.add(self.user)
+        self.client.force_login(self.user)
+        response = self.client.get(self.user.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<span class="badge mx-2 bg-secondary">Inactive</span>', html=True)
+
     def test_other_dbgap_applications(self):
         # Create an application for a different user.
         dbGaPApplicationFactory.create()
@@ -564,7 +595,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge mx-2 bg-danger">Withdrawn</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-secondary">Withdrawn</span>', html=True)
 
     def test_cdsa_accessor_replaced_agreement_shown_correct_badge(self):
         agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.REPLACED)
@@ -572,7 +603,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge mx-2 bg-danger">Replaced</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-secondary">Replaced</span>', html=True)
 
     def test_cdsa_accessor_lapsed_agreement_shown_correct_badge(self):
         agreement = MemberAgreementFactory.create(signed_agreement__status=SignedAgreement.StatusChoices.LAPSED)
@@ -580,7 +611,7 @@ class UserDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.user.get_absolute_url())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<span class="badge mx-2 bg-danger">Lapsed</span>', html=True)
+        self.assertContains(response, '<span class="badge mx-2 bg-secondary">Lapsed</span>', html=True)
 
     def test_acm_staff_view(self):
         """Users with staff view permission see dbGaP application info."""
