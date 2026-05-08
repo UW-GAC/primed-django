@@ -15,6 +15,8 @@ asgiref==3.8.1
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   django
+ast-serialize==0.3.0
+    # via mypy
 asttokens==2.4.1
     # via stack-data
 babel==2.14.0
@@ -54,7 +56,7 @@ django==5.2.13
     #   django-stubs-ext
 django-debug-toolbar==6.3.0
     # via -r requirements/dev-requirements.in
-django-stubs==6.0.2
+django-stubs==6.0.3
     # via -r requirements/dev-requirements.in
 django-stubs-ext==6.0.2
     # via django-stubs
@@ -86,7 +88,7 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.6
     # via sphinx
-librt==0.8.1
+librt==0.10.0
     # via mypy
 markupsafe==2.1.5
     # via
@@ -94,7 +96,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==1.20.0
+mypy==2.0.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -115,7 +117,7 @@ pickleshare==0.7.5
     # via ipython
 platformdirs==4.1.0
     # via virtualenv
-pre-commit==4.5.1
+pre-commit==4.6.0
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
@@ -137,7 +139,7 @@ requests==2.33.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.15.10
+ruff==0.15.12
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -154,7 +156,7 @@ sphinx==7.1.2
     #   sphinx-autobuild
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx-autobuild==2024.10.3
+sphinx-autobuild==2025.8.25
     # via -r requirements/dev-requirements.in
 sphinx-rtd-theme==3.1.0
     # via -r requirements/dev-requirements.in
@@ -188,7 +190,7 @@ traitlets==5.14.1
     #   matplotlib-inline
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.33.0.20260408
+types-requests==2.33.0.20260503
     # via -r requirements/dev-requirements.in
 typing-extensions==4.15.0
     # via
