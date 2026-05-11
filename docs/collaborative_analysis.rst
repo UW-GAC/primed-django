@@ -22,9 +22,9 @@ Access to Collaborative Analysis workspaces
 :class:`~primed.collaborative_analysis.models.CollaborativeAnalysisWorkspace` objects have an associated Managed Group on AnVIL (:attr:`~primed.collaborative_analysis.models.CollaborativeAnalysisWorkspace.analyst_group`) that contains the AnVIL accounts of analysts specified by the custodian.
 A PRIMED user is allowed to work in the Collaborative Analysis workspace if the following are all true:
 
-    - The analyst has access to all source workspaces associated with the Collaborative Analysis workspace
-    - The analyst's AnVIL account is active
-    - The analyst is a member of the workspace's ``analyst_group`` (e.g., has been specified by the custodian as an analyst)
+    - The user's account has access to all source workspaces associated with the Collaborative Analysis workspace
+    - The user's AnVIL account is active
+    - The user's account is a member of the workspace's ``analyst_group`` (e.g., has been specified by the custodian as an analyst) or is a member of the ``PRIMED_DCC_WRITERS`` group
 
 To manage access to the workspace, analysts are added to the workspace's authorization domain if all of the above criteria are met.
 The workspace is then shared with the analyst group with "write" permission.
@@ -36,6 +36,7 @@ Auditing workspace access
 
 The app provides functionality (:mod:`primed.collaborative_analysis.audit`) to audit the members of the workspace's authorization domain against the set of analysts in the workspace's ``analyst_group``.
 If all of the criteria in the previous section are met, the audit will confirm that the user is in the authorization domain or whether they need to be added; or if any criteria are not met, the audit will confirm that the user is not in the authorization domain or whether they need to be removed.
+The audit does not rely on checks against the AnVIL platform itself; it instead expects that the data in the app are correct, and consistency checks against AnVIL are handled by the AnVIL audit functionality provided by the ``djang-anvil-consortium-manager`` app.
 
 The :class:`~primed.collaborative_analysis.audit.CollaborativeAnalysisWorkspaceAccessAudit` auditing class is responsible for performing the above checks and storing the results.
 The audit can be run for all workspaces or for a single workspace at a time.
