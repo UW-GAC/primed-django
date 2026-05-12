@@ -5460,13 +5460,12 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIsNotNone(audit_result.action)
 
-    def test_get_snapshot_needs_update(self):
-        """needs_action_table shows a record when audit finds that dar needs update."""
-        workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace,
-            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=5),
-        )
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2025, 1, 1))
+    def test_get_snapshot_outdated(self):
+        """needs_action_table shows a record when audit finds that dar is outdated."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        with time_machine.travel(datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.get_default_timezone())):
+            dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
 
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.get(),
