@@ -397,8 +397,6 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 # ------------------------------------------------------------------------------
 CONSTANCE_CONFIG = {
     "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
-    # Old fields for determining outdated status of a DAR snapshot.
-    "DBGAP_SNAPSHOT_OLD_DAYS": (30, "Number of days before a dbGaP snapshot is considered old", int),
     # New field for determining outdated status of a DAR snapshot.
     "DBGAP_SNAPSHOT_OLD_DATE": (
         None,
