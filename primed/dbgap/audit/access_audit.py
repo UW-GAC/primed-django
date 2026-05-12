@@ -1,13 +1,10 @@
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Optional
 
 import django_tables2 as tables
 from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
-from constance import config
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.utils import timezone
 
 from primed.primed_anvil.audit import PRIMEDAudit, PRIMEDAuditResult
 from primed.primed_anvil.tables import BooleanIconColumn
@@ -248,9 +245,7 @@ class dbGaPAccessAudit(PRIMEDAudit):
             return  # Go to the next workspace.
 
         # Is snapshot more than 30 days old
-        snapshot_is_prior = app_snapshot.created.date() <= (
-            timezone.localdate() - timedelta(days=config.DBGAP_SNAPSHOT_OLD_DAYS)
-        )
+        snapshot_is_prior = app_snapshot.is_outdated()
 
         try:
             # There should only be one DAR from this snapshot associated with a given workspace.
