@@ -41,7 +41,7 @@ typing-extensions==4.15.0
     #   -c requirements/dev-requirements.txt
     #   -c requirements/test-requirements.txt
     #   beautifulsoup4
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   -c requirements/dev-requirements.txt
     #   -c requirements/requirements.txt
