@@ -134,7 +134,7 @@ class WorkspaceAccessAuditResultTest(TestCase):
         self.assertEqual(instance.get_action_url(), expected_url)
 
 
-class CollaborativeAnalysisWorkspaceAccessAudit(TestCase):
+class CollaborativeAnalysisWorkspaceAccessAuditTest(TestCase):
     """Tests for the CollaborativeAnalysisWorkspaceAccessAudit class."""
 
     def test_completed(self):
