@@ -399,7 +399,7 @@ CONSTANCE_CONFIG = {
     "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
     # New field for determining outdated status of a DAR snapshot.
     "DBGAP_SNAPSHOT_OLD_DATE": (
-        None,
+        date(2026, 1, 1),
         "Date before which a dbGaPDataAccessSnapshot is considered outdated.",
         date,
     ),
