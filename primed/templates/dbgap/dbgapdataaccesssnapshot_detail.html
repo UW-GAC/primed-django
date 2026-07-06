@@ -9,6 +9,11 @@
       This is not the most recent snapshot for this dbGaP application!
     </div>
   {% endif %}
+  {% if object.is_outdated %}
+    <div class="alert alert-danger" role="alert">
+      This snapshot is outdated.
+    </div>
+  {% endif %}
 {% endblock pills %}
 
 {% block panel %}
