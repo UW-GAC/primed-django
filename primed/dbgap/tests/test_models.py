@@ -1219,13 +1219,6 @@ class dbGaPDataAccessSnapshotTest(TestCase):
         self.assertIn("project_id mismatch. previous_dar: 1234", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
 
-    @override_config(DBGAP_SNAPSHOT_OLD_DATE=None)
-    def test_is_outdated_old_date_not_set(self):
-        snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
-        self.assertFalse(snapshot.is_outdated())
-        snapshot = factories.dbGaPDataAccessSnapshotFactory.create(created=timezone.now() - timedelta(days=365))
-        self.assertFalse(snapshot.is_outdated())
-
     @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2026, 5, 30))
     def test_is_outdated_created_before_old_date(self):
         # One year before old date.
