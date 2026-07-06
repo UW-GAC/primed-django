@@ -1,9 +1,10 @@
 """Tests for views related to the `dbgap` app."""
 
 import json
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 
 import responses
+import time_machine
 from anvil_consortium_manager import views as acm_views
 from anvil_consortium_manager.models import (
     AnVILProjectManagerAccess,
@@ -23,6 +24,7 @@ from anvil_consortium_manager.tests.factories import (
     WorkspaceAuthorizationDomainFactory,
 )
 from anvil_consortium_manager.tests.utils import AnVILAPIMockTestMixin
+from constance.test import override_config
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -3869,13 +3871,13 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         table = response.context_data["summary_table"]
         self.assertEqual(len(table.rows), 0)
 
-    def test_no_alert_for_most_recent_snapshot(self):
+    def test_no_most_recent_alert_most_recent(self):
         """No alert is shown when this is the most recent snapshot for an application."""
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.application.dbgap_project_id, self.snapshot.pk))
         self.assertNotContains(response, "not the most recent snapshot", status_code=200)
 
-    def test_alert_when_not_most_recent_snapshot(self):
+    def test_no_most_recent_alert_not_most_recent(self):
         """An alert is shown when this is not the most recent snapshot for an application."""
         old_snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
             dbgap_application=self.application,
@@ -3885,6 +3887,28 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url(self.application.dbgap_project_id, old_snapshot.pk))
         self.assertContains(response, "not the most recent snapshot", status_code=200)
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2024, 5, 1))
+    def test_outdated_alert_not_outdated(self):
+        """No alert is shown when this snapshot is not outdated."""
+        with time_machine.travel(datetime(2025, 5, 1, tzinfo=timezone.get_current_timezone())):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(snapshot.dbgap_application.dbgap_project_id, snapshot.pk))
+        self.assertNotContains(response, "outdated", status_code=200)
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2024, 5, 1))
+    def test_outdated_alert_outdated(self):
+        """An alert is shown when this snapshot is outdated."""
+        with time_machine.travel(datetime(2023, 5, 1, tzinfo=timezone.get_current_timezone())):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
+                dbgap_application=self.application,
+                created=timezone.now() - timedelta(weeks=5),
+                is_most_recent=False,
+            )
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url(snapshot.dbgap_application.dbgap_project_id, snapshot.pk))
+        self.assertContains(response, "outdated", status_code=200)
 
 
 class dbGaPDataAccessRequestListTest(TestCase):
@@ -5423,13 +5447,12 @@ class dbGaPAccessAuditResolveTest(AnVILAPIMockTestMixin, TestCase):
         )
         self.assertIsNotNone(audit_result.action)
 
-    def test_get_snapshot_needs_update(self):
-        """needs_action_table shows a record when audit finds that dar needs update."""
-        workspace = factories.dbGaPWorkspaceFactory.create(created=timezone.now() - timedelta(weeks=5))
-        dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(
-            dbgap_workspace=workspace,
-            dbgap_data_access_snapshot__created=timezone.now() - timedelta(weeks=5),
-        )
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2025, 1, 1))
+    def test_get_snapshot_outdated(self):
+        """needs_action_table shows a record when audit finds that dar is outdated."""
+        workspace = factories.dbGaPWorkspaceFactory.create()
+        with time_machine.travel(datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.get_default_timezone())):
+            dar = factories.dbGaPDataAccessRequestForWorkspaceFactory.create(dbgap_workspace=workspace)
 
         GroupGroupMembershipFactory.create(
             parent_group=workspace.workspace.authorization_domains.get(),

@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/dbgap-mhtml-parser-requirements.in
 #
-beautifulsoup4==4.14.3
+beautifulsoup4==4.15.0
     # via -r requirements/dbgap-mhtml-parser-requirements.in
 certifi==2024.7.4
     # via
@@ -24,7 +24,7 @@ idna==3.7
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   requests
-lxml==6.0.3
+lxml==6.1.1
     # via -r requirements/dbgap-mhtml-parser-requirements.in
 mhtml-to-html-py==0.1.0
     # via -r requirements/dbgap-mhtml-parser-requirements.in
@@ -41,7 +41,7 @@ typing-extensions==4.15.0
     #   -c requirements/dev-requirements.txt
     #   -c requirements/test-requirements.txt
     #   beautifulsoup4
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   -c requirements/dev-requirements.txt
     #   -c requirements/requirements.txt

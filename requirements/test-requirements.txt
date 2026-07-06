@@ -16,12 +16,12 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements/requirements.txt
     #   requests
-coverage[toml]==7.13.5
+coverage[toml]==7.14.1
     # via
     #   -r requirements/test-requirements.in
     #   django-coverage-plugin
     #   pytest-cov
-django==5.2.13
+django==5.2.14
     # via
     #   -c requirements/requirements.txt
     #   django-coverage-plugin
@@ -84,7 +84,7 @@ requests==2.33.0
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.26.0
+responses==0.26.1
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
@@ -96,9 +96,11 @@ sqlparse==0.5.4
     #   django
 termcolor==2.4.0
     # via pytest-sugar
+time-machine==3.2.0
+    # via -r requirements/test-requirements.in
 typing-extensions==4.15.0
     # via django-test-migrations
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   -c requirements/requirements.txt
     #   requests

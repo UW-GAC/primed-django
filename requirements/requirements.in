@@ -11,14 +11,14 @@ pyjwt  # https://github.com/jpadilla/pyjwt
 requests-oauthlib  # https://github.com/requests/requests-oauthlib
 # Address security alerts
 requests>=2.32.4  # https://github.com/psf/requests
-urllib3>=2.6.0  # https://github.com/urllib3/urllib3
+urllib3>=2.7.0  # https://github.com/urllib3/urllib3
 
 # Password hashing
 argon2-cffi # https://github.com/hynek/argon2_cffi
 
 # Django
 # ------------------------------------------------------------------------------
-django>=5.2.13,<6.0 # https://www.djangoproject.com/
+django>=5.2.14,<6.0 # https://www.djangoproject.com/
 # Read from .env files
 # Pin to <= 0.10.0 because 0.11+ introduces a bug with reading environment variables with # characters.
 django-environ<=0.13.0  # https://github.com/joke2k/django-environ
@@ -41,7 +41,7 @@ django-dbbackup # https://github.com/jazzband/django-dbbackup
 django-extensions  # https://github.com/django-extensions/django-extensions
 
 # anvil_consortium_manager
-django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.34.0
+django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.36.0
 
 # Simple history - model history tracking
 django-simple-history
