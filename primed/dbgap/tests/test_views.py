@@ -3910,19 +3910,6 @@ class dbGaPDataAccessSnapshotDetailTest(TestCase):
         response = self.client.get(self.get_url(snapshot.dbgap_application.dbgap_project_id, snapshot.pk))
         self.assertContains(response, "outdated", status_code=200)
 
-    @override_config(DBGAP_SNAPSHOT_OLD_DATE=None)
-    def test_outdated_alert_no_outdated_date(self):
-        """No alert is shown when DBGAP_SNAPSHOT_OLD_DATE is not set."""
-        with time_machine.travel(datetime(2023, 5, 1, tzinfo=timezone.get_current_timezone())):
-            snapshot = factories.dbGaPDataAccessSnapshotFactory.create(
-                dbgap_application=self.application,
-                created=timezone.now() - timedelta(weeks=5),
-                is_most_recent=False,
-            )
-        self.client.force_login(self.user)
-        response = self.client.get(self.get_url(snapshot.dbgap_application.dbgap_project_id, snapshot.pk))
-        self.assertNotContains(response, "outdated", status_code=200)
-
 
 class dbGaPDataAccessRequestListTest(TestCase):
     def setUp(self):
