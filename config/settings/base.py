@@ -2,6 +2,7 @@
 Base settings to build other settings files upon.
 """
 
+from datetime import date
 from pathlib import Path
 
 import environ
@@ -396,7 +397,12 @@ DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 # ------------------------------------------------------------------------------
 CONSTANCE_CONFIG = {
     "ANNOUNCEMENT_TEXT": ("", "Site-wide announcement message", str),
-    "DBGAP_SNAPSHOT_OLD_DAYS": (30, "Number of days before a dbGaP snapshot is considered old", int),
+    # New field for determining outdated status of a DAR snapshot.
+    "DBGAP_SNAPSHOT_OLD_DATE": (
+        None,
+        "Date before which a dbGaPDataAccessSnapshot is considered outdated.",
+        date,
+    ),
 }
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"

@@ -9,15 +9,18 @@ referencing (e.g., "dbgap_study_accession").
 
 import logging
 import re
+from datetime import datetime
 
 import jsonschema
 import requests
 from anvil_consortium_manager.models import BaseWorkspaceData, ManagedGroup
+from constance import config
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django_extensions.db.models import TimeStampedModel
 from model_utils.models import StatusModel
 from simple_history.models import HistoricalRecords
@@ -370,6 +373,18 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         # Create the DARs in bulk - there are usually a lot of them.
         dars = dbGaPDataAccessRequest.objects.bulk_create(dars)
         return dars
+
+    def is_outdated(self):
+        """Determine whether a dbGaPDataAccessSnapshot is outdated."""
+        x = config.DBGAP_SNAPSHOT_OLD_DATE
+        if x is None:
+            return False
+        else:
+            cutoff = timezone.make_aware(
+                datetime(x.year, x.month, x.day),
+                timezone.get_default_timezone(),
+            )
+            return self.created < cutoff
 
 
 class dbGaPDataAccessRequest(TimeStampedModel, models.Model):

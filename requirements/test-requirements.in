@@ -18,6 +18,8 @@ pytest-django  # https://github.com/pytest-dev/pytest-django
 django-test-migrations
 # Freeze time in tests.
 freezegun  # https://github.com/spulec/freezegun
+# Replacement for freezegun - better timezone support
+time-machine
 # Coverage of django templates
 django-coverage-plugin  # https://github.com/nedbat/django_coverage_plugin
 # Test coverage.

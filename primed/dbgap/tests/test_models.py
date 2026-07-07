@@ -1,13 +1,16 @@
 """Tests of models in the `dbgap` app."""
 
-from datetime import timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import jsonschema
 import responses
+import time_machine
 from anvil_consortium_manager.tests.factories import (
     ManagedGroupFactory,
     WorkspaceFactory,
 )
+from constance.test import override_config
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
@@ -21,6 +24,10 @@ from primed.users.tests.factories import UserFactory
 
 from .. import constants, models
 from . import factories
+
+# Naive datetimes not allowed
+# See docs: https://time-machine.readthedocs.io/en/latest/usage.html#time_machine.naive_mode
+time_machine.naive_mode = time_machine.NaiveMode.ERROR
 
 fake = Faker()
 
@@ -1211,6 +1218,76 @@ class dbGaPDataAccessSnapshotTest(TestCase):
             second_snapshot.create_dars_from_json()
         self.assertIn("project_id mismatch. previous_dar: 1234", str(e.exception))
         self.assertEqual(models.dbGaPDataAccessRequest.objects.count(), 1)
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=None)
+    def test_is_outdated_old_date_not_set(self):
+        snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+        snapshot = factories.dbGaPDataAccessSnapshotFactory.create(created=timezone.now() - timedelta(days=365))
+        self.assertFalse(snapshot.is_outdated())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2026, 5, 30))
+    def test_is_outdated_created_before_old_date(self):
+        # One year before old date.
+        with time_machine.travel(datetime(2025, 5, 30, 12, 0, 0, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertTrue(snapshot.is_outdated())
+        # One day before old date.
+        with time_machine.travel(datetime(2026, 5, 29, 12, 0, 0, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertTrue(snapshot.is_outdated())
+        # One second before old date.
+        with time_machine.travel(datetime(2025, 5, 30, 23, 59, 59, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertTrue(snapshot.is_outdated())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2026, 5, 30))
+    def test_is_outdated_created_after_old_date(self):
+        # One year after old date.
+        with time_machine.travel(datetime(2027, 5, 30, 12, 0, 0, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+        # One day after old date.
+        with time_machine.travel(datetime(2026, 5, 31, 12, 0, 0, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+        # One second after old date.
+        with time_machine.travel(datetime(2026, 5, 31, 0, 0, 1, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2026, 5, 30))
+    def test_is_outdated_created_on_old_date(self):
+        # Middle of the date
+        with time_machine.travel(datetime(2026, 5, 30, 12, 0, 0, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+        # Zeroth second of the day
+        with time_machine.travel(datetime(2026, 5, 30, 0, 0, 0, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+        # First second of the day
+        with time_machine.travel(datetime(2026, 5, 30, 0, 0, 1, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+        # Last second of the day
+        with time_machine.travel(datetime(2026, 5, 30, 23, 59, 59, tzinfo=timezone.get_default_timezone()), tick=False):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        self.assertFalse(snapshot.is_outdated())
+
+    @override_config(DBGAP_SNAPSHOT_OLD_DATE=date(2026, 5, 15))
+    def test_is_outdated_timezones(self):
+        # Invalid snapshot in default timezone but not local timezone.
+        # This is an snapshot with a created time of 2026-05-14 23:59:59 in the default timezone.
+        with time_machine.travel(datetime(2026, 5, 14, 23, 59, 59, tzinfo=timezone.get_default_timezone())):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        with time_machine.travel(datetime(2026, 5, 15, 0, 0, 1, tzinfo=ZoneInfo("America/Denver")), tick=False):
+            self.assertTrue(snapshot.is_outdated())
+        # Valid snapshot in default timezone but not local timezone.
+        with time_machine.travel(datetime(2026, 5, 15, 0, 0, 1, tzinfo=timezone.get_default_timezone())):
+            snapshot = factories.dbGaPDataAccessSnapshotFactory.create()
+        with time_machine.travel(datetime(2026, 5, 14, 23, 59, 59, tzinfo=ZoneInfo("America/Anchorage")), tick=False):
+            self.assertFalse(snapshot.is_outdated())
 
 
 class dbGaPDataAccessRequestTest(TestCase):
