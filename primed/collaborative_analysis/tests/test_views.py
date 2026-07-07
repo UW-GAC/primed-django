@@ -508,6 +508,7 @@ class CollaborativeAnalysisWorkspaceUpdateTest(AnVILAPIMockTestMixin, TestCase):
                 self.workspace.workspace.name,
             ),
             {
+                "app_access": self.workspace.workspace.app_access,
                 # Workspace data form.
                 "workspacedata-TOTAL_FORMS": 1,
                 "workspacedata-INITIAL_FORMS": 1,
