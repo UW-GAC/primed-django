@@ -51,6 +51,7 @@ django==5.2.14
     #   django-extensions
     #   django-filter
     #   django-htmx
+    #   django-maintenance-mode
     #   django-model-utils
     #   django-picklefield
     #   django-simple-history
@@ -82,7 +83,7 @@ django-htmx==1.27.0
     # via -r requirements/requirements.in
 django-login-required-middleware==0.9.0
     # via -r requirements/requirements.in
-django-maintenance-mode==0.22.0
+django-maintenance-mode==0.23.0
     # via -r requirements/requirements.in
 django-model-utils==5.0.0
     # via -r requirements/requirements.in
@@ -156,7 +157,7 @@ python-dateutil==2.8.2
     # via
     #   pandas
     #   pronto
-python-fsutil==0.13.1
+python-fsutil==0.17.0
     # via django-maintenance-mode
 pytz==2023.3.post1
     # via django-anvil-consortium-manager
