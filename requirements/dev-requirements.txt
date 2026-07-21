@@ -15,7 +15,7 @@ asgiref==3.8.1
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   django
-ast-serialize==0.3.0
+ast-serialize==0.6.0
     # via mypy
 asttokens==2.4.1
     # via stack-data
@@ -56,7 +56,7 @@ django==5.2.14
     #   django-stubs-ext
 django-debug-toolbar==7.0.0
     # via -r requirements/dev-requirements.in
-django-stubs==6.0.6
+django-stubs==6.0.7
     # via -r requirements/dev-requirements.in
 django-stubs-ext==6.0.2
     # via django-stubs
@@ -88,7 +88,7 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.6
     # via sphinx
-librt==0.11.0
+librt==0.13.0
     # via mypy
 markupsafe==2.1.5
     # via
@@ -96,7 +96,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==2.1.0
+mypy==2.3.0
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -139,7 +139,7 @@ requests==2.33.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.15.20
+ruff==0.15.22
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -190,7 +190,7 @@ traitlets==5.14.1
     #   matplotlib-inline
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.33.0.20260518
+types-requests==2.33.0.20260712
     # via -r requirements/dev-requirements.in
 typing-extensions==4.15.0
     # via
