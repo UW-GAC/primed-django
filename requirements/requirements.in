@@ -18,7 +18,7 @@ argon2-cffi # https://github.com/hynek/argon2_cffi
 
 # Django
 # ------------------------------------------------------------------------------
-django>=5.2.14,<6.0 # https://www.djangoproject.com/
+django>=5.2.17,<6.0 # https://www.djangoproject.com/
 # Read from .env files
 # Pin to <= 0.10.0 because 0.11+ introduces a bug with reading environment variables with # characters.
 django-environ<=0.14.0  # https://github.com/joke2k/django-environ
@@ -45,6 +45,9 @@ django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-con
 
 # Simple history - model history tracking
 django-simple-history
+
+# IDNA
+idna>=3.15
 
 # Making HTTP requests to get dbgap study versions.
 requests>=2.32.0
