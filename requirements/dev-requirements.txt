@@ -192,7 +192,7 @@ types-pyyaml==6.0.12.12
     # via django-stubs
 types-requests==2.33.0.20260712
     # via -r requirements/dev-requirements.in
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   -c requirements/test-requirements.txt
     #   django-stubs
