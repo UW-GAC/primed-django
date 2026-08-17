@@ -28,16 +28,12 @@ class dbGaPDAR:
         # Check that the full string matches, ignoring case.
         name_consent_group = this_code.get("name_consent_group")
         name_participant_set = this_code.get("name_participant_set")
-        if name_consent_group and self.full_consent.lower() == name_consent_group.lower():
-            pass
-        elif name_participant_set and self.full_consent.lower() == name_participant_set.lower():
+        if name_consent_group and self.full_consent.lower() == name_consent_group.lower() or name_participant_set and self.full_consent.lower() == name_participant_set.lower():
             pass
         else:
             # Sometimes the string has the consent abbreviation in parentheses. Check that next.
             full_consent_with_code = f"{self.full_consent} ({this_code.get('short_name')})"
-            if name_consent_group and full_consent_with_code.lower() == name_consent_group.lower():
-                pass
-            elif name_participant_set and full_consent_with_code.lower() == name_participant_set.lower():
+            if name_consent_group and full_consent_with_code.lower() == name_consent_group.lower() or name_participant_set and full_consent_with_code.lower() == name_participant_set.lower():
                 pass
             else:
                 raise ValueError(f"Consent string mismatch for code {self.consent_code} (DAR {self.id})")
@@ -259,11 +255,7 @@ class dbGaPApplication:
             status = "expired"
         elif status_classes == set(["revision_requested"]) and status_text == set(["rev. requested"]):
             status = "new"
-        elif status_classes == set(["staff_queued"]) and status_text == set(["dac review", "granted"]):
-            status = "approved"
-        elif status_classes == set(["staff_processing"]) and status_text == set(["dac review", "granted"]):
-            status = "approved"
-        elif status_classes == set(["revision_requested"]) and status_text == set(["granted", "rev. requested"]):
+        elif status_classes == set(["staff_queued"]) and status_text == set(["dac review", "granted"]) or status_classes == set(["staff_processing"]) and status_text == set(["dac review", "granted"]) or status_classes == set(["revision_requested"]) and status_text == set(["granted", "rev. requested"]):
             status = "approved"
         else:
             raise (ValueError("Unknown DAR status"))
