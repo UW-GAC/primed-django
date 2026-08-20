@@ -54,9 +54,9 @@ django==5.2.17
     #   django-debug-toolbar
     #   django-stubs
     #   django-stubs-ext
-django-debug-toolbar==7.0.0
+django-debug-toolbar==7.1.1
     # via -r requirements/dev-requirements.in
-django-stubs==6.0.8
+django-stubs==6.1.0
     # via -r requirements/dev-requirements.in
 django-stubs-ext==6.0.2
     # via django-stubs
@@ -96,7 +96,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==2.3.0
+mypy==2.3.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -117,7 +117,7 @@ pickleshare==0.7.5
     # via ipython
 platformdirs==4.1.0
     # via virtualenv
-pre-commit==4.6.1
+pre-commit==4.6.2
     # via -r requirements/dev-requirements.in
 prompt-toolkit==3.0.43
     # via ipython
@@ -139,7 +139,7 @@ requests==2.33.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.16.1
+ruff==0.16.3
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
