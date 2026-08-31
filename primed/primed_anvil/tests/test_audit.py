@@ -32,7 +32,6 @@ class TempAudit(audit.PRIMEDAudit):
     def _run_audit(self):
         """Run the audit."""
         # For this test, do nothing.
-        pass
 
 
 class PRIMEDAuditResultTest(TestCase):
