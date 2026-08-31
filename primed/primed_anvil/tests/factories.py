@@ -7,7 +7,7 @@ from .. import models
 class StudyFactory(DjangoModelFactory):
     """A factory for the Study model."""
 
-    short_name = Sequence(lambda n: "Study:{0:07d}".format(n))
+    short_name = Sequence(lambda n: f"Study:{n:07d}")
     full_name = Faker("company")
 
     class Meta:
@@ -17,7 +17,7 @@ class StudyFactory(DjangoModelFactory):
 class StudySiteFactory(DjangoModelFactory):
     """A factory for the StudySite model."""
 
-    short_name = Sequence(lambda n: "Site:{0:07d}".format(n))
+    short_name = Sequence(lambda n: f"Site:{n:07d}")
     full_name = Faker("company")
 
     class Meta:
@@ -30,5 +30,5 @@ class AvailableDataFactory(DjangoModelFactory):
     class Meta:
         model = models.AvailableData
 
-    name = Sequence(lambda n: "data:{0:07d}".format(n))
+    name = Sequence(lambda n: f"data:{n:07d}")
     description = Faker("paragraph")

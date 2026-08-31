@@ -219,10 +219,7 @@ class AgreementTypeCreateMixin:
     def get_agreement(self, form, formset):
         """Build the SignedAgreement object."""
         # Create the access group.
-        access_group_name = "{}_CDSA_ACCESS_{}".format(
-            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
-            form.instance.cc_id,
-        )
+        access_group_name = f"{settings.ANVIL_DATA_ACCESS_GROUP_PREFIX}_CDSA_ACCESS_{form.instance.cc_id}"
         access_group = ManagedGroup(name=access_group_name, email=access_group_name + "@firecloud.org")
         # Make sure the group doesn't exist already.
         access_group.full_clean()
@@ -333,10 +330,7 @@ class DataAffiliateAgreementCreate(
     def get_agreement_type(self, form, formset):
         agreement_type = super().get_agreement_type(form, formset)
         # Create the upload group.
-        upload_group_name = "{}_CDSA_UPLOAD_{}".format(
-            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
-            form.instance.cc_id,
-        )
+        upload_group_name = f"{settings.ANVIL_DATA_ACCESS_GROUP_PREFIX}_CDSA_UPLOAD_{form.instance.cc_id}"
         upload_group = ManagedGroup(name=upload_group_name, email=upload_group_name + "@firecloud.org")
         # Make sure the group doesn't exist already.
         upload_group.full_clean()
