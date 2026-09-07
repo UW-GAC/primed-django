@@ -42,7 +42,7 @@ class Command(BaseCommand):
             # Use the default.
             tmppath = os.path.dirname(os.path.realpath(__file__))
             duo_file = os.path.join(tmppath, os.pardir, os.pardir, "fixtures", "duo-basic.owl")
-        self.stdout.write("Loading DUO terms from {}".format(duo_file))
+        self.stdout.write(f"Loading DUO terms from {duo_file}")
 
         # Read in the ontology.
         duo = Ontology(duo_file)
@@ -50,12 +50,12 @@ class Command(BaseCommand):
         # Check that specified terms are in the file.
         permissions_code = options["permissions_code"]
         if permissions_code not in duo.terms():
-            msg = "permissions-code '{}' not in available terms.".format(permissions_code)
+            msg = f"permissions-code '{permissions_code}' not in available terms."
             raise CommandError(self.style.ERROR(msg))
 
         modifiers_code = options["modifiers_code"]
         if modifiers_code not in duo.terms():
-            msg = "modifiers-code '{}' not in available terms.".format(modifiers_code)
+            msg = f"modifiers-code '{modifiers_code}' not in available terms."
             raise CommandError(self.style.ERROR(msg))
 
         with transaction.atomic():
@@ -67,10 +67,7 @@ class Command(BaseCommand):
                 self._create_modifier(term, parent=None)
 
         # Hard code terms for DUP and DUMs
-        msg = "{} DataUsePermissions and {} DataUseModifiers loaded.".format(
-            models.DataUsePermission.objects.count(),
-            models.DataUseModifier.objects.count(),
-        )
+        msg = f"{models.DataUsePermission.objects.count()} DataUsePermissions and {models.DataUseModifier.objects.count()} DataUseModifiers loaded."
         self.stdout.write(self.style.SUCCESS(msg))
 
     def _get_term_abbreviation(self, term):
