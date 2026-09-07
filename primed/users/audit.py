@@ -23,7 +23,7 @@ from primed.primed_anvil.models import StudySite
 logger = logging.getLogger(__name__)
 
 
-class TextTable(object):
+class TextTable:
     def render_to_text(self):
         self.primed_is_export = True
         return TableExport(export_format=TableExport.CSV, table=self).export()

@@ -32,9 +32,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("problems found."))
 
         # Print results
-        self.stdout.write("* Verified: {}".format(len(data_access_audit.verified)))
-        self.stdout.write("* Needs action: {}".format(len(data_access_audit.needs_action)))
-        self.stdout.write("* Errors: {}".format(len(data_access_audit.errors)))
+        self.stdout.write(f"* Verified: {len(data_access_audit.verified)}")
+        self.stdout.write(f"* Needs action: {len(data_access_audit.needs_action)}")
+        self.stdout.write(f"* Errors: {len(data_access_audit.errors)}")
 
         if not audit_ok:
             self.stdout.write(self.style.ERROR(f"Please visit {url} to resolve these issues."))

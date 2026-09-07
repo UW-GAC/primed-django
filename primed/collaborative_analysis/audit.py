@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Union
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import (
@@ -22,7 +21,7 @@ class AccessAuditResult(PRIMEDAuditResult):
     """Base class to hold the result of an access audit for a CollaborativeAnalysisWorkspace."""
 
     collaborative_analysis_workspace: models.CollaborativeAnalysisWorkspace
-    member: Union[Account, ManagedGroup]
+    member: Account | ManagedGroup
     note: str
     has_access: bool
     action: str = None
