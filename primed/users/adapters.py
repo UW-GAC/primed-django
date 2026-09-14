@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
@@ -23,7 +23,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest, sociallogin: Any):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
-    def update_user_info(self, user, extra_data: Dict, apply_update=True):
+    def update_user_info(self, user, extra_data: dict, apply_update=True):
         drupal_username = extra_data.get("preferred_username")
         drupal_email = extra_data.get("email")
         first_name = extra_data.get("first_name")
@@ -55,7 +55,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
             user.save()
         return user_changed
 
-    def update_user_study_sites(self, user, extra_data: Dict, apply_update=True):
+    def update_user_study_sites(self, user, extra_data: dict, apply_update=True):
         # Get list of research centers in domain table
 
         research_center_or_site = extra_data.get("study_site_or_center")
@@ -97,7 +97,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                         )
             return user_sites_updated
 
-    def update_user_groups(self, user, extra_data: Dict):
+    def update_user_groups(self, user, extra_data: dict):
         managed_scope_status = extra_data.get("managed_scope_status")
         if managed_scope_status:
             added_groups = []

@@ -54,7 +54,7 @@ class dbGaPStudyAccession(TimeStampedModel, models.Model):
         verbose_name_plural = " dbGaP study accessions"
 
     def __str__(self):
-        return "phs{phs:06d}".format(phs=self.dbgap_phs)
+        return f"phs{self.dbgap_phs:06d}"
 
     def get_absolute_url(self):
         return reverse("dbgap:dbgap_study_accessions:detail", kwargs={"dbgap_phs": self.dbgap_phs})
@@ -139,11 +139,7 @@ class dbGaPWorkspace(RequesterModel, DataUseOntologyModel, TimeStampedModel, Bas
 
     def get_dbgap_accession(self):
         """Return the full dbGaP accession including phs, version, and participant set."""
-        return "phs{phs:06d}.v{v}.p{ps}".format(
-            phs=self.dbgap_study_accession.dbgap_phs,
-            v=self.dbgap_version,
-            ps=self.dbgap_participant_set,
-        )
+        return f"phs{self.dbgap_study_accession.dbgap_phs:06d}.v{self.dbgap_version}.p{self.dbgap_participant_set}"
 
     def get_data_access_requests(self, most_recent=False):
         """Get a list of data access requests associated with this dbGaPWorkspace."""
@@ -158,9 +154,7 @@ class dbGaPWorkspace(RequesterModel, DataUseOntologyModel, TimeStampedModel, Bas
         return qs
 
     def get_dbgap_link(self):
-        url = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={}".format(
-            self.get_dbgap_accession()
-        )
+        url = f"https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={self.get_dbgap_accession()}"
         return url
 
 
@@ -214,7 +208,7 @@ class dbGaPApplication(TimeStampedModel, dbGaPApplicationStatusMixin, StatusMode
         verbose_name = " dbGaP application"
 
     def __str__(self):
-        return "{}".format(self.dbgap_project_id)
+        return f"{self.dbgap_project_id}"
 
     def get_absolute_url(self):
         """Return the absolute url for this object."""
@@ -252,7 +246,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
 
     def __str__(self):
         """String method."""
-        return "{}".format(self.created)
+        return f"{self.created}"
 
     def get_absolute_url(self):
         return reverse(
@@ -291,9 +285,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
         # Validate the json. It should already be validated, but it doesn't hurt to check again.
         jsonschema.validate(self.dbgap_dar_data, constants.JSON_PROJECT_DAR_SCHEMA)
         # Log the json.
-        msg = "Creating DARs using snapshot pk {pk}...\n".format(
-            pk=self.pk,
-        )
+        msg = f"Creating DARs using snapshot pk {self.pk}...\n"
         logger.info(msg)
         project_json = self.dbgap_dar_data
         # Create a list in which to store DARs to create.
@@ -341,7 +333,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     # It is not necessarily true for all dbGaP applications, eg TOPMed applying to the EA.
                     response = requests.get(
                         constants.DBGAP_STUDY_URL,
-                        params={"study_id": "phs{phs:06d}".format(phs=phs)},
+                        params={"study_id": f"phs{phs:06d}"},
                         allow_redirects=False,
                     )
                     # Raise an error if an error code was returned.
@@ -352,7 +344,7 @@ class dbGaPDataAccessSnapshot(TimeStampedModel, models.Model):
                     original_participant_set = int(match.group("participant_set"))
                 except ValueError as e:
                     # Log an error and re-raise.
-                    msg = "DAR ID mismatch for snapshot pk {} and DAR ID {}".format(self.pk, previous_dar.dbgap_dar_id)
+                    msg = f"DAR ID mismatch for snapshot pk {self.pk} and DAR ID {previous_dar.dbgap_dar_id}"
                     logger.error(msg)
                     logger.error(str(e))
                     raise
@@ -486,7 +478,7 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
         ]
 
     def __str__(self):
-        return "{}".format(self.dbgap_dar_id)
+        return f"{self.dbgap_dar_id}"
 
     @property
     def is_approved(self):
@@ -495,17 +487,11 @@ class dbGaPDataAccessRequest(TimeStampedModel, models.Model):
 
     def get_dbgap_link(self):
         """Returns a link to the study page on dbGaP."""
-        return "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={}".format(
-            self.get_dbgap_accession()
-        )
+        return f"https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id={self.get_dbgap_accession()}"
 
     def get_dbgap_accession(self):
         """Return the dbGaP accession for this DAR."""
-        return "phs{phs:06d}.v{version}.p{participant_set}".format(
-            phs=self.dbgap_phs,
-            version=self.original_version,
-            participant_set=self.original_participant_set,
-        )
+        return f"phs{self.dbgap_phs:06d}.v{self.original_version}.p{self.original_participant_set}"
 
     def get_dbgap_workspaces(self):
         """Get the set of dbGaPWorkspaces associated with this data access request.
