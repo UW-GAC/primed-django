@@ -66,9 +66,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("problems found."))
 
         # Print results
-        self.stdout.write("* Verified: {}".format(len(data_access_audit.verified)))
-        self.stdout.write("* Needs action: {}".format(len(data_access_audit.needs_action)))
-        self.stdout.write("* Errors: {}".format(len(data_access_audit.errors)))
+        self.stdout.write(f"* Verified: {len(data_access_audit.verified)}")
+        self.stdout.write(f"* Needs action: {len(data_access_audit.needs_action)}")
+        self.stdout.write(f"* Errors: {len(data_access_audit.errors)}")
 
         if not audit_ok:
             self.stdout.write(self.style.ERROR(f"Please visit {resolve_url} to resolve these issues."))
@@ -76,7 +76,7 @@ class Command(BaseCommand):
     def _send_email(self, data_access_audit, url):
         # Send email if requested and there are problems.
         if not data_access_audit.ok():
-            subject = "CDSA {} errors".format(data_access_audit.__class__.__name__)
+            subject = f"CDSA {data_access_audit.__class__.__name__} errors"
             html_body = render_to_string(
                 "primed_anvil/email_audit_report.html",
                 context={

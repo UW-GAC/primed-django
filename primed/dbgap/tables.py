@@ -31,7 +31,7 @@ class dbGaPAccessionColumn(tables.Column):
         if self.dbgap_link_accessor:
             url = tables.A(self.dbgap_link_accessor).resolve(record)
             return mark_safe(
-                """<a href="{}" target="_blank">{} <i class="bi bi-box-arrow-up-right"></i></a>""".format(url, value)
+                f"""<a href="{url}" target="_blank">{value} <i class="bi bi-box-arrow-up-right"></i></a>"""
             )
         else:
             return value
@@ -69,7 +69,7 @@ class dbGaPStudyAccessionTable(tables.Table):
         order_by = ("dbgap_phs",)
 
     def render_dbgap_phs(self, value):
-        return "phs{0:06d}".format(value)
+        return f"phs{value:06d}"
 
 
 class dbGaPWorkspaceUserTable(tables.Table):
