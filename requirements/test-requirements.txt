@@ -84,7 +84,7 @@ requests==2.33.0
     # via
     #   -c requirements/requirements.txt
     #   responses
-responses==0.26.2
+responses==0.26.3
     # via -r requirements/test-requirements.in
 six==1.16.0
     # via
@@ -96,7 +96,7 @@ sqlparse==0.5.4
     #   django
 termcolor==2.4.0
     # via pytest-sugar
-time-machine==3.4.0
+time-machine==3.5.1
     # via -r requirements/test-requirements.in
 typing-extensions==4.16.0
     # via django-test-migrations
