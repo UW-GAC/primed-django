@@ -86,7 +86,6 @@ class RemoveAccess(AccessAuditResult):
 class OtherError(AccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
-    pass
 
 
 class WorkspaceAccessAuditTable(tables.Table):
