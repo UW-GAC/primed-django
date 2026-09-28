@@ -39,7 +39,6 @@ soupsieve==2.9
 typing-extensions==4.16.0
     # via
     #   -c requirements/dev-requirements.txt
-    #   -c requirements/test-requirements.txt
     #   beautifulsoup4
 urllib3==2.7.0
     # via
