@@ -91,7 +91,7 @@ class dbGaPWorkspaceFactory(TimeStampedModelFactory, DjangoModelFactory):
             return
 
         # Create an authorization domain.
-        auth_domain = ManagedGroupFactory.create(name="auth_{}".format(self.workspace.name))
+        auth_domain = ManagedGroupFactory.create(name=f"auth_{self.workspace.name}")
         self.workspace.authorization_domains.add(auth_domain)
 
 
@@ -103,10 +103,7 @@ class dbGaPApplicationFactory(DjangoModelFactory):
     anvil_access_group = SubFactory(
         ManagedGroupFactory,
         name=LazyAttribute(
-            lambda o: "{}_DBGAP_ACCESS_{}".format(
-                settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
-                o.factory_parent.dbgap_project_id,
-            )
+            lambda o: f"{settings.ANVIL_DATA_ACCESS_GROUP_PREFIX}_DBGAP_ACCESS_{o.factory_parent.dbgap_project_id}"
         ),
     )
 

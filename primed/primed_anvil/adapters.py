@@ -44,7 +44,7 @@ class AccountAdapter(BaseAccountAdapter):
             name = account.user.name
         else:
             name = "---"
-        return "{} ({})".format(name, account.email)
+        return f"{name} ({account.email})"
 
     def after_account_verification(self, account):
         """Add the account to the member group for any StudySites that they are a part of."""
