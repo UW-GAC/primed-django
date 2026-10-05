@@ -143,7 +143,7 @@ def get_workspaces_for_inventory():
         "billing-project-2/workspace-2": "study3",
         ...
     }
-    """  # noqa: E501
+    """
 
     # primed-all group. We will need this to determine if the workspace is shared with PRIMED_ALL.
     primed_all = ManagedGroup.objects.get(name="PRIMED_ALL")

@@ -204,6 +204,6 @@ class UserAccountSingleGroupMembershipTable(UserAccountTable):
             )
         else:
             rendered_value = mark_safe(
-                """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""  # noqa: E501
+                """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""
             )
         return rendered_value

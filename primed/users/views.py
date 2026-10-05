@@ -63,7 +63,7 @@ class UserAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView)
     """View to provide autocompletion for users. Matches either email or name."""
 
     def get_result_label(self, result):
-        return "{} ({})".format(result.name, result.email)
+        return f"{result.name} ({result.email})"
 
     def get_queryset(self):
         """Filter to users matching the query."""
