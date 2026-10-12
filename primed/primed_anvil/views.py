@@ -103,7 +103,7 @@ class StudyAutocomplete(AnVILConsortiumManagerStaffViewRequired, autocomplete.Se
     """View to provide autocompletion for `Study`s. Match either the `short_name` or `full_name`."""
 
     def get_result_label(self, result):
-        s = "{} ({})".format(result.full_name, result.short_name)
+        s = f"{result.full_name} ({result.short_name})"
         return s
 
     def get_selected_result_label(self, result):
