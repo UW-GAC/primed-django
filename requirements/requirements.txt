@@ -133,7 +133,7 @@ packaging==26.0
     #   build
     #   plotly
     #   wheel
-pandas==3.0.5
+pandas==3.0.6
     # via -r requirements/requirements.in
 pip-tools==7.6.1
     # via -r requirements/requirements.in
