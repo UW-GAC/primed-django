@@ -192,7 +192,6 @@ types-requests==2.33.0.20260906
     # via -r requirements/dev-requirements.in
 typing-extensions==4.16.0
     # via
-    #   -c requirements/test-requirements.txt
     #   anyio
     #   django-stubs
     #   django-stubs-ext
