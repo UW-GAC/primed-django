@@ -37,7 +37,7 @@ crispy-bootstrap5==2026.9
     # via
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
-cryptography==50.0.1
+cryptography==50.0.2
     # via -r requirements/requirements.in
 django==5.2.17
     # via
@@ -56,13 +56,13 @@ django==5.2.17
     #   django-picklefield
     #   django-simple-history
     #   django-tables2
-django-allauth==65.19.3
+django-allauth==65.20.1
     # via -r requirements/requirements.in
 django-anvil-consortium-manager @ git+https://github.com/UW-GAC/django-anvil-consortium-manager.git@v0.36.0
     # via -r requirements/requirements.in
 django-autocomplete-light==3.11.0
     # via django-anvil-consortium-manager
-django-constance==4.3.5
+django-constance==4.4.0
     # via -r requirements/requirements.in
 django-crispy-forms==2.7
     # via
@@ -95,7 +95,7 @@ django-simple-history==3.13.0
     #   django-anvil-consortium-manager
 django-tables2==2.7.0
     # via django-anvil-consortium-manager
-django-tree-queries==0.26.1
+django-tree-queries==0.27.0
     # via -r requirements/requirements.in
 fastobo==0.13.0
     # via pronto
@@ -124,7 +124,7 @@ numpy==1.26.4 ; python_version == "3.12"
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
     #   pandas
-oauthlib==3.3.1
+oauthlib==4.0.0
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
@@ -133,13 +133,13 @@ packaging==26.0
     #   build
     #   plotly
     #   wheel
-pandas==3.0.5
+pandas==3.0.6
     # via -r requirements/requirements.in
 pip-tools==7.6.1
     # via -r requirements/requirements.in
 plotly==5.19.0
     # via django-anvil-consortium-manager
-pronto==2.7.3
+pronto==2.7.4
     # via -r requirements/requirements.in
 pyasn1==0.6.4
     # via
@@ -149,7 +149,7 @@ pyasn1-modules==0.4.2
     # via google-auth
 pycparser==2.21
     # via cffi
-pyjwt==2.14.0
+pyjwt==2.15.1
     # via -r requirements/requirements.in
 pyproject-hooks==1.0.0
     # via
