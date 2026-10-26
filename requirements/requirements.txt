@@ -124,7 +124,7 @@ numpy==1.26.4 ; python_version == "3.12"
     #   -r requirements/requirements.in
     #   django-anvil-consortium-manager
     #   pandas
-oauthlib==3.3.1
+oauthlib==4.0.0
     # via
     #   -r requirements/requirements.in
     #   requests-oauthlib
