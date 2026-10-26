@@ -33,7 +33,7 @@ class AgreementMajorVersion(TimeStampedModel, models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return "v{}".format(self.version)
+        return f"v{self.version}"
 
     def get_absolute_url(self):
         return reverse(
@@ -86,7 +86,7 @@ class AgreementVersion(TimeStampedModel, models.Model):
 
     @property
     def full_version(self):
-        return "{}.{}".format(str(self.major_version), self.minor_version)
+        return f"{self.major_version!s}.{self.minor_version}"
 
 
 class SignedAgreementStatusMixin:
@@ -176,7 +176,7 @@ class SignedAgreement(TimeStampedModel, SignedAgreementStatusMixin, StatusModel,
     history = HistoricalRecords(bases=[SignedAgreementStatusMixin, models.Model])
 
     def __str__(self):
-        return "{}".format(self.cc_id)
+        return f"{self.cc_id}"
 
     def get_absolute_url(self):
         return self.get_agreement_type().get_absolute_url()
@@ -184,9 +184,7 @@ class SignedAgreement(TimeStampedModel, SignedAgreementStatusMixin, StatusModel,
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
-        if self.type == self.MEMBER and not self.get_agreement_type().is_primary:
-            combined_type = combined_type + " component"
-        elif self.type == self.DATA_AFFILIATE and not self.get_agreement_type().is_primary:
+        if self.type == self.MEMBER and not self.get_agreement_type().is_primary or self.type == self.DATA_AFFILIATE and not self.get_agreement_type().is_primary:
             combined_type = combined_type + " component"
         return combined_type
 
