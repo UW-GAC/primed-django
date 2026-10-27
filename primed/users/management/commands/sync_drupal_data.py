@@ -56,7 +56,7 @@ class Command(BaseCommand):
             # if we wanted to linkify any of our data we would need to do more here
 
             request = HttpRequest()
-            subject = "[command:sync-drupal-data] report"
+            subject = "[command:sync_drupal_data] report"
             html_body = render_to_string(
                 "users/drupal_data_audit_email.html",
                 context={
@@ -82,7 +82,7 @@ class Command(BaseCommand):
         self.ignore_threshold = options["ignore_threshold"]
 
         notification_content = (
-            f"[sync-drupal-data] start: Applying Changes: {self.apply_changes} "
+            f"[sync_drupal_data] start: Applying Changes: {self.apply_changes} "
             f"Ignoring Threshold: {self.ignore_threshold} Start time: {localtime()}\n"
         )
         site_audit = audit.SiteAudit(apply_changes=self.apply_changes)

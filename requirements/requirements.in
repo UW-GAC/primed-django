@@ -6,12 +6,13 @@ whitenoise  # https://github.com/evansd/whitenoise
 oauthlib  # https://github.com/oauthlib/oauthlib
 
 # Allauth adapter related needs
+certifi>=2026.10.18
 cryptography # https://github.com/pyca/cryptography
 pyjwt  # https://github.com/jpadilla/pyjwt
 requests-oauthlib  # https://github.com/requests/requests-oauthlib
 # Address security alerts
 requests>=2.32.4  # https://github.com/psf/requests
-urllib3>=2.7.0  # https://github.com/urllib3/urllib3
+urllib3>=2.8.0  # https://github.com/urllib3/urllib3
 
 # Password hashing
 argon2-cffi # https://github.com/hynek/argon2_cffi

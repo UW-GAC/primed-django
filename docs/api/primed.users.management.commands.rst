@@ -4,10 +4,10 @@ primed.users.management.commands package
 Submodules
 ----------
 
-primed.users.management.commands.sync\-drupal\-data module
+primed.users.management.commands.sync_drupal_data module
 ----------------------------------------------------------
 
-.. automodule:: primed.users.management.commands.sync-drupal-data
+.. automodule:: primed.users.management.commands.sync_drupal_data
    :members:
    :undoc-members:
    :show-inheritance:

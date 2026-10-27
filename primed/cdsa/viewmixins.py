@@ -7,7 +7,9 @@ from . import models
 
 class SignedAgreementViewPermissionMixin(UserPassesTestMixin):
     """Mixin to check if the user has permission to view a SignedAgreement.
+
     The user has permission to view an agreement if:
+
         - they have ACM Staff View permission, or
         - they are the signing representative for the agreement, or
         - they are an accessor for the agreement, or
