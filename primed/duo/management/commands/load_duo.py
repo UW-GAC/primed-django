@@ -67,16 +67,14 @@ class Command(BaseCommand):
                 self._create_modifier(term, parent=None)
 
         # Hard code terms for DUP and DUMs
-        msg = f"{models.DataUsePermission.objects.count()} DataUsePermissions and {models.DataUseModifier.objects.count()} DataUseModifiers loaded."
+        msg = (f"{models.DataUsePermission.objects.count()} DataUsePermissions and "
+        f"{models.DataUseModifier.objects.count()} DataUseModifiers loaded.")
         self.stdout.write(self.style.SUCCESS(msg))
 
     def _get_term_abbreviation(self, term):
         """Return the abbreviation for the term."""
         abbreviation = [a.literal for a in term.annotations if "shorthand" in a.property]
-        if len(abbreviation) != 1:
-            import ipdb
 
-            ipdb.set_trace()
         return abbreviation[0]
 
     def _get_term_comment(self, term):

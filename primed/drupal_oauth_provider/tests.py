@@ -218,7 +218,6 @@ class CustomProviderLoginTest(TestCase):
         # Verify user is logged in
         self.assertTrue("_auth_user_id" in self.client.session, f"session: {self.client.session}")
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.id)
-        responses.mock.assert_all_requests_are_fired
 
     @responses.activate
     def test_login_existing_user(self):
@@ -263,7 +262,6 @@ class CustomProviderLoginTest(TestCase):
         # Verify user is logged in
         self.assertTrue("_auth_user_id" in self.client.session, f"session: {self.client.session.__dict__}")
         self.assertEqual(int(self.client.session["_auth_user_id"]), existing_user.id)
-        responses.mock.assert_all_requests_are_fired
 
     @patch("requests.post")
     def test_token_exchange_failure(self, mock_post):
@@ -358,9 +356,10 @@ class TestProviderConfig(TestCase):
         rf = RequestFactory()
         request = rf.get("/fake-url/")
         custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = None
-        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
-            with self.assertRaises(ImproperlyConfigured):
-                CustomProvider(request, app=self.app).get_provider_scope_config()
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
+            ImproperlyConfigured
+        ):
+            CustomProvider(request, app=self.app).get_provider_scope_config()
 
     def test_custom_provider_scope_detail_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
@@ -373,9 +372,10 @@ class TestProviderConfig(TestCase):
                 "django_group_name": "Z",
             }
         ]
-        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings):
-            with self.assertRaises(ImproperlyConfigured):
-                CustomProvider(request, app=self.app).get_provider_managed_scope_status()
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
+            ImproperlyConfigured
+        ):
+            CustomProvider(request, app=self.app).get_provider_managed_scope_status()
 
     def test_custom_provider_has_scope(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS

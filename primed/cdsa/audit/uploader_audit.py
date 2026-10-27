@@ -97,7 +97,6 @@ class Error(UploaderAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
 
-
 class UploaderAuditTable(tables.Table):
     """A table to show results from a DataAffiliateAgreementUploaderAudit subclass."""
 
@@ -198,7 +197,7 @@ class UploaderAudit(PRIMEDAudit):
         elif isinstance(instance, ManagedGroup):
             self._audit_agreement_and_group(data_affiliate_agreement, instance)
         else:
-            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
+            raise TypeError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_agreement_and_user(self, data_affiliate_agreement, user):
         """Audit access for a specific DataAffiliateAgreement and a specific user."""

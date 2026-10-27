@@ -87,7 +87,6 @@ class OtherError(AccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
 
-
 class WorkspaceAccessAuditTable(tables.Table):
     """A table to show results from a WorkspaceAccessAudit instance."""
 

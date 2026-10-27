@@ -48,16 +48,10 @@ class CustomAdapter(OAuth2Adapter):
             return keys[0]
 
     def get_public_key(self, headers):
-        provider_settings = app_settings.PROVIDERS.get(self.provider_id, {})
-
-        config_public_key = provider_settings.get("PUBLIC_KEY")
-        if False and config_public_key:
-            return config_public_key
-
         public_key_jwk = self._get_public_key_jwk(headers)
         try:
             public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(public_key_jwk))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"[get_public_key] failed to convert jwk {public_key_jwk} to public key {e}")
             raise OAuth2Error(f"[get_public_key] failed to convert jwk {public_key_jwk} to public key {e}")
         else:

@@ -1,7 +1,5 @@
 """Tests of models in the `cdsa` app."""
 
-from datetime import datetime
-
 from anvil_consortium_manager.models import ManagedGroup
 from anvil_consortium_manager.tests.factories import (
     GroupGroupMembershipFactory,
@@ -12,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.db.utils import IntegrityError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from primed.duo.tests.factories import DataUseModifierFactory, DataUsePermissionFactory
 from primed.primed_anvil.tests.factories import (
@@ -81,7 +80,9 @@ class AgreementVersionTest(TestCase):
 
     def test_model_saving(self):
         major_version = factories.AgreementMajorVersionFactory.create()
-        instance = models.AgreementVersion(major_version=major_version, minor_version=0, date_approved=datetime.today())
+        instance = models.AgreementVersion(
+            major_version=major_version, minor_version=0, date_approved=timezone.localdate()
+        )
         instance.save()
         self.assertIsInstance(instance, models.AgreementVersion)
 

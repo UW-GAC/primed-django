@@ -91,7 +91,6 @@ class Error(AccessorAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
 
-
 class AccessorAuditTable(tables.Table):
     """A table to show results from a AccessorAudit subclass."""
 
@@ -191,7 +190,7 @@ class AccessorAudit(PRIMEDAudit):
         elif isinstance(instance, ManagedGroup):
             self._audit_agreement_and_group(signed_agreement, instance)
         else:
-            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
+            raise TypeError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_agreement_and_user(self, signed_agreement, user):
         """Audit access for a specific SignedAgreement and a specific user."""

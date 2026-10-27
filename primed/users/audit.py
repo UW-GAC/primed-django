@@ -257,9 +257,8 @@ class UserAudit(PRIMEDAudit):
                                 )
                             if new_sites:
                                 for new_site in new_user_sites:
-                                    if new_site.short_name in new_user_site_names:
-                                        if self.apply_changes is True:
-                                            sa.user.study_sites.add(new_site)
+                                    if new_site.short_name in new_user_site_names and self.apply_changes is True:
+                                        sa.user.study_sites.add(new_site)
 
                     if user_updates:
                         if self.apply_changes is True:
@@ -288,9 +287,8 @@ class UserAudit(PRIMEDAudit):
         user_ids_to_check = []
         count_inactive = unaudited_drupal_accounts.count()
         over_threshold = False
-        if self.ignore_deactivate_threshold is False:
-            if count_inactive > self.USER_DEACTIVATE_THRESHOLD:
-                over_threshold = True
+        if self.ignore_deactivate_threshold is False and count_inactive > self.USER_DEACTIVATE_THRESHOLD:
+            over_threshold = True
 
         for uda in unaudited_drupal_accounts:
             user_ids_to_check.append(uda.user.id)
@@ -492,7 +490,7 @@ def get_drupal_json_api():
 def get_study_sites(json_api):
     study_sites_endpoint = json_api.endpoint("node/study_site_or_center")
     study_sites_response = study_sites_endpoint.get()
-    study_sites_info = dict()
+    study_sites_info = {}
 
     for ss in study_sites_response.data:
         short_name = ss.attributes["title"]

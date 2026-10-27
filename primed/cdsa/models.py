@@ -184,7 +184,12 @@ class SignedAgreement(TimeStampedModel, SignedAgreementStatusMixin, StatusModel,
     @property
     def combined_type(self):
         combined_type = self.get_type_display()
-        if self.type == self.MEMBER and not self.get_agreement_type().is_primary or self.type == self.DATA_AFFILIATE and not self.get_agreement_type().is_primary:
+        if (
+            self.type == self.MEMBER
+            and not self.get_agreement_type().is_primary
+            or self.type == self.DATA_AFFILIATE
+            and not self.get_agreement_type().is_primary
+        ):
             combined_type = combined_type + " component"
         return combined_type
 

@@ -90,33 +90,31 @@ class UserSchema(Schema):
 
 
 TEST_STUDY_SITE_DATA = [
-    StudySiteMockObject(
-        **{
-            "id": "1",
-            "drupal_internal__nid": "1",
-            "title": "SS1",
-            "field_long_name": "S S 1",
-            # "document_meta": {"page": {"offset": 10}},
-        }
-    ),
-    StudySiteMockObject(
-        **{
-            "id": "2",
-            "drupal_internal__nid": "2",
-            "title": "SS2",
-            "field_long_name": "S S 2",
-            # "document_meta": {"page": {"offset": 10}},
-        }
-    ),
+    StudySiteMockObject(id="1", drupal_internal__nid="1", title="SS1", field_long_name="S S 1"),
+    StudySiteMockObject(id="2", drupal_internal__nid="2", title="SS2", field_long_name="S S 2"),
 ]
 
 TEST_USER_DATA = [
     UserMockObject(
-        id="usr1", display_name="dnusr1", drupal_internal__uid="usr1", name="testuser1", mail="testuser1@test.com", field_given_first_name_s_="test1", field_examples_family_last_name_="user1", field_study_site_or_center=[]
+        id="usr1",
+        display_name="dnusr1",
+        drupal_internal__uid="usr1",
+        name="testuser1",
+        mail="testuser1@test.com",
+        field_given_first_name_s_="test1",
+        field_examples_family_last_name_="user1",
+        field_study_site_or_center=[],
     ),
     # second mock object is deactivated user (no drupal uid)
     UserMockObject(
-        id="usr2", display_name="dnusr2", drupal_internal__uid="", name="testuser2", mail="testuser2@test.com", field_given_first_name_s_="test2", field_examples_family_last_name_="user2", field_study_site_or_center=[]
+        id="usr2",
+        display_name="dnusr2",
+        drupal_internal__uid="",
+        name="testuser2",
+        mail="testuser2@test.com",
+        field_given_first_name_s_="test2",
+        field_examples_family_last_name_="user2",
+        field_study_site_or_center=[],
     ),
 ]
 
@@ -301,7 +299,8 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[1].title,
             full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
         )
-        drupal_fullname = f"{TEST_USER_DATA[0].field_given_first_name_s_} {TEST_USER_DATA[0].field_examples_family_last_name_}"
+        drupal_fullname = (f"{TEST_USER_DATA[0].field_given_first_name_s_} "
+        f"{TEST_USER_DATA[0].field_examples_family_last_name_}")
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -334,7 +333,8 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[1].title,
             full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
         )
-        drupal_fullname = f"{TEST_USER_DATA[0].field_given_first_name_s_} {TEST_USER_DATA[0].field_examples_family_last_name_}"
+        drupal_fullname = (f"{TEST_USER_DATA[0].field_given_first_name_s_} "
+        f"{TEST_USER_DATA[0].field_examples_family_last_name_}")
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -366,7 +366,8 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].title,
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
-        drupal_fullname = f"{TEST_USER_DATA[0].field_given_first_name_s_} {TEST_USER_DATA[0].field_examples_family_last_name_}"
+        drupal_fullname = (f"{TEST_USER_DATA[0].field_given_first_name_s_} "
+        f"{TEST_USER_DATA[0].field_examples_family_last_name_}")
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -510,7 +511,7 @@ class TestUserDataAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
-        call_command("sync-drupal-data", stdout=out)
+        call_command("sync_drupal_data", stdout=out)
         self.assertIn(
             "SiteAudit summary: status ok: False verified: 0 needs_changes: 2",
             out.getvalue(),
@@ -534,11 +535,11 @@ class TestUserDataAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
-        call_command("sync-drupal-data", email="test@example.com", error_email="test2@example.com", stdout=out)
+        call_command("sync_drupal_data", email="test@example.com", error_email="test2@example.com", stdout=out)
         self.assertIn("SiteAudit summary: status ok: False", out.getvalue())
         self.assertIn("UserAudit summary: status ok: False", out.getvalue())
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com", "test2@example.com"])
-        self.assertEqual(email.subject, "[command:sync-drupal-data] report")
+        self.assertEqual(email.subject, "[command:sync_drupal_data] report")

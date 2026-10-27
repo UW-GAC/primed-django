@@ -165,7 +165,6 @@ class AvailableDataDetail(AnVILConsortiumManagerStaffViewRequired, SingleTableMi
     model = models.AvailableData
     context_table_name = "dbgap_workspace_table"
     table_class = dbGaPWorkspaceStaffTable
-    context_table_name = "dbgap_workspace_table"
 
     def get_table_data(self):
         return Workspace.objects.filter(dbgapworkspace__available_data=self.object)

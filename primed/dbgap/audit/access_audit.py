@@ -114,7 +114,6 @@ class Error(AccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
 
-
 @dataclass
 class UpdateSnapshot(RemoveAccess):
     """Audit results class for when date of last snapshot is more than 30 days old"""

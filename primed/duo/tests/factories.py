@@ -22,13 +22,11 @@ class DataUsePermissionFactory(DUOFactory):
         model = models.DataUsePermission
 
 
-
 class DataUseModifierFactory(DUOFactory):
     """A factory for the DataUseModifier model."""
 
     class Meta:
         model = models.DataUseModifier
-
 
 
 class DataUseOntologyModelFactory(factory.django.DjangoModelFactory):

@@ -366,9 +366,7 @@ class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, Singl
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -403,9 +401,7 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -426,9 +422,7 @@ class SignedAgreementAccessorsUpdate(AnVILConsortiumManagerStaffEditRequired, Su
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -457,9 +451,7 @@ class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -493,9 +485,7 @@ class DataAffiliateAgreementUploadersUpdate(AnVILConsortiumManagerStaffEditRequi
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -534,9 +524,7 @@ class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMi
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -595,9 +583,7 @@ class SignedAgreementAuditResolve(AnVILConsortiumManagerStaffEditRequired, Singl
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_audit_result(self):
@@ -708,9 +694,7 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
                 workspace__name=self.kwargs.get("workspace_slug"),
             )
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_audit_result(self):

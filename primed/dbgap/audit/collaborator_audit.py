@@ -97,7 +97,6 @@ class Error(CollaboratorAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
 
 
-
 class dbGaPCollaboratorAuditTable(tables.Table):
     """A table to show results from a dbGaPCollaboratorAudit subclass."""
 
@@ -207,7 +206,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
         elif isinstance(instance, ManagedGroup):
             self._audit_application_and_group(dbgap_application, instance)
         else:
-            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
+            raise TypeError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_application_and_user(self, dbgap_application, user):
         """Audit access for a specific dbGaP application and a specific user."""

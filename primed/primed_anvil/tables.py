@@ -188,7 +188,7 @@ class UserAccountSingleGroupMembershipTable(UserAccountTable):
         if managed_group is None:
             raise ValueError("managed_group must be provided.")
         if not isinstance(managed_group, ManagedGroup):
-            raise ValueError("managed_group must be an instance of ManagedGroup.")
+            raise TypeError("managed_group must be an instance of ManagedGroup.")
         self.managed_group = managed_group
         super().__init__(*args, **kwargs)
 
