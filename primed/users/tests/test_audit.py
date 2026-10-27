@@ -299,8 +299,9 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[1].title,
             full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
         )
-        drupal_fullname = (f"{TEST_USER_DATA[0].field_given_first_name_s_} "
-        f"{TEST_USER_DATA[0].field_examples_family_last_name_}")
+        drupal_fullname = (
+            f"{TEST_USER_DATA[0].field_given_first_name_s_} {TEST_USER_DATA[0].field_examples_family_last_name_}"
+        )
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -333,8 +334,9 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[1].title,
             full_name=TEST_STUDY_SITE_DATA[1].field_long_name,
         )
-        drupal_fullname = (f"{TEST_USER_DATA[0].field_given_first_name_s_} "
-        f"{TEST_USER_DATA[0].field_examples_family_last_name_}")
+        drupal_fullname = (
+            f"{TEST_USER_DATA[0].field_given_first_name_s_} {TEST_USER_DATA[0].field_examples_family_last_name_}"
+        )
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(
@@ -366,8 +368,9 @@ class TestUserDataAudit(TestCase):
             short_name=TEST_STUDY_SITE_DATA[0].title,
             full_name=TEST_STUDY_SITE_DATA[0].field_long_name,
         )
-        drupal_fullname = (f"{TEST_USER_DATA[0].field_given_first_name_s_} "
-        f"{TEST_USER_DATA[0].field_examples_family_last_name_}")
+        drupal_fullname = (
+            f"{TEST_USER_DATA[0].field_given_first_name_s_} {TEST_USER_DATA[0].field_examples_family_last_name_}"
+        )
         drupal_username = TEST_USER_DATA[0].name
         drupal_email = TEST_USER_DATA[0].mail
         new_user = get_user_model().objects.create(

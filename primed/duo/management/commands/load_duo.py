@@ -67,8 +67,10 @@ class Command(BaseCommand):
                 self._create_modifier(term, parent=None)
 
         # Hard code terms for DUP and DUMs
-        msg = (f"{models.DataUsePermission.objects.count()} DataUsePermissions and "
-        f"{models.DataUseModifier.objects.count()} DataUseModifiers loaded.")
+        msg = (
+            f"{models.DataUsePermission.objects.count()} DataUsePermissions and "
+            f"{models.DataUseModifier.objects.count()} DataUseModifiers loaded."
+        )
         self.stdout.write(self.style.SUCCESS(msg))
 
     def _get_term_abbreviation(self, term):
