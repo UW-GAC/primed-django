@@ -537,7 +537,7 @@ class TestUserDataAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
-        call_command("sync-drupal-data", stdout=out)
+        call_command("sync_drupal_data", stdout=out)
         self.assertIn(
             "SiteAudit summary: status ok: False verified: 0 needs_changes: 2",
             out.getvalue(),
@@ -561,11 +561,11 @@ class TestUserDataAudit(TestCase):
         self.add_fake_study_sites_response()
         self.add_fake_users_response()
         out = StringIO()
-        call_command("sync-drupal-data", email="test@example.com", error_email="test2@example.com", stdout=out)
+        call_command("sync_drupal_data", email="test@example.com", error_email="test2@example.com", stdout=out)
         self.assertIn("SiteAudit summary: status ok: False", out.getvalue())
         self.assertIn("UserAudit summary: status ok: False", out.getvalue())
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, ["test@example.com", "test2@example.com"])
-        self.assertEqual(email.subject, "[command:sync-drupal-data] report")
+        self.assertEqual(email.subject, "[command:sync_drupal_data] report")

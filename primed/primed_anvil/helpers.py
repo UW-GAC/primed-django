@@ -137,7 +137,8 @@ def get_workspaces_for_inventory():
     workspaces that have been shared with the consortium are included.
     See dockstore link: https://dockstore.org/workflows/github.com/UW-GAC/primed-inventory-workflows/primed_inventory:main?tab=info
 
-    The "workspaces" field has the format:
+    The "workspaces" field has the format::
+
     {
         "billing-project-1/workspace-1": "study1, study2",
         "billing-project-2/workspace-2": "study3",
