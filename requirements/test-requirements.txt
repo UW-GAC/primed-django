@@ -96,7 +96,7 @@ sqlparse==0.6.0
     #   django
 termcolor==2.4.0
     # via pytest-sugar
-time-machine==3.5.1
+time-machine==3.6.0
     # via -r requirements/test-requirements.in
 urllib3==2.8.0
     # via
