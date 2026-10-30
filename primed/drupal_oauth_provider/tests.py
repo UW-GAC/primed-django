@@ -328,6 +328,37 @@ class CustomProviderLoginTest(TestCase):
         provider_ids = [p.id for p in provider_classes]
         self.assertIn(CustomProvider.id, provider_ids)
 
+    def test_invalid_id_token_raises_oauth2_error(self):
+        """Test that a PyJWTError is converted to OAuth2Error."""
+        request = RequestFactory().get("/fake-url/", HTTP_HOST="testserver")
+        adapter = CustomAdapter(request)
+
+        id_token = Mock(token=self.get_id_token())
+
+        with (
+            patch.object(adapter, "get_public_key", return_value="mock-public-key"),
+            patch.object(
+                jwt,
+                "decode",
+                side_effect=jwt.InvalidTokenError("invalid token"),
+            ),
+            self.assertRaisesRegex(OAuth2Error, "Invalid id_token") as context,
+        ):
+            adapter.get_scopes_from_token(
+                id_token=id_token,
+                headers={"HTTP_HOST": "testserver"},
+            )
+
+        self.assertIsInstance(context.exception.__cause__, jwt.PyJWTError)
+
+    @patch("primed.drupal_oauth_provider.views.requests.get")
+    def test_invalid_public_key_json(self, mock_get):
+        request = RequestFactory().get("/fake-url/", HTTP_HOST="testserver")
+        adapter = CustomAdapter(request)
+        mock_get.return_value.json.side_effect = json.JSONDecodeError("Invalid JSON", "x", 0)
+        with self.assertRaisesRegex(OAuth2Error, "Error retrieving drupal public key"):
+            adapter._get_public_key_jwk({})
+
 
 class TestProviderConfig(TestCase):
     def setUp(self):
@@ -360,6 +391,16 @@ class TestProviderConfig(TestCase):
             ImproperlyConfigured
         ):
             CustomProvider(request, app=self.app).get_provider_scope_config()
+    
+    def test_custom_provider_scope_config_invalid_type(self):
+            custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
+            rf = RequestFactory()
+            request = rf.get("/fake-url/")
+            custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = "Foobar"
+            with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
+                ImproperlyConfigured
+            ):
+                CustomProvider(request, app=self.app).get_provider_scope_config()
 
     def test_custom_provider_scope_detail_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
