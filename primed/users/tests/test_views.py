@@ -98,7 +98,7 @@ class TestUserUpdateView:
 
         # Initialize the form
         form = UserChangeForm()
-        form.cleaned_data = dict()
+        form.cleaned_data = {}
         view.form_valid(form)
 
         messages_sent = [m.message for m in messages.get_messages(request)]
@@ -119,7 +119,7 @@ class TestUserRedirectView:
 class TestUserDetailView:
     def test_authenticated(self, client, user: User, rf: RequestFactory):
         client.force_login(user)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -130,7 +130,7 @@ class TestUserDetailView:
             Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         AccountFactory.create(email="foo@bar.com", user=user, verified=True)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -141,7 +141,7 @@ class TestUserDetailView:
             Permission.objects.get(codename=AnVILProjectManagerAccess.STAFF_VIEW_PERMISSION_CODENAME)
         )
         UserEmailEntryFactory.create(email="foo@bar.com", user=user)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -149,7 +149,7 @@ class TestUserDetailView:
     def test_authenticated_with_unverified_account(self, client, user: User, rf: RequestFactory):
         client.force_login(user)
         AccountFactory.create(email="foo@bar.com", user=user, verified=False)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -158,7 +158,7 @@ class TestUserDetailView:
         client.force_login(user)
         study_site = StudySiteFactory.create()
         user.study_sites.add(study_site)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
 
         assert response.status_code == 200
@@ -180,7 +180,7 @@ class TestUserDetailView:
         )
         client.force_login(user)
         account = AccountFactory.create(email="foo@bar.com", user=user, verified=True)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
         assert account.get_absolute_url() in str(response.content)
 
@@ -189,7 +189,7 @@ class TestUserDetailView:
         user.user_permissions.add(Permission.objects.get(codename=AnVILProjectManagerAccess.VIEW_PERMISSION_CODENAME))
         client.force_login(user)
         account = AccountFactory.create(email="foo@bar.com", user=user, verified=True)
-        user_detail_url = reverse("users:detail", kwargs=dict(username=user.username))
+        user_detail_url = reverse("users:detail", kwargs={"username": user.username})
         response = client.get(user_detail_url)
         assert account.get_absolute_url() not in str(response.content)
 

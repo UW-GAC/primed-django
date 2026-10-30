@@ -44,8 +44,7 @@ class CollaborativeAnalysisWorkspaceForm(Bootstrap5MediaFormMixin, forms.ModelFo
         # Workspace is not also a source_workspace.
         workspace = cleaned_data.get("workspace", None)
         source_workspaces = cleaned_data.get("source_workspaces", [])
-        if workspace and source_workspaces:
-            if workspace in source_workspaces:
-                raise ValidationError("source_workspaces cannot include workspace.")
+        if workspace and source_workspaces and workspace in source_workspaces:
+            raise ValidationError("source_workspaces cannot include workspace.")
 
         return cleaned_data

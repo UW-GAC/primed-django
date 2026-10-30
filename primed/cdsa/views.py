@@ -219,10 +219,7 @@ class AgreementTypeCreateMixin:
     def get_agreement(self, form, formset):
         """Build the SignedAgreement object."""
         # Create the access group.
-        access_group_name = "{}_CDSA_ACCESS_{}".format(
-            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
-            form.instance.cc_id,
-        )
+        access_group_name = f"{settings.ANVIL_DATA_ACCESS_GROUP_PREFIX}_CDSA_ACCESS_{form.instance.cc_id}"
         access_group = ManagedGroup(name=access_group_name, email=access_group_name + "@firecloud.org")
         # Make sure the group doesn't exist already.
         access_group.full_clean()
@@ -333,10 +330,7 @@ class DataAffiliateAgreementCreate(
     def get_agreement_type(self, form, formset):
         agreement_type = super().get_agreement_type(form, formset)
         # Create the upload group.
-        upload_group_name = "{}_CDSA_UPLOAD_{}".format(
-            settings.ANVIL_DATA_ACCESS_GROUP_PREFIX,
-            form.instance.cc_id,
-        )
+        upload_group_name = f"{settings.ANVIL_DATA_ACCESS_GROUP_PREFIX}_CDSA_UPLOAD_{form.instance.cc_id}"
         upload_group = ManagedGroup(name=upload_group_name, email=upload_group_name + "@firecloud.org")
         # Make sure the group doesn't exist already.
         upload_group.full_clean()
@@ -372,9 +366,7 @@ class MemberAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin, Singl
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -409,9 +401,7 @@ class SignedAgreementStatusUpdate(AnVILConsortiumManagerStaffEditRequired, Succe
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -432,9 +422,7 @@ class SignedAgreementAccessorsUpdate(AnVILConsortiumManagerStaffEditRequired, Su
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"), type=self.kwargs.get("agreement_type"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -463,9 +451,7 @@ class DataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMixin
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -499,9 +485,7 @@ class DataAffiliateAgreementUploadersUpdate(AnVILConsortiumManagerStaffEditRequi
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -540,9 +524,7 @@ class NonDataAffiliateAgreementDetail(viewmixins.SignedAgreementViewPermissionMi
         try:
             obj = queryset.get(signed_agreement__cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -601,9 +583,7 @@ class SignedAgreementAuditResolve(AnVILConsortiumManagerStaffEditRequired, Singl
         try:
             obj = queryset.get(cc_id=self.kwargs.get("cc_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_audit_result(self):
@@ -714,9 +694,7 @@ class CDSAWorkspaceAuditResolve(AnVILConsortiumManagerStaffEditRequired, SingleO
                 workspace__name=self.kwargs.get("workspace_slug"),
             )
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_audit_result(self):

@@ -36,7 +36,7 @@ class DUOFields(models.Model):
         Returns:
             A string showing the short consent code of the object.
         """
-        return "{}".format(self.term)
+        return f"{self.term}"
 
     def get_ols_url(self):
         return "http://purl.obolibrary.org/obo/{}".format(self.identifier.replace("DUO:", "DUO_"))
@@ -105,5 +105,5 @@ class DataUseOntologyModel(models.Model):
                 )
             if not self.data_use_permission.requires_disease_term and self.disease_term:
                 raise ValidationError(
-                    ("`disease_term` must be None because data_use_permission does not require a disease restriction.")
+                    "`disease_term` must be None because data_use_permission does not require a disease restriction."
                 )

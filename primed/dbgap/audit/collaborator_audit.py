@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Union
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, ManagedGroup
@@ -21,7 +20,7 @@ class CollaboratorAuditResult(PRIMEDAuditResult):
 
     dbgap_application: dbGaPApplication
     user: User
-    member: Union[Account, ManagedGroup]
+    member: Account | ManagedGroup
     note: str
     has_access: bool
     action: str = None
@@ -35,7 +34,7 @@ class CollaboratorAuditResult(PRIMEDAuditResult):
     def get_action_url(self):
         """The URL that handles the action needed."""
         # This is handled in the template with htmx, so None is fine.
-        return None
+        return
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
@@ -96,8 +95,6 @@ class RemoveAccess(CollaboratorAuditResult):
 @dataclass
 class Error(CollaboratorAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
-
-    pass
 
 
 class dbGaPCollaboratorAuditTable(tables.Table):
@@ -209,7 +206,7 @@ class dbGaPCollaboratorAudit(PRIMEDAudit):
         elif isinstance(instance, ManagedGroup):
             self._audit_application_and_group(dbgap_application, instance)
         else:
-            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
+            raise TypeError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_application_and_user(self, dbgap_application, user):
         """Audit access for a specific dbGaP application and a specific user."""

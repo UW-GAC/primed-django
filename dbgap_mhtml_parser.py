@@ -28,16 +28,22 @@ class dbGaPDAR:
         # Check that the full string matches, ignoring case.
         name_consent_group = this_code.get("name_consent_group")
         name_participant_set = this_code.get("name_participant_set")
-        if name_consent_group and self.full_consent.lower() == name_consent_group.lower():
-            pass
-        elif name_participant_set and self.full_consent.lower() == name_participant_set.lower():
+        if (
+            name_consent_group
+            and self.full_consent.lower() == name_consent_group.lower()
+            or name_participant_set
+            and self.full_consent.lower() == name_participant_set.lower()
+        ):
             pass
         else:
             # Sometimes the string has the consent abbreviation in parentheses. Check that next.
             full_consent_with_code = f"{self.full_consent} ({this_code.get('short_name')})"
-            if name_consent_group and full_consent_with_code.lower() == name_consent_group.lower():
-                pass
-            elif name_participant_set and full_consent_with_code.lower() == name_participant_set.lower():
+            if (
+                name_consent_group
+                and full_consent_with_code.lower() == name_consent_group.lower()
+                or name_participant_set
+                and full_consent_with_code.lower() == name_participant_set.lower()
+            ):
                 pass
             else:
                 raise ValueError(f"Consent string mismatch for code {self.consent_code} (DAR {self.id})")
@@ -239,7 +245,7 @@ class dbGaPApplication:
         assert len(x) == 1
         # Parse out the classes and the text of the status element, and use those to determine the DAR status.
         status_text = [y.strip().lower() for y in x[0].text.split("\n")]
-        status_text = set([y for y in status_text if len(y) > 0])
+        status_text = {y for y in status_text if len(y) > 0}
         status_classes = x[0].attrs.get("class")
         status_classes.remove("status")
         status_classes = set(status_classes)
@@ -249,21 +255,24 @@ class dbGaPApplication:
             print("      - status text:", status_text)
             print("      - status classes:", status_classes)
 
-        if status_classes == set(["approved"]) and status_text == set(["approved", "granted"]):
+        if status_classes == {"approved"} and status_text == {"approved", "granted"}:
             status = "approved"
-        elif status_classes == set(["rejected"]) and status_text == set(["rejected"]):
+        elif status_classes == {"rejected"} and status_text == {"rejected"}:
             status = "rejected"
-        elif status_classes == set() and status_text == set(["closed"]):
+        elif status_classes == set() and status_text == {"closed"}:
             status = "closed"
-        elif status_classes == set(["revision_requested"]) and status_text == set(["rev. requested", "expired"]):
+        elif status_classes == {"revision_requested"} and status_text == {"rev. requested", "expired"}:
             status = "expired"
-        elif status_classes == set(["revision_requested"]) and status_text == set(["rev. requested"]):
+        elif status_classes == {"revision_requested"} and status_text == {"rev. requested"}:
             status = "new"
-        elif status_classes == set(["staff_queued"]) and status_text == set(["dac review", "granted"]):
-            status = "approved"
-        elif status_classes == set(["staff_processing"]) and status_text == set(["dac review", "granted"]):
-            status = "approved"
-        elif status_classes == set(["revision_requested"]) and status_text == set(["granted", "rev. requested"]):
+        elif (
+            status_classes == {"staff_queued"}
+            and status_text == {"dac review", "granted"}
+            or status_classes == {"staff_processing"}
+            and status_text == {"dac review", "granted"}
+            or status_classes == {"revision_requested"}
+            and status_text == {"granted", "rev. requested"}
+        ):
             status = "approved"
         else:
             raise (ValueError("Unknown DAR status"))

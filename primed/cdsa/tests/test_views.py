@@ -1244,7 +1244,7 @@ class SignedAgreementAccessorsUpdateMemberTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.SignedAgreementStatusUpdate.as_view()
+        return views.SignedAgreementAccessorsUpdate.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
@@ -10447,7 +10447,7 @@ class CDSAWorkspaceDetailTest(TestCase):
             response,
             # """<dt class="col-sm-2">Associated CDSA</dt><dd class="col-sm-9">mdash;</dd>"""
             """No primary CDSA""",
-            # """<dt class="col-sm-2">Associated CDSA</dt> <dd class="col-sm-9">&mdash;</dd>""",  # noqa: E501
+            # """<dt class="col-sm-2">Associated CDSA</dt> <dd class="col-sm-9">&mdash;</dd>""",
         )
 
 

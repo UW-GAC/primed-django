@@ -110,13 +110,8 @@ class SocialAccountAdapterTest(TestCase):
         response = self.client.get(callback_url, {"error": "access_denied"})
         self.assertTemplateUsed(
             response,
-            "socialaccount/authentication_error.%s" % getattr(settings, "ACCOUNT_TEMPLATE_EXTENSION", "html"),
+            "socialaccount/authentication_error.{}".format(getattr(settings, "ACCOUNT_TEMPLATE_EXTENSION", "html")),
         )
-        # # Check if the response redirects to the login error page
-        # #self.assertEqual(response.status_code, 302)
-        # import sys
-        # print(f"RESP {response} ", file=sys.stderr)
-        # self.assertIn('socialaccount/authentication_error', response.url)
 
     def test_update_user_info(self):
         adapter = SocialAccountAdapter()
@@ -129,19 +124,19 @@ class SocialAccountAdapterTest(TestCase):
         new_email = "newemail@example.com"
         new_username = "newusername"
         setattr(user, account_settings.USER_MODEL_USERNAME_FIELD, "test")
-        setattr(user, "name", "Old Name")
+        user.name = "Old Name"
         setattr(user, account_settings.USER_MODEL_EMAIL_FIELD, "test@example.com")
 
         user.save()
 
         adapter.update_user_info(
             user,
-            dict(
-                first_name=new_first_name,
-                last_name=new_last_name,
-                email=new_email,
-                preferred_username=new_username,
-            ),
+            {
+                "first_name": new_first_name,
+                "last_name": new_last_name,
+                "email": new_email,
+                "preferred_username": new_username,
+            },
         )
         assert user.name == new_name
         assert user.email == new_email
@@ -158,7 +153,7 @@ class SocialAccountAdapterTest(TestCase):
 
         user.save()
 
-        adapter.update_user_study_sites(user, dict(study_site_or_center=[rc1.short_name]))
+        adapter.update_user_study_sites(user, {"study_site_or_center": [rc1.short_name]})
         assert user.study_sites.filter(pk=rc1.pk).exists()
         assert user.study_sites.all().count() == 1
 
@@ -176,7 +171,7 @@ class SocialAccountAdapterTest(TestCase):
         user.study_sites.add(rc1, rc2)
         assert user.study_sites.all().count() == 2
 
-        adapter.update_user_study_sites(user, dict(study_site_or_center=[rc1.short_name]))
+        adapter.update_user_study_sites(user, {"study_site_or_center": [rc1.short_name]})
         assert user.study_sites.filter(pk=rc1.pk).exists()
         assert user.study_sites.all().count() == 1
 
@@ -185,7 +180,7 @@ class SocialAccountAdapterTest(TestCase):
         adapter = SocialAccountAdapter()
         user = UserFactory()
 
-        adapter.update_user_study_sites(user, dict(study_site_or_center=["UNKNOWN"]))
+        adapter.update_user_study_sites(user, {"study_site_or_center": ["UNKNOWN"]})
         assert user.study_sites.all().count() == 0
         assert len(mail.outbox) == 1
         assert mail.outbox[0].subject == f"{settings.EMAIL_SUBJECT_PREFIX}Missing StudySite"
@@ -194,7 +189,7 @@ class SocialAccountAdapterTest(TestCase):
         adapter = SocialAccountAdapter()
         user = UserFactory()
         with pytest.raises(ImproperlyConfigured):
-            adapter.update_user_study_sites(user, dict(study_site_or_center="FOO"))
+            adapter.update_user_study_sites(user, {"study_site_or_center": "FOO"})
 
     def test_update_user_groups_add(self):
         adapter = SocialAccountAdapter()
@@ -207,7 +202,7 @@ class SocialAccountAdapterTest(TestCase):
 
         user.save()
 
-        adapter.update_user_groups(user, extra_data=dict(managed_scope_status={rc1.name: True}))
+        adapter.update_user_groups(user, extra_data={"managed_scope_status": {rc1.name: True}})
         assert user.groups.filter(pk=rc1.pk).exists()
         assert user.groups.all().count() == 1
 
@@ -221,7 +216,7 @@ class SocialAccountAdapterTest(TestCase):
 
         user.save()
         new_group_name = "NEW_GROUP"
-        adapter.update_user_groups(user, extra_data=dict(managed_scope_status={new_group_name: True}))
+        adapter.update_user_groups(user, extra_data={"managed_scope_status": {new_group_name: True}})
         assert user.groups.filter(name=new_group_name).exists()
         assert user.groups.all().count() == 1
 
@@ -241,7 +236,7 @@ class SocialAccountAdapterTest(TestCase):
 
         adapter.update_user_groups(
             user,
-            extra_data=dict(managed_scope_status={rc1.name: True, rc2.name: False}),
+            extra_data={"managed_scope_status": {rc1.name: True, rc2.name: False}},
         )
         assert user.groups.filter(pk=rc1.pk).exists()
         assert not user.groups.filter(pk=rc2.pk).exists()
@@ -251,7 +246,7 @@ class SocialAccountAdapterTest(TestCase):
         adapter = SocialAccountAdapter()
         user = UserFactory()
         with pytest.raises(ImproperlyConfigured):
-            adapter.update_user_groups(user, dict(managed_scope_status="FOO"))
+            adapter.update_user_groups(user, {"managed_scope_status": "FOO"})
 
     @override_settings(ACCOUNT_ALLOW_REGISTRATION=True)
     def test_account_is_open_for_signup(self):

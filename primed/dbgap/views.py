@@ -55,9 +55,7 @@ class dbGaPStudyAccessionDetail(AnVILConsortiumManagerStaffViewRequired, SingleT
         try:
             obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_table(self):
@@ -108,9 +106,7 @@ class dbGaPStudyAccessionUpdate(AnVILConsortiumManagerStaffEditRequired, Success
         try:
             obj = queryset.get(dbgap_phs=self.kwargs.get("dbgap_phs"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -141,9 +137,7 @@ class dbGaPApplicationDetail(viewmixins.dbGaPApplicationViewPermissionMixin, Mul
         try:
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get(self, request, *args, **kwargs):
@@ -211,7 +205,7 @@ class dbGaPApplicationCreate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
     def form_valid(self, form):
         """Create a managed group in the app on AnVIL and link it to this application."""
         project_id = form.cleaned_data["dbgap_project_id"]
-        group_name = "{}_DBGAP_ACCESS_{}".format(settings.ANVIL_DATA_ACCESS_GROUP_PREFIX, project_id)
+        group_name = f"{settings.ANVIL_DATA_ACCESS_GROUP_PREFIX}_DBGAP_ACCESS_{project_id}"
         managed_group = ManagedGroup(name=group_name, email=group_name + "@firecloud.org")
         try:
             managed_group.full_clean()
@@ -258,9 +252,7 @@ class dbGaPApplicationUpdate(AnVILConsortiumManagerStaffEditRequired, SuccessMes
         try:
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
 
@@ -277,10 +269,7 @@ class dbGaPDataAccessSnapshotCreate(AnVILConsortiumManagerStaffEditRequired, Suc
         try:
             dbgap_application = models.dbGaPApplication.objects.get(dbgap_project_id=self.kwargs["dbgap_project_id"])
         except models.dbGaPApplication.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
-            )
+            raise Http404(f"No {models.dbGaPApplication._meta.verbose_name} found matching the query")
         return dbgap_application
 
     def get(self, request, *args, **kwargs):
@@ -453,10 +442,7 @@ class dbGaPDataAccessSnapshotDetail(viewmixins.dbGaPApplicationViewPermissionMix
         try:
             application = model.objects.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query"
-                % {"verbose_name": models.dbGaPApplication._meta.verbose_name}
-            )
+            raise Http404(f"No {models.dbGaPApplication._meta.verbose_name} found matching the query")
         return application
 
     def get_object(self, queryset=None):
@@ -465,9 +451,7 @@ class dbGaPDataAccessSnapshotDetail(viewmixins.dbGaPApplicationViewPermissionMix
                 pk=self.kwargs.get("dbgap_data_access_snapshot_pk")
             )
         except self.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
-            )
+            raise Http404(f"No {self.model._meta.verbose_name} found matching the query")
         return obj
 
         # # Already set by the view mixin.
@@ -576,9 +560,7 @@ class dbGaPApplicationAccessAudit(AnVILConsortiumManagerStaffViewRequired, Detai
         try:
             obj = queryset.get(dbgap_project_id=self.kwargs.get("dbgap_project_id"))
         except queryset.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": queryset.model._meta.verbose_name}
-            )
+            raise Http404(f"No {queryset.model._meta.verbose_name} found matching the query")
         return obj
 
     def get(self, request, *args, **kwargs):
