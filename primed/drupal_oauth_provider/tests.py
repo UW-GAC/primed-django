@@ -391,7 +391,7 @@ class TestProviderConfig(TestCase):
             ImproperlyConfigured
         ):
             CustomProvider(request, app=self.app).get_provider_scope_config()
-    
+
     def test_custom_provider_scope_config_invalid_type(self):
             custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
             rf = RequestFactory()
