@@ -111,6 +111,13 @@ class dbGaPStudyAccessionTableTest(TestCase):
         self.assertEqual(table.data[0], instance_2)
         self.assertEqual(table.data[1], instance_1)
 
+    def test_dbgap_phs_display(self):
+        """Verify PHS formatting"""
+        self.model_factory.create(dbgap_phs=42)
+        table = self.table_class(self.model.objects.all())
+
+        self.assertIn("phs000042", table.rows[0].get_cell("dbgap_phs"))
+
 
 class dbGaPWorkspaceStaffTableTest(TestCase):
     model = acm_models.Workspace

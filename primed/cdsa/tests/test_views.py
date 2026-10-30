@@ -1244,7 +1244,7 @@ class SignedAgreementAccessorsUpdateMemberTest(TestCase):
 
     def get_view(self):
         """Return the view being tested."""
-        return views.SignedAgreementStatusUpdate.as_view()
+        return views.SignedAgreementAccessorsUpdate.as_view()
 
     def test_view_redirect_not_logged_in(self):
         "View redirects to login view when user is not logged in."
