@@ -393,14 +393,14 @@ class TestProviderConfig(TestCase):
             CustomProvider(request, app=self.app).get_provider_scope_config()
 
     def test_custom_provider_scope_config_invalid_type(self):
-            custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
-            rf = RequestFactory()
-            request = rf.get("/fake-url/")
-            custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = "Foobar"
-            with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
-                ImproperlyConfigured
-            ):
-                CustomProvider(request, app=self.app).get_provider_scope_config()
+        custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
+        rf = RequestFactory()
+        request = rf.get("/fake-url/")
+        custom_provider_settings["drupal_oauth_provider"]["SCOPES"] = "Foobar"
+        with override_settings(SOCIALACCOUNT_PROVIDERS=custom_provider_settings) and self.assertRaises(
+            ImproperlyConfigured
+        ):
+            CustomProvider(request, app=self.app).get_provider_scope_config()
 
     def test_custom_provider_scope_detail_config(self):
         custom_provider_settings = settings.SOCIALACCOUNT_PROVIDERS
