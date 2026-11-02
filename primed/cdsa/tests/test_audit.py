@@ -2995,7 +2995,7 @@ class AccessorAuditTest(TestCase):
         """audit_agreement_and_object raises ValueError when passed an incorrect object."""
         signed_agreement = factories.SignedAgreementFactory.create()
         audit = accessor_audit.AccessorAudit()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             audit.audit_agreement_and_object(signed_agreement, object)
 
     def test_accessor_linked_account_in_access_group(self):
@@ -3531,7 +3531,7 @@ class DataAffiliateAgreementUploaderAuditTest(TestCase):
         """audit_agreement_and_object raises ValueError when passed an incorrect object."""
         data_affiliate_agreement = factories.DataAffiliateAgreementFactory.create()
         audit = uploader_audit.UploaderAudit()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             audit.audit_agreement_and_object(data_affiliate_agreement, object)
 
     def test_uploader_linked_account_in_access_group(self):

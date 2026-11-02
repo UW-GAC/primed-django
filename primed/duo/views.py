@@ -24,9 +24,7 @@ class DataUsePermissionDetail(AnVILConsortiumManagerViewRequired, DetailView):
         try:
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))
         except self.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
-            )
+            raise Http404(f"No {self.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):
@@ -54,9 +52,7 @@ class DataUseModifierDetail(AnVILConsortiumManagerViewRequired, DetailView):
         try:
             obj = self.model.objects.get(identifier=self.kwargs.get("id"))
         except self.model.DoesNotExist:
-            raise Http404(
-                "No %(verbose_name)s found matching the query" % {"verbose_name": self.model._meta.verbose_name}
-            )
+            raise Http404(f"No {self.model._meta.verbose_name} found matching the query")
         return obj
 
     def get_context_data(self, **kwargs):

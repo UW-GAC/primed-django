@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 import django_tables2 as tables
 from anvil_consortium_manager.exceptions import WorkspaceAccessAuthorizationDomainUnknownError
@@ -25,7 +24,7 @@ class AccessAuditResult(PRIMEDAuditResult):
     workspace: dbGaPWorkspace
     note: str
     dbgap_application: dbGaPApplication
-    has_access: Optional[bool] = None
+    has_access: bool | None = None
     data_access_request: dbGaPDataAccessRequest = None
     action: str = None
 
@@ -113,8 +112,6 @@ class RemoveAccess(AccessAuditResult):
 @dataclass
 class Error(AccessAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
-
-    pass
 
 
 @dataclass
@@ -359,7 +356,6 @@ class dbGaPAccessAudit(PRIMEDAudit):
                         note=self.ERROR_HAS_ACCESS,
                     )
                 )
-            pass
         else:
             # Verified no access because DAR is not approved.
             self.verified.append(

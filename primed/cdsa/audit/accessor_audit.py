@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Union
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, ManagedGroup
@@ -23,7 +22,7 @@ class AccessorAuditResult(PRIMEDAuditResult):
     note: str
     has_access: bool
     user: User = None
-    member: Union[Account, ManagedGroup] = None
+    member: Account | ManagedGroup = None
     action: str = None
 
     def __post_init__(self):
@@ -90,8 +89,6 @@ class RemoveAccess(AccessorAuditResult):
 @dataclass
 class Error(AccessorAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
-
-    pass
 
 
 class AccessorAuditTable(tables.Table):
@@ -193,7 +190,7 @@ class AccessorAudit(PRIMEDAudit):
         elif isinstance(instance, ManagedGroup):
             self._audit_agreement_and_group(signed_agreement, instance)
         else:
-            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
+            raise TypeError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_agreement_and_user(self, signed_agreement, user):
         """Audit access for a specific SignedAgreement and a specific user."""
