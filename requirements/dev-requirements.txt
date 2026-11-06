@@ -98,7 +98,7 @@ markupsafe==2.1.5
     #   werkzeug
 matplotlib-inline==0.1.6
     # via ipython
-mypy==2.4.0
+mypy==2.4.1
     # via -r requirements/dev-requirements.in
 mypy-extensions==1.0.0
     # via mypy
@@ -144,7 +144,7 @@ requests==2.33.0
     #   -c requirements/requirements.txt
     #   -c requirements/test-requirements.txt
     #   sphinx
-ruff==0.17.2
+ruff==0.17.3
     # via -r requirements/dev-requirements.in
 six==1.16.0
     # via
@@ -193,7 +193,7 @@ traitlets==5.14.1
     #   matplotlib-inline
 types-pyyaml==6.0.12.12
     # via django-stubs
-types-requests==2.33.0.20261006
+types-requests==2.33.0.20261030
     # via -r requirements/dev-requirements.in
 typing-extensions==4.16.0
     # via
