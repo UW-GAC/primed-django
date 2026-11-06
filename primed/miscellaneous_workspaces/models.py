@@ -57,10 +57,8 @@ class DataPrepWorkspace(RequesterModel, TimeStampedModel, BaseWorkspaceData):
     )
 
     def clean(self):
-        if hasattr(self, "target_workspace"):
-            if self.target_workspace.workspace_type == "data_prep":
-                raise ValidationError({"target_workspace": "target_workspace cannot be a DataPrepWorkspace."})
+        if hasattr(self, "target_workspace") and self.target_workspace.workspace_type == "data_prep":
+            raise ValidationError({"target_workspace": "target_workspace cannot be a DataPrepWorkspace."})
 
-        if hasattr(self, "target_workspace") and hasattr(self, "workspace"):
-            if self.target_workspace == self.workspace:
-                raise ValidationError({"target_workspace": "target_workspace must be different than workspace."})
+        if hasattr(self, "target_workspace") and hasattr(self, "workspace") and self.target_workspace == self.workspace:
+            raise ValidationError({"target_workspace": "target_workspace must be different than workspace."})

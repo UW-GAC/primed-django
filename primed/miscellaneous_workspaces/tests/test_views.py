@@ -177,7 +177,7 @@ class SimulatedDataWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=(), access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
@@ -447,7 +447,7 @@ class ConsortiumDevelWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=(), access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
@@ -717,7 +717,7 @@ class ResourceWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=(), access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
@@ -986,7 +986,7 @@ class TemplateWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=(), access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
@@ -1269,7 +1269,7 @@ class OpenAccessWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=(), access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,
@@ -1566,7 +1566,7 @@ class DataPrepWorkspaceImportTest(AnVILAPIMockTestMixin, TestCase):
         """Return the Terra API url for a given billing project and workspace."""
         return self.api_client.rawls_entry_point + "/api/workspaces/" + billing_project_name + "/" + workspace_name
 
-    def get_api_json_response(self, billing_project, workspace, authorization_domains=[], access="OWNER"):
+    def get_api_json_response(self, billing_project, workspace, authorization_domains=(), access="OWNER"):
         """Return a pared down version of the json response from the AnVIL API with only fields we need."""
         json_data = {
             "accessLevel": access,

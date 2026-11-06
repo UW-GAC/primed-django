@@ -916,10 +916,14 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
         res = helpers.get_workspaces_for_inventory()
-        self.assertEqual(len(res), 3)
-        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
-        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
-        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+        self.assertListEqual(
+            list(res),
+            [
+                "test-bp-1/test-ws-2",
+                "test-bp-2/test-ws-1",
+                "test-bp-2/test-ws-3",
+            ],
+        )
 
     def test_order_cdsa(self):
         """CDSAWorkspaces are ordered by billing project and workspace in results."""
@@ -939,10 +943,14 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
         res = helpers.get_workspaces_for_inventory()
-        self.assertEqual(len(res), 3)
-        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
-        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
-        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+        self.assertListEqual(
+            list(res),
+            [
+                "test-bp-1/test-ws-2",
+                "test-bp-2/test-ws-1",
+                "test-bp-2/test-ws-3",
+            ],
+        )
 
     def test_order_simulated_data(self):
         """SimulatedDataWorkspaces are ordered by billing project and workspace in results."""
@@ -962,10 +970,15 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
         res = helpers.get_workspaces_for_inventory()
-        self.assertEqual(len(res), 3)
-        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
-        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
-        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+
+        self.assertListEqual(
+            list(res),
+            [
+                "test-bp-1/test-ws-2",
+                "test-bp-2/test-ws-1",
+                "test-bp-2/test-ws-3",
+            ],
+        )
 
     def test_order_open_access(self):
         """OpenAccessWorkspaces are ordered by billing project and workspace in results."""
@@ -985,7 +998,11 @@ class GetWorkspacesForPhenotypeInventoryTest(TestCase):
         )
         WorkspaceGroupSharingFactory.create(workspace=workspace_3.workspace, group=self.primed_all_group)
         res = helpers.get_workspaces_for_inventory()
-        self.assertEqual(len(res), 3)
-        self.assertEqual(list(res)[0], "test-bp-1/test-ws-2")
-        self.assertEqual(list(res)[1], "test-bp-2/test-ws-1")
-        self.assertEqual(list(res)[2], "test-bp-2/test-ws-3")
+        self.assertListEqual(
+            list(res),
+            [
+                "test-bp-1/test-ws-2",
+                "test-bp-2/test-ws-1",
+                "test-bp-2/test-ws-3",
+            ],
+        )

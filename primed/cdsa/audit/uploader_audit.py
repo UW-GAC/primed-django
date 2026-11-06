@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Union
 
 import django_tables2 as tables
 from anvil_consortium_manager.models import Account, GroupAccountMembership, GroupGroupMembership, ManagedGroup
@@ -24,7 +23,7 @@ class UploaderAuditResult(PRIMEDAuditResult):
     has_access: bool
     action: str = None
     user: User = None
-    member: Union[Account, ManagedGroup] = None
+    member: Account | ManagedGroup = None
 
     def __post_init__(self):
         if isinstance(self.member, Account) and hasattr(self.member, "user") and self.member.user != self.user:
@@ -35,7 +34,7 @@ class UploaderAuditResult(PRIMEDAuditResult):
     def get_action_url(self):
         """The URL that handles the action needed."""
         # This is handled in the template with htmx, so None is fine.
-        return None
+        return
 
     def get_table_dictionary(self):
         """Return a dictionary that can be used to populate an instance of `dbGaPDataAccessSnapshotAuditTable`."""
@@ -96,8 +95,6 @@ class RemoveAccess(UploaderAuditResult):
 @dataclass
 class Error(UploaderAuditResult):
     """Audit results class for when an error has been detected (e.g., has access and never should have)."""
-
-    pass
 
 
 class UploaderAuditTable(tables.Table):
@@ -200,7 +197,7 @@ class UploaderAudit(PRIMEDAudit):
         elif isinstance(instance, ManagedGroup):
             self._audit_agreement_and_group(data_affiliate_agreement, instance)
         else:
-            raise ValueError("object must be a User, Account, ManagedGroup, or string.")
+            raise TypeError("object must be a User, Account, ManagedGroup, or string.")
 
     def _audit_agreement_and_user(self, data_affiliate_agreement, user):
         """Audit access for a specific DataAffiliateAgreement and a specific user."""

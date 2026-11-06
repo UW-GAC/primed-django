@@ -342,6 +342,6 @@ class UserAccountSingleGroupMembershipTableTest(TestCase):
         self.assertEqual(str(e.exception), "managed_group must be provided.")
 
     def test_managed_group_wrong_class(self):
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(TypeError) as e:
             tables.UserAccountSingleGroupMembershipTable(User.objects.all(), managed_group=AccountFactory.create())
         self.assertEqual(str(e.exception), "managed_group must be an instance of ManagedGroup.")

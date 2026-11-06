@@ -7,6 +7,7 @@ exclude = [
 ]
 
 [lint]
+ignore = ["RUF012", "FLY002"]
 extend-select = [
     "E",
     "F",

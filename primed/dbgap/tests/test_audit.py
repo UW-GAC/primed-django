@@ -1373,7 +1373,7 @@ class dbGaPCollaboratorAuditTest(TestCase):
         """audit_application_and_object raises ValueError when passed an incorrect object."""
         dbgap_application = factories.dbGaPApplicationFactory.create()
         collab_audit = collaborator_audit.dbGaPCollaboratorAudit()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             collab_audit.audit_application_and_object(dbgap_application, object)
 
     def test_pi_no_account(self):

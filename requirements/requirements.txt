@@ -143,7 +143,7 @@ plotly==5.19.0
     # via django-anvil-consortium-manager
 pronto==2.7.4
     # via -r requirements/requirements.in
-pyasn1==0.6.4
+pyasn1==0.6.5
     # via
     #   pyasn1-modules
     #   rsa

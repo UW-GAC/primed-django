@@ -188,7 +188,7 @@ class UserAccountSingleGroupMembershipTable(UserAccountTable):
         if managed_group is None:
             raise ValueError("managed_group must be provided.")
         if not isinstance(managed_group, ManagedGroup):
-            raise ValueError("managed_group must be an instance of ManagedGroup.")
+            raise TypeError("managed_group must be an instance of ManagedGroup.")
         self.managed_group = managed_group
         super().__init__(*args, **kwargs)
 
@@ -204,6 +204,6 @@ class UserAccountSingleGroupMembershipTable(UserAccountTable):
             )
         else:
             rendered_value = mark_safe(
-                """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""  # noqa: E501
+                """<i class="bi bi-x-circle-fill bi-align-center px-2" style="color: red;"></i>"""
             )
         return rendered_value
